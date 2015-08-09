@@ -1,0 +1,20 @@
+{
+  "name": "opendebug-webkit",
+  "version": "0.0.0",
+  "description": "OpenDebug adapters for the WebKit protocol",
+  "author": {
+    "name": "Microsoft Corporation, Visual Studio Code Team"
+  },
+  "license": "",
+  "dependencies": {
+    "ws": "^0.7.2"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-typescript": "^2.8.0",
+    "gulp-util": "^3.0.5",
+    "tsd": "^0.6.3",
+    "typescript": "^1.5.3"
+  }
+}

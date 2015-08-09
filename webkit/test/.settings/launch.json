@@ -1,0 +1,12 @@
+{
+	"version": "0.1.0",
+	"openDebugRegistry": "${workspaceRoot}/../openDebugRegistry.json",
+    "openDebug": "server=4712",
+	"configurations": [
+		{
+			"name": "webkit test",
+			"type": "webkit",
+			"program": "index.html"
+		}
+	]
+}
