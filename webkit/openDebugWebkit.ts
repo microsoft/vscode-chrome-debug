@@ -42,7 +42,7 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
-        let chromeExe = args.runtimeExecutable || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe';
+        let chromeExe = args.runtimeExecutable || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'; // todo
         let port = 9222;
 
         let chromeArgs: string[] = [];
@@ -144,19 +144,27 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
-        this.sendResponse(response);
+        this._webKitConnection.resume().then(() => {
+            this.sendResponse(response);
+        });
     }
 
     protected nextRequest(response: OpenDebugProtocol.NextResponse): void {
-        this.sendResponse(response);
+        this._webKitConnection.stepOver().then(() => {
+            this.sendResponse(response);
+        });
     }
 
     protected stepInRequest(response: OpenDebugProtocol.StepInResponse): void {
-        this.sendResponse(response);
+        this._webKitConnection.stepIn().then(() => {
+            this.sendResponse(response);
+        });
     }
 
     protected stepOutRequest(response: OpenDebugProtocol.StepOutResponse): void {
-        this.sendResponse(response);
+        this._webKitConnection.stepOut().then(() => {
+            this.sendResponse(response);
+        });
     }
 
     protected pauseRequest(response: OpenDebugProtocol.PauseResponse): void {

@@ -10,7 +10,7 @@ import {EventEmitter} from 'events';
  * Implements a Request/Response API on top of a WebSocket for messages that are marked with an `id` property.
  * Emits `message.method` for messages that don't have `id`.
  */
-export class ResReqWebSocket extends EventEmitter {
+class ResReqWebSocket extends EventEmitter {
     private _pendingRequests = new Map<number, any>();
     private _wsAttached: Promise<WebSocket>;
 
@@ -79,21 +79,39 @@ export class WebKitConnection {
             return this._socket.attach(wsUrl);
         }).then(() => {
             // init, enable debugger
-            this._socket.sendMessage({
-                id: this._nextId++,
-                method: "Debugger.enable"
-            });
+            this.sendMessage('Debugger.enable');
         });
     }
 
     public setBreakpoint(location: WebKitProtocol.Location, condition?: string): Promise<WebKitProtocol.SetBreakpointResponse> {
-        return this._socket.sendMessage(<WebKitProtocol.SetBreakpointRequest>{
+        return this.sendMessage('Debugger.setBreakpoint', { location, condition });
+    }
+
+    public stepOver(): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.stepOver');
+    }
+
+    public stepIn(): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.stepIn');
+    }
+
+    public stepOut(): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.stepOut');
+    }
+
+    public resume(): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.resume');
+    }
+
+    public pause(): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.pause');
+    }
+
+    private sendMessage(method: any, params?: any): Promise<WebKitProtocol.Response> {
+        return this._socket.sendMessage({
             id: this._nextId++,
-            method: "Debugger.setBreakpoint",
-            params: {
-                location,
-                condition
-            }
+            method,
+            params
         });
     }
 }
@@ -104,7 +122,7 @@ export class WebKitConnection {
 function getUrl(url: string): Promise<string> {
     return new Promise((resolve, reject) => {
         http.get(url, response => {
-            let jsonResponse = "";
+            let jsonResponse = '';
             response.on('data', chunk => jsonResponse += chunk);
             response.on('end', () => {
                 resolve(jsonResponse);
