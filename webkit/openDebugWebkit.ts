@@ -9,16 +9,22 @@ import {readFileSync} from 'fs';
 import {spawn, ChildProcess} from 'child_process';
 import {WebKitConnection} from './webkitConnection';
 
+interface IPendingBreakpoint {
+    response: OpenDebugProtocol.SetBreakpointsResponse;
+    args: OpenDebugProtocol.SetBreakpointsArguments;
+}
+
 class WebkitDebugSession extends DebugSession {
     private _sourceFile: string;
     private _currentLine: number;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.CallFrame[];
+    private _pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
 
     private _chromeProc: any;
     private _webKitConnection: WebKitConnection;
 
-    // Cached scripts
+    // Scripts
     private _scriptsById = new Map<string, WebKitProtocol.Script>();
     private _scriptsByUrl = new Map<string, WebKitProtocol.Script>();
 
@@ -85,8 +91,15 @@ class WebkitDebugSession extends DebugSession {
     }
 
     private onScriptParsed(script: WebKitProtocol.Script): void {
-        this._scriptsByUrl.set(canonicalizeUrl(script.url), script);
+        var scriptUrl = canonicalizeUrl(script.url);
+        this._scriptsByUrl.set(scriptUrl, script);
         this._scriptsById.set(script.scriptId, script);
+
+        if (this._pendingBreakpointsByUrl.has(scriptUrl)) {
+            var pendingBreakpoint = this._pendingBreakpointsByUrl.get(scriptUrl);
+            this._pendingBreakpointsByUrl.delete(scriptUrl);
+            this.setBreakPointsRequest(pendingBreakpoint.response, pendingBreakpoint.args);
+        }
     }
 
     protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
@@ -100,8 +113,9 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
+        let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
-            args.source.path ? this._scriptsByUrl.get(canonicalizeUrl(args.source.path)) :
+            args.source.path ? this._scriptsByUrl.get(sourceUrl) :
                 args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
 
         if (script) {
@@ -121,7 +135,7 @@ class WebkitDebugSession extends DebugSession {
                     this.sendResponse(response);
                 });
         } else {
-            this.sendResponse(response);
+            this._pendingBreakpointsByUrl.set(sourceUrl, { response, args });
         }
     }
 
@@ -177,7 +191,7 @@ class WebkitDebugSession extends DebugSession {
 
             return {
                 id: i,
-                name: 'frame ' + i,
+                name: callFrame.functionName,
                 source: scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
                 line: callFrame.location.lineNumber,
                 column: callFrame.location.columnNumber,
