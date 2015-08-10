@@ -6,76 +6,86 @@ import WebSocket = require('ws');
 import http = require('http');
 import {EventEmitter} from 'events';
 
-export class WebSocketWrapper extends EventEmitter {
-	private _websocketConnect: Promise<WebSocket>;
+/**
+ * Implements a Request/Response API on top of a WebSocket for messages that are marked with an `id` property.
+ * Emits `message.method` for messages that don't have `id`.
+ */
+export class ResReqWebSocket extends EventEmitter {
 	private _pendingRequests = new Map<number, any>();
+    private _wsAttached: Promise<WebSocket>;
 
-    public attachToUrl(url: string): void {
-        this._websocketConnect = new Promise<WebSocket>((resolve, reject) => {
-			// Get the websocket url
-			getUrl(url).then(jsonResponse => {
-				var wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
-				var ws = new WebSocket(wsUrl);
-				ws.on('open', () => {
-					console.log('open');
-					resolve(ws);
-				});
+    /**
+     * Attach to the given websocket url
+     */
+    public attach(wsUrl: string): void {
+        this._wsAttached = new Promise((resolve, reject) => {
+            var ws = new WebSocket(wsUrl);
 
-				ws.on('message', message => {
-					console.log('received ' + message);
-					this.onMessage(JSON.parse(message));
-				});
-			}, e => {
-				// Chrome isn't running or not set up correctly?
-			});
-		});
+            ws.on('open', () => resolve(ws));
+            ws.on('message', msg => this.onMessage(JSON.parse(msg)))
+        });
     }
 
-	protected sendMessage(message: { id: number }): Promise<any> {
+    /**
+     * Send a message which must have an id. Ok to call immediately after attach
+     */
+	public sendMessage(message: { id: number }): Promise<any> {
 		return new Promise((resolve, reject) => {
 			this._pendingRequests.set(message.id, resolve);
-			this._websocketConnect.then(ws =>
-				ws.send(JSON.stringify(message)));
+			this._wsAttached.then(ws => ws.send(JSON.stringify(message)));
 		});
 	}
 
 	private onMessage(message: any): void {
 		if (message.id) {
-			var response = message;
-			if (this._pendingRequests.has(response.id)) {
+			if (this._pendingRequests.has(message.id)) {
 				// Resolve the pending request with this response
-				this._pendingRequests.get(response.id)(response);
-				this._pendingRequests.delete(response.id);
+				this._pendingRequests.get(message.id)(message);
+				this._pendingRequests.delete(message.id);
 			} else {
-				console.error(`Got a response with id ${response.id} for which there is no pending request, weird.`);
+				console.error(`Got a response with id ${message.id} for which there is no pending request, weird.`);
 			}
 		} else if (message.method) {
-			var notification = message;
-			this.emit(notification.method, notification.params);
+			this.emit(message.method, message.params);
 		}
 	}
 }
 
-export class WebKitConnection extends WebSocketWrapper {
+/**
+ * Connects to a target supporting the webkit protocol and sends and receives messages
+ */
+export class WebKitConnection {
 	private _nextId = 1;
+    private _socket: ResReqWebSocket;
+
+    constructor() {
+        this._socket = new ResReqWebSocket();
+    }
+
+    public on(eventName: string, handler: (msg: any) => void): void {
+        this._socket.on(eventName, handler);
+    }
 
 	public attach(port: number): void {
-		super.attachToUrl(`http://localhost:${port}/json`);
-
-		// init, enable debugger
-		this.sendMessage({
-			id: this._nextId++,
-			method: "Debugger.enable"
-		});
+        getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
+    		var wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
+            return this._socket.attach(wsUrl);
+        }).then(() => {
+    		// init, enable debugger
+    		this._socket.sendMessage({
+    			id: this._nextId++,
+    			method: "Debugger.enable"
+    		});
+        });
 	}
 
 	public setBreakpoint(location: WebKitProtocol.Location, condition?: string): Promise<WebKitProtocol.SetBreakpointResponse> {
-		return this.sendMessage(<WebKitProtocol.SetBreakpointRequest>{
+		return this._socket.sendMessage(<WebKitProtocol.SetBreakpointRequest>{
 			id: this._nextId++,
 			method: "Debugger.setBreakpoint",
 			params: {
-				location: location,
-				condition: condition
+				location,
+				condition
 			}
 		});
 	}
@@ -87,7 +97,7 @@ export class WebKitConnection extends WebSocketWrapper {
 function getUrl(url: string): Promise<string> {
 	return new Promise((resolve, reject) => {
 		http.get(url, response => {
-			var jsonResponse = "";
+			let jsonResponse = "";
 			response.on('data', chunk => jsonResponse += chunk);
 			response.on('end', () => {
 				resolve(jsonResponse);

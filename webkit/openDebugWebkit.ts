@@ -38,14 +38,14 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
-		var chromeExe = args.runtimeExecutable || "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
-		var port = 9222;
+		let chromeExe = args.runtimeExecutable || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe';
+		let port = 9222;
 
-		var chromeArgs: string[] = [];
-		chromeArgs.push("--remote-debugging-port=9222");
+		let chromeArgs: string[] = [];
+		chromeArgs.push('--remote-debugging-port=9222');
 
 		if (args.runtimeArguments) {
-			for (var a of args.runtimeArguments) {
+			for (let a of args.runtimeArguments) {
 				chromeArgs.push(a);
 			}
 		}
@@ -53,18 +53,18 @@ class WebkitDebugSession extends DebugSession {
 		chromeArgs.push(args.program);
 
 		if (args.arguments) {
-			for (var a of args.arguments) {
+			for (let a of args.arguments) {
 				chromeArgs.push(a);
 			}
 		}
 
 		this._chromeProc = spawn(chromeExe, chromeArgs);
 		this._chromeProc.on('error', (err) => {
-			console.error("chrome error: " + err);
+			console.error('chrome error: ' + err);
 			this.sendEvent(this.createTerminatedEvent());
 		});
 		this._chromeProc.on('exit', () => {
-			console.error("chrome terminated");
+			console.error('chrome terminated');
 			this.sendEvent(this.createTerminatedEvent());
 		});
 
@@ -79,10 +79,10 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	private onDebuggerPaused(notification: WebKitProtocol.PausedNotificationParams): void {
-		var scriptLocation = notification.callFrames[0].location;
-		var script = this._scriptsById.get(scriptLocation.scriptId);
+		let scriptLocation = notification.callFrames[0].location;
+		let script = this._scriptsById.get(scriptLocation.scriptId);
 
-		this.sendEvent(this.createStoppedEvent('pause', { name: "name", path: script.url, sourceReference: parseInt(script.scriptId) }, scriptLocation.lineNumber, scriptLocation.columnNumber, 4711));
+		this.sendEvent(this.createStoppedEvent('pause', { name: 'name', path: script.url, sourceReference: parseInt(script.scriptId) }, scriptLocation.lineNumber, scriptLocation.columnNumber, 4711));
 	}
 
 	private onScriptParsed(script: WebKitProtocol.Script): void {
@@ -97,15 +97,16 @@ class WebkitDebugSession extends DebugSession {
 	protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
 		let port = args.port;
 		this.attach(port, response);
+        this.sendResponse(response);
 	}
 
 	protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
-		var script =
+		let script =
 			args.source.path ? this._scriptsByUrl.get(canonicalizeUrl(args.source.path)) :
-			args.source.sourceReference ? this._scriptsById.get("" + args.source.sourceReference) : null;
+			args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
 
 		if (script) {
-			var responsePromises = args.lines
+			let responsePromises = args.lines
 				.map(line => this._webKitConnection.setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
 
 			Promise.all(<Iterable<any>><any>responsePromises)
@@ -158,7 +159,7 @@ class WebkitDebugSession extends DebugSession {
 			threads: [
 				{
 					id: 4711,
-					name: "thread 1"
+					name: 'thread 1'
 				}
 			]
 		};
@@ -166,30 +167,30 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
-		var frames = [];
+		let frames = [];
 
-		for (var i= 0; i < 3; i++) {
-			var scopes = [];
+		for (let i= 0; i < 3; i++) {
+			let scopes = [];
 
 			scopes.push({
-				name: "Local",
-				variablesReference: this._variableHandles.Create("local_" + i),
+				name: 'Local',
+				variablesReference: this._variableHandles.Create('local_' + i),
 				expensive: false
 			});
 			scopes.push({
-				name: "Closure",
-				variablesReference: this._variableHandles.Create("closure_" + i),
+				name: 'Closure',
+				variablesReference: this._variableHandles.Create('closure_' + i),
 				expensive: false
 			});
 			scopes.push({
-				name: "Global",
-				variablesReference: this._variableHandles.Create("global_" + i),
+				name: 'Global',
+				variablesReference: this._variableHandles.Create('global_' + i),
 				expensive: false
 			});
 
 			frames.push({
 				id: i,
-				name: "frame " + i,
+				name: 'frame ' + i,
 				source: this.createSource(this.convertDebuggerPathToClient(this._sourceFile)),
 				line: this.convertDebuggerLineToClient(this._currentLine),
 				column: 0,
@@ -204,28 +205,28 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
-		var variables = [];
-		var id = this._variableHandles.Get(args.variablesReference);
+		let variables = [];
+		let id = this._variableHandles.Get(args.variablesReference);
 		if (id != null) {
 			variables.push({
-				name: id + "_i",
-				value: "123",
+				name: id + '_i',
+				value: '123',
 				variablesReference: 0
 			});
 			variables.push({
-				name: id + "_f",
-				value: "3.14",
+				name: id + '_f',
+				value: '3.14',
 				variablesReference: 0
 			});
 			variables.push({
-				name: id + "_s",
-				value: "hello world",
+				name: id + '_s',
+				value: 'hello world',
 				variablesReference: 0
 			});
 			variables.push({
-				name: id + "_o",
-				value: "Object",
-				variablesReference: this._variableHandles.Create("object_")
+				name: id + '_o',
+				value: 'Object',
+				variablesReference: this._variableHandles.Create('object_')
 			});
 		}
 
@@ -242,33 +243,33 @@ class WebkitDebugSession extends DebugSession {
 
 function canonicalizeUrl(url: string): string {
 	return url
-		.replace("file:///", "")
-		.replace(/\\/g, "/")
+		.replace('file:///', '')
+		.replace(/\\/g, '/')
 		.toLowerCase();
 }
 
 // parse arguments
-var port = 0;
-var args = process.argv.slice(2);
+let port = 0;
+let args = process.argv.slice(2);
 args.forEach(function(val, index, array) {
-	var portMatch = /^--server=(\d{2,5})$/.exec(val);
+	let portMatch = /^--server=(\d{2,5})$/.exec(val);
 	if (portMatch !== null) {
 		port = parseInt(portMatch[1], 10);
 	}
 });
 
 // start session
-var mock = new WebkitDebugSession(false);
+let mock = new WebkitDebugSession(false);
 if (port > 0) {
-	console.error("waiting for v8 protocol on port " + port);
+	console.error('waiting for v8 protocol on port ' + port);
 	createServer(function(socket) {
-		console.error(">> accepted connection from client");
+		console.error('>> accepted connection from client');
 		socket.on('end', () => {
-			console.error(">> client connection closed");
+			console.error('>> client connection closed');
 		});
 		mock.startDispatch(socket, socket);
 	}).listen(port);
 } else {
-	console.error("waiting for v8 protocol on stdin/stdout");
+	console.error('waiting for v8 protocol on stdin/stdout');
 	mock.startDispatch(process.stdin, process.stdout);
 }
