@@ -7,7 +7,7 @@
         "node_modules": true
     },
     "search.exclude": {
-		".git": true,
+        ".git": true,
         "node_modules": true,
         "bin": true,
         "out": true

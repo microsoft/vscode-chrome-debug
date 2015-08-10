@@ -1,12 +1,12 @@
 {
-	"compilerOptions": {
-		"module": "commonjs",
+    "compilerOptions": {
+        "module": "commonjs",
         "noImplicitAny": false,
         "removeComments": false,
-		"target": "ES5",
+        "target": "ES5",
         "sourceMap": true,
-		"outDir": "out"
-	},
+        "outDir": "out"
+    },
     "files": [
         "common/debugSession.ts",
         "common/handles.ts",

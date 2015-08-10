@@ -3,13 +3,13 @@
         {
             "type": "webkit",
             "program": "${workspaceRoot}/out/webkit/openDebugWebkit.js",
-			"runtime": "node"
+            "runtime": "node"
         },
         {
             "type": "mock",
             "program": "${workspaceRoot}/out/mock/openDebugMock.js",
-			"runtime": "node"
-        },	
+            "runtime": "node"
+        },    
         {
             "type": "node",
             "program": "vs/workbench/parts/debug/bin/OpenDebug.exe",

@@ -1,14 +1,14 @@
 {
-	"version": "0.1.0",
-	"configurations": [
-		{
-			"name": "opendebug-webkit",
-			"type": "node",
-			"program": "./out/webkit/openDebugWebkit.js",
-			"stopOnEntry": false,
-			"args": [ "--server=4712" ],
-			"sourceMaps": false,
-			"outDir": "out"
-		}
-	]
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "opendebug-webkit",
+            "type": "node",
+            "program": "./out/webkit/openDebugWebkit.js",
+            "stopOnEntry": false,
+            "args": [ "--server=4712" ],
+            "sourceMaps": false,
+            "outDir": "out"
+        }
+    ]
 }

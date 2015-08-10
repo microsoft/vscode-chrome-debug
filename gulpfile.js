@@ -10,29 +10,29 @@ var typescript = require('typescript');
 var sourcemaps = require('gulp-sourcemaps');
 
 var sources = [
-	'common/**/*.ts',
-	'webkit/**/*.ts',
-	'typings/**/*.ts'
+    'common/**/*.ts',
+    'webkit/**/*.ts',
+    'typings/**/*.ts'
 ];
 
 var projectConfig = {
-	noImplicitAny: false,
-	target: 'ES5',
-	module: 'commonjs',
-	declarationFiles: true,
-	typescript: typescript
+    noImplicitAny: false,
+    target: 'ES5',
+    module: 'commonjs',
+    declarationFiles: true,
+    typescript: typescript
 };
 
 gulp.task('build', function () {
-	gulp.src(sources, { base: '.' })
+    gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
-		.pipe(ts(projectConfig))
+        .pipe(ts(projectConfig))
         .pipe(sourcemaps.write())
-		.pipe(gulp.dest('out'));
+        .pipe(gulp.dest('out'));
 });
 
 gulp.task('ts-watch', ['build'], function(cb) {
-	log('Watching build sources...');
+    log('Watching build sources...');
     gulp.watch(sources, ['build']);
 });
 
