@@ -12,22 +12,20 @@ import {WebKitConnection} from './webkitConnection';
 class WebkitDebugSession extends DebugSession {
 	private _sourceFile: string;
 	private _currentLine: number;
-	private _sourceLines: string[];
-	private _breakPoints: any;
 	private _variableHandles: Handles<string>;
+    private _currentStack: WebKitProtocol.CallFrame[];
 
 	private _chromeProc: any;
 	private _webKitConnection: WebKitConnection;
 
+    // Cached scripts
 	private _scriptsById = new Map<string, WebKitProtocol.Script>();
 	private _scriptsByUrl = new Map<string, WebKitProtocol.Script>();
 
 	public constructor(debuggerLinesStartAt1: boolean) {
 		super(debuggerLinesStartAt1);
 		this._sourceFile = null;
-		this._sourceLines = [];
 		this._currentLine = 0;
-		this._breakPoints = {};
 		this._variableHandles = new Handles<string>();
 	}
 
@@ -79,10 +77,11 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	private onDebuggerPaused(notification: WebKitProtocol.PausedNotificationParams): void {
+        this._currentStack = notification.callFrames;
 		let scriptLocation = notification.callFrames[0].location;
 		let script = this._scriptsById.get(scriptLocation.scriptId);
-
-		this.sendEvent(this.createStoppedEvent('pause', { name: 'name', path: script.url, sourceReference: parseInt(script.scriptId) }, scriptLocation.lineNumber, scriptLocation.columnNumber, 4711));
+        let source = scriptToSource(script);
+		this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/4711));
 	}
 
 	private onScriptParsed(script: WebKitProtocol.Script): void {
@@ -109,7 +108,7 @@ class WebkitDebugSession extends DebugSession {
 			let responsePromises = args.lines
 				.map(line => this._webKitConnection.setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
 
-			Promise.all(<Iterable<any>><any>responsePromises)
+			Promise.all(<Iterable<any>><any>responsePromises) // Not sure why array isn't considered iterable here
 				.then(responses => {
 					let breakpoints = responses.map(response => {
 						return <OpenDebugProtocol.Breakpoint>{
@@ -167,39 +166,27 @@ class WebkitDebugSession extends DebugSession {
 	}
 
 	protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
-		let frames = [];
+        let stackFrames: OpenDebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.CallFrame, i: number) => {
+            let scopes = callFrame.scopeChain.map((scope: WebKitProtocol.Scope) => {
+                return <OpenDebugProtocol.Scope>{
+                    name: scope.type,
+                    variablesReference: 1,
+                    expensive: true
+                };
+            });
 
-		for (let i= 0; i < 3; i++) {
-			let scopes = [];
-
-			scopes.push({
-				name: 'Local',
-				variablesReference: this._variableHandles.Create('local_' + i),
-				expensive: false
-			});
-			scopes.push({
-				name: 'Closure',
-				variablesReference: this._variableHandles.Create('closure_' + i),
-				expensive: false
-			});
-			scopes.push({
-				name: 'Global',
-				variablesReference: this._variableHandles.Create('global_' + i),
-				expensive: false
-			});
-
-			frames.push({
-				id: i,
-				name: 'frame ' + i,
-				source: this.createSource(this.convertDebuggerPathToClient(this._sourceFile)),
-				line: this.convertDebuggerLineToClient(this._currentLine),
-				column: 0,
-				scopes: scopes
-			});
-		}
+            return {
+                id: i,
+                name: 'frame ' + i,
+                source: scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
+                line: callFrame.location.lineNumber,
+                column: callFrame.location.columnNumber,
+                scopes: scopes
+            };
+        });
 
 		response.body = {
-			stackFrames: frames
+			stackFrames
 		};
 		this.sendResponse(response);
 	}
@@ -241,11 +228,19 @@ class WebkitDebugSession extends DebugSession {
 	}
 }
 
+/**
+ * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
+ * The ODP client can handle urls in this format too.
+ */
 function canonicalizeUrl(url: string): string {
 	return url
 		.replace('file:///', '')
 		.replace(/\\/g, '/')
 		.toLowerCase();
+}
+
+function scriptToSource(script: WebKitProtocol.Script): OpenDebugProtocol.Source {
+    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: parseInt(script.scriptId) };
 }
 
 // parse arguments

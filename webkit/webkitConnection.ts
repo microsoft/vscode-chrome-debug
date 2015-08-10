@@ -19,10 +19,13 @@ export class ResReqWebSocket extends EventEmitter {
      */
     public attach(wsUrl: string): void {
         this._wsAttached = new Promise((resolve, reject) => {
-            var ws = new WebSocket(wsUrl);
+            let ws = new WebSocket(wsUrl);
 
             ws.on('open', () => resolve(ws));
-            ws.on('message', msg => this.onMessage(JSON.parse(msg)))
+            ws.on('message', msgStr => {
+                console.log('From target: ' + msgStr);
+                this.onMessage(JSON.parse(msgStr));
+            });
         });
     }
 
@@ -32,7 +35,11 @@ export class ResReqWebSocket extends EventEmitter {
 	public sendMessage(message: { id: number }): Promise<any> {
 		return new Promise((resolve, reject) => {
 			this._pendingRequests.set(message.id, resolve);
-			this._wsAttached.then(ws => ws.send(JSON.stringify(message)));
+			this._wsAttached.then(ws => {
+                let msgStr = JSON.stringify(message);
+                console.log('To target: ' + msgStr);
+                ws.send(msgStr);
+            });
 		});
 	}
 
@@ -68,7 +75,7 @@ export class WebKitConnection {
 
 	public attach(port: number): void {
         getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
-    		var wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
+    		let wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
             return this._socket.attach(wsUrl);
         }).then(() => {
     		// init, enable debugger

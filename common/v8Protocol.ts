@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 export class V8Protocol {
-	
+
 	private _state: string;
 	private _contentLength: number;
 	private _bodyStartByteIndex: number;
@@ -12,24 +12,24 @@ export class V8Protocol {
 	private _writableStream: NodeJS.WritableStream;
 	private _pendingRequests: ((response: OpenDebugProtocol.Response) => void)[];
 	private _callback: (event: OpenDebugProtocol.Event) => void;
-	
+
 	public constructor(cb: (event: OpenDebugProtocol.Event) => void = null) {
 		this._callback = cb;
 	}
-	
+
 	public startDispatch(inStream: NodeJS.ReadableStream, outStream: NodeJS.WritableStream): void {
 		this._sequence = 1;
 		this._writableStream = outStream;
 		this._newRes(null);
 		this._pendingRequests = new Array();
-		
+
 		inStream.setEncoding('utf8');
 		inStream.resume();
-		inStream.on('data', (data) => this.execute(data));		
+		inStream.on('data', (data) => this.execute(data));
 	}
 
 	public command(command: string, args: any, cb: (response: OpenDebugProtocol.Response) => void): void {
-				
+
 		var request: any = {
 			command: command
 		};
@@ -37,7 +37,7 @@ export class V8Protocol {
 			request.arguments = args;
 		}
 		this.send('request', request);
-		
+
 		if (cb) {
 			this._pendingRequests[request.seq] = cb;
 		}
@@ -46,7 +46,7 @@ export class V8Protocol {
 	public sendEvent(event: OpenDebugProtocol.Event): void {
 		this.send('event', event);
 	}
-	
+
 	public sendResponse(response: OpenDebugProtocol.Response): void {
 		this.send('response', response);
 	}
@@ -57,11 +57,12 @@ export class V8Protocol {
 	}
 
 	// ---- private ------------------------------------------------------------
-	
+
 	private send(typ: string, message: OpenDebugProtocol.V8Message): void {
 		message.type = typ;
 		message.seq = this._sequence++;
 		var json = JSON.stringify(message);
+        console.log('To client: ' + json);
 		var data = 'Content-Length: ' + Buffer.byteLength(json, 'utf8') + '\r\n\r\n' + json;
 		this._writableStream.write(data);
 	}
@@ -126,7 +127,7 @@ export class V8Protocol {
 					break;
 				}
 			// pass thru
-				
+
 			case 'body':
 				var resRawByteLength = Buffer.byteLength(res.raw, 'utf8');
 				if (resRawByteLength - this._bodyStartByteIndex >= this._contentLength) {
