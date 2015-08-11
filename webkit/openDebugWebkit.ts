@@ -15,18 +15,20 @@ interface IPendingBreakpoint {
 }
 
 class WebkitDebugSession extends DebugSession {
+    private static THREAD_ID = 1;
+
     private _sourceFile: string;
     private _currentLine: number;
     private _variableHandles: Handles<string>;
-    private _currentStack: WebKitProtocol.CallFrame[];
+    private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
 
     private _chromeProc: any;
     private _webKitConnection: WebKitConnection;
 
     // Scripts
-    private _scriptsById: Map<string, WebKitProtocol.Script>;
-    private _scriptsByUrl: Map<string, WebKitProtocol.Script>;
+    private _scriptsById: Map<string, WebKitProtocol.Debugger.Script>;
+    private _scriptsByUrl: Map<string, WebKitProtocol.Debugger.Script>;
 
     public constructor(debuggerLinesStartAt1: boolean) {
         super(debuggerLinesStartAt1);
@@ -39,8 +41,8 @@ class WebkitDebugSession extends DebugSession {
     }
 
     private clearTargetContext(): void {
-        this._scriptsById = new Map<string, WebKitProtocol.Script>();
-        this._scriptsByUrl = new Map<string, WebKitProtocol.Script>();
+        this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
+        this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
     }
 
     private clearClientContext(): void {
@@ -102,22 +104,22 @@ class WebkitDebugSession extends DebugSession {
         this.sendEvent(this.createTerminatedEvent());
         this.clearTargetContext();
         this.clearClientContext();
-        this._webKitConnection = null
+        this._webKitConnection = null;
     }
 
     private onGlobalObjectCleared(): void {
         this.clearTargetContext();
     }
 
-    private onDebuggerPaused(notification: WebKitProtocol.PausedNotificationParams): void {
+    private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
         this._currentStack = notification.callFrames;
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
         let source = scriptToSource(script);
-        this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/1));
+        this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/WebkitDebugSession.THREAD_ID));
     }
 
-    private onScriptParsed(script: WebKitProtocol.Script): void {
+    private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
         var scriptUrl = canonicalizeUrl(script.url);
         this._scriptsByUrl.set(scriptUrl, script);
         this._scriptsById.set(script.scriptId, script);
@@ -208,8 +210,8 @@ class WebkitDebugSession extends DebugSession {
         response.body = {
             threads: [
                 {
-                    id: 1,
-                    name: 'Thread 1'
+                    id: WebkitDebugSession.THREAD_ID,
+                    name: 'Thread ' + WebkitDebugSession.THREAD_ID
                 }
             ]
         };
@@ -217,11 +219,11 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
-        let stackFrames: OpenDebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.CallFrame, i: number) => {
-            let scopes = callFrame.scopeChain.map((scope: WebKitProtocol.Scope) => {
+        let stackFrames: OpenDebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
+            let scopes = callFrame.scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
                 return <OpenDebugProtocol.Scope>{
                     name: scope.type,
-                    variablesReference: 1,
+                    variablesReference: this._variableHandles.Create(scope.object.objectId),
                     expensive: true
                 };
             });
@@ -236,42 +238,31 @@ class WebkitDebugSession extends DebugSession {
             };
         });
 
-        response.body = {
-            stackFrames
-        };
+        response.body = { stackFrames };
         this.sendResponse(response);
     }
 
     protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
-        let variables = [];
         let id = this._variableHandles.Get(args.variablesReference);
         if (id != null) {
-            variables.push({
-                name: id + '_i',
-                value: '123',
-                variablesReference: 0
-            });
-            variables.push({
-                name: id + '_f',
-                value: '3.14',
-                variablesReference: 0
-            });
-            variables.push({
-                name: id + '_s',
-                value: 'hello world',
-                variablesReference: 0
-            });
-            variables.push({
-                name: id + '_o',
-                value: 'Object',
-                variablesReference: this._variableHandles.Create('object_')
-            });
-        }
+            this._webKitConnection.runtime_getProperties(id).then(getPropsResponse => {
+                let variables = getPropsResponse.result.result.map(propDesc => {
+                    let value = typeof propDesc.value === 'undefined' ? propDesc.get : propDesc.value;
+                    if (value.type === 'object') {
+                        // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
+                        return { name: propDesc.name, value: 'Object', variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
+                    }
 
-        response.body = {
-            variables: variables
-        };
-        this.sendResponse(response);
+                    // For a primitive value, we have the value, no reference needed
+                    return { name: propDesc.name, value: (value.value || value.description), variablesReference: 0 };
+                });
+
+                response.body = { variables };
+                this.sendResponse(response);
+            });
+        } else {
+            this.sendResponse(response);
+        }
     }
 
     protected evaluateRequest(response: OpenDebugProtocol.EvaluateResponse, args: OpenDebugProtocol.EvaluateArguments): void {
@@ -290,7 +281,7 @@ function canonicalizeUrl(url: string): string {
         .toLowerCase();
 }
 
-function scriptToSource(script: WebKitProtocol.Script): OpenDebugProtocol.Source {
+function scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
     return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: parseInt(script.scriptId) };
 }
 

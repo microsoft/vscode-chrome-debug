@@ -83,7 +83,7 @@ export class WebKitConnection {
         });
     }
 
-    public setBreakpoint(location: WebKitProtocol.Location, condition?: string): Promise<WebKitProtocol.SetBreakpointResponse> {
+    public setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
         return this.sendMessage('Debugger.setBreakpoint', { location, condition });
     }
 
@@ -92,7 +92,7 @@ export class WebKitConnection {
     }
 
     public stepIn(): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.stepIn');
+        return this.sendMessage('Debugger.stepInto');
     }
 
     public stepOut(): Promise<WebKitProtocol.Response> {
@@ -105,6 +105,10 @@ export class WebKitConnection {
 
     public pause(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.pause');
+    }
+
+    public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
+        return this.sendMessage('Runtime.getProperties', { objectId, ownProperties });
     }
 
     private sendMessage(method: any, params?: any): Promise<WebKitProtocol.Response> {
