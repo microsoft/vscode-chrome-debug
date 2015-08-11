@@ -19,20 +19,32 @@ class WebkitDebugSession extends DebugSession {
     private _currentLine: number;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.CallFrame[];
-    private _pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
+    private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
 
     private _chromeProc: any;
     private _webKitConnection: WebKitConnection;
 
     // Scripts
-    private _scriptsById = new Map<string, WebKitProtocol.Script>();
-    private _scriptsByUrl = new Map<string, WebKitProtocol.Script>();
+    private _scriptsById: Map<string, WebKitProtocol.Script>;
+    private _scriptsByUrl: Map<string, WebKitProtocol.Script>;
 
     public constructor(debuggerLinesStartAt1: boolean) {
         super(debuggerLinesStartAt1);
         this._sourceFile = null;
         this._currentLine = 0;
         this._variableHandles = new Handles<string>();
+
+        this.clearClientContext();
+        this.clearTargetContext();
+    }
+
+    private clearTargetContext(): void {
+        this._scriptsById = new Map<string, WebKitProtocol.Script>();
+        this._scriptsByUrl = new Map<string, WebKitProtocol.Script>();
+    }
+
+    private clearClientContext(): void {
+        this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
     }
 
     protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
@@ -65,21 +77,36 @@ class WebkitDebugSession extends DebugSession {
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
             console.error('chrome error: ' + err);
-            this.sendEvent(this.createTerminatedEvent());
+            this.terminateSession();
         });
         this._chromeProc.on('exit', () => {
-            console.error('chrome terminated');
-            this.sendEvent(this.createTerminatedEvent());
+            console.error('chrome exited');
+            this.terminateSession();
         });
 
         this.attach(port, response);
     }
 
     private attach(port: number, response: OpenDebugProtocol.Response): void {
-        this._webKitConnection = new WebKitConnection();
-        this._webKitConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
-        this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
-        this._webKitConnection.attach(9222);
+        // ODP client is attaching - if not attached to the webkit target, create a connection and attach
+        if (!this._webKitConnection) {
+            this._webKitConnection = new WebKitConnection();
+            this._webKitConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
+            this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
+            this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
+            this._webKitConnection.attach(9222);
+        }
+    }
+
+    private terminateSession(): void {
+        this.sendEvent(this.createTerminatedEvent());
+        this.clearTargetContext();
+        this.clearClientContext();
+        this._webKitConnection = null
+    }
+
+    private onGlobalObjectCleared(): void {
+        this.clearTargetContext();
     }
 
     private onDebuggerPaused(notification: WebKitProtocol.PausedNotificationParams): void {
@@ -87,7 +114,7 @@ class WebkitDebugSession extends DebugSession {
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
         let source = scriptToSource(script);
-        this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/4711));
+        this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/1));
     }
 
     private onScriptParsed(script: WebKitProtocol.Script): void {
@@ -103,6 +130,7 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
+        this.clearClientContext();
         this.sendResponse(response);
     }
 
@@ -116,7 +144,7 @@ class WebkitDebugSession extends DebugSession {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
-                args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
+            args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
 
         if (script) {
             let responsePromises = args.lines
@@ -144,6 +172,7 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
+        this._currentStack = null;
         this._webKitConnection.resume().then(() => {
             this.sendResponse(response);
         });
@@ -179,8 +208,8 @@ class WebkitDebugSession extends DebugSession {
         response.body = {
             threads: [
                 {
-                    id: 4711,
-                    name: 'thread 1'
+                    id: 1,
+                    name: 'Thread 1'
                 }
             ]
         };
