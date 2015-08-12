@@ -247,14 +247,17 @@ class WebkitDebugSession extends DebugSession {
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id).then(getPropsResponse => {
                 let variables = getPropsResponse.result.result.map(propDesc => {
-                    let value = typeof propDesc.value === 'undefined' ? propDesc.get : propDesc.value;
-                    if (value.type === 'object') {
+                    let valueDesc = typeof propDesc.value === 'undefined' ? propDesc.get : propDesc.value;
+                    if (valueDesc.type === 'object') {
                         // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
                         return { name: propDesc.name, value: 'Object', variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
+                    } else if (valueDesc.type === 'function') {
+                        // Could parse description to something other than the entire body
+                        return { name: propDesc.name, value: valueDesc.description, variablesReference: 0 };
                     }
 
-                    // For a primitive value, we have the value, no reference needed
-                    return { name: propDesc.name, value: (value.value || value.description), variablesReference: 0 };
+                    let actualValue = typeof valueDesc.value === 'undefined' ? 'undefined' : valueDesc.value;
+                    return { name: propDesc.name, value: actualValue, variablesReference: 0 };
                 });
 
                 response.body = { variables };
