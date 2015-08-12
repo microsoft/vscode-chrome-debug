@@ -120,7 +120,7 @@ class WebkitDebugSession extends DebugSession {
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
         let source = scriptToSource(script);
-        this.sendEvent(this.createStoppedEvent('pause', source, scriptLocation.lineNumber, scriptLocation.columnNumber, /*threadId=*/WebkitDebugSession.THREAD_ID));
+        this.sendEvent(this.createStoppedEvent('pause', source, this.convertDebuggerLineToClient(scriptLocation.lineNumber), scriptLocation.columnNumber, /*threadId=*/WebkitDebugSession.THREAD_ID));
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
@@ -154,6 +154,7 @@ class WebkitDebugSession extends DebugSession {
 
         if (script) {
             let responsePromises = args.lines
+                .map(clientLine => this.convertClientLineToDebugger(clientLine))
                 .map(line => this._webKitConnection.setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
 
             Promise.all(<Iterable<any>><any>responsePromises) // Not sure why array isn't considered iterable here
@@ -161,7 +162,7 @@ class WebkitDebugSession extends DebugSession {
                     let breakpoints = responses.map(response => {
                         return <OpenDebugProtocol.Breakpoint>{
                             verified: true,
-                            line: response.result.actualLocation.lineNumber
+                            line: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
                         };
                     });
 
@@ -236,7 +237,7 @@ class WebkitDebugSession extends DebugSession {
                 id: i,
                 name: callFrame.functionName,
                 source: scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
-                line: callFrame.location.lineNumber,
+                line: this.convertDebuggerLineToClient(callFrame.location.lineNumber),
                 column: callFrame.location.columnNumber,
                 scopes: scopes
             };

@@ -20,6 +20,7 @@ function printHello() {
     xyz++;
     xyz++;
     console.log(str + obj.a);
+    anotherFn();
     fn();
 }
 
