@@ -40,6 +40,10 @@ class WebkitDebugSession extends DebugSession {
         this.clearTargetContext();
     }
 
+    private get paused(): boolean {
+        return !!this._currentStack;
+    }
+
     private clearTargetContext(): void {
         this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
@@ -274,13 +278,23 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected evaluateRequest(response: OpenDebugProtocol.EvaluateResponse, args: OpenDebugProtocol.EvaluateArguments): void {
-        let callFrameId = this._currentStack[args.frameId].callFrameId;
-        this._webKitConnection.evaluateOnCallFrame(callFrameId, args.expression).then(evalResponse => {
+        let evalPromise: Promise<any>;
+        if (this.paused) {
+            let callFrameId = this._currentStack[args.frameId].callFrameId;
+            evalPromise = this._webKitConnection.evaluateOnCallFrame(callFrameId, args.expression)
+        } else {
+            evalPromise = this._webKitConnection.runtime_evaluate(args.expression);
+        }
+
+        evalPromise.then(evalResponse => {
             let resultObj = evalResponse.result.result;
             let result: string;
             let variablesReference = 0;
-            if (resultObj.subtype === 'error') {
-                result = evalResponse.result.exceptionDetails.text;
+            if (evalResponse.result.wasThrown) {
+                response.success = false;
+                response.message = evalResponse.result.exceptionDetails.text;
+                this.sendResponse(response);
+                return;
             } else if (resultObj.type === 'object') {
                 result = 'Object';
                 variablesReference = this._variableHandles.Create(resultObj.objectId);

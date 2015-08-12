@@ -135,5 +135,12 @@ declare module WebKitProtocol {
             type: string;
             value?: any;
         }
+
+        interface EvaluateResponse extends Response {
+            result: {
+                result: Runtime.RemoteObject;
+                wasThrown: boolean;
+            }
+        }
     }
 }

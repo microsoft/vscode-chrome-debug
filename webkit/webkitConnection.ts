@@ -107,12 +107,16 @@ export class WebKitConnection {
         return this.sendMessage('Debugger.pause');
     }
 
-    public evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue = false): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
+    public evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
         return this.sendMessage('Debugger.evaluateOnCallFrame', { callFrameId, expression, objectGroup, returnByValue });
     }
 
     public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
         return this.sendMessage('Runtime.getProperties', { objectId, ownProperties });
+    }
+
+    public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId?: number, returnByValue = false): Promise<WebKitProtocol.Runtime.EvaluateResponse> {
+        return this.sendMessage('Runtime.evaluate', { expression, objectGroup, contextId, returnByValue });
     }
 
     private sendMessage(method: any, params?: any): Promise<WebKitProtocol.Response> {
