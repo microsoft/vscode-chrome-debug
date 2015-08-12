@@ -204,7 +204,7 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected pauseRequest(response: OpenDebugProtocol.PauseResponse): void {
-        this.sendResponse(response);
+        this._webKitConnection.pause().then(() => this.sendResponse(response));
     }
 
     protected sourceRequest(response: OpenDebugProtocol.SourceResponse, args: OpenDebugProtocol.SourceArguments): void {
