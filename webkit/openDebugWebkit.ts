@@ -245,19 +245,24 @@ class WebkitDebugSession extends DebugSession {
     protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
         let id = this._variableHandles.Get(args.variablesReference);
         if (id != null) {
-            this._webKitConnection.runtime_getProperties(id).then(getPropsResponse => {
+            this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
                 let variables = getPropsResponse.result.result.map(propDesc => {
-                    let valueDesc = typeof propDesc.value === 'undefined' ? propDesc.get : propDesc.value;
-                    if (valueDesc.type === 'object') {
+                    if (propDesc.value && propDesc.value.type === 'object') {
                         // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
-                        return { name: propDesc.name, value: 'Object', variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
-                    } else if (valueDesc.type === 'function') {
-                        // Could parse description to something other than the entire body
-                        return { name: propDesc.name, value: valueDesc.description, variablesReference: 0 };
+                        return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
                     }
 
-                    let actualValue = typeof valueDesc.value === 'undefined' ? 'undefined' : valueDesc.value;
-                    return { name: propDesc.name, value: actualValue, variablesReference: 0 };
+                    let value: string;
+                    if (propDesc.value && propDesc.value.type === 'undefined') {
+                        value = 'undefined';
+                    } else if (typeof propDesc.get !== 'undefined') {
+                        value = 'getter';
+                    } else {
+                        // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
+                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
+                    }
+
+                    return { name: propDesc.name, value, variablesReference: 0 };
                 });
 
                 response.body = { variables };
@@ -269,7 +274,26 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected evaluateRequest(response: OpenDebugProtocol.EvaluateResponse, args: OpenDebugProtocol.EvaluateArguments): void {
-        this.sendResponse(response);
+        let callFrameId = this._currentStack[args.frameId].callFrameId;
+        this._webKitConnection.evaluateOnCallFrame(callFrameId, args.expression).then(evalResponse => {
+            let resultObj = evalResponse.result.result;
+            let result: string;
+            let variablesReference = 0;
+            if (resultObj.subtype === 'error') {
+                result = evalResponse.result.exceptionDetails.text;
+            } else if (resultObj.type === 'object') {
+                result = 'Object';
+                variablesReference = this._variableHandles.Create(resultObj.objectId);
+            } else if (resultObj.type === 'undefined') {
+                result = 'undefined';
+            } else {
+                // The result was a primitive value, or something which has a description (not object, primitive, or undefined)
+                result = typeof resultObj.value === 'undefined' ? resultObj.description : resultObj.value;
+            }
+
+            response.body = { result, variablesReference };
+            this.sendResponse(response);
+        });
     }
 }
 

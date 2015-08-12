@@ -71,6 +71,35 @@ declare module WebKitProtocol {
                 actualLocation: Location;
             }
         }
+
+        interface EvaluateOnCallFrameRequest extends Request {
+            params: {
+                callFrameId: string;
+                expression: string;
+                objectGroup: string;
+                returnByValue: boolean;
+            }
+        }
+
+        interface ExceptionStackFrame extends Location {
+            functionName: string;
+            scriptId: string;
+            url: string;
+        }
+
+        interface EvaluateOnCallFrameResponse extends Response {
+            result: {
+                result: Runtime.RemoteObject;
+                wasThrown: boolean;
+                exceptionDetails?: {
+                    text: string;
+                    url: string;
+                    line: number;
+                    column: number;
+                    stackTrace: ExceptionStackFrame[];
+                }
+            }
+        }
     }
 
     module Runtime {

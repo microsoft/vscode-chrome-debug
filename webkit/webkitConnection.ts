@@ -107,6 +107,10 @@ export class WebKitConnection {
         return this.sendMessage('Debugger.pause');
     }
 
+    public evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue = false): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
+        return this.sendMessage('Debugger.evaluateOnCallFrame', { callFrameId, expression, objectGroup, returnByValue });
+    }
+
     public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
         return this.sendMessage('Runtime.getProperties', { objectId, ownProperties });
     }
