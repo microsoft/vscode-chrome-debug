@@ -14,6 +14,11 @@ interface IPendingBreakpoint {
     args: OpenDebugProtocol.SetBreakpointsArguments;
 }
 
+interface ICommittedBreakpoint {
+    breakpointId: string;
+    clientLine: number;
+}
+
 class WebkitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
 
@@ -22,6 +27,7 @@ class WebkitDebugSession extends DebugSession {
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
+    private _committedBreakpointsByScriptId: Map<string, ICommittedBreakpoint[]>;
 
     private _chromeProc: any;
     private _webKitConnection: WebKitConnection;
@@ -47,6 +53,7 @@ class WebkitDebugSession extends DebugSession {
     private clearTargetContext(): void {
         this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
+        this._committedBreakpointsByScriptId = new Map<string, ICommittedBreakpoint[]>();
     }
 
     private clearClientContext(): void {
@@ -146,6 +153,10 @@ class WebkitDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
+    /**
+     * todo - How hard does the adapter need to work to maintain consistency? This API is weird. For example, will the client call setBreakpoints
+     * multiple times before receiving a response?
+     */
     protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
@@ -153,22 +164,55 @@ class WebkitDebugSession extends DebugSession {
             args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
 
         if (script) {
-            let responsePromises = args.lines
+            // ODP client gives the current list of breakpoints. Need to compare with the committed set to determine
+            // individual adds and removes. Client could add and remove bps with a single request.
+            let committedBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
+            let addedBpLines = args.lines.filter(line => !committedBreakpoints.some(bp => bp.clientLine === line));
+            let removedBps = committedBreakpoints.filter(bp => !args.lines.some(line => line === bp.clientLine));
+
+            let addResponsePromises = addedBpLines
                 .map(clientLine => this.convertClientLineToDebugger(clientLine))
                 .map(line => this._webKitConnection.setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
 
-            Promise.all(<Iterable<any>><any>responsePromises) // Not sure why array isn't considered iterable here
-                .then(responses => {
-                    let breakpoints = responses.map(response => {
-                        return <OpenDebugProtocol.Breakpoint>{
-                            verified: true,
-                            line: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
+            let removeResponsePromises = removedBps
+                .map(bp => bp.breakpointId)
+                .map(bpId => this._webKitConnection.removeBreakpoint(bpId));
+
+            Promise.all(addResponsePromises).then(responses => {
+                // Process responses and cache in committedBreakpoints set
+                let addedBreakpoints = responses
+                    .filter(response => !response.error) // Remove failed setBreakpoint responses
+                    .map(response => {
+                        return <ICommittedBreakpoint>{
+                            breakpointId: response.result.breakpointId,
+                            clientLine: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
                         };
                     });
+                let currentBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
+                this._committedBreakpointsByScriptId.set(script.scriptId, currentBreakpoints.concat(addedBreakpoints));
 
-                    response.body = { breakpoints };
-                    this.sendResponse(response);
-                });
+                // Map committed breakpoints to ODP response objects and send response
+                let odpBreakpoints = addedBreakpoints
+                    .map(bp => <OpenDebugProtocol.Breakpoint>{
+                        verified: true,
+                        line: bp.clientLine
+                    });
+
+                response.body = { breakpoints: odpBreakpoints };
+            });
+
+            Promise.all(removeResponsePromises).then(responses => {
+                // Assume all success because we can't signal failure to the client anyway
+                let currentBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
+                currentBreakpoints = currentBreakpoints.filter(bp => !removedBps.some(removedBp => removedBp.breakpointId === bp.breakpointId));
+                this._committedBreakpointsByScriptId.set(script.scriptId, currentBreakpoints);
+            });
+
+            // When all adds and removes are complete, send the response
+            Promise.all(addResponsePromises.concat(removeResponsePromises)).then(responses => {
+                this.sendResponse(response);
+            });
+
         } else {
             this._pendingBreakpointsByUrl.set(sourceUrl, { response, args });
         }

@@ -87,6 +87,10 @@ export class WebKitConnection {
         return this.sendMessage('Debugger.setBreakpoint', { location, condition });
     }
 
+    public removeBreakpoint(breakpointId: string): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.removeBreakpoint', { breakpointId })
+    }
+
     public stepOver(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.stepOver');
     }

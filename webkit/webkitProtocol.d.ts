@@ -72,6 +72,12 @@ declare module WebKitProtocol {
             }
         }
 
+        interface RemoveBreakpointRequest extends Request {
+            params: {
+                breakpointId: string;
+            }
+        }
+
         interface EvaluateOnCallFrameRequest extends Request {
             params: {
                 callFrameId: string;
