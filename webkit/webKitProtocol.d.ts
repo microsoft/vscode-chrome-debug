@@ -155,4 +155,10 @@ declare module WebKitProtocol {
             }
         }
     }
+
+    module Page {
+        interface SetOverlayMessageRequest extends Request {
+            message: string;
+        }
+    }
 }

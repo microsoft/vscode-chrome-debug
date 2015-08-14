@@ -21,6 +21,7 @@ interface ICommittedBreakpoint {
 
 class WebkitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
+    private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code'; // or Code
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
@@ -103,6 +104,7 @@ class WebkitDebugSession extends DebugSession {
         if (!this._webKitConnection) {
             this._webKitConnection = new WebKitConnection();
             this._webKitConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
+            this._webKitConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
             this._webKitConnection.attach(9222)
@@ -129,11 +131,16 @@ class WebkitDebugSession extends DebugSession {
     }
 
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
+        this._webKitConnection.page_setOverlayMessage(WebkitDebugSession.PAGE_PAUSE_MESSAGE);
         this._currentStack = notification.callFrames;
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
         let source = scriptToSource(script);
         this.sendEvent(this.createStoppedEvent('pause', source, this.convertDebuggerLineToClient(scriptLocation.lineNumber), scriptLocation.columnNumber, /*threadId=*/WebkitDebugSession.THREAD_ID));
+    }
+
+    private onDebuggerResumed(): void {
+        // Called when the resume button on the page is pressed, but ODP doesn't have an event to support it.
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
@@ -240,6 +247,7 @@ class WebkitDebugSession extends DebugSession {
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
         this._currentStack = null;
         this._webKitConnection.resume().then(() => {
+            this._webKitConnection.page_clearOverlayMessage();
             this.sendResponse(response);
         });
     }
