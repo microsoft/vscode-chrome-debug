@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugSession} from '../common/DebugSession';
-import {Handles} from '../common/Handles';
+import {DebugSession} from '../common/debugSession';
+import {Handles} from '../common/handles';
 import {Socket, createServer} from 'net';
 import {readFileSync} from 'fs';
 import {spawn, ChildProcess} from 'child_process';
