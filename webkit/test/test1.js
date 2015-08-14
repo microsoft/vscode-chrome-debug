@@ -22,9 +22,16 @@ function printHello() {
     console.log(str + obj.a);
     anotherFn();
     fn();
+
+    try { throwSomething() } catch (e) {}
+    throwSomething();
 }
 
 function anotherFn() {
     var zzzz = 1;
     return 2345;
+}
+
+function throwSomething() {
+    throw new Error('error!');
 }

@@ -30,7 +30,7 @@ class ResReqWebSocket extends EventEmitter {
     }
 
     /**
-     * Send a message which must have an id. Ok to call immediately after attach
+     * Send a message which must have an id. Ok to call immediately after attach. Messages will be queued until the websocket actually attaches.
      */
     public sendMessage(message: { id: number }): Promise<any> {
         return new Promise((resolve, reject) => {
@@ -73,11 +73,15 @@ export class WebKitConnection {
         this._socket.on(eventName, handler);
     }
 
-    public attach(port: number): void {
-        getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
+    /**
+     * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
+     * When the
+     */
+    public attach(port: number): Promise<void> {
+        return getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
             let wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
-            return this._socket.attach(wsUrl);
-        }).then(() => {
+            this._socket.attach(wsUrl);
+
             // init, enable debugger
             this.sendMessage('Debugger.enable');
         });
@@ -113,6 +117,10 @@ export class WebKitConnection {
 
     public evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
         return this.sendMessage('Debugger.evaluateOnCallFrame', { callFrameId, expression, objectGroup, returnByValue });
+    }
+
+    public setPauseOnExceptions(state: string): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.setPauseOnExceptions', { state });
     }
 
     public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {

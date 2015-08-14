@@ -61,7 +61,7 @@ declare module WebKitProtocol {
         interface SetBreakpointRequest extends Request {
             params: {
                 location: Location;
-                condition?: string
+                condition?: string;
             }
         }
 
@@ -104,6 +104,12 @@ declare module WebKitProtocol {
                     column: number;
                     stackTrace: ExceptionStackFrame[];
                 }
+            }
+        }
+
+        interface SetPauseOnExceptionsRequest extends Request {
+            params: {
+                state: string;
             }
         }
     }

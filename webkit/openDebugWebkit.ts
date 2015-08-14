@@ -63,7 +63,6 @@ class WebkitDebugSession extends DebugSession {
     protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
         // give UI a chance to set breakpoints (??)
         this.sendResponse(response);
-        this.sendEvent(this.createInitializedEvent());
     }
 
     protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
@@ -107,7 +106,8 @@ class WebkitDebugSession extends DebugSession {
             this._webKitConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
-            this._webKitConnection.attach(9222);
+            this._webKitConnection.attach(9222)
+                .then(() => this.sendEvent(this.createInitializedEvent()));
         }
     }
 
@@ -219,7 +219,18 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected setExceptionBreakPointsRequest(response: OpenDebugProtocol.SetExceptionBreakpointsResponse, args: OpenDebugProtocol.SetExceptionBreakpointsArguments): void {
-        this.sendResponse(response);
+        let state: string;
+        if (args.filters.indexOf("all") >= 0) {
+            state = "all";
+        } else if (args.filters.indexOf("uncaught") >= 0) {
+            state = "uncaught";
+        } else {
+            state = "none";
+        }
+
+        this._webKitConnection.setPauseOnExceptions(state).then(() => {
+            this.sendResponse(response);
+        });
     }
 
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
