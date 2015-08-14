@@ -22,8 +22,7 @@ interface ICommittedBreakpoint {
 class WebkitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
 
-    private _sourceFile: string;
-    private _currentLine: number;
+    private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
@@ -38,8 +37,6 @@ class WebkitDebugSession extends DebugSession {
 
     public constructor(debuggerLinesStartAt1: boolean) {
         super(debuggerLinesStartAt1);
-        this._sourceFile = null;
-        this._currentLine = 0;
         this._variableHandles = new Handles<string>();
 
         this.clearClientContext();
@@ -54,14 +51,16 @@ class WebkitDebugSession extends DebugSession {
         this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<string, ICommittedBreakpoint[]>();
+        this._webKitConnection = null;
     }
 
     private clearClientContext(): void {
+        this._clientAttached = false;
         this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
     }
 
     protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
-        // give UI a chance to set breakpoints (??)
+        // Nothing really to do here.
         this.sendResponse(response);
     }
 
@@ -96,10 +95,10 @@ class WebkitDebugSession extends DebugSession {
             this.terminateSession();
         });
 
-        this.attach(port, response);
+        this.attachToClient(port, response);
     }
 
-    private attach(port: number, response: OpenDebugProtocol.Response): void {
+    private attachToClient(port: number, response: OpenDebugProtocol.Response): void {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
         if (!this._webKitConnection) {
             this._webKitConnection = new WebKitConnection();
@@ -109,13 +108,20 @@ class WebkitDebugSession extends DebugSession {
             this._webKitConnection.attach(9222)
                 .then(() => this.sendEvent(this.createInitializedEvent()));
         }
+
+        this._clientAttached = true;
     }
 
+    /**
+     * Chrome is closing, or error'd somehow, stop the debug session
+     */
     private terminateSession(): void {
-        this.sendEvent(this.createTerminatedEvent());
+        if (this._clientAttached) {
+            this.sendEvent(this.createTerminatedEvent());
+            this.clearClientContext();
+        }
+
         this.clearTargetContext();
-        this.clearClientContext();
-        this._webKitConnection = null;
     }
 
     private onGlobalObjectCleared(): void {
@@ -149,7 +155,7 @@ class WebkitDebugSession extends DebugSession {
 
     protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
         let port = args.port;
-        this.attach(port, response);
+        this.attachToClient(port, response);
         this.sendResponse(response);
     }
 
