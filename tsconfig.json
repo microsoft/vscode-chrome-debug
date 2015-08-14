@@ -15,8 +15,8 @@
         "typings/node/node.d.ts",
         "typings/ws/ws.d.ts",
         "typings/node.es6.d.ts",
-        "webkit/openDebugWebkit.ts",
-        "webkit/webkitConnection.ts",
-        "webkit/webkitProtocol.d.ts"
+        "webkit/openDebugWebKit.ts",
+        "webkit/webKitConnection.ts",
+        "webkit/webKitProtocol.d.ts"
     ]
 }

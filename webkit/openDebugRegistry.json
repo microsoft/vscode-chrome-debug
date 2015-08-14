@@ -2,14 +2,14 @@
     "adapters": [
         {
             "type": "webkit",
-            "program": "${workspaceRoot}/out/webkit/openDebugWebkit.js",
+            "program": "${workspaceRoot}/out/webkit/openDebugWebKit.js",
             "runtime": "node"
         },
         {
             "type": "mock",
             "program": "${workspaceRoot}/out/mock/openDebugMock.js",
             "runtime": "node"
-        },    
+        },
         {
             "type": "node",
             "program": "vs/workbench/parts/debug/bin/OpenDebug.exe",
