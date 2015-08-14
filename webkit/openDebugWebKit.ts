@@ -51,7 +51,6 @@ class WebkitDebugSession extends DebugSession {
         this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<string, ICommittedBreakpoint[]>();
-        this._webKitConnection = null;
     }
 
     private clearClientContext(): void {
@@ -95,10 +94,11 @@ class WebkitDebugSession extends DebugSession {
             this.terminateSession();
         });
 
-        this.attachToClient(port, response);
+        this.attachToClient(port);
+        this.sendResponse(response);
     }
 
-    private attachToClient(port: number, response: OpenDebugProtocol.Response): void {
+    private attachToClient(port: number): void {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
         if (!this._webKitConnection) {
             this._webKitConnection = new WebKitConnection();
@@ -108,7 +108,6 @@ class WebkitDebugSession extends DebugSession {
             this._webKitConnection.attach(9222)
                 .then(() => this.sendEvent(this.createInitializedEvent()));
         }
-
         this._clientAttached = true;
     }
 
@@ -122,6 +121,7 @@ class WebkitDebugSession extends DebugSession {
         }
 
         this.clearTargetContext();
+        this._webKitConnection = null;
     }
 
     private onGlobalObjectCleared(): void {
@@ -215,7 +215,7 @@ class WebkitDebugSession extends DebugSession {
             });
 
             // When all adds and removes are complete, send the response
-            Promise.all(addResponsePromises.concat(removeResponsePromises)).then(responses => {
+            Promise.all(addResponsePromises.concat(removeResponsePromises)).then(() => {
                 this.sendResponse(response);
             });
 
