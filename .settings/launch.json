@@ -4,7 +4,7 @@
         {
             "name": "opendebug-webkit",
             "type": "node",
-            "program": "./out/webkit/openDebugWebkit.js",
+            "program": "./out/webkit/openDebugWebKit.js",
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": false,

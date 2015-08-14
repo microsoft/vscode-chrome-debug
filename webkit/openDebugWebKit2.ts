@@ -7,7 +7,7 @@ import {Handles} from '../common/Handles';
 import {Socket, createServer} from 'net';
 import {readFileSync} from 'fs';
 import {spawn, ChildProcess} from 'child_process';
-import {WebKitConnection} from './webkitConnection';
+import {WebKitConnection} from './webKitConnection';
 
 interface IPendingBreakpoint {
     response: OpenDebugProtocol.SetBreakpointsResponse;
