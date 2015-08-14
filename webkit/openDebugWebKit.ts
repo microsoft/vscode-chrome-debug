@@ -167,7 +167,7 @@ class WebkitDebugSession extends DebugSession {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
-            args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
+                args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
 
         if (script) {
             // ODP client gives the current list of breakpoints. Need to compare with the committed set to determine
@@ -196,15 +196,6 @@ class WebkitDebugSession extends DebugSession {
                     });
                 let currentBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
                 this._committedBreakpointsByScriptId.set(script.scriptId, currentBreakpoints.concat(addedBreakpoints));
-
-                // Map committed breakpoints to ODP response objects and send response
-                let odpBreakpoints = addedBreakpoints
-                    .map(bp => <OpenDebugProtocol.Breakpoint>{
-                        verified: true,
-                        line: bp.clientLine
-                    });
-
-                response.body = { breakpoints: odpBreakpoints };
             });
 
             Promise.all(removeResponsePromises).then(responses => {
@@ -216,6 +207,13 @@ class WebkitDebugSession extends DebugSession {
 
             // When all adds and removes are complete, send the response
             Promise.all(addResponsePromises.concat(removeResponsePromises)).then(() => {
+                // Map committed breakpoints to ODP response objects and send response
+                let odpBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId)
+                    .map(bp => <OpenDebugProtocol.Breakpoint>{
+                        verified: true,
+                        line: bp.clientLine
+                    });
+                response.body = { breakpoints: odpBreakpoints };
                 this.sendResponse(response);
             });
 
