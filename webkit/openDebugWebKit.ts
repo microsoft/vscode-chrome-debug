@@ -154,8 +154,8 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
-        let port = args.port;
-        this.attachToClient(port, response);
+        response.success = false;
+        response.message = "Attaching to a running instance of Chrome is not supported";
         this.sendResponse(response);
     }
 
