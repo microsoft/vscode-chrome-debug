@@ -27,13 +27,13 @@ class WebkitDebugSession extends DebugSession {
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
-    private _committedBreakpointsByScriptId: Map<string, ICommittedBreakpoint[]>;
+    private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, ICommittedBreakpoint[]>;
 
     private _chromeProc: any;
     private _webKitConnection: WebKitConnection;
 
     // Scripts
-    private _scriptsById: Map<string, WebKitProtocol.Debugger.Script>;
+    private _scriptsById: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>;
     private _scriptsByUrl: Map<string, WebKitProtocol.Debugger.Script>;
 
     public constructor(debuggerLinesStartAt1: boolean) {
@@ -49,9 +49,9 @@ class WebkitDebugSession extends DebugSession {
     }
 
     private clearTargetContext(): void {
-        this._scriptsById = new Map<string, WebKitProtocol.Debugger.Script>();
+        this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
-        this._committedBreakpointsByScriptId = new Map<string, ICommittedBreakpoint[]>();
+        this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, ICommittedBreakpoint[]>();
     }
 
     private clearClientContext(): void {
@@ -174,7 +174,7 @@ class WebkitDebugSession extends DebugSession {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
-                args.source.sourceReference ? this._scriptsById.get('' + args.source.sourceReference) : null;
+                args.source.sourceReference ? this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference)) : null;
 
         if (script) {
             // ODP client gives the current list of breakpoints. Need to compare with the committed set to determine
@@ -275,7 +275,10 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected sourceRequest(response: OpenDebugProtocol.SourceResponse, args: OpenDebugProtocol.SourceArguments): void {
-        this.sendResponse(response);
+        this._webKitConnection.getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(webkitResponse => {
+            response.body = { content: webkitResponse.result.scriptSource };
+            this.sendResponse(response);
+        });
     }
 
     protected threadsRequest(response: OpenDebugProtocol.ThreadsResponse): void {
@@ -296,13 +299,13 @@ class WebkitDebugSession extends DebugSession {
                 return <OpenDebugProtocol.Scope>{
                     name: scope.type,
                     variablesReference: this._variableHandles.Create(scope.object.objectId),
-                    expensive: true
+                    expensive: true // ?
                 };
             });
 
             return {
                 id: i,
-                name: callFrame.functionName,
+                name: callFrame.functionName || '(eval code)', // anything else?
                 source: scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
                 line: this.convertDebuggerLineToClient(callFrame.location.lineNumber),
                 column: callFrame.location.columnNumber,
@@ -391,7 +394,15 @@ function canonicalizeUrl(url: string): string {
 }
 
 function scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
-    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: parseInt(script.scriptId) };
+    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
+}
+
+function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {
+    return parseInt(scriptId);
+}
+
+function sourceReferenceToScriptId(sourceReference: number): WebKitProtocol.Debugger.ScriptId {
+    return '' + sourceReference;
 }
 
 // parse arguments

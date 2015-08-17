@@ -22,6 +22,7 @@ function printHello() {
     console.log(str + obj.a);
     anotherFn();
     fn();
+    eval("throw new Error('fail')");
 
     try { throwSomething() } catch (e) {}
     throwSomething();

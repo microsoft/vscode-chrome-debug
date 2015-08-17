@@ -17,8 +17,10 @@ declare module WebKitProtocol {
     }
 
     module Debugger {
+        type ScriptId = string;
+
         interface Script {
-            scriptId: string;
+            scriptId: ScriptId;
             url: string;
 
             startLine?: number;
@@ -53,7 +55,7 @@ declare module WebKitProtocol {
         }
 
         interface Location {
-            scriptId: string;
+            scriptId: ScriptId;
             lineNumber: number;
             columnNumber?: number;
         }
@@ -89,7 +91,7 @@ declare module WebKitProtocol {
 
         interface ExceptionStackFrame extends Location {
             functionName: string;
-            scriptId: string;
+            scriptId: ScriptId;
             url: string;
         }
 
@@ -110,6 +112,18 @@ declare module WebKitProtocol {
         interface SetPauseOnExceptionsRequest extends Request {
             params: {
                 state: string;
+            }
+        }
+
+        interface GetScriptSourceRequest extends Request {
+            params: {
+                scriptId: ScriptId;
+            }
+        }
+
+        interface GetScriptSourceResponse extends Response {
+            result: {
+                scriptSource: string;
             }
         }
     }

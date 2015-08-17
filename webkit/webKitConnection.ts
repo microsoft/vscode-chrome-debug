@@ -123,6 +123,10 @@ export class WebKitConnection {
         return this.sendMessage('Debugger.setPauseOnExceptions', { state });
     }
 
+    public getScriptSource(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<WebKitProtocol.Debugger.GetScriptSourceResponse> {
+        return this.sendMessage('Debugger.getScriptSource', { scriptId });
+    }
+
     public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
         return this.sendMessage('Runtime.getProperties', { objectId, ownProperties });
     }
