@@ -87,52 +87,52 @@ export class WebKitConnection {
         });
     }
 
-    public setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
-        return this.sendMessage('Debugger.setBreakpoint', { location, condition });
+    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
+        return this.sendMessage('Debugger.setBreakpoint', <WebKitProtocol.Debugger.SetBreakpointParams>{ location, condition });
     }
 
-    public removeBreakpoint(breakpointId: string): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.removeBreakpoint', { breakpointId })
+    public debugger_removeBreakpoint(breakpointId: string): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.removeBreakpoint', <WebKitProtocol.Debugger.RemoveBreakpointParams>{ breakpointId })
     }
 
-    public stepOver(): Promise<WebKitProtocol.Response> {
+    public debugger_stepOver(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.stepOver');
     }
 
-    public stepIn(): Promise<WebKitProtocol.Response> {
+    public debugger_stepIn(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.stepInto');
     }
 
-    public stepOut(): Promise<WebKitProtocol.Response> {
+    public debugger_stepOut(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.stepOut');
     }
 
-    public resume(): Promise<WebKitProtocol.Response> {
+    public debugger_resume(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.resume');
     }
 
-    public pause(): Promise<WebKitProtocol.Response> {
+    public debugger_pause(): Promise<WebKitProtocol.Response> {
         return this.sendMessage('Debugger.pause');
     }
 
-    public evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
-        return this.sendMessage('Debugger.evaluateOnCallFrame', { callFrameId, expression, objectGroup, returnByValue });
+    public debugger_evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
+        return this.sendMessage('Debugger.evaluateOnCallFrame', <WebKitProtocol.Debugger.EvaluateOnCallFrameParams>{ callFrameId, expression, objectGroup, returnByValue });
     }
 
-    public setPauseOnExceptions(state: string): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.setPauseOnExceptions', { state });
+    public debugger_setPauseOnExceptions(state: string): Promise<WebKitProtocol.Response> {
+        return this.sendMessage('Debugger.setPauseOnExceptions', <WebKitProtocol.Debugger.SetPauseOnExceptionsParams>{ state });
     }
 
-    public getScriptSource(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<WebKitProtocol.Debugger.GetScriptSourceResponse> {
-        return this.sendMessage('Debugger.getScriptSource', { scriptId });
+    public debugger_getScriptSource(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<WebKitProtocol.Debugger.GetScriptSourceResponse> {
+        return this.sendMessage('Debugger.getScriptSource', <WebKitProtocol.Debugger.GetScriptSourceParams>{ scriptId });
     }
 
     public runtime_getProperties(objectId: string, ownProperties = false): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
-        return this.sendMessage('Runtime.getProperties', { objectId, ownProperties });
+        return this.sendMessage('Runtime.getProperties', <WebKitProtocol.Runtime.GetPropertiesParams>{ objectId, ownProperties });
     }
 
     public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId?: number, returnByValue = false): Promise<WebKitProtocol.Runtime.EvaluateResponse> {
-        return this.sendMessage('Runtime.evaluate', { expression, objectGroup, contextId, returnByValue });
+        return this.sendMessage('Runtime.evaluate', <WebKitProtocol.Runtime.EvaluateParams>{ expression, objectGroup, contextId, returnByValue });
     }
 
     public page_setOverlayMessage(message: string): Promise<WebKitProtocol.Response> {

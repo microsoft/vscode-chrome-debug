@@ -185,11 +185,11 @@ class WebkitDebugSession extends DebugSession {
 
             let addResponsePromises = addedBpLines
                 .map(clientLine => this.convertClientLineToDebugger(clientLine))
-                .map(line => this._webKitConnection.setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
+                .map(line => this._webKitConnection.debugger_setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
 
             let removeResponsePromises = removedBps
                 .map(bp => bp.breakpointId)
-                .map(bpId => this._webKitConnection.removeBreakpoint(bpId));
+                .map(bpId => this._webKitConnection.debugger_removeBreakpoint(bpId));
 
             Promise.all(addResponsePromises).then(responses => {
                 // Process responses and cache in committedBreakpoints set
@@ -239,43 +239,43 @@ class WebkitDebugSession extends DebugSession {
             state = "none";
         }
 
-        this._webKitConnection.setPauseOnExceptions(state).then(() => {
+        this._webKitConnection.debugger_setPauseOnExceptions(state).then(() => {
             this.sendResponse(response);
         });
     }
 
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
         this._currentStack = null;
-        this._webKitConnection.resume().then(() => {
+        this._webKitConnection.debugger_resume().then(() => {
             this._webKitConnection.page_clearOverlayMessage();
             this.sendResponse(response);
         });
     }
 
     protected nextRequest(response: OpenDebugProtocol.NextResponse): void {
-        this._webKitConnection.stepOver().then(() => {
+        this._webKitConnection.debugger_stepOver().then(() => {
             this.sendResponse(response);
         });
     }
 
     protected stepInRequest(response: OpenDebugProtocol.StepInResponse): void {
-        this._webKitConnection.stepIn().then(() => {
+        this._webKitConnection.debugger_stepIn().then(() => {
             this.sendResponse(response);
         });
     }
 
     protected stepOutRequest(response: OpenDebugProtocol.StepOutResponse): void {
-        this._webKitConnection.stepOut().then(() => {
+        this._webKitConnection.debugger_stepOut().then(() => {
             this.sendResponse(response);
         });
     }
 
     protected pauseRequest(response: OpenDebugProtocol.PauseResponse): void {
-        this._webKitConnection.pause().then(() => this.sendResponse(response));
+        this._webKitConnection.debugger_pause().then(() => this.sendResponse(response));
     }
 
     protected sourceRequest(response: OpenDebugProtocol.SourceResponse, args: OpenDebugProtocol.SourceArguments): void {
-        this._webKitConnection.getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(webkitResponse => {
+        this._webKitConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(webkitResponse => {
             response.body = { content: webkitResponse.result.scriptSource };
             this.sendResponse(response);
         });
@@ -352,7 +352,7 @@ class WebkitDebugSession extends DebugSession {
         let evalPromise: Promise<any>;
         if (this.paused) {
             let callFrameId = this._currentStack[args.frameId].callFrameId;
-            evalPromise = this._webKitConnection.evaluateOnCallFrame(callFrameId, args.expression)
+            evalPromise = this._webKitConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression)
         } else {
             evalPromise = this._webKitConnection.runtime_evaluate(args.expression);
         }

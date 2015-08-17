@@ -60,11 +60,9 @@ declare module WebKitProtocol {
             columnNumber?: number;
         }
 
-        interface SetBreakpointRequest extends Request {
-            params: {
-                location: Location;
-                condition?: string;
-            }
+        interface SetBreakpointParams {
+            location: Location;
+            condition?: string;
         }
 
         interface SetBreakpointResponse extends Response {
@@ -74,19 +72,15 @@ declare module WebKitProtocol {
             }
         }
 
-        interface RemoveBreakpointRequest extends Request {
-            params: {
-                breakpointId: string;
-            }
+        interface RemoveBreakpointParams {
+            breakpointId: string;
         }
 
-        interface EvaluateOnCallFrameRequest extends Request {
-            params: {
-                callFrameId: string;
-                expression: string;
-                objectGroup: string;
-                returnByValue: boolean;
-            }
+        interface EvaluateOnCallFrameParams {
+            callFrameId: string;
+            expression: string;
+            objectGroup: string;
+            returnByValue: boolean;
         }
 
         interface ExceptionStackFrame extends Location {
@@ -109,16 +103,12 @@ declare module WebKitProtocol {
             }
         }
 
-        interface SetPauseOnExceptionsRequest extends Request {
-            params: {
-                state: string;
-            }
+        interface SetPauseOnExceptionsParams {
+            state: string;
         }
 
-        interface GetScriptSourceRequest extends Request {
-            params: {
-                scriptId: ScriptId;
-            }
+        interface GetScriptSourceParams {
+            scriptId: ScriptId;
         }
 
         interface GetScriptSourceResponse extends Response {
@@ -129,11 +119,9 @@ declare module WebKitProtocol {
     }
 
     module Runtime {
-        interface GetPropertiesRequest extends Request {
-            params: {
-                objectId: string;
-                ownProperties: boolean;
-            }
+        interface GetPropertiesParams {
+            objectId: string;
+            ownProperties: boolean;
         }
 
         interface GetPropertiesResponse extends Response {
@@ -160,6 +148,13 @@ declare module WebKitProtocol {
             subtype?: string;
             type: string;
             value?: any;
+        }
+
+        interface EvaluateParams {
+            expression: string;
+            objectGroup: string;
+            contextId: number;
+            returnByValue: boolean;
         }
 
         interface EvaluateResponse extends Response {
