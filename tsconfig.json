@@ -6,19 +6,5 @@
         "target": "ES5",
         "sourceMap": true,
         "outDir": "out"
-    },
-    "files": [
-        "common/debugSession.ts",
-        "common/handles.ts",
-        "common/openDebugProtocol.d.ts",
-        "common/v8Protocol.ts",
-        "typings/node/node.d.ts",
-        "typings/ws/ws.d.ts",
-        "typings/es6-collections/es6-collections.d.ts",
-        "typings/es6-promise/es6-promise.d.ts",
-        "webkit/openDebugWebKit.ts",
-        "webkit/webKitDebugSession.ts",
-        "webkit/webKitConnection.ts",
-        "webkit/webKitProtocol.d.ts"
-    ]
+    }
 }

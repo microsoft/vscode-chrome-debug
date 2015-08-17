@@ -3,10 +3,9 @@
  *--------------------------------------------------------*/
 
 import {createServer} from 'net';
-import {WebKitDebugSession} from './webKitDebugSession';
 
 // parse arguments
-let port = 0;
+/*let port = 0;
 let args = process.argv.slice(2);
 args.forEach(function(val, index, array) {
     let portMatch = /^--server=(\d{2,5})$/.exec(val);
@@ -29,4 +28,4 @@ if (port > 0) {
 } else {
     console.error('waiting for v8 protocol on stdin/stdout');
     session.startDispatch(process.stdin, process.stdout);
-}
+}*/

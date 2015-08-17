@@ -18,6 +18,15 @@
             "stopOnEntry": false,
             "sourceMaps": false,
             "outDir": "out"
+        },
+        {
+            "name": "opendebug-node",
+            "type": "node",
+            "program": "./out/node/openDebugNode.js",
+            "stopOnEntry": false,
+            "args": [ "--server=4712" ],
+            "sourceMaps": false,
+            "outDir": "out"
         }
     ]
 }

@@ -10,10 +10,12 @@ var typescript = require('typescript');
 var sourcemaps = require('gulp-sourcemaps');
 
 var sources = [
-    'common/**/*.ts',
-    'webkit/**/*.ts',
-    'typings/**/*.ts'
-];
+    'common',
+    'node',
+    'webkit',
+    'typings',
+    'mux'
+].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
 var projectConfig = {
     noImplicitAny: false,

@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugSession} from '../common/debugSession';
+import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 
@@ -64,6 +64,21 @@ export class WebKitDebugSession extends DebugSession {
         this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
     }
 
+    protected dispatchRequest(request: OpenDebugProtocol.Request): void {
+        console.log(`From client: ${request.command}(${JSON.stringify(request.arguments)})`);
+        super.dispatchRequest(request);
+    }
+
+    public sendEvent(event: OpenDebugProtocol.Event): void {
+        console.log(`To client: ${JSON.stringify(event)}`);
+		super.sendEvent(event);
+	}
+
+	public sendResponse(response: OpenDebugProtocol.Response): void {
+        console.log(`To client: ${JSON.stringify(response)}`);
+        super.sendResponse(response);
+    }
+
     protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
         // Nothing really to do here.
         this.sendResponse(response);
@@ -123,7 +138,7 @@ export class WebKitDebugSession extends DebugSession {
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
             this._webKitConnection.attach(port)
-                .then(() => this.sendEvent(this.createInitializedEvent()));
+                .then(() => this.sendEvent(new InitializedEvent()));
         }
         this._clientAttached = true;
     }
@@ -133,7 +148,7 @@ export class WebKitDebugSession extends DebugSession {
      */
     private terminateSession(): void {
         if (this._clientAttached) {
-            this.sendEvent(this.createTerminatedEvent());
+            this.sendEvent(new TerminatedEvent());
             this.clearClientContext();
         }
 
@@ -151,7 +166,8 @@ export class WebKitDebugSession extends DebugSession {
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
         let source = this.scriptToSource(script);
-        this.sendEvent(this.createStoppedEvent('pause', source, this.convertDebuggerLineToClient(scriptLocation.lineNumber), scriptLocation.columnNumber, /*threadId=*/WebKitDebugSession.THREAD_ID));
+        let exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
+        this.sendEvent(new StoppedEvent('pause', /*threadId=*/WebKitDebugSession.THREAD_ID, exceptionText));
     }
 
     private onDebuggerResumed(): void {
@@ -354,7 +370,7 @@ export class WebKitDebugSession extends DebugSession {
                         value = 'getter';
                     } else {
                         // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
-                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : (propDesc.value.value || 'falsy');
+                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
                     }
 
                     return { name: propDesc.name, value, variablesReference: 0 };
@@ -449,6 +465,10 @@ function canonicalizeUrl(url: string): string {
         .replace('file:///', '')
         .replace(/\\/g, '/')
         .toLowerCase();
+}
+
+function scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
+    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {

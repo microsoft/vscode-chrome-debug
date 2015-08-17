@@ -7,28 +7,28 @@ export class Handles<T> {
 	private START_HANDLE = 1000;
 
 	private _nextHandle : number;
-	private _handleMap : any;
+	private _handleMap : { [index: number]: T };
 
 	public constructor() {
 		this._nextHandle = this.START_HANDLE;
-		this._handleMap = {};
+		this._handleMap = [];
 	}
 
 	public Reset(): void {
 		this._nextHandle = this.START_HANDLE;
-		this._handleMap = {};
+		this._handleMap = [];
 	}
 
 	public Create(value: T): number {
 		var handle = this._nextHandle++;
-		this._handleMap[handle.toString()] = value;
+		this._handleMap[handle] = value;
 		return handle;
 	}
 
-	public Get(handle: number, dflt: T = null): T {
-		var key = handle.toString();
-		if (this._handleMap.hasOwnProperty(key)) {
-			return this._handleMap[key];
+	public Get(handle: number, dflt?: T): T {
+		var v= this._handleMap[handle];
+		if (v) {
+			return v;
 		}
 		return dflt;
 	}
