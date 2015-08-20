@@ -1,5 +1,6 @@
 {
     "version": "0.1.0",
+    "openDebugRegistry": "webkit/openDebugRegistry.json",
     "configurations": [
         {
             "name": "opendebug-webkit",
@@ -7,6 +8,14 @@
             "program": "./out/webkit/openDebugWebKit.js",
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
+            "sourceMaps": false,
+            "outDir": "out"
+        },
+        {
+            "name": "test",
+            "type": "webkit",
+            "program": "./webkit/test/index.html",
+            "stopOnEntry": false,
             "sourceMaps": false,
             "outDir": "out"
         }
