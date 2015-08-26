@@ -1,11 +1,11 @@
 {
     "version": "0.1.0",
-     "openDebug": "server=4712",
+    "openDebug": "server=4712",
     "configurations": [
         {
             "name": "webkit test",
             "type": "webkit",
-            "program": "index.html"
+            "program": "http://localhost:8080"
         }
     ]
 }
