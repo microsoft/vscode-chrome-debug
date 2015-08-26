@@ -1,14 +1,14 @@
 {
     "version": "0.1.0",
-    "openDebugRegistry": "webkit/openDebugRegistry.json",
     "configurations": [
         {
             "name": "opendebug-webkit",
             "type": "node",
             "program": "./out/webkit/openDebugWebKit.js",
+			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
-            "sourceMaps": false,
+            "sourceMaps": true,
             "outDir": "out"
         },
         {
