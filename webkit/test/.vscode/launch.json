@@ -1,7 +1,6 @@
 {
     "version": "0.1.0",
-    "openDebugRegistry": "d:/opendebug-webkit/webkit/openDebugRegistry.json",
-    "openDebug": "server=4712",
+     "openDebug": "server=4712",
     "configurations": [
         {
             "name": "webkit test",
