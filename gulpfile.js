@@ -27,7 +27,7 @@ gulp.task('build', function () {
     gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig))
-        .pipe(sourcemaps.write())
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/opendebug-webkit' }))
         .pipe(gulp.dest('out'));
 });
 
