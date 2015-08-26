@@ -5,7 +5,7 @@
         {
             "name": "webkit test",
             "type": "webkit",
-            "program": "http://localhost:8080"
+            "program": "index.html"
         }
     ]
 }
