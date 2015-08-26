@@ -4,10 +4,12 @@
 
 import {DebugSession} from '../common/debugSession';
 import {Handles} from '../common/handles';
+import {WebKitConnection} from './webKitConnection';
+
 import {Socket, createServer} from 'net';
 import {readFileSync} from 'fs';
 import {spawn, ChildProcess} from 'child_process';
-import {WebKitConnection} from './webKitConnection';
+import os = require('os');
 
 interface IPendingBreakpoint {
     response: OpenDebugProtocol.SetBreakpointsResponse;
@@ -21,7 +23,7 @@ interface ICommittedBreakpoint {
 
 class WebkitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
-    private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code'; // or Code
+    private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
@@ -65,24 +67,31 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
-        let chromeExe = args.runtimeExecutable || 'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe'; // todo
-        let port = 9222;
+        let chromeExe = args.runtimeExecutable;
 
-        let chromeArgs: string[] = [];
-        chromeArgs.push('--remote-debugging-port=9222');
-
-        if (args.runtimeArguments) {
-            for (let a of args.runtimeArguments) {
-                chromeArgs.push(a);
+        if (!chromeExe) {
+            let platform = os.platform();
+            if (platform === 'darwin') {
+                chromeExe = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+            } else if (platform === 'win32') {
+                chromeExe = os.arch() === 'x64' ?
+                    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' :
+                    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+            } else {
+                chromeExe = '/usr/bin/google-chrome';
             }
+        }
+
+        let port = 9222;
+        let chromeArgs: string[] = ['--remote-debugging-port=' + port];
+        if (args.runtimeArguments) {
+            chromeArgs.push(...chromeArgs);
         }
 
         chromeArgs.push(args.program);
 
         if (args.arguments) {
-            for (let a of args.arguments) {
-                chromeArgs.push(a);
-            }
+            chromeArgs.push(...args.arguments);
         }
 
         this._chromeProc = spawn(chromeExe, chromeArgs);
@@ -107,7 +116,7 @@ class WebkitDebugSession extends DebugSession {
             this._webKitConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
-            this._webKitConnection.attach(9222)
+            this._webKitConnection.attach(port)
                 .then(() => this.sendEvent(this.createInitializedEvent()));
         }
         this._clientAttached = true;
