@@ -27,7 +27,7 @@ declare module WebKitProtocol {
             startColumn?: number;
             endLine?: number;
             endColumn?: number;
-            isContentScript?: boolean;
+            isInternalScript?: boolean;
             sourceMapURL?: string;
         }
 

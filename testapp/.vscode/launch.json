@@ -5,7 +5,7 @@
         {
             "name": "webkit test",
             "type": "webkit",
-            "program": "index.html"
+            "runtimeArgs": ["http://localhost:8080/app/index.html"]
         }
     ]
 }

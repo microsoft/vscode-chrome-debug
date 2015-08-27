@@ -7,9 +7,11 @@ import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 
 import {Socket, createServer} from 'net';
-import {readFileSync} from 'fs';
 import {spawn, ChildProcess} from 'child_process';
 import os = require('os');
+import nodeUrl = require('url');
+import path = require('path');
+import fs = require('fs');
 
 interface IPendingBreakpoint {
     response: OpenDebugProtocol.SetBreakpointsResponse;
@@ -25,6 +27,7 @@ class WebkitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 
+    private _clientCWD: string;
     private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
@@ -67,6 +70,7 @@ class WebkitDebugSession extends DebugSession {
     }
 
     protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
+        this._clientCWD = args.workingDirectory;
         let chromeExe = args.runtimeExecutable;
 
         if (!chromeExe) {
@@ -85,10 +89,12 @@ class WebkitDebugSession extends DebugSession {
         let port = 9222;
         let chromeArgs: string[] = ['--remote-debugging-port=' + port];
         if (args.runtimeArguments) {
-            chromeArgs.push(...chromeArgs);
+            chromeArgs.push(...args.runtimeArguments);
         }
 
-        chromeArgs.push(args.program);
+        if (args.program) {
+            chromeArgs.push(args.program);
+        }
 
         if (args.arguments) {
             chromeArgs.push(...args.arguments);
@@ -144,7 +150,7 @@ class WebkitDebugSession extends DebugSession {
         this._currentStack = notification.callFrames;
         let scriptLocation = notification.callFrames[0].location;
         let script = this._scriptsById.get(scriptLocation.scriptId);
-        let source = scriptToSource(script);
+        let source = this.scriptToSource(script);
         this.sendEvent(this.createStoppedEvent('pause', source, this.convertDebuggerLineToClient(scriptLocation.lineNumber), scriptLocation.columnNumber, /*threadId=*/WebkitDebugSession.THREAD_ID));
     }
 
@@ -153,13 +159,13 @@ class WebkitDebugSession extends DebugSession {
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
-        var scriptUrl = canonicalizeUrl(script.url);
-        this._scriptsByUrl.set(scriptUrl, script);
+        let clientUrl = this.webkitUrlToClientUrl(script.url);
+        this._scriptsByUrl.set(clientUrl, script);
         this._scriptsById.set(script.scriptId, script);
 
-        if (this._pendingBreakpointsByUrl.has(scriptUrl)) {
-            var pendingBreakpoint = this._pendingBreakpointsByUrl.get(scriptUrl);
-            this._pendingBreakpointsByUrl.delete(scriptUrl);
+        if (this._pendingBreakpointsByUrl.has(clientUrl)) {
+            let pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
+            this._pendingBreakpointsByUrl.delete(clientUrl);
             this.setBreakPointsRequest(pendingBreakpoint.response, pendingBreakpoint.args);
         }
     }
@@ -175,10 +181,6 @@ class WebkitDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    /**
-     * todo - How hard does the adapter need to work to maintain consistency? This API is weird. For example, will the client call setBreakpoints
-     * multiple times before receiving a response?
-     */
     protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
@@ -315,7 +317,7 @@ class WebkitDebugSession extends DebugSession {
             return {
                 id: i,
                 name: callFrame.functionName || '(eval code)', // anything else?
-                source: scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
+                source: this.scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
                 line: this.convertDebuggerLineToClient(callFrame.location.lineNumber),
                 column: callFrame.location.columnNumber,
                 scopes: scopes
@@ -330,10 +332,19 @@ class WebkitDebugSession extends DebugSession {
         let id = this._variableHandles.Get(args.variablesReference);
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
+                if (getPropsResponse.error) {
+                    this.sendErrorResponse(response, getPropsResponse.error);
+                    return;
+                }
+
                 let variables = getPropsResponse.result.result.map(propDesc => {
                     if (propDesc.value && propDesc.value.type === 'object') {
-                        // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
-                        return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
+                        if (propDesc.value.subtype === 'null') {
+                            return { name: propDesc.name, value: 'null', variablesReference: 0 };
+                        } else {
+                            // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
+                            return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
+                        }
                     }
 
                     let value: string;
@@ -343,7 +354,7 @@ class WebkitDebugSession extends DebugSession {
                         value = 'getter';
                     } else {
                         // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
-                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
+                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : (propDesc.value.value || 'falsy');
                     }
 
                     return { name: propDesc.name, value, variablesReference: 0 };
@@ -389,21 +400,55 @@ class WebkitDebugSession extends DebugSession {
             this.sendResponse(response);
         });
     }
+
+    private scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
+        return <OpenDebugProtocol.Source>{
+            name: script.url,
+            path: this.webkitUrlToClientUrl(script.url),
+            sourceReference: scriptIdToSourceReference(script.scriptId)
+        };
+    }
+
+    /**
+     * http://localhost/app/scripts/code.js => d:/scripts/code.js
+     * file:///d:/scripts/code.js => d:/scripts/code.js
+     */
+    private webkitUrlToClientUrl(url: string): string {
+        if (url.substr(0, 8) === "file:///") {
+            return canonicalizeUrl(url);
+        }
+
+        // Search the filesystem under our cwd for the file that best matches the given url
+        let pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+        if (!pathName) {
+            return '';
+        }
+
+        let pathParts = pathName.split('/');
+        while (pathParts.length > 0) {
+            let clientUrl = path.join(this._clientCWD, pathParts.join('/'));
+            if (fs.existsSync(clientUrl)) {
+                return canonicalizeUrl(clientUrl); // path.join will change / to \
+            }
+
+            pathParts.shift();
+        }
+
+        return '';
+    }
 }
 
 /**
  * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
  * The ODP client can handle urls in this format too.
+ * file:///d:\\scripts\\code.js => d:/scripts/code.js
+ * http://localhost/app/scripts/code.js => /app/scripts/code.js
  */
 function canonicalizeUrl(url: string): string {
     return url
         .replace('file:///', '')
         .replace(/\\/g, '/')
         .toLowerCase();
-}
-
-function scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
-    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {

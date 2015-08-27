@@ -6,6 +6,7 @@ function printHello() {
     var buffView   = new Int32Array(buffer);
     buffView[0] = 234;
 
+    var n = null;
     var s = Symbol('hi');
     var bool = true;
     var fn = function() {
