@@ -172,6 +172,7 @@ export class WebKitDebugSession extends DebugSession {
 
     private onDebuggerResumed(): void {
         // Called when the resume button on the page is pressed, but ODP doesn't have an event to support it.
+        this._webKitConnection.page_clearOverlayMessage();
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
@@ -274,7 +275,6 @@ export class WebKitDebugSession extends DebugSession {
     protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
         this._currentStack = null;
         this._webKitConnection.debugger_resume().then(() => {
-            this._webKitConnection.page_clearOverlayMessage();
             this.sendResponse(response);
         });
     }
