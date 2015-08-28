@@ -18,6 +18,7 @@ declare module WebKitProtocol {
 
     module Debugger {
         type ScriptId = string;
+        type BreakpointId = string;
 
         interface Script {
             scriptId: ScriptId;
@@ -67,13 +68,13 @@ declare module WebKitProtocol {
 
         interface SetBreakpointResponse extends Response {
             result: {
-                breakpointId: string;
+                breakpointId: BreakpointId;
                 actualLocation: Location;
             }
         }
 
         interface RemoveBreakpointParams {
-            breakpointId: string;
+            breakpointId: BreakpointId;
         }
 
         interface EvaluateOnCallFrameParams {

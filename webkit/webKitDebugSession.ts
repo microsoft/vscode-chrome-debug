@@ -18,11 +18,6 @@ interface IPendingBreakpoint {
     args: OpenDebugProtocol.SetBreakpointsArguments;
 }
 
-interface ICommittedBreakpoint {
-    breakpointId: string;
-    clientLine: number;
-}
-
 export class WebKitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -32,7 +27,7 @@ export class WebKitDebugSession extends DebugSession {
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
-    private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, ICommittedBreakpoint[]>;
+    private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -55,7 +50,7 @@ export class WebKitDebugSession extends DebugSession {
     private clearTargetContext(): void {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
-        this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, ICommittedBreakpoint[]>();
+        this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
     }
 
     private clearClientContext(): void {
@@ -155,7 +150,7 @@ export class WebKitDebugSession extends DebugSession {
                         return Promise.reject(e);
                     });
         } else {
-            return Promise.resolve();
+            return Promise.resolve<void>();
         }
     }
 
@@ -244,55 +239,37 @@ export class WebKitDebugSession extends DebugSession {
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
                 args.source.sourceReference ? this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference)) : null;
 
+        let debuggerLines = args.lines
+            .map(clientLine => this.convertClientLineToDebugger(clientLine));
+
         if (script) {
-            // ODP client gives the current list of breakpoints. Need to compare with the committed set to determine
-            // individual adds and removes. Client could add and remove bps with a single request.
-            let committedBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
-            let addedBpLines = args.lines.filter(line => !committedBreakpoints.some(bp => bp.clientLine === line));
-            let removedBps = committedBreakpoints.filter(bp => !args.lines.some(line => line === bp.clientLine));
+            // ODP sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
+            this.clearAllBreakpoints(script.scriptId).then(() => {
+                // Call setBreakpoint for all breakpoints in the script simultaneously, join to a single promise
+                return Promise.all(debuggerLines
+                    .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: script.scriptId, lineNumber })));
+            }).then(responses => {
+                // Ignore errors
+                let successfulResponses = responses
+                    .filter(response => !response.error);
 
-            let addResponsePromises = addedBpLines
-                .map(clientLine => this.convertClientLineToDebugger(clientLine))
-                .map(line => this._webKitConnection.debugger_setBreakpoint({ lineNumber: line, scriptId: script.scriptId }));
-
-            let removeResponsePromises = removedBps
-                .map(bp => bp.breakpointId)
-                .map(bpId => this._webKitConnection.debugger_removeBreakpoint(bpId));
-
-            Promise.all(addResponsePromises).then(responses => {
                 // Process responses and cache in committedBreakpoints set
-                let addedBreakpoints = responses
-                    .filter(response => !response.error) // Remove failed setBreakpoint responses
-                    .map(response => {
-                        return <ICommittedBreakpoint>{
-                            breakpointId: response.result.breakpointId,
-                            clientLine: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
-                        };
-                    });
-                let currentBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
-                this._committedBreakpointsByScriptId.set(script.scriptId, currentBreakpoints.concat(addedBreakpoints));
-            });
+                let addedBreakpointIds = successfulResponses
+                    .map(response => response.result.breakpointId);
+                this._committedBreakpointsByScriptId.set(script.scriptId, addedBreakpointIds);
 
-            Promise.all(removeResponsePromises).then(responses => {
-                // Assume all success because we can't signal failure to the client anyway
-                let currentBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId) || [];
-                currentBreakpoints = currentBreakpoints.filter(bp => !removedBps.some(removedBp => removedBp.breakpointId === bp.breakpointId));
-                this._committedBreakpointsByScriptId.set(script.scriptId, currentBreakpoints);
-            });
-
-            // When all adds and removes are complete, send the response
-            Promise.all(addResponsePromises.concat(removeResponsePromises)).then(() => {
                 // Map committed breakpoints to ODP response objects and send response
-                let odpBreakpoints = this._committedBreakpointsByScriptId.get(script.scriptId)
-                    .map(bp => <OpenDebugProtocol.Breakpoint>{
+                let odpBreakpoints = successfulResponses
+                    .map(response => <OpenDebugProtocol.Breakpoint>{
                         verified: true,
-                        line: bp.clientLine
+                        line: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
                     });
                 response.body = { breakpoints: odpBreakpoints };
                 this.sendResponse(response);
             });
-
         } else {
+            // We could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
+            // This seems easier
             this._pendingBreakpointsByUrl.set(sourceUrl, { response, args });
         }
     }
@@ -455,6 +432,11 @@ export class WebKitDebugSession extends DebugSession {
             response.body = { result, variablesReference };
             this.sendResponse(response);
         });
+    }
+
+    private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
+        let committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
+        return <Promise<void>><any>Promise.all(committedBps.map(bpId => this._webKitConnection.debugger_removeBreakpoint(bpId)));
     }
 
     private scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
