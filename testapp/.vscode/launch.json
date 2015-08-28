@@ -6,6 +6,7 @@
             "name": "test webkit",
             "type": "webkit",
             "runtimeArgs": ["http://localhost:8080/app/index.html"],
+            "cwd": "./client",
             "stopOnEntry": false,
             "sourceMaps": false
         },
