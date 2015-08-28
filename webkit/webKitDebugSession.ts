@@ -125,11 +125,11 @@ export class WebKitDebugSession extends DebugSession {
             this.terminateSession();
         });
 
-        this.attachToClient(port);
+        this.attach(port);
         this.sendResponse(response);
     }
 
-    private attachToClient(port: number): void {
+    private attach(port: number): void {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
         if (!this._webKitConnection) {
             this._webKitConnection = new WebKitConnection();
@@ -193,8 +193,14 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
-        response.success = false;
-        response.message = "Attaching to a running instance of Chrome is not supported";
+        if (args.address !== 'localhost') {
+            response.success = false;
+            response.message = 'Remote debugging is not supported';
+            this.sendResponse(response);
+            return;
+        }
+
+        this.attach(args.port);
         this.sendResponse(response);
     }
 
@@ -430,8 +436,14 @@ export class WebKitDebugSession extends DebugSession {
      * file:///d:/scripts/code.js => d:/scripts/code.js
      */
     private webkitUrlToClientUrl(url: string): string {
+        // If a file:/// url is loaded in the client, just send the absolute path of the file
         if (url.substr(0, 8) === "file:///") {
             return canonicalizeUrl(url);
+        }
+
+        // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
+        if (!this._clientCWD) {
+            return '';
         }
 
         // Search the filesystem under our cwd for the file that best matches the given url

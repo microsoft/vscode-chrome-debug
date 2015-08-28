@@ -5,9 +5,14 @@
         {
             "name": "test webkit",
             "type": "webkit",
-            "program": "client/index.html",
+            "runtimeArgs": ["http://localhost:8080/app/index.html"],
             "stopOnEntry": false,
             "sourceMaps": false
+        },
+        {
+            "name": "attach to webkit",
+            "type": "webkit",
+            "port": 9221
         },
         {
             "name": "server",

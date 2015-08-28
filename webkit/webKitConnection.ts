@@ -75,7 +75,6 @@ export class WebKitConnection {
 
     /**
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
-     * When the
      */
     public attach(port: number): Promise<void> {
         return getUrl(`http://localhost:${port}/json`).then(jsonResponse => {

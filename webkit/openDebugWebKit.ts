@@ -30,3 +30,5 @@ if (port > 0) {
     console.error('waiting for v8 protocol on stdin/stdout');
     session.startDispatch(process.stdin, process.stdout);
 }
+
+setInterval(() => console.log('-'), 1000);
