@@ -1,0 +1,20 @@
+{
+    "version": "0.1.0",
+    "openDebug": "server=4712",
+    "configurations": [
+        {
+            "name": "test webkit",
+            "type": "webkit",
+            "program": "client/index.html",
+            "stopOnEntry": false,
+            "sourceMaps": false
+        },
+        {
+            "name": "server",
+            "type": "node",
+            "program": "server/app.js",
+            "stopOnEntry": false,
+            "sourceMaps": false
+        }
+    ]
+}

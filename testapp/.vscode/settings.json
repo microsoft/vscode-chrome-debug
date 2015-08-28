@@ -1,0 +1,15 @@
+{
+    "editor.insertSpaces": true,
+    "files.trimTrailingWhitespace": true,
+    "files.exclude": {
+        ".git": true,
+        "bin": true,
+        "node_modules": true
+    },
+    "search.exclude": {
+        ".git": true,
+        "node_modules": true,
+        "bin": true,
+        "out": true
+    }
+}
