@@ -137,6 +137,8 @@ export class WebKitDebugSession extends DebugSession {
             this._webKitConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
+            this._webKitConnection.on('Inspector.detached', () => this.terminateSession());
+            this._webKitConnection.on('close', () => this.terminateSession());
             this._webKitConnection.attach(port)
                 .then(() => this.sendEvent(new InitializedEvent()));
         }
@@ -188,6 +190,7 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
+        // Leave Chrome running?
         this.clearClientContext();
         this.sendResponse(response);
     }

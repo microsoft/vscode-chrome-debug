@@ -26,6 +26,7 @@ class ResReqWebSocket extends EventEmitter {
                 console.log('From target: ' + msgStr);
                 this.onMessage(JSON.parse(msgStr));
             });
+            ws.on('close', () => this.emit('close'));
         });
     }
 
