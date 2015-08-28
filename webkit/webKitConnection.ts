@@ -30,6 +30,12 @@ class ResReqWebSocket extends EventEmitter {
         });
     }
 
+    public close(): void {
+        if (this._wsAttached) {
+            this._wsAttached.then(ws => ws.close());
+        }
+    }
+
     /**
      * Send a message which must have an id. Ok to call immediately after attach. Messages will be queued until the websocket actually attaches.
      */
@@ -85,6 +91,10 @@ export class WebKitConnection {
             // init, enable debugger
             this.sendMessage('Debugger.enable');
         });
+    }
+
+    public close(): void {
+        this._socket.close();
     }
 
     public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {

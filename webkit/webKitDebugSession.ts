@@ -155,6 +155,7 @@ export class WebKitDebugSession extends DebugSession {
         }
 
         this.clearTargetContext();
+        this._webKitConnection.close();
         this._webKitConnection = null;
     }
 
