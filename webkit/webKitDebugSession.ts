@@ -34,7 +34,7 @@ export class WebKitDebugSession extends DebugSession {
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, ICommittedBreakpoint[]>;
 
-    private _chromeProc: any;
+    private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
 
     // Scripts
@@ -45,8 +45,7 @@ export class WebKitDebugSession extends DebugSession {
         super(debuggerLinesStartAt1);
         this._variableHandles = new Handles<string>();
 
-        this.clearClientContext();
-        this.clearTargetContext();
+        this.clearEverything();
     }
 
     private get paused(): boolean {
@@ -167,15 +166,23 @@ export class WebKitDebugSession extends DebugSession {
         if (this._clientAttached) {
             this.sendEvent(new TerminatedEvent());
         }
+
+        this.clearEverything();
     }
 
     private clearEverything(): void {
         this.clearClientContext();
         this.clearTargetContext();
-        this._webKitConnection.close();
-        this._webKitConnection = null;
+
+        if (this._webKitConnection) {
+            this._webKitConnection.close();
+            this._webKitConnection = null;
+        }
     }
 
+    /**
+     * e.g. the target navigated
+     */
     private onGlobalObjectCleared(): void {
         this.clearTargetContext();
     }
@@ -208,9 +215,10 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
-        // Leave Chrome running?
-        this.clearClientContext();
+        this._chromeProc.kill();
+        this.clearEverything();
         this.sendResponse(response);
+
     }
 
     protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
