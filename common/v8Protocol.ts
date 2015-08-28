@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as EE from 'events';
+
 export class Message implements OpenDebugProtocol.V8Message {
 	seq: number;
 	type: string;
@@ -42,7 +44,7 @@ export class Event extends Message implements OpenDebugProtocol.Event {
 	}
 }
 
-export class V8Protocol {
+export class V8Protocol extends EE.EventEmitter {
 	
 	private static TIMEOUT = 3000;
 
@@ -53,20 +55,11 @@ export class V8Protocol {
 	private _sequence: number;
 	private _writableStream: NodeJS.WritableStream;
 	private _pendingRequests: ((response: OpenDebugProtocol.Response) => void)[];
-	private _callback: (event: OpenDebugProtocol.Event) => void;
 	private _unresponsiveMode: boolean;
 	
 	public embeddedHostVersion: number = -1;
 	
-	
-	public constructor(cb?: (event: OpenDebugProtocol.Event) => void) {
-		if (cb) {
-			this._callback = cb;
-		} else {
-			this._callback = () => {};
-		}
-	}
-	
+		
 	public startDispatch(inStream: NodeJS.ReadableStream, outStream: NodeJS.WritableStream): void {
 		this._sequence = 1;
 		this._writableStream = outStream;
@@ -74,20 +67,29 @@ export class V8Protocol {
 		this._pendingRequests = new Array();
 		
 		inStream.setEncoding('utf8');
-		inStream.resume();
+
 		inStream.on('data', (data) => this.execute(data));
 		inStream.on('close', () => {
-			this._callback(new Event('close'));
+			this.emitEvent(new Event('close'));
 		});
 		inStream.on('error', (error) => {
-			this._callback(new Event('error'));			
+			this.emitEvent(new Event('error'));			
 		});
+		
 		outStream.on('error', (error) => {
-			this._callback(new Event('error'));		
+			this.emitEvent(new Event('error'));		
 		});
+		
+		inStream.resume();
+	}
+	
+	public stop(): void {
+		if (this._writableStream) {
+			this._writableStream.end();
+		}
 	}
 
-	public command(command: string, args: any, cb: (response: OpenDebugProtocol.Response) => void): void {
+	public command(command: string, args?: any, cb?: (response: OpenDebugProtocol.Response) => void): void {
 				
 		var timeout = V8Protocol.TIMEOUT;
 		
@@ -99,26 +101,29 @@ export class V8Protocol {
 		}
 		
 		if (this._unresponsiveMode) {
-			cb(new Response(request, 'canceled because node is unresponsive'));
+			if (cb) {
+				cb(new Response(request, 'cancelled because node is unresponsive'));
+			}
 			return;
 		}
 		
 		this.send('request', request);
-		
+					
 		if (cb) {
 			this._pendingRequests[request.seq] = cb;
+			
+			var timer = setTimeout(() => {
+				clearTimeout(timer);
+				var clb = this._pendingRequests[request.seq];
+				if (clb) {
+					delete this._pendingRequests[request.seq];
+					clb(new Response(request, 'timeout after ' + timeout + 'ms'));
+				
+					this._unresponsiveMode = true;
+					this.emitEvent(new Event('diagnostic', { reason: 'unresponsive ' + command }));
+				}
+			}, timeout);
 		}
-		
-		var timer = setTimeout(() => {
-			clearTimeout(timer);
-			var clb = this._pendingRequests[request.seq];
-			if (clb) {
-				this._unresponsiveMode = true;
-				delete this._pendingRequests[request.seq];
-				clb(new Response(request, 'timeout after ' + timeout + 'ms'));
-				this._callback(new Event('diagnostic', { reason: 'unresponsive' }));
-			}
-		}, timeout);
 	}
 	
 	public command2(command: string, args: any, timeout: number = V8Protocol.TIMEOUT): Promise<OpenDebugProtocol.Response> {
@@ -138,7 +143,11 @@ export class V8Protocol {
 	}
 	
 	public sendResponse(response: OpenDebugProtocol.Response): void {
-		this.send('response', response);
+		if (response.seq > 0) {
+			console.error('attempt to send more than one response for command {0}', response.command);
+		} else {
+			this.send('response', response);
+		}
 	}
 
 	// ---- protected ----------------------------------------------------------
@@ -148,12 +157,18 @@ export class V8Protocol {
 
 	// ---- private ------------------------------------------------------------
 	
+	private emitEvent(event: OpenDebugProtocol.Event) {
+		this.emit(event.event, event);
+	}
+		
 	private send(typ: string, message: OpenDebugProtocol.V8Message): void {
 		message.type = typ;
 		message.seq = this._sequence++;
 		var json = JSON.stringify(message);
 		var data = 'Content-Length: ' + Buffer.byteLength(json, 'utf8') + '\r\n\r\n' + json;
-		this._writableStream.write(data);
+		if (this._writableStream) {
+			this._writableStream.write(data);
+		}
 	}
 
 	private _newRes(raw: string): void {
@@ -168,12 +183,13 @@ export class V8Protocol {
 	private internalDispatch(message: OpenDebugProtocol.V8Message): void {
 		switch (message.type) {
 		case 'event':
-			this._callback(<OpenDebugProtocol.Event> message);
+			var e = <OpenDebugProtocol.Event> message;
+			this.emitEvent(e);
 			break;
 		case 'response':
 			if (this._unresponsiveMode) {
 				this._unresponsiveMode = false;
-				this._callback(new Event('diagnostic', { reason: 'responsive' }));
+				this.emitEvent(new Event('diagnostic', { reason: 'responsive' }));
 			}
 			var response = <OpenDebugProtocol.Response> message;
 			var clb = this._pendingRequests[response.request_seq];

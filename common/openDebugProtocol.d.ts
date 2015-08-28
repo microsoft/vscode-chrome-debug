@@ -354,7 +354,7 @@ declare module OpenDebugProtocol {
 	export interface EvaluateArguments {
 		/** The expression to evaluate */
 		expression: string;
-		/** Evaluate the expression in the context of this stack frame. If not specified, the top most frame is used. */
+		/** Evaluate the expression in the context of this stack frame. If not specified, the expression is evaluated in the global context. */
 		frameId?: number;
 	}
 	/** Response to "evaluate" request. */
@@ -376,7 +376,7 @@ declare module OpenDebugProtocol {
 		/** A format string for the message. Embedded variables have the form '{name}'.
 		    If variable name starts with an underscore character, the variable does not contain user data (PII) and can be safely used for telemetry purposes. */
 		format: string;
-		/** An object used as a dictonary for looking up the variables in the format string. */
+		/** An object used as a dictionary for looking up the variables in the format string. */
 		variables?: { [key: string]: string };
 	}
 
