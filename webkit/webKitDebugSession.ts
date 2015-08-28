@@ -65,17 +65,17 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected dispatchRequest(request: OpenDebugProtocol.Request): void {
-        console.log(`From client: ${request.command}(${JSON.stringify(request.arguments)})`);
+        console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
         super.dispatchRequest(request);
     }
 
     public sendEvent(event: OpenDebugProtocol.Event): void {
-        console.log(`To client: ${JSON.stringify(event)}`);
-		super.sendEvent(event);
-	}
+        console.log(`To client: ${JSON.stringify(event) }`);
+        super.sendEvent(event);
+    }
 
-	public sendResponse(response: OpenDebugProtocol.Response): void {
-        console.log(`To client: ${JSON.stringify(response)}`);
+    public sendResponse(response: OpenDebugProtocol.Response): void {
+        console.log(`To client: ${JSON.stringify(response) }`);
         super.sendResponse(response);
     }
 
@@ -125,24 +125,39 @@ export class WebKitDebugSession extends DebugSession {
             this.terminateSession();
         });
 
-        this.attach(port);
-        this.sendResponse(response);
+        this.attach(port).then(
+            () => this.sendResponse(response),
+            e => {
+                response.message = e;
+                response.success = false;
+                this.sendResponse(response);
+            });
     }
 
-    private attach(port: number): void {
+    private attach(port: number): Promise<void> {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
+        this._clientAttached = true;
         if (!this._webKitConnection) {
             this._webKitConnection = new WebKitConnection();
             this._webKitConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
             this._webKitConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
+
             this._webKitConnection.on('Inspector.detached', () => this.terminateSession());
             this._webKitConnection.on('close', () => this.terminateSession());
-            this._webKitConnection.attach(port)
-                .then(() => this.sendEvent(new InitializedEvent()));
+            this._webKitConnection.on('error', () => this.terminateSession());
+
+            return this._webKitConnection.attach(port)
+                .then(
+                    () => this.sendEvent(new InitializedEvent()),
+                    e => {
+                        this.clearEverything();
+                        return Promise.reject(e);
+                    });
+        } else {
+            return Promise.resolve();
         }
-        this._clientAttached = true;
     }
 
     /**
@@ -151,9 +166,11 @@ export class WebKitDebugSession extends DebugSession {
     private terminateSession(): void {
         if (this._clientAttached) {
             this.sendEvent(new TerminatedEvent());
-            this.clearClientContext();
         }
+    }
 
+    private clearEverything(): void {
+        this.clearClientContext();
         this.clearTargetContext();
         this._webKitConnection.close();
         this._webKitConnection = null;
@@ -204,8 +221,13 @@ export class WebKitDebugSession extends DebugSession {
             return;
         }
 
-        this.attach(args.port);
-        this.sendResponse(response);
+        this.attach(args.port).then(
+            () => this.sendResponse(response),
+            e => {
+                response.message = e;
+                response.success = false;
+                this.sendResponse(response);
+            });
     }
 
     protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {

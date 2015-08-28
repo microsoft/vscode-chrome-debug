@@ -17,17 +17,37 @@ class ResReqWebSocket extends EventEmitter {
     /**
      * Attach to the given websocket url
      */
-    public attach(wsUrl: string): void {
+    public attach(wsUrl: string): Promise<void> {
         this._wsAttached = new Promise((resolve, reject) => {
-            let ws = new WebSocket(wsUrl);
+            let ws: WebSocket;
+            try {
+                ws = new WebSocket(wsUrl);
+            } catch (e) {
+                // invalid url e.g.
+                reject(e.message);
+                return;
+            }
 
-            ws.on('open', () => resolve(ws));
+            // WebSocket will try to connect for 20+ seconds before timing out.
+            // Implement a shorter timeout here
+            setTimeout(() => reject('WebSocket connection timed out'), 5000);
+
+            // if 'error' is fired while connecting, reject the promise
+            ws.on('error', reject);
+            ws.on('open', () => {
+                // Replace the promise-rejecting handler
+                ws.removeListener('error', reject);
+                ws.on('error', e => this.emit('error', e));
+                resolve(ws);
+            });
             ws.on('message', msgStr => {
                 console.log('From target: ' + msgStr);
                 this.onMessage(JSON.parse(msgStr));
             });
             ws.on('close', () => this.emit('close'));
         });
+
+        return <Promise<void>><any>this._wsAttached;
     }
 
     public close(): void {
@@ -86,11 +106,8 @@ export class WebKitConnection {
     public attach(port: number): Promise<void> {
         return getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
             let wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
-            this._socket.attach(wsUrl);
-
-            // init, enable debugger
-            this.sendMessage('Debugger.enable');
-        });
+            return this._socket.attach(wsUrl);
+        }).then(() => <Promise<void>><any>this.sendMessage('Debugger.enable'));
     }
 
     public close(): void {
@@ -162,6 +179,19 @@ export class WebKitConnection {
     }
 }
 
+function getUrlWithRetry(url: string, retryCount = 5): Promise<string> {
+    return getUrl(url).catch(
+        e => {
+            if (retryCount > 0) {
+                // Wait 200ms, then recurse
+                return setTimeoutP(200)
+                    .then(() => getUrlWithRetry(url, retryCount - 1));
+            } else {
+                return Promise.reject(e);
+            }
+        });
+}
+
 /**
  * Helper function to GET the contents of a url
  */
@@ -174,7 +204,13 @@ function getUrl(url: string): Promise<string> {
                 resolve(jsonResponse);
             });
         }).on('error', e => {
-            reject(e);
+            reject('Cannot connect to the target');
         });
+    });
+}
+
+function setTimeoutP(timeout: number): Promise<any> {
+    return new Promise(resolve => {
+        setTimeout(resolve, timeout);
     });
 }
