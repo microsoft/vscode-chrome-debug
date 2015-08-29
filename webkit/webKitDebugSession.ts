@@ -36,6 +36,8 @@ export class WebKitDebugSession extends DebugSession {
     private _scriptsById: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>;
     private _scriptsByUrl: Map<string, WebKitProtocol.Debugger.Script>;
 
+    private _setBreakpointsRequestQ: Promise<void>;
+
     public constructor(debuggerLinesStartAt1: boolean) {
         super(debuggerLinesStartAt1);
         this._variableHandles = new Handles<string>();
@@ -51,6 +53,7 @@ export class WebKitDebugSession extends DebugSession {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
+        this._setBreakpointsRequestQ = Promise.resolve<void>();
     }
 
     private clearClientContext(): void {
@@ -235,6 +238,13 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
+        // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome
+        this._setBreakpointsRequestQ = this._setBreakpointsRequestQ.then(() => {
+            return this._setBreakpoints(response, args);
+        });
+    }
+
+    private _setBreakpoints(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): Promise<void> {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
@@ -245,7 +255,7 @@ export class WebKitDebugSession extends DebugSession {
 
         if (script) {
             // ODP sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-            this.clearAllBreakpoints(script.scriptId).then(() => {
+            return this.clearAllBreakpoints(script.scriptId).then(() => {
                 // Call setBreakpoint for all breakpoints in the script simultaneously, join to a single promise
                 return Promise.all(debuggerLines
                     .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: script.scriptId, lineNumber })));
@@ -272,6 +282,7 @@ export class WebKitDebugSession extends DebugSession {
             // We could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
             // This seems easier
             this._pendingBreakpointsByUrl.set(sourceUrl, { response, args });
+            return Promise.resolve<void>();
         }
     }
 
