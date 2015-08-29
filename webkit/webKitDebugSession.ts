@@ -436,7 +436,14 @@ export class WebKitDebugSession extends DebugSession {
 
     private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
         let committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
-        return <Promise<void>><any>Promise.all(committedBps.map(bpId => this._webKitConnection.debugger_removeBreakpoint(bpId)));
+
+        // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
+        // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
+        // state where later adds on the same line will fail with "breakpoint already exists" even though it
+        // does not break there.
+        return committedBps.reduce<Promise<void>>((p, bpId) => {
+            return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
+        }, Promise.resolve<void>());
     }
 
     private scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
