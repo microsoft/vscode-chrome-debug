@@ -14,13 +14,6 @@
             "name": "attach to webkit",
             "type": "webkit",
             "port": 9221
-        },
-        {
-            "name": "server",
-            "type": "node",
-            "program": "server/app.js",
-            "stopOnEntry": false,
-            "sourceMaps": false
         }
     ]
 }
