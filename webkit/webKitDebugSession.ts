@@ -353,7 +353,7 @@ export class WebKitDebugSession extends DebugSession {
             let scopes = callFrame.scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
                 return <OpenDebugProtocol.Scope>{
                     name: scope.type,
-                    variablesReference: this._variableHandles.Create(scope.object.objectId),
+                    variablesReference: this._variableHandles.create(scope.object.objectId),
                     expensive: true // ?
                 };
             });
@@ -373,36 +373,32 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
-        let id = this._variableHandles.Get(args.variablesReference);
+        let id = this._variableHandles.get(args.variablesReference);
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
-                if (getPropsResponse.error) {
-                    this.sendErrorResponse(response, getPropsResponse.error);
-                    return;
-                }
-
-                let variables = getPropsResponse.result.result.map(propDesc => {
-                    if (propDesc.value && propDesc.value.type === 'object') {
-                        if (propDesc.value.subtype === 'null') {
-                            return { name: propDesc.name, value: 'null', variablesReference: 0 };
-                        } else {
-                            // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
-                            return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.Create(propDesc.value.objectId) };
+                let variables = getPropsResponse.error ? [] :
+                    getPropsResponse.result.result.map(propDesc => {
+                        if (propDesc.value && propDesc.value.type === 'object') {
+                            if (propDesc.value.subtype === 'null') {
+                                return { name: propDesc.name, value: 'null', variablesReference: 0 };
+                            } else {
+                                // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
+                                return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.create(propDesc.value.objectId) };
+                            }
                         }
-                    }
 
-                    let value: string;
-                    if (propDesc.value && propDesc.value.type === 'undefined') {
-                        value = 'undefined';
-                    } else if (typeof propDesc.get !== 'undefined') {
-                        value = 'getter';
-                    } else {
-                        // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
-                        value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
-                    }
+                        let value: string;
+                        if (propDesc.value && propDesc.value.type === 'undefined') {
+                            value = 'undefined';
+                        } else if (typeof propDesc.get !== 'undefined') {
+                            value = 'getter';
+                        } else {
+                            // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
+                            value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
+                        }
 
-                    return { name: propDesc.name, value, variablesReference: 0 };
-                });
+                        return { name: propDesc.name, value, variablesReference: 0 };
+                    });
 
                 response.body = { variables };
                 this.sendResponse(response);
@@ -432,7 +428,7 @@ export class WebKitDebugSession extends DebugSession {
                 return;
             } else if (resultObj.type === 'object') {
                 result = 'Object';
-                variablesReference = this._variableHandles.Create(resultObj.objectId);
+                variablesReference = this._variableHandles.create(resultObj.objectId);
             } else if (resultObj.type === 'undefined') {
                 result = 'undefined';
             } else {

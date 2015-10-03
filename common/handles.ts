@@ -3,33 +3,28 @@
  *--------------------------------------------------------*/
 
 export class Handles<T> {
-	
+
 	private START_HANDLE = 1000;
 
 	private _nextHandle : number;
-	private _handleMap : { [index: number]: T };
+	private _handleMap = new Map<number, T>();
 
 	public constructor() {
 		this._nextHandle = this.START_HANDLE;
-		this._handleMap = [];
 	}
 
-	public Reset(): void {
+	public reset(): void {
 		this._nextHandle = this.START_HANDLE;
-		this._handleMap = [];
+		this._handleMap = new Map<number, T>();
 	}
 
-	public Create(value: T): number {
+	public create(value: T): number {
 		var handle = this._nextHandle++;
 		this._handleMap[handle] = value;
 		return handle;
 	}
 
-	public Get(handle: number, dflt?: T): T {
-		var v= this._handleMap[handle];
-		if (v) {
-			return v;
-		}
-		return dflt;
+	public get(handle: number, dflt?: T): T {
+		return this._handleMap[handle] || dflt;
 	}
 }

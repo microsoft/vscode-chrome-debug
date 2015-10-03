@@ -3,13 +3,14 @@
  *--------------------------------------------------------*/
 
 import {V8Protocol, Response, Event} from './v8Protocol';
-import * as Utils from './utilities';
+import * as Net from 'net';
+
 
 export class Source implements OpenDebugProtocol.Source {
 	name: string;
 	path: string;
 	sourceReference: number;
-	
+
 	public constructor(name: string, path: string, id: number = 0) {
 		this.name = name;
 		this.path = path;
@@ -21,7 +22,7 @@ export class Scope implements OpenDebugProtocol.Scope {
 	name: string;
 	variablesReference: number;
 	expensive: boolean;
-	
+
 	public constructor(name: string, reference: number, expensive: boolean = false) {
 		this.name = name;
 		this.variablesReference = reference;
@@ -35,15 +36,13 @@ export class StackFrame implements OpenDebugProtocol.StackFrame {
 	line: number;
 	column: number;
 	name: string;
-	scopes: Scope[];
 
-	public constructor(i: number, nm: string, src: Source, ln: number, col: number, scps: Scope[]) {
+	public constructor(i: number, nm: string, src: Source, ln: number, col: number) {
 		this.id = i;
 		this.source = src;
 		this.line = ln;
 		this.column = col;
 		this.name = nm;
-		this.scopes = scps;
 	}
 }
 
@@ -53,10 +52,10 @@ export class Thread implements OpenDebugProtocol.Thread {
 
 	public constructor(id: number, name: string) {
 		this.id = id;
-		if (name == null || name.length == 0) {
-			this.name = "Thread #" + id;
-		} else {
+		if (name) {
 			this.name = name;
+		} else {
+			this.name = "Thread #" + id;
 		}
 	}
 }
@@ -76,7 +75,7 @@ export class Variable implements OpenDebugProtocol.Variable {
 export class Breakpoint implements OpenDebugProtocol.Breakpoint {
 	verified: boolean;
 	line: number;
-	
+
 	public constructor(verified: boolean, line: number) {
 		this.verified = verified;
 		this.line = line;
@@ -88,15 +87,15 @@ export class StoppedEvent extends Event implements OpenDebugProtocol.StoppedEven
 		reason: string;
 		threadId: number;
 	};
-	
+
 	public constructor(reason: string, threadId: number, exception_text: string = null) {
 		super('stopped');
 		this.body = {
 			reason: reason,
 			threadId: threadId
 		};
-		
-		if (exception_text != null) {
+
+		if (exception_text) {
 			(<any>this).body.text = exception_text;
 		}
 	}
@@ -114,114 +113,181 @@ export class TerminatedEvent extends Event implements OpenDebugProtocol.Terminat
 	}
 }
 
+export enum ErrorDestination {
+	User = 1,
+	Telemetry = 2
+};
 
 export class DebugSession extends V8Protocol {
-	
+
 	private _debuggerLinesStartAt1: boolean;
-	
+
 	private _clientLinesStartAt1: boolean;
 	private _clientPathFormat: string;
-	
-	
-	public constructor(debuggerLinesStartAt1: boolean) {
+	private _isServer: boolean;
+
+	public constructor(debuggerLinesStartAt1: boolean, isServer: boolean = false) {
 		super();
 		this._debuggerLinesStartAt1 = debuggerLinesStartAt1;
+		this._isServer = isServer;
+
+		this.on('close', () => {
+			this.shutdown();
+		});
+		this.on('error', (error) => {
+			this.shutdown();
+		});
 	}
-	
-	protected sendErrorResponse(response: OpenDebugProtocol.Response, format: string, ...params: any[]): void {
-		response.success = false;
-		var args = [ Utils.format("{0}: {1}", response.command, format) ].concat(params);
-		response.message = Utils.format.apply(null, args);
-		this.sendResponse(response);
+
+	/**
+	 * A virtual constructor...
+	 */
+	public static run(debugSession: typeof DebugSession) {
+
+		// parse arguments
+		let port = 0;
+		const args = process.argv.slice(2);
+		args.forEach(function (val, index, array) {
+			const portMatch = /^--server=(\d{4,5})$/.exec(val);
+			if (portMatch) {
+				port = parseInt(portMatch[1], 10);
+			}
+		});
+
+		if (port > 0) {
+			// start as a server
+			console.error(`waiting for v8 protocol on port ${port}`);
+			Net.createServer((socket) => {
+				console.error('>> accepted connection from client');
+				socket.on('end', () => {
+					console.error('>> client connection closed\n');
+				});
+				new debugSession(false, true).startDispatch(socket, socket);
+			}).listen(port);
+		} else {
+
+			// start a session
+			console.error("waiting for v8 protocol on stdin/stdout");
+			let session = new debugSession(false);
+			process.on('SIGTERM', () => {
+				session.shutdown();
+			});
+			session.startDispatch(process.stdin, process.stdout);
+		}
 	}
-	
-	protected sendFErrorResponse(response: OpenDebugProtocol.Response, code: number, format: string, args?: any): void {
-		
-		var message = Utils.formatPII(format, true, args);
-		
+
+	public shutdown(): void {
+		if (this._isServer) {
+			console.error('process.exit ignored in server mode');
+		} else {
+			// wait a bit before shutting down
+			setTimeout(() => {
+				process.exit(0);
+			}, 100);
+		}
+	}
+
+	protected sendErrorResponse(response: OpenDebugProtocol.Response, code: number, format: string, args?: any, dest: ErrorDestination = ErrorDestination.User): void {
+
+		const message = formatPII(format, true, args);
+
 		response.success = false;
-		response.message = response.command + ": " + message;
+		response.message = `${response.command}: ${message}`;
 		if (!response.body) {
 			response.body = {};
 		}
-		response.body.error = <OpenDebugProtocol.Message> {
+		const msg = <OpenDebugProtocol.Message> {
 			id: code,
-			format: format,
-			variables: args
+			format: format
 		};
+		if (args) {
+			msg.variables = args;
+		}
+		if (dest & ErrorDestination.User) {
+			msg.showUser = true;
+		}
+		if (dest & ErrorDestination.Telemetry) {
+			msg.sendTelemetry = true;
+		}
+		response.body.error = msg;
+
 		this.sendResponse(response);
 	}
 
 	protected dispatchRequest(request: OpenDebugProtocol.Request): void {
-		
-		var response = new Response(request);
-		
-		try {	
-			if (request.command == 'initialize') {
+
+		const response = new Response(request);
+
+		try {
+			if (request.command === 'initialize') {
 				var args = <OpenDebugProtocol.InitializeRequestArguments> request.arguments;
 				this._clientLinesStartAt1 = args.linesStartAt1;
 				this._clientPathFormat = args.pathFormat;
 				this.initializeRequest(<OpenDebugProtocol.InitializeResponse> response, args);
-				
-			} else if (request.command == 'launch') {
+
+			} else if (request.command === 'launch') {
 				this.launchRequest(<OpenDebugProtocol.LaunchResponse> response, <OpenDebugProtocol.LaunchRequestArguments> request.arguments);
-				
-			} else if (request.command == 'attach') {
+
+			} else if (request.command === 'attach') {
 				this.attachRequest(<OpenDebugProtocol.AttachResponse> response, <OpenDebugProtocol.AttachRequestArguments> request.arguments);
-				
-			} else if (request.command == 'disconnect') {
-				this.disconnectRequest(<OpenDebugProtocol.DisconnectResponse> response);
-				
-			} else if (request.command == 'setBreakpoints') {
+
+			} else if (request.command === 'disconnect') {
+				this.disconnectRequest(<OpenDebugProtocol.DisconnectResponse> response, <OpenDebugProtocol.DisconnectArguments> request.arguments);
+
+			} else if (request.command === 'setBreakpoints') {
 				this.setBreakPointsRequest(<OpenDebugProtocol.SetBreakpointsResponse> response, <OpenDebugProtocol.SetBreakpointsArguments> request.arguments);
-				
-			} else if (request.command == 'setExceptionBreakpoints') {
+
+			} else if (request.command === 'setExceptionBreakpoints') {
 				this.setExceptionBreakPointsRequest(<OpenDebugProtocol.SetExceptionBreakpointsResponse> response, <OpenDebugProtocol.SetExceptionBreakpointsArguments> request.arguments);
-				
-			} else if (request.command == 'continue') {
+
+			} else if (request.command === 'continue') {
 				this.continueRequest(<OpenDebugProtocol.ContinueResponse> response);
-				
-			} else if (request.command == 'next') {
+
+			} else if (request.command === 'next') {
 				this.nextRequest(<OpenDebugProtocol.NextResponse> response);
-	
-			} else if (request.command == 'stepIn') {
+
+			} else if (request.command === 'stepIn') {
 				this.stepInRequest(<OpenDebugProtocol.StepInResponse> response);
-	
-			} else if (request.command == 'stepOut') {
+
+			} else if (request.command === 'stepOut') {
 				this.stepOutRequest(<OpenDebugProtocol.StepOutResponse> response);
-	
-			} else if (request.command == 'pause') {
+
+			} else if (request.command === 'pause') {
 				this.pauseRequest(<OpenDebugProtocol.PauseResponse> response);
-	
-			} else if (request.command == 'stackTrace') {
+
+			} else if (request.command === 'stackTrace') {
 				this.stackTraceRequest(<OpenDebugProtocol.StackTraceResponse> response, <OpenDebugProtocol.StackTraceArguments> request.arguments);
-				
-			} else if (request.command == 'variables') {
+
+			} else if (request.command === 'scopes') {
+				this.scopesRequest(<OpenDebugProtocol.ScopesResponse> response, <OpenDebugProtocol.ScopesArguments> request.arguments);
+
+			} else if (request.command === 'variables') {
 				this.variablesRequest(<OpenDebugProtocol.VariablesResponse> response, <OpenDebugProtocol.VariablesArguments> request.arguments);
-	
-			} else if (request.command == 'source') {
+
+			} else if (request.command === 'source') {
 				this.sourceRequest(<OpenDebugProtocol.SourceResponse> response, <OpenDebugProtocol.SourceArguments> request.arguments);
-	
-			} else if (request.command == 'threads') {
+
+			} else if (request.command === 'threads') {
 				this.threadsRequest(<OpenDebugProtocol.ThreadsResponse> response);
-				
-			} else if (request.command == 'evaluate') {
+
+			} else if (request.command === 'evaluate') {
 				this.evaluateRequest(<OpenDebugProtocol.EvaluateResponse> response, <OpenDebugProtocol.EvaluateArguments> request.arguments);
-	
+
 			} else {
-				this.sendErrorResponse(response, "unhandled request");
+				this.sendErrorResponse(response, 1014, "unrecognized request", null, ErrorDestination.Telemetry);
 			}
 		} catch (e) {
-			this.sendErrorResponse(response, "exception: {0}", e);
+			this.sendErrorResponse(response, 1104, "exception while processing request (exception: {_exception})", { _exception: e.message }, ErrorDestination.Telemetry);
 		}
 	}
-	
+
 	protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
 		this.sendResponse(response);
 	}
 
-	protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
+	protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse, args: OpenDebugProtocol.DisconnectArguments): void {
 		this.sendResponse(response);
+		this.shutdown();
 	}
 
 	protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
@@ -239,11 +305,11 @@ export class DebugSession extends V8Protocol {
 	protected setExceptionBreakPointsRequest(response: OpenDebugProtocol.SetExceptionBreakpointsResponse, args: OpenDebugProtocol.SetExceptionBreakpointsArguments): void {
 		this.sendResponse(response);
 	}
-		
+
 	protected continueRequest(response: OpenDebugProtocol.ContinueResponse) : void {
 		this.sendResponse(response);
 	}
-	
+
 	protected nextRequest(response: OpenDebugProtocol.NextResponse) : void {
 		this.sendResponse(response);
 	}
@@ -251,7 +317,7 @@ export class DebugSession extends V8Protocol {
 	protected stepInRequest(response: OpenDebugProtocol.StepInResponse) : void {
 		this.sendResponse(response);
 	}
-	
+
 	protected stepOutRequest(response: OpenDebugProtocol.StepOutResponse) : void {
 		this.sendResponse(response);
 	}
@@ -259,29 +325,33 @@ export class DebugSession extends V8Protocol {
 	protected pauseRequest(response: OpenDebugProtocol.PauseResponse) : void {
 		this.sendResponse(response);
 	}
-	
+
 	protected sourceRequest(response: OpenDebugProtocol.SourceResponse, args: OpenDebugProtocol.SourceArguments) : void {
 		this.sendResponse(response);
 	}
-	
+
 	protected threadsRequest(response: OpenDebugProtocol.ThreadsResponse): void {
 		this.sendResponse(response);
 	}
-		
+
 	protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
+		this.sendResponse(response);
+	}
+
+	protected scopesRequest(response: OpenDebugProtocol.ScopesResponse, args: OpenDebugProtocol.ScopesArguments): void {
 		this.sendResponse(response);
 	}
 
 	protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
 		this.sendResponse(response);
 	}
-	
+
 	protected evaluateRequest(response: OpenDebugProtocol.EvaluateResponse, args: OpenDebugProtocol.EvaluateArguments): void {
 		this.sendResponse(response);
 	}
-		
+
 	//-----------------------------------------------------------------------------------------------------
-		
+
 	protected convertClientLineToDebugger(line): number {
 		if (this._debuggerLinesStartAt1) {
 			return this._clientLinesStartAt1 ? line : line + 1;
@@ -295,12 +365,12 @@ export class DebugSession extends V8Protocol {
 		}
 		return this._clientLinesStartAt1 ? line + 1 : line;
 	}
-	
+
 	protected convertDebuggerColumnToClient(column): number {
 		// TODO@AW
 		return column;
 	}
-	
+
 	protected convertClientPathToDebugger(path: string): string {
 		// TODO@AW
 		return path;
@@ -310,4 +380,20 @@ export class DebugSession extends V8Protocol {
 		// TODO@AW
 		return path;
 	}
+}
+
+const _formatPIIRegexp = /{([^}]+)}/g;
+
+/*
+ * If argument starts with '_' it is OK to send its value to telemetry.
+ */
+function formatPII(format:string, excludePII: boolean, args: {[key: string]: string}): string {
+	return format.replace(_formatPIIRegexp, function(match, paramName) {
+		if (excludePII && paramName.length > 0 && paramName[0] !== '_') {
+			return match;
+		}
+		return args[paramName] && args.hasOwnProperty(paramName) ?
+			args[paramName] :
+			match;
+	})
 }

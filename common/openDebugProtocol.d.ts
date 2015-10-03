@@ -175,6 +175,10 @@ declare module OpenDebugProtocol {
 		TODO@AW currently this kills the debuggee too. A better semantics is to stop debugging but let the debugee continue to run.
 	*/
 	export interface DisconnectRequest extends Request {
+		arguments?: DisconnectArguments;
+	}
+	/** Arguments for "disconnect" request. */
+	export interface DisconnectArguments {
 	}
 	/** Response to "disconnect" request. This is just an acknowledgement, so no body field is required. */
 	export interface DisconnectResponse extends Response {
@@ -292,6 +296,25 @@ declare module OpenDebugProtocol {
 		};
     }
 
+	/** Scopes request; value of command field is "scopes".
+		The request returns the variable scopes for a given stackframe ID.
+	*/
+	export interface ScopesRequest extends Request {
+		arguments: ScopesArguments;
+	}
+	/** Arguments for "scopes" request. */
+	export interface ScopesArguments {
+		/** Retrieve the scopes for this stackframe. */
+		frameId: number;
+	}
+	/** Response to "scopes" request. */
+	export interface ScopesResponse extends Response {
+		body: {
+			/** The scopes of the stackframe. If the array has length zero, there are no scopes available. */
+			scopes: Scope[];
+		};
+    }
+
 	/** Variables request; value of command field is "variables".
 		Retrieves all children for the given variable reference.
 	*/
@@ -378,6 +401,10 @@ declare module OpenDebugProtocol {
 		format: string;
 		/** An object used as a dictionary for looking up the variables in the format string. */
 		variables?: { [key: string]: string };
+		/** if true send to telemetry (Experimental) */
+		sendTelemetry?: boolean;
+		/** if true show user (Experimental) */
+		showUser?: boolean;
 	}
 
 	/** A Thread */
@@ -398,9 +425,9 @@ declare module OpenDebugProtocol {
 		sourceReference?: number;
 	}
 
-	/** A Stackframe contains the source location and all variables defined at that location. */
+	/** A Stackframe contains the source location. */
 	export interface StackFrame {
-		/** An identifier for the stack frame. */
+		/** An identifier for the stack frame. This id can be used to retrieve the scopes of the frame with the 'scopesRequest'. */
 		id: number;
 		/** The name of the stack frame, typically a method name */
 		name: string;
@@ -410,8 +437,6 @@ declare module OpenDebugProtocol {
 		line: number;
 		/** The column within the line. If source is null or doesn't exist, column is 0 and must be ignored. */
 		column: number;
-		/** All arguments and variables declared in this stackframe. */
-		scopes: Scope[];
 	}
 
 	/** A Scope is a named container for variables. */

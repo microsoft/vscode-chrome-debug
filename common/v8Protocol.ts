@@ -34,7 +34,7 @@ export class Response extends Message implements OpenDebugProtocol.Response {
 
 export class Event extends Message implements OpenDebugProtocol.Event {
 	event: string;
-	
+
 	public constructor(event: string, body?: any) {
 		super('event');
 		this.event = event;
@@ -45,7 +45,7 @@ export class Event extends Message implements OpenDebugProtocol.Event {
 }
 
 export class V8Protocol extends EE.EventEmitter {
-	
+
 	private static TIMEOUT = 3000;
 
 	private _state: string;
@@ -54,18 +54,17 @@ export class V8Protocol extends EE.EventEmitter {
 	private _res: any;
 	private _sequence: number;
 	private _writableStream: NodeJS.WritableStream;
-	private _pendingRequests: ((response: OpenDebugProtocol.Response) => void)[];
+	private _pendingRequests = new Map<number, OpenDebugProtocol.Response>();
 	private _unresponsiveMode: boolean;
-	
+
 	public embeddedHostVersion: number = -1;
-	
-		
+
+
 	public startDispatch(inStream: NodeJS.ReadableStream, outStream: NodeJS.WritableStream): void {
 		this._sequence = 1;
 		this._writableStream = outStream;
 		this._newRes(null);
-		this._pendingRequests = new Array();
-		
+
 		inStream.setEncoding('utf8');
 
 		inStream.on('data', (data) => this.execute(data));
@@ -73,16 +72,16 @@ export class V8Protocol extends EE.EventEmitter {
 			this.emitEvent(new Event('close'));
 		});
 		inStream.on('error', (error) => {
-			this.emitEvent(new Event('error'));			
+			this.emitEvent(new Event('error'));
 		});
-		
+
 		outStream.on('error', (error) => {
-			this.emitEvent(new Event('error'));		
+			this.emitEvent(new Event('error'));
 		});
-		
+
 		inStream.resume();
 	}
-	
+
 	public stop(): void {
 		if (this._writableStream) {
 			this._writableStream.end();
@@ -90,42 +89,42 @@ export class V8Protocol extends EE.EventEmitter {
 	}
 
 	public command(command: string, args?: any, cb?: (response: OpenDebugProtocol.Response) => void): void {
-				
-		var timeout = V8Protocol.TIMEOUT;
-		
-		var request: any = {
+
+		const timeout = V8Protocol.TIMEOUT;
+
+		const request: any = {
 			command: command
 		};
 		if (args && Object.keys(args).length > 0) {
 			request.arguments = args;
 		}
-		
+
 		if (this._unresponsiveMode) {
 			if (cb) {
 				cb(new Response(request, 'cancelled because node is unresponsive'));
 			}
 			return;
 		}
-		
+
 		this.send('request', request);
-					
+
 		if (cb) {
 			this._pendingRequests[request.seq] = cb;
-			
-			var timer = setTimeout(() => {
+
+			const timer = setTimeout(() => {
 				clearTimeout(timer);
-				var clb = this._pendingRequests[request.seq];
+				const clb = this._pendingRequests[request.seq];
 				if (clb) {
 					delete this._pendingRequests[request.seq];
 					clb(new Response(request, 'timeout after ' + timeout + 'ms'));
-				
+
 					this._unresponsiveMode = true;
 					this.emitEvent(new Event('diagnostic', { reason: 'unresponsive ' + command }));
 				}
 			}, timeout);
 		}
 	}
-	
+
 	public command2(command: string, args: any, timeout: number = V8Protocol.TIMEOUT): Promise<OpenDebugProtocol.Response> {
 		return new Promise((completeDispatch, errorDispatch) => {
 			this.command(command, args, (result: OpenDebugProtocol.Response) => {
@@ -137,11 +136,11 @@ export class V8Protocol extends EE.EventEmitter {
 			});
 		});
 	}
-	
+
 	public sendEvent(event: OpenDebugProtocol.Event): void {
 		this.send('event', event);
 	}
-	
+
 	public sendResponse(response: OpenDebugProtocol.Response): void {
 		if (response.seq > 0) {
 			console.error('attempt to send more than one response for command {0}', response.command);
@@ -156,16 +155,16 @@ export class V8Protocol extends EE.EventEmitter {
 	}
 
 	// ---- private ------------------------------------------------------------
-	
+
 	private emitEvent(event: OpenDebugProtocol.Event) {
 		this.emit(event.event, event);
 	}
-		
+
 	private send(typ: string, message: OpenDebugProtocol.V8Message): void {
 		message.type = typ;
 		message.seq = this._sequence++;
-		var json = JSON.stringify(message);
-		var data = 'Content-Length: ' + Buffer.byteLength(json, 'utf8') + '\r\n\r\n' + json;
+		const json = JSON.stringify(message);
+		const data = 'Content-Length: ' + Buffer.byteLength(json, 'utf8') + '\r\n\r\n' + json;
 		if (this._writableStream) {
 			this._writableStream.write(data);
 		}
@@ -183,7 +182,7 @@ export class V8Protocol extends EE.EventEmitter {
 	private internalDispatch(message: OpenDebugProtocol.V8Message): void {
 		switch (message.type) {
 		case 'event':
-			var e = <OpenDebugProtocol.Event> message;
+			const e = <OpenDebugProtocol.Event> message;
 			this.emitEvent(e);
 			break;
 		case 'response':
@@ -191,8 +190,8 @@ export class V8Protocol extends EE.EventEmitter {
 				this._unresponsiveMode = false;
 				this.emitEvent(new Event('diagnostic', { reason: 'responsive' }));
 			}
-			var response = <OpenDebugProtocol.Response> message;
-			var clb = this._pendingRequests[response.request_seq];
+			const response = <OpenDebugProtocol.Response> message;
+			const clb = this._pendingRequests[response.request_seq];
 			if (clb) {
 				delete this._pendingRequests[response.request_seq];
 				clb(response);
@@ -207,24 +206,24 @@ export class V8Protocol extends EE.EventEmitter {
 	}
 
 	private execute(d): void {
-		var res = this._res;
+		const res = this._res;
 		res.raw += d;
 
 		switch (this._state) {
 			case 'headers':
-				var endHeaderIndex = res.raw.indexOf('\r\n\r\n');
+				const endHeaderIndex = res.raw.indexOf('\r\n\r\n');
 				if (endHeaderIndex < 0)
 					break;
 
-				var rawHeader = res.raw.slice(0, endHeaderIndex);
-				var endHeaderByteIndex = Buffer.byteLength(rawHeader, 'utf8');
-				var lines = rawHeader.split('\r\n');
-				for (var i = 0; i < lines.length; i++) {
-					var kv = lines[i].split(/: +/);
+				const rawHeader = res.raw.slice(0, endHeaderIndex);
+				const endHeaderByteIndex = Buffer.byteLength(rawHeader, 'utf8');
+				const lines = rawHeader.split('\r\n');
+				for (let i = 0; i < lines.length; i++) {
+					const kv = lines[i].split(/: +/);
 					res.headers[kv[0]] = kv[1];
-					if (kv[0] == 'Embedding-Host') {
-						var match = kv[1].match(/node\sv(\d+)\.\d+\.\d+/)
-						if (match.length == 2) {
+					if (kv[0] === 'Embedding-Host') {
+						const match = kv[1].match(/node\sv(\d+)\.\d+\.\d+/)
+						if (match.length === 2) {
 							this.embeddedHostVersion = parseInt(match[1]);
 						}
 					}
@@ -235,16 +234,16 @@ export class V8Protocol extends EE.EventEmitter {
 
 				this._state = 'body';
 
-				var len = Buffer.byteLength(res.raw, 'utf8');
+				const len = Buffer.byteLength(res.raw, 'utf8');
 				if (len - this._bodyStartByteIndex < this._contentLength) {
 					break;
 				}
 			// pass thru
-				
+
 			case 'body':
-				var resRawByteLength = Buffer.byteLength(res.raw, 'utf8');
+				const resRawByteLength = Buffer.byteLength(res.raw, 'utf8');
 				if (resRawByteLength - this._bodyStartByteIndex >= this._contentLength) {
-					var buf = new Buffer(resRawByteLength);
+					const buf = new Buffer(resRawByteLength);
 					buf.write(res.raw, 0, resRawByteLength, 'utf8');
 					res.body = buf.slice(this._bodyStartByteIndex, this._bodyStartByteIndex + this._contentLength).toString('utf8');
 					res.body = res.body.length ? JSON.parse(res.body) : {};
