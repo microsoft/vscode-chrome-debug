@@ -5,10 +5,10 @@
 import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
+import Utilities = require('./utilities');
 
 import {Socket, createServer} from 'net';
 import {spawn, ChildProcess} from 'child_process';
-import os = require('os');
 import nodeUrl = require('url');
 import path = require('path');
 import fs = require('fs');
@@ -83,20 +83,7 @@ export class WebKitDebugSession extends DebugSession {
 
     protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
         this._clientCWD = args.workingDirectory;
-        let chromeExe = args.runtimeExecutable;
-
-        if (!chromeExe) {
-            let platform = os.platform();
-            if (platform === 'darwin') {
-                chromeExe = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-            } else if (platform === 'win32') {
-                chromeExe = os.arch() === 'x64' ?
-                    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe' :
-                    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-            } else {
-                chromeExe = '/usr/bin/google-chrome';
-            }
-        }
+        let chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
         let port = 9222;
         let chromeArgs: string[] = ['--remote-debugging-port=' + port];
@@ -402,7 +389,7 @@ export class WebKitDebugSession extends DebugSession {
         }
 
         evalPromise.then(evalResponse => {
-            let resultObj = evalResponse.result.result;
+            let resultObj: WebKitProtocol.Runtime.RemoteObject = evalResponse.result.result;
             let result: string;
             let variablesReference = 0;
             if (evalResponse.result.wasThrown) {
@@ -417,7 +404,7 @@ export class WebKitDebugSession extends DebugSession {
                 result = 'undefined';
             } else {
                 // The result was a primitive value, or something which has a description (not object, primitive, or undefined)
-                result = typeof resultObj.value === 'undefined' ? resultObj.description : resultObj.value;
+                result = '' + (typeof resultObj.value === 'undefined' ? resultObj.description : resultObj.value);
             }
 
             response.body = { result, variablesReference };
