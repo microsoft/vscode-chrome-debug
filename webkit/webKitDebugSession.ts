@@ -350,25 +350,30 @@ export class WebKitDebugSession extends DebugSession {
 
     protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
         let stackFrames: OpenDebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
-            let scopes = callFrame.scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
-                return <OpenDebugProtocol.Scope>{
-                    name: scope.type,
-                    variablesReference: this._variableHandles.create(scope.object.objectId),
-                    expensive: true // ?
-                };
-            });
-
             return {
                 id: i,
                 name: callFrame.functionName || '(eval code)', // anything else?
                 source: this.scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
                 line: this.convertDebuggerLineToClient(callFrame.location.lineNumber),
-                column: callFrame.location.columnNumber,
-                scopes: scopes
+                column: callFrame.location.columnNumber
             };
         });
 
         response.body = { stackFrames };
+        this.sendResponse(response);
+    }
+
+    protected scopesRequest(response: OpenDebugProtocol.ScopesResponse, args: OpenDebugProtocol.ScopesArguments): void {
+        let scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
+            console.log(scope.type);
+            return <OpenDebugProtocol.Scope>{
+                name: scope.type,
+                variablesReference: this._variableHandles.create(scope.object.objectId),
+                expensive: true // ?
+            };
+        });
+
+        response.body = { scopes };
         this.sendResponse(response);
     }
 
@@ -377,28 +382,7 @@ export class WebKitDebugSession extends DebugSession {
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
                 let variables = getPropsResponse.error ? [] :
-                    getPropsResponse.result.result.map(propDesc => {
-                        if (propDesc.value && propDesc.value.type === 'object') {
-                            if (propDesc.value.subtype === 'null') {
-                                return { name: propDesc.name, value: 'null', variablesReference: 0 };
-                            } else {
-                                // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
-                                return { name: propDesc.name, value: propDesc.value.description, variablesReference: this._variableHandles.create(propDesc.value.objectId) };
-                            }
-                        }
-
-                        let value: string;
-                        if (propDesc.value && propDesc.value.type === 'undefined') {
-                            value = 'undefined';
-                        } else if (typeof propDesc.get !== 'undefined') {
-                            value = 'getter';
-                        } else {
-                            // The value is a primitive value, or something that has a description (not object, primitive, or undefined)
-                            value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value;
-                        }
-
-                        return { name: propDesc.name, value, variablesReference: 0 };
-                    });
+                    getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToODPVariable(propDesc));
 
                 response.body = { variables };
                 this.sendResponse(response);
@@ -439,6 +423,29 @@ export class WebKitDebugSession extends DebugSession {
             response.body = { result, variablesReference };
             this.sendResponse(response);
         });
+    }
+
+    private propertyDescriptorToODPVariable(propDesc: WebKitProtocol.Runtime.PropertyDescriptor): OpenDebugProtocol.Variable {
+        if (propDesc.value && propDesc.value.type === 'object') {
+            if (propDesc.value.subtype === 'null') {
+                return { name: propDesc.name, value: 'null', variablesReference: 0 };
+            } else {
+                // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
+                return { name: propDesc.name, value: propDesc.value.description + '', variablesReference: this._variableHandles.create(propDesc.value.objectId) };
+            }
+        }
+
+        let value: string;
+        if (propDesc.value && propDesc.value.type === 'undefined') {
+            value = 'undefined';
+        } else if (typeof propDesc.get !== 'undefined') {
+            value = 'getter';
+        } else {
+            // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+            value = '' + (typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value);
+        }
+
+        return { name: propDesc.name, value, variablesReference: 0 };
     }
 
     private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
