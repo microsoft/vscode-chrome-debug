@@ -20,7 +20,7 @@ function printHello() {
     };
     var qqq;
     var str = 'hello';
-     var xyz = 1;
+    var xyz = 1;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
     xyz++;                     xyz++;
     console.log(str + obj.a);
