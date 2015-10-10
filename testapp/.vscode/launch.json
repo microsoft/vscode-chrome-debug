@@ -5,10 +5,12 @@
         {
             "name": "test webkit",
             "type": "webkit",
-            "runtimeArgs": ["http://localhost:8080/index.html"],
+            "program": "out/client/index.html",
+            //"runtimeArgs": ["http://localhost:8080/index.html"],
             "cwd": "./client",
             "stopOnEntry": false,
-            "sourceMaps": false
+            "sourceMaps": true,
+            "outDir": "out"
         },
         {
             "name": "attach to webkit",

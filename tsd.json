@@ -16,6 +16,9 @@
     },
     "es6-collections/es6-collections.d.ts": {
       "commit": "5109e1269d6ab8e8e73b1a5e85d8ceb836d3099f"
+    },
+    "source-map/source-map.d.ts": {
+      "commit": "bb45306d0fd8ce0852a8d24c023fd787f4151e65"
     }
   }
 }

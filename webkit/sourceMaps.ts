@@ -313,7 +313,7 @@ class SourceMap {
 	/*
 	 * finds the nearest location in the generated file for the given source location.
 	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
+	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): SourceMap.Position {
 
 		// make input path relative to sourceRoot
 		if (this._sourceRoot) {

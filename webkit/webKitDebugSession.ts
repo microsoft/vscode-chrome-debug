@@ -6,6 +6,7 @@ import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import Utilities = require('./utilities');
+import {ISourceMaps, SourceMaps} from './sourceMaps';
 
 import {Socket, createServer} from 'net';
 import {spawn, ChildProcess} from 'child_process';
@@ -28,6 +29,7 @@ export class WebKitDebugSession extends DebugSession {
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
+    private _sourceMaps: ISourceMaps;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -77,7 +79,10 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-        // Nothing really to do here.
+        if (args.sourceMaps) {
+            this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
+		}
+
         this.sendResponse(response);
     }
 
@@ -91,7 +96,15 @@ export class WebKitDebugSession extends DebugSession {
             chromeArgs.push(...args.runtimeArguments);
         }
 
+        // Can html files be sourcemapped? May as well try.
         if (args.program) {
+            if (this._sourceMaps) {
+                const generatedPath = this._sourceMaps.MapPathFromSource(args.program);
+                if (generatedPath) {
+                    args.program = generatedPath;
+                }
+            }
+
             chromeArgs.push(args.program);
         }
 
@@ -232,20 +245,40 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     private _setBreakpoints(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
-        let sourceUrl = canonicalizeUrl(args.source.path);
-        let script =
-            args.source.path ? this._scriptsByUrl.get(sourceUrl) :
-                args.source.sourceReference ? this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference)) : null;
+        let targetScript: WebKitProtocol.Debugger.Script;
+        let path: string;
+        if (args.source.path) {
+            path = args.source.path;
+            if (this._sourceMaps) {
+                path = this._sourceMaps.MapPathFromSource(args.source.path) || args.source.path;
+            }
 
-        let debuggerLines = args.lines
-            .map(clientLine => this.convertClientLineToDebugger(clientLine));
+            targetScript = this._scriptsByUrl.get(canonicalizeUrl(path));
+        } else if (args.source.sourceReference) {
+            // TODO de-sourcemap
+            targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
+        } else if (args.source.name) {
+            // ??
+        }
 
-        if (script) {
+        if (targetScript) {
             // ODP sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-            return this.clearAllBreakpoints(script.scriptId).then(() => {
+            return this.clearAllBreakpoints(targetScript.scriptId).then(() => {
+                const debuggerLines = args.lines
+                    .map(clientLine => this.convertClientLineToDebugger(clientLine))
+                    .map(debuggerLine => {
+                        // Sourcemap lines
+                        if (this._sourceMaps) {
+                            const mapped = this._sourceMaps.MapFromSource(args.source.path, debuggerLine, /*column=*/0);
+                            return mapped ? mapped.line : debuggerLine;
+                        } else {
+                            return debuggerLine;
+                        }
+                    });
+
                 // Call setBreakpoint for all breakpoints in the script simultaneously, join to a single promise
                 return Promise.all(debuggerLines
-                    .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: script.scriptId, lineNumber })));
+                    .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: targetScript.scriptId, lineNumber })));
             }).then(responses => {
                 // Ignore errors
                 let successfulResponses = responses
@@ -254,21 +287,33 @@ export class WebKitDebugSession extends DebugSession {
                 // Process responses and cache in committedBreakpoints set
                 let addedBreakpointIds = successfulResponses
                     .map(response => response.result.breakpointId);
-                this._committedBreakpointsByScriptId.set(script.scriptId, addedBreakpointIds);
+                this._committedBreakpointsByScriptId.set(targetScript.scriptId, addedBreakpointIds);
 
                 // Map committed breakpoints to ODP response objects and send response
                 let odpBreakpoints = successfulResponses
-                    .map(response => <DebugProtocol.Breakpoint>{
-                        verified: true,
-                        line: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
+                    .map(response => {
+                        let line = response.result.actualLocation.lineNumber;
+                        if (this._sourceMaps) {
+                            let mapped = this._sourceMaps.MapToSource(path, response.result.actualLocation.lineNumber, response.result.actualLocation.columnNumber);
+                            if (mapped) {
+                                line = mapped.line;
+                            }
+                        }
+
+                        return <DebugProtocol.Breakpoint>{
+                            verified: true,
+                            line: this.convertDebuggerLineToClient(line)
+                        }
                     });
+
                 response.body = { breakpoints: odpBreakpoints };
                 this.sendResponse(response);
             });
         } else {
             // We could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
             // This seems easier
-            this._pendingBreakpointsByUrl.set(sourceUrl, { response, args });
+            // TODO caching by source.path seems wrong because it may not exist? But this implies that we haven't told ODP about this script so it may have to be set. Assert non-null?
+            this._pendingBreakpointsByUrl.set(canonicalizeUrl(args.source.path), { response, args });
             return Promise.resolve<void>();
         }
     }
@@ -383,7 +428,7 @@ export class WebKitDebugSession extends DebugSession {
         let evalPromise: Promise<any>;
         if (this.paused) {
             let callFrameId = this._currentStack[args.frameId].callFrameId;
-            evalPromise = this._webKitConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression)
+            evalPromise = this._webKitConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression);
         } else {
             evalPromise = this._webKitConnection.runtime_evaluate(args.expression);
         }
