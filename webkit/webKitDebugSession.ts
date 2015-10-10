@@ -14,8 +14,8 @@ import path = require('path');
 import fs = require('fs');
 
 interface IPendingBreakpoint {
-    response: OpenDebugProtocol.SetBreakpointsResponse;
-    args: OpenDebugProtocol.SetBreakpointsArguments;
+    response: DebugProtocol.SetBreakpointsResponse;
+    args: DebugProtocol.SetBreakpointsArguments;
 }
 
 export class WebKitDebugSession extends DebugSession {
@@ -38,8 +38,8 @@ export class WebKitDebugSession extends DebugSession {
 
     private _setBreakpointsRequestQ: Promise<void>;
 
-    public constructor(debuggerLinesStartAt1: boolean) {
-        super(debuggerLinesStartAt1);
+    public constructor(debuggerLinesStartAt1: boolean, isServer: boolean = false) {
+        super(debuggerLinesStartAt1, isServer);
         this._variableHandles = new Handles<string>();
 
         this.clearEverything();
@@ -61,27 +61,27 @@ export class WebKitDebugSession extends DebugSession {
         this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
     }
 
-    protected dispatchRequest(request: OpenDebugProtocol.Request): void {
+    protected dispatchRequest(request: DebugProtocol.Request): void {
         console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
         super.dispatchRequest(request);
     }
 
-    public sendEvent(event: OpenDebugProtocol.Event): void {
+    public sendEvent(event: DebugProtocol.Event): void {
         console.log(`To client: ${JSON.stringify(event) }`);
         super.sendEvent(event);
     }
 
-    public sendResponse(response: OpenDebugProtocol.Response): void {
+    public sendResponse(response: DebugProtocol.Response): void {
         console.log(`To client: ${JSON.stringify(response) }`);
         super.sendResponse(response);
     }
 
-    protected initializeRequest(response: OpenDebugProtocol.InitializeResponse, args: OpenDebugProtocol.InitializeRequestArguments): void {
+    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
         // Nothing really to do here.
         this.sendResponse(response);
     }
 
-    protected launchRequest(response: OpenDebugProtocol.LaunchResponse, args: OpenDebugProtocol.LaunchRequestArguments): void {
+    protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments): void {
         this._clientCWD = args.workingDirectory;
         let chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
@@ -200,14 +200,14 @@ export class WebKitDebugSession extends DebugSession {
         }
     }
 
-    protected disconnectRequest(response: OpenDebugProtocol.DisconnectResponse): void {
+    protected disconnectRequest(response: DebugProtocol.DisconnectResponse): void {
         this._chromeProc.kill();
         this.clearEverything();
         this.sendResponse(response);
 
     }
 
-    protected attachRequest(response: OpenDebugProtocol.AttachResponse, args: OpenDebugProtocol.AttachRequestArguments): void {
+    protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments): void {
         if (args.address !== 'localhost') {
             response.success = false;
             response.message = 'Remote debugging is not supported';
@@ -224,14 +224,14 @@ export class WebKitDebugSession extends DebugSession {
             });
     }
 
-    protected setBreakPointsRequest(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): void {
+    protected setBreakPointsRequest(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): void {
         // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome
         this._setBreakpointsRequestQ = this._setBreakpointsRequestQ.then(() => {
             return this._setBreakpoints(response, args);
         });
     }
 
-    private _setBreakpoints(response: OpenDebugProtocol.SetBreakpointsResponse, args: OpenDebugProtocol.SetBreakpointsArguments): Promise<void> {
+    private _setBreakpoints(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
         let sourceUrl = canonicalizeUrl(args.source.path);
         let script =
             args.source.path ? this._scriptsByUrl.get(sourceUrl) :
@@ -258,7 +258,7 @@ export class WebKitDebugSession extends DebugSession {
 
                 // Map committed breakpoints to ODP response objects and send response
                 let odpBreakpoints = successfulResponses
-                    .map(response => <OpenDebugProtocol.Breakpoint>{
+                    .map(response => <DebugProtocol.Breakpoint>{
                         verified: true,
                         line: this.convertDebuggerLineToClient(response.result.actualLocation.lineNumber)
                     });
@@ -273,7 +273,7 @@ export class WebKitDebugSession extends DebugSession {
         }
     }
 
-    protected setExceptionBreakPointsRequest(response: OpenDebugProtocol.SetExceptionBreakpointsResponse, args: OpenDebugProtocol.SetExceptionBreakpointsArguments): void {
+    protected setExceptionBreakPointsRequest(response: DebugProtocol.SetExceptionBreakpointsResponse, args: DebugProtocol.SetExceptionBreakpointsArguments): void {
         let state: string;
         if (args.filters.indexOf("all") >= 0) {
             state = "all";
@@ -288,42 +288,42 @@ export class WebKitDebugSession extends DebugSession {
         });
     }
 
-    protected continueRequest(response: OpenDebugProtocol.ContinueResponse): void {
+    protected continueRequest(response: DebugProtocol.ContinueResponse): void {
         this._webKitConnection.debugger_resume().then(() => {
             this.sendResponse(response);
         });
     }
 
-    protected nextRequest(response: OpenDebugProtocol.NextResponse): void {
+    protected nextRequest(response: DebugProtocol.NextResponse): void {
         this._webKitConnection.debugger_stepOver().then(() => {
             this.sendResponse(response);
         });
     }
 
-    protected stepInRequest(response: OpenDebugProtocol.StepInResponse): void {
+    protected stepInRequest(response: DebugProtocol.StepInResponse): void {
         this._webKitConnection.debugger_stepIn().then(() => {
             this.sendResponse(response);
         });
     }
 
-    protected stepOutRequest(response: OpenDebugProtocol.StepOutResponse): void {
+    protected stepOutRequest(response: DebugProtocol.StepOutResponse): void {
         this._webKitConnection.debugger_stepOut().then(() => {
             this.sendResponse(response);
         });
     }
 
-    protected pauseRequest(response: OpenDebugProtocol.PauseResponse): void {
+    protected pauseRequest(response: DebugProtocol.PauseResponse): void {
         this._webKitConnection.debugger_pause().then(() => this.sendResponse(response));
     }
 
-    protected sourceRequest(response: OpenDebugProtocol.SourceResponse, args: OpenDebugProtocol.SourceArguments): void {
+    protected sourceRequest(response: DebugProtocol.SourceResponse, args: DebugProtocol.SourceArguments): void {
         this._webKitConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(webkitResponse => {
             response.body = { content: webkitResponse.result.scriptSource };
             this.sendResponse(response);
         });
     }
 
-    protected threadsRequest(response: OpenDebugProtocol.ThreadsResponse): void {
+    protected threadsRequest(response: DebugProtocol.ThreadsResponse): void {
         response.body = {
             threads: [
                 {
@@ -335,8 +335,8 @@ export class WebKitDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected stackTraceRequest(response: OpenDebugProtocol.StackTraceResponse, args: OpenDebugProtocol.StackTraceArguments): void {
-        let stackFrames: OpenDebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
+    protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
+        let stackFrames: DebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
             return {
                 id: i,
                 name: callFrame.functionName || '(eval code)', // anything else?
@@ -350,10 +350,10 @@ export class WebKitDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected scopesRequest(response: OpenDebugProtocol.ScopesResponse, args: OpenDebugProtocol.ScopesArguments): void {
+    protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         let scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
             console.log(scope.type);
-            return <OpenDebugProtocol.Scope>{
+            return <DebugProtocol.Scope>{
                 name: scope.type,
                 variablesReference: this._variableHandles.create(scope.object.objectId),
                 expensive: true // ?
@@ -364,7 +364,7 @@ export class WebKitDebugSession extends DebugSession {
         this.sendResponse(response);
     }
 
-    protected variablesRequest(response: OpenDebugProtocol.VariablesResponse, args: OpenDebugProtocol.VariablesArguments): void {
+    protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
         let id = this._variableHandles.get(args.variablesReference);
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
@@ -379,7 +379,7 @@ export class WebKitDebugSession extends DebugSession {
         }
     }
 
-    protected evaluateRequest(response: OpenDebugProtocol.EvaluateResponse, args: OpenDebugProtocol.EvaluateArguments): void {
+    protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         let evalPromise: Promise<any>;
         if (this.paused) {
             let callFrameId = this._currentStack[args.frameId].callFrameId;
@@ -412,7 +412,7 @@ export class WebKitDebugSession extends DebugSession {
         });
     }
 
-    private propertyDescriptorToODPVariable(propDesc: WebKitProtocol.Runtime.PropertyDescriptor): OpenDebugProtocol.Variable {
+    private propertyDescriptorToODPVariable(propDesc: WebKitProtocol.Runtime.PropertyDescriptor): DebugProtocol.Variable {
         if (propDesc.value && propDesc.value.type === 'object') {
             if (propDesc.value.subtype === 'null') {
                 return { name: propDesc.name, value: 'null', variablesReference: 0 };
@@ -447,8 +447,8 @@ export class WebKitDebugSession extends DebugSession {
         }, Promise.resolve<void>());
     }
 
-    private scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
-        return <OpenDebugProtocol.Source>{
+    private scriptToSource(script: WebKitProtocol.Debugger.Script): DebugProtocol.Source {
+        return <DebugProtocol.Source>{
             name: script.url,
             path: this.webkitUrlToClientUrl(script.url),
             sourceReference: scriptIdToSourceReference(script.scriptId)
@@ -503,8 +503,8 @@ function canonicalizeUrl(url: string): string {
         .toLowerCase();
 }
 
-function scriptToSource(script: WebKitProtocol.Debugger.Script): OpenDebugProtocol.Source {
-    return <OpenDebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
+function scriptToSource(script: WebKitProtocol.Debugger.Script): DebugProtocol.Source {
+    return <DebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {
