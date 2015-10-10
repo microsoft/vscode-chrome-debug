@@ -2,11 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-/** Declaration module describing the OpenDebug Server protocol
+/** Declaration module describing the VS Code debug protocol
  */
-declare module OpenDebugProtocol {
+declare module DebugProtocol {
 
-	//---- V8 protocol
+	//---- V8 inspired protocol
 
 	/** Base class of V8 requests, responses, and events. */
 	export interface V8Message {
@@ -46,7 +46,7 @@ declare module OpenDebugProtocol {
 		body?: any;
 	}
 
-	//---- OpenDebug Events
+	//---- Events
 
 	/** Event message for "initialized" event types.
 		The event indicates that the debugee is ready to accept SetBreakpoint calls.
@@ -98,7 +98,7 @@ declare module OpenDebugProtocol {
 		};
 	}
 
-	//---- OpenDebug Requests
+	//---- Requests
 
 	/** On error that is whenever 'success' is false, the body can provide more details.
 	 */
@@ -246,7 +246,7 @@ declare module OpenDebugProtocol {
 
 	/** StepIn request; value of command field is "stepIn".
 		The request starts the debuggee to run again for one step.
-		OpenDebug will respond with a StoppedEvent (event type 'step') after running the step.
+		The debug adapter will respond with a StoppedEvent (event type 'step') after running the step.
 	*/
 	export interface StepInRequest extends Request {
 	}
@@ -390,7 +390,7 @@ declare module OpenDebugProtocol {
 		};
 	}
 
-	//---- OpenDebug types
+	//---- types
 
 	/** A structured message object. Used to return errors from requests. */
 	export interface Message {
@@ -417,11 +417,11 @@ declare module OpenDebugProtocol {
 
 	/** A Source .*/
 	export interface Source {
-		/** The short name of the source. Every source returned from OpenDebug has a name. When specifying a source to OpenDebug this name is optional. */
+		/** The short name of the source. Every source returned from the debu adapter has a name. When specifying a source to the debug adapter this name is optional. */
 		name?: string;
 		/** The long (absolute) path of the source. It is not guaranteed that the source exists at this location. */
 		path?: string;
-		/** If sourceReference > 0 the contents of the source can be retrieved through OpenDebug's SourceRequest. A sourceReference is only valid for a session, so it must not be used to persist a source. */
+		/** If sourceReference > 0 the contents of the source can be retrieved through the SourceRequest. A sourceReference is only valid for a session, so it must not be used to persist a source. */
 		sourceReference?: number;
 	}
 
