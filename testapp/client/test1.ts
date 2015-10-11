@@ -27,6 +27,8 @@ function printHello() {
     anotherFn();
     fn();
 
+    eval('var x = 1; debugger;');
+
     try { throwSomething() } catch (e) {}
     throwSomething();
 }

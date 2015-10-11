@@ -188,9 +188,6 @@ export class WebKitDebugSession extends DebugSession {
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
         this._webKitConnection.page_setOverlayMessage(WebKitDebugSession.PAGE_PAUSE_MESSAGE);
         this._currentStack = notification.callFrames;
-        let scriptLocation = notification.callFrames[0].location;
-        let script = this._scriptsById.get(scriptLocation.scriptId);
-        let source = this.scriptToSource(script);
         let exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
         this.sendEvent(new StoppedEvent('pause', /*threadId=*/WebKitDebugSession.THREAD_ID, exceptionText));
     }
@@ -246,16 +243,10 @@ export class WebKitDebugSession extends DebugSession {
 
     private _setAllBreakpoints(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
         let targetScript: WebKitProtocol.Debugger.Script;
-        let path: string;
         if (args.source.path) {
-            path = args.source.path;
-            if (this._sourceMaps) {
-                path = this._sourceMaps.MapPathFromSource(args.source.path) || args.source.path;
-            }
-
+            let path = (this._sourceMaps && this._sourceMaps.MapPathFromSource(args.source.path)) || args.source.path;
             targetScript = this._scriptsByUrl.get(canonicalizeUrl(path));
         } else if (args.source.sourceReference) {
-            // TODO de-sourcemap
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
         } else if (args.source.name) {
             // ??
@@ -387,12 +378,30 @@ export class WebKitDebugSession extends DebugSession {
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
         let stackFrames: DebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
+            let script = this._scriptsById.get(callFrame.location.scriptId);
+            let path = this.webkitUrlToClientUrl(script.url);
+            let line = callFrame.location.lineNumber;
+            let column = callFrame.location.columnNumber;
+            if (this._sourceMaps) {
+                const mapped = this._sourceMaps.MapToSource(path, line, column);
+                if (mapped) {
+                    path = mapped.path;
+                    line = mapped.line;
+                    column = mapped.column;
+                }
+            }
+
+            let source = <DebugProtocol.Source>{
+                path,
+                sourceReference: scriptIdToSourceReference(script.scriptId)
+            };
+
             return {
                 id: i,
                 name: callFrame.functionName || '(eval code)', // anything else?
-                source: this.scriptToSource(this._scriptsById.get(callFrame.location.scriptId)),
-                line: this.convertDebuggerLineToClient(callFrame.location.lineNumber),
-                column: callFrame.location.columnNumber
+                source,
+                line: this.convertDebuggerLineToClient(line),
+                column
             };
         });
 
@@ -402,7 +411,6 @@ export class WebKitDebugSession extends DebugSession {
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
         let scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
-            console.log(scope.type);
             return <DebugProtocol.Scope>{
                 name: scope.type,
                 variablesReference: this._variableHandles.create(scope.object.objectId),
@@ -497,14 +505,6 @@ export class WebKitDebugSession extends DebugSession {
         }, Promise.resolve<void>());
     }
 
-    private scriptToSource(script: WebKitProtocol.Debugger.Script): DebugProtocol.Source {
-        return <DebugProtocol.Source>{
-            name: script.url,
-            path: this.webkitUrlToClientUrl(script.url),
-            sourceReference: scriptIdToSourceReference(script.scriptId)
-        };
-    }
-
     /**
      * http://localhost/app/scripts/code.js => d:/scripts/code.js
      * file:///d:/scripts/code.js => d:/scripts/code.js
@@ -551,10 +551,6 @@ function canonicalizeUrl(url: string): string {
         .replace('file:///', '')
         .replace(/\\/g, '/')
         .toLowerCase();
-}
-
-function scriptToSource(script: WebKitProtocol.Debugger.Script): DebugProtocol.Source {
-    return <DebugProtocol.Source>{ name: script.url, path: canonicalizeUrl(script.url), sourceReference: scriptIdToSourceReference(script.scriptId) };
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {
