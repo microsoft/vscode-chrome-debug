@@ -303,7 +303,8 @@ export class WebKitDebugSession extends DebugSession {
             .map(response => {
                 let line = response.result.actualLocation.lineNumber;
                 if (this._sourceMaps) {
-                    const mapped = this._sourceMaps.MapToSource(canonicalizeUrl(script.url), response.result.actualLocation.lineNumber, response.result.actualLocation.columnNumber);
+                    const clientUrl = this.webkitUrlToClientUrl(script.url);
+                    const mapped = this._sourceMaps.MapToSource(clientUrl, response.result.actualLocation.lineNumber, response.result.actualLocation.columnNumber);
                     if (mapped) {
                         line = mapped.line;
                     }
@@ -530,7 +531,8 @@ export class WebKitDebugSession extends DebugSession {
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
+            const rootDir = this._sourceMaps ? this._sourceMaps.generatedCodeDirectory : this._clientCWD;
+            const clientUrl = path.join(rootDir, pathParts.join('/'));
             if (fs.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
             }

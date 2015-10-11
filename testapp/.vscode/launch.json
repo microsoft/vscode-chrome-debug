@@ -5,8 +5,8 @@
         {
             "name": "test webkit",
             "type": "webkit",
-            "program": "out/client/index.html",
-            //"runtimeArgs": ["http://localhost:8080/index.html"],
+            //"program": "out/client/index.html",
+            "runtimeArgs": ["http://localhost:8080/out/client/index.html"],
             "cwd": "./client",
             "stopOnEntry": false,
             "sourceMaps": true,
