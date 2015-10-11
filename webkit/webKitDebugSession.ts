@@ -90,10 +90,10 @@ export class WebKitDebugSession extends DebugSession {
 
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments): void {
         this._clientCWD = args.workingDirectory;
-        let chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
+        const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
-        let port = 9222;
-        let chromeArgs: string[] = ['--remote-debugging-port=' + port];
+        const port = 9222;
+        const chromeArgs: string[] = ['--remote-debugging-port=' + port];
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
@@ -190,7 +190,7 @@ export class WebKitDebugSession extends DebugSession {
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugSession.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
-        let exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
+        const exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
         this.sendEvent(new StoppedEvent('pause', /*threadId=*/WebKitDebugSession.THREAD_ID, exceptionText));
     }
 
@@ -201,12 +201,12 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
-        let clientUrl = this.webkitUrlToClientUrl(script.url);
+        const clientUrl = this.webkitUrlToClientUrl(script.url);
         this._scriptsByUrl.set(clientUrl, script);
         this._scriptsById.set(script.scriptId, script);
 
         if (this._pendingBreakpointsByUrl.has(clientUrl)) {
-            let pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
+            const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
             this._pendingBreakpointsByUrl.delete(clientUrl);
             this.setBreakPointsRequest(pendingBreakpoint.response, pendingBreakpoint.args);
         }
@@ -246,7 +246,7 @@ export class WebKitDebugSession extends DebugSession {
     private _setAllBreakpoints(response: DebugProtocol.SetBreakpointsResponse, args: DebugProtocol.SetBreakpointsArguments): Promise<void> {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
-            let path = (this._sourceMaps && this._sourceMaps.MapPathFromSource(args.source.path)) || args.source.path;
+            const path = (this._sourceMaps && this._sourceMaps.MapPathFromSource(args.source.path)) || args.source.path;
             targetScript = this._scriptsByUrl.get(canonicalizeUrl(path));
         } else if (args.source.sourceReference) {
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
@@ -292,7 +292,7 @@ export class WebKitDebugSession extends DebugSession {
 
     private _webkitBreakpointResponsesToODPBreakpoints(script: WebKitProtocol.Debugger.Script, responses: WebKitProtocol.Debugger.SetBreakpointResponse[]): DebugProtocol.Breakpoint[] {
         // Ignore errors
-        let successfulResponses = responses
+        const successfulResponses = responses
             .filter(response => !response.error);
 
         // Cache breakpoint ids from webkit in committedBreakpoints set
@@ -379,8 +379,8 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected stackTraceRequest(response: DebugProtocol.StackTraceResponse, args: DebugProtocol.StackTraceArguments): void {
-        let stackFrames: DebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
-            let script = this._scriptsById.get(callFrame.location.scriptId);
+        const stackFrames: DebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
+            const script = this._scriptsById.get(callFrame.location.scriptId);
             let path = this.webkitUrlToClientUrl(script.url);
             let line = callFrame.location.lineNumber;
             let column = callFrame.location.columnNumber;
@@ -393,7 +393,7 @@ export class WebKitDebugSession extends DebugSession {
                 }
             }
 
-            let source = <DebugProtocol.Source>{
+            const source = <DebugProtocol.Source>{
                 path,
                 sourceReference: scriptIdToSourceReference(script.scriptId)
             };
@@ -412,7 +412,7 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected scopesRequest(response: DebugProtocol.ScopesResponse, args: DebugProtocol.ScopesArguments): void {
-        let scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
+        const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
             return <DebugProtocol.Scope>{
                 name: scope.type,
                 variablesReference: this._variableHandles.create(scope.object.objectId),
@@ -425,10 +425,10 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected variablesRequest(response: DebugProtocol.VariablesResponse, args: DebugProtocol.VariablesArguments): void {
-        let id = this._variableHandles.get(args.variablesReference);
+        const id = this._variableHandles.get(args.variablesReference);
         if (id != null) {
             this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
-                let variables = getPropsResponse.error ? [] :
+                const variables = getPropsResponse.error ? [] :
                     getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToODPVariable(propDesc));
 
                 response.body = { variables };
@@ -442,14 +442,14 @@ export class WebKitDebugSession extends DebugSession {
     protected evaluateRequest(response: DebugProtocol.EvaluateResponse, args: DebugProtocol.EvaluateArguments): void {
         let evalPromise: Promise<any>;
         if (this.paused) {
-            let callFrameId = this._currentStack[args.frameId].callFrameId;
+            const callFrameId = this._currentStack[args.frameId].callFrameId;
             evalPromise = this._webKitConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression);
         } else {
             evalPromise = this._webKitConnection.runtime_evaluate(args.expression);
         }
 
         evalPromise.then(evalResponse => {
-            let resultObj: WebKitProtocol.Runtime.RemoteObject = evalResponse.result.result;
+            const resultObj: WebKitProtocol.Runtime.RemoteObject = evalResponse.result.result;
             let result: string;
             let variablesReference = 0;
             if (evalResponse.result.wasThrown) {
@@ -496,7 +496,7 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
-        let committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
+        const committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
 
         // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
         // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
@@ -523,14 +523,14 @@ export class WebKitDebugSession extends DebugSession {
         }
 
         // Search the filesystem under our cwd for the file that best matches the given url
-        let pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+        const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
         if (!pathName) {
             return '';
         }
 
-        let pathParts = pathName.split('/');
+        const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            let clientUrl = path.join(this._clientCWD, pathParts.join('/'));
+            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
             if (fs.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
             }

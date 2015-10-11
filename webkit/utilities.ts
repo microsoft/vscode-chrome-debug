@@ -5,7 +5,7 @@
 import os = require('os');
 
 export function getBrowserPath(): string {
-    let platform = os.platform();
+    const platform = os.platform();
     if (platform === 'darwin') {
         return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     } else if (platform === 'win32') {
