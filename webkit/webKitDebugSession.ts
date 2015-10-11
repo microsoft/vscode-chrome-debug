@@ -30,6 +30,7 @@ export class WebKitDebugSession extends DebugSession {
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
     private _sourceMaps: ISourceMaps;
+    private _overlayHelper: Utilities.DebounceHelper;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -43,6 +44,7 @@ export class WebKitDebugSession extends DebugSession {
     public constructor(debuggerLinesStartAt1: boolean, isServer: boolean = false) {
         super(debuggerLinesStartAt1, isServer);
         this._variableHandles = new Handles<string>();
+        this._overlayHelper = new Utilities.DebounceHelper(/*timeoutMs=*/200);
 
         this.clearEverything();
     }
@@ -186,7 +188,7 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
-        this._webKitConnection.page_setOverlayMessage(WebKitDebugSession.PAGE_PAUSE_MESSAGE);
+        this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugSession.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
         let exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
         this.sendEvent(new StoppedEvent('pause', /*threadId=*/WebKitDebugSession.THREAD_ID, exceptionText));
@@ -194,7 +196,7 @@ export class WebKitDebugSession extends DebugSession {
 
     private onDebuggerResumed(): void {
         // Called when the resume button on the page is pressed, but ODP doesn't have an event to support it.
-        this._webKitConnection.page_clearOverlayMessage();
+        this._overlayHelper.wait(() => this._webKitConnection.page_clearOverlayMessage());
         this._currentStack = null;
     }
 

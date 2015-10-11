@@ -16,3 +16,27 @@ export function getBrowserPath(): string {
         return '/usr/bin/google-chrome';
     }
 }
+
+export class DebounceHelper {
+    private waitToken: NodeJS.Timer;
+
+    constructor(private timeoutMs: number) { }
+
+    public wait(fn: () => any): void {
+        if (!this.waitToken) {
+            this.waitToken = setTimeout(() => {
+                this.waitToken = null;
+                fn();
+            }, this.timeoutMs)
+        }
+    }
+
+    public doAndCancel(fn: () => any): void {
+        if (this.waitToken) {
+            clearTimeout(this.waitToken);
+            this.waitToken = null;
+        }
+
+        fn();
+    }
+}
