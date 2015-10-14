@@ -104,7 +104,7 @@ export class WebKitConnection {
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
     public attach(port: number): Promise<void> {
-        return getUrl(`http://localhost:${port}/json`).then(jsonResponse => {
+        return getUrlWithRetry(`http://localhost:${port}/json`).then(jsonResponse => {
             const wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
             return this._socket.attach(wsUrl);
         }).then(() => <Promise<void>><any>this.sendMessage('Debugger.enable'));
@@ -179,7 +179,7 @@ export class WebKitConnection {
     }
 }
 
-function getUrlWithRetry(url: string, retryCount = 5): Promise<string> {
+function getUrlWithRetry(url: string, retryCount = 10): Promise<string> {
     return getUrl(url).catch(
         e => {
             if (retryCount > 0) {
