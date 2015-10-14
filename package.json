@@ -18,7 +18,7 @@
     "gulp-typescript": "^2.8.0",
     "gulp-util": "^3.0.5",
     "tsd": "^0.6.3",
-    "typescript": "^1.5.3"
+    "typescript": "1.5.3"
   },
   "contributes": {
 		"debugAdapter": [
