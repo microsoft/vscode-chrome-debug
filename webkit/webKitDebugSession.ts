@@ -13,6 +13,7 @@ import {spawn, ChildProcess} from 'child_process';
 import nodeUrl = require('url');
 import path = require('path');
 import fs = require('fs');
+import os = require('os');
 
 interface IPendingBreakpoint {
     response: DebugProtocol.SetBreakpointsResponse;
@@ -92,8 +93,12 @@ export class WebKitDebugSession extends DebugSession {
         this._clientCWD = args.workingDirectory;
         const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
+        // Start with remote debugging enabled
         const port = 9222;
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
+
+        // Also start with extra stuff disabled, and no user-data-dir so previously open tabs aren't opened.
+        chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
@@ -114,6 +119,7 @@ export class WebKitDebugSession extends DebugSession {
             chromeArgs.push(...args.arguments);
         }
 
+        console.log(`Spawning chrome: "${chromeExe}", ${JSON.stringify(chromeArgs)}`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
             console.error('chrome error: ' + err);
@@ -121,12 +127,13 @@ export class WebKitDebugSession extends DebugSession {
         });
         this._chromeProc.on('exit', () => {
             console.error('chrome exited');
-            this.terminateSession();
+            //this.terminateSession();
         });
 
         this.attach(port).then(
             () => this.sendResponse(response),
             e => {
+                console.log(e.toString());
                 response.message = e;
                 response.success = false;
                 this.sendResponse(response);
@@ -247,7 +254,8 @@ export class WebKitDebugSession extends DebugSession {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
             const path = (this._sourceMaps && this._sourceMaps.MapPathFromSource(args.source.path)) || args.source.path;
-            targetScript = this._scriptsByUrl.get(canonicalizeUrl(path));
+            const canPath = canonicalizeUrl(path);
+            targetScript = this._scriptsByUrl.get(canPath);
         } else if (args.source.sourceReference) {
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
         } else if (args.source.name) {
@@ -551,10 +559,17 @@ export class WebKitDebugSession extends DebugSession {
  * http://localhost/app/scripts/code.js => /app/scripts/code.js
  */
 function canonicalizeUrl(url: string): string {
-    return url
+    url = url
         .replace('file:///', '')
-        .replace(/\\/g, '/')
+        .replace(/\\/g, '/') // \ to /
         .toLowerCase();
+
+    // Ensure osx path starts with /, maybe it was removed when file:/// was stripped
+    if (url[0] !== '/' && os.platform() === 'darwin') {
+        url = '/' + url;
+    }
+
+    return url;
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {

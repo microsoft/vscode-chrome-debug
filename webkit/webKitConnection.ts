@@ -30,7 +30,7 @@ class ResReqWebSocket extends EventEmitter {
 
             // WebSocket will try to connect for 20+ seconds before timing out.
             // Implement a shorter timeout here
-            setTimeout(() => reject('WebSocket connection timed out'), 5000);
+            setTimeout(() => reject('WebSocket connection timed out'), 10000);
 
             // if 'error' is fired while connecting, reject the promise
             ws.on('error', reject);
@@ -105,7 +105,8 @@ export class WebKitConnection {
      */
     public attach(port: number): Promise<void> {
         return getUrlWithRetry(`http://localhost:${port}/json`).then(jsonResponse => {
-            const wsUrl = JSON.parse(jsonResponse)[0].webSocketDebuggerUrl;
+            const pages = JSON.parse(jsonResponse).filter(target => target.type === "page");
+            const wsUrl = pages[0].webSocketDebuggerUrl;
             return this._socket.attach(wsUrl);
         }).then(() => <Promise<void>><any>this.sendMessage('Debugger.enable'));
     }
@@ -179,7 +180,7 @@ export class WebKitConnection {
     }
 }
 
-function getUrlWithRetry(url: string, retryCount = 10): Promise<string> {
+function getUrlWithRetry(url: string, retryCount = 500): Promise<string> {
     return getUrl(url).catch(
         e => {
             if (retryCount > 0) {
