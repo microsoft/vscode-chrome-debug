@@ -126,7 +126,11 @@ export class WebKitDebugSession extends DebugSession {
         });
         this._chromeProc.on('exit', () => {
             console.error('chrome exited');
-            //this.terminateSession();
+
+            // This event is fired when Chrome is starting on OS X for some reason
+            if (Utilities.getPlatform() === Utilities.Platform.Windows) {
+                this.terminateSession();
+            }
         });
 
         this.attach(port).then(
@@ -565,8 +569,6 @@ function canonicalizeUrl(url: string): string {
     // Ensure osx path starts with /, it can be removed when file:/// was stripped
     if (url[0] !== '/' && Utilities.getPlatform() === Utilities.Platform.OSX) {
         url = '/' + url;
-    } else if (Utilities.getPlatform() === Utilities.Platform.Windows) {
-        url = url.toLowerCase();
     }
 
     return url;
