@@ -15,11 +15,6 @@ export interface MappingResult {
 }
 
 export interface ISourceMaps {
-    /**
-     * The generated code directory
-     */
-    generatedCodeDirectory: string;
-
 	/*
 	 * Map source language path to generated path.
 	 * Returns null if not found.
@@ -54,10 +49,6 @@ export class SourceMaps implements ISourceMaps {
 	public constructor(generatedCodeDirectory: string) {
 		this._generatedCodeDirectory = generatedCodeDirectory;
 	}
-
-    public get generatedCodeDirectory(): string {
-        return this._generatedCodeDirectory;
-    }
 
 	public MapPathFromSource(pathToSource: string): string {
 		var map = this._findSourceToGeneratedMapping(pathToSource);
@@ -322,7 +313,7 @@ class SourceMap {
 	/*
 	 * finds the nearest location in the generated file for the given source location.
 	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): SourceMap.Position {
+	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
 
 		// make input path relative to sourceRoot
 		if (this._sourceRoot) {

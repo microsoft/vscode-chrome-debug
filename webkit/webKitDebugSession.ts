@@ -81,16 +81,16 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-        if (args.sourceMaps) {
-            this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
+        if (args['sourceMaps']) {
+            this._sourceMaps = new SourceMaps(args['outDir']);
 		}
 
         this.sendResponse(response);
     }
 
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments): void {
-        this._clientCWD = args.workingDirectory;
-        const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
+        this._clientCWD = args['workingDirectory'];
+        const chromeExe = args['runtimeExecutable'] || Utilities.getBrowserPath();
 
         // Start with remote debugging enabled
         const port = 9222;
@@ -98,24 +98,24 @@ export class WebKitDebugSession extends DebugSession {
 
         // Also start with extra stuff disabled, and no user-data-dir so previously open tabs aren't opened.
         chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args.runtimeArguments) {
-            chromeArgs.push(...args.runtimeArguments);
+        if (args['runtimeArguments']) {
+            chromeArgs.push(...args['runtimeArguments']);
         }
 
         // Can html files be sourcemapped? May as well try.
-        if (args.program) {
+        if (args['program']) {
             if (this._sourceMaps) {
-                const generatedPath = this._sourceMaps.MapPathFromSource(args.program);
+                const generatedPath = this._sourceMaps.MapPathFromSource(args['program']);
                 if (generatedPath) {
-                    args.program = generatedPath;
+                    args['program'] = generatedPath;
                 }
             }
 
-            chromeArgs.push(args.program);
+            chromeArgs.push(args['program']);
         }
 
-        if (args.arguments) {
-            chromeArgs.push(...args.arguments);
+        if (args['arguments']) {
+            chromeArgs.push(...args['arguments']);
         }
 
         console.log(`Spawning chrome: "${chromeExe}", ${JSON.stringify(chromeArgs)}`);
@@ -226,14 +226,14 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments): void {
-        if (args.address !== 'localhost') {
+        if (args['address'] !== 'localhost') {
             response.success = false;
             response.message = 'Remote debugging is not supported';
             this.sendResponse(response);
             return;
         }
 
-        this.attach(args.port).then(
+        this.attach(args['port']).then(
             () => this.sendResponse(response),
             e => {
                 response.message = e;
@@ -538,7 +538,7 @@ export class WebKitDebugSession extends DebugSession {
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const rootDir = this._sourceMaps ? this._sourceMaps.generatedCodeDirectory : this._clientCWD;
+            const rootDir = this._sourceMaps ? this._sourceMaps['outDir'] : this._clientCWD;
             const clientUrl = path.join(rootDir, pathParts.join('/'));
             if (fs.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
