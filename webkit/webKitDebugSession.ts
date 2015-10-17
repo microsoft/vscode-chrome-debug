@@ -13,7 +13,6 @@ import {spawn, ChildProcess} from 'child_process';
 import nodeUrl = require('url');
 import path = require('path');
 import fs = require('fs');
-import os = require('os');
 
 interface IPendingBreakpoint {
     response: DebugProtocol.SetBreakpointsResponse;
@@ -556,17 +555,18 @@ export class WebKitDebugSession extends DebugSession {
  * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
  * The ODP client can handle urls in this format too.
  * file:///d:\\scripts\\code.js => d:/scripts/code.js
- * http://localhost/app/scripts/code.js => /app/scripts/code.js
+ * file:///Users/me/project/code.js => /Users/me/project/code.js
  */
 function canonicalizeUrl(url: string): string {
     url = url
         .replace('file:///', '')
-        .replace(/\\/g, '/') // \ to /
-        .toLowerCase();
+        .replace(/\\/g, '/'); // \ to /
 
-    // Ensure osx path starts with /, maybe it was removed when file:/// was stripped
-    if (url[0] !== '/' && os.platform() === 'darwin') {
+    // Ensure osx path starts with /, it can be removed when file:/// was stripped
+    if (url[0] !== '/' && Utilities.getPlatform() === Utilities.Platform.OSX) {
         url = '/' + url;
+    } else if (Utilities.getPlatform() === Utilities.Platform.Windows) {
+        url = url.toLowerCase();
     }
 
     return url;

@@ -6,10 +6,20 @@ import os = require('os');
 import fs = require('fs');
 
 export function getBrowserPath(): string {
-    const platform = os.platform();
-    if (platform === 'darwin') {
+    function existsSync(path: string): boolean {
+        try {
+            fs.statSync(path);
+            return true;
+        } catch (e) {
+            // doesn't exist
+            return false;
+        }
+    }
+
+    const platform = getPlatform();
+    if (platform === Platform.OSX) {
         return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    } else if (platform === 'win32') {
+    } else if (platform === Platform.Windows) {
         const pfx86ChromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
         const pfChromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
         if (existsSync(pfx86ChromePath)) {
@@ -24,15 +34,15 @@ export function getBrowserPath(): string {
     }
 }
 
-function existsSync(path: string): boolean {
-    try {
-        fs.statSync(path);
-    } catch (e) {
-        // doesn't exist
-        return false;
-    }
+export const enum Platform {
+    Windows, OSX, Linux
+}
 
-    return true;
+export function getPlatform(): Platform {
+    const platform = os.platform();
+    return platform === 'darwin' ? Platform.OSX :
+        platform === 'win32' ? Platform.Windows :
+        Platform.Linux;
 }
 
 export class DebounceHelper {
