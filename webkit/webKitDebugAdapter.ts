@@ -8,7 +8,6 @@ import {WebKitConnection} from './webKitConnection';
 import Utilities = require('./utilities');
 import {ISourceMaps, SourceMaps} from './sourceMaps';
 
-import {Socket, createServer} from 'net';
 import {spawn, ChildProcess} from 'child_process';
 import nodeUrl = require('url');
 import path = require('path');
