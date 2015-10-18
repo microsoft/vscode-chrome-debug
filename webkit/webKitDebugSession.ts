@@ -19,6 +19,26 @@ interface IPendingBreakpoint {
     args: DebugProtocol.SetBreakpointsArguments;
 }
 
+interface IInitializeRequestArgs extends DebugProtocol.InitializeRequestArguments {
+    sourceMaps?: boolean;
+    generatedCodeDirectory?: string;
+}
+
+interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
+    workingDirectory: string;
+    runtimeArguments?: string[];
+    runtimeExecutable?: string;
+    program?: string;
+    url?: string;
+    arguments?: string[];
+    stopOnEntry?: boolean;
+}
+
+interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
+    port: number;
+    address: string;
+}
+
 export class WebKitDebugSession extends DebugSession {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -81,17 +101,17 @@ export class WebKitDebugSession extends DebugSession {
         super.sendResponse(response);
     }
 
-    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
-        if (args['sourceMaps']) {
-            this._sourceMaps = new SourceMaps(args['outDir']);
+    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: IInitializeRequestArgs): void {
+        if (args.sourceMaps) {
+            this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
 		}
 
         this.sendResponse(response);
     }
 
-    protected launchRequest(response: DebugProtocol.LaunchResponse, args: DebugProtocol.LaunchRequestArguments): void {
-        this._clientCWD = args['workingDirectory'];
-        const chromeExe = args['runtimeExecutable'] || Utilities.getBrowserPath();
+    protected launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArgs): void {
+        this._clientCWD = args.workingDirectory;
+        const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
         // Start with remote debugging enabled
         const port = 9222;
@@ -99,24 +119,26 @@ export class WebKitDebugSession extends DebugSession {
 
         // Also start with extra stuff disabled, and no user-data-dir so previously open tabs aren't opened.
         chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args['runtimeArguments']) {
-            chromeArgs.push(...args['runtimeArguments']);
+        if (args.runtimeArguments) {
+            chromeArgs.push(...args.runtimeArguments);
         }
 
-        // Can html files be sourcemapped? May as well try.
-        if (args['program']) {
+        if (args.program) {
+            // Can html files be sourcemapped? May as well try.
             if (this._sourceMaps) {
-                const generatedPath = this._sourceMaps.MapPathFromSource(args['program']);
+                const generatedPath = this._sourceMaps.MapPathFromSource(args.program);
                 if (generatedPath) {
-                    args['program'] = generatedPath;
+                    args.program = generatedPath;
                 }
             }
 
-            chromeArgs.push(args['program']);
+            chromeArgs.push(args.program);
+        } else if (args.url) {
+            chromeArgs.push(args.url);
         }
 
-        if (args['arguments']) {
-            chromeArgs.push(...args['arguments']);
+        if (args.arguments) {
+            chromeArgs.push(...args.arguments);
         }
 
         console.log(`Spawning chrome: "${chromeExe}", ${JSON.stringify(chromeArgs)}`);
@@ -227,15 +249,15 @@ export class WebKitDebugSession extends DebugSession {
 
     }
 
-    protected attachRequest(response: DebugProtocol.AttachResponse, args: DebugProtocol.AttachRequestArguments): void {
-        if (args['address'] !== 'localhost') {
+    protected attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArgs): void {
+        if (args.address !== 'localhost') {
             response.success = false;
             response.message = 'Remote debugging is not supported';
             this.sendResponse(response);
             return;
         }
 
-        this.attach(args['port']).then(
+        this.attach(args.port).then(
             () => this.sendResponse(response),
             e => {
                 response.message = e;
