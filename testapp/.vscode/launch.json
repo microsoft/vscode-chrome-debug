@@ -15,7 +15,7 @@
         {
             "name": "attach to webkit",
             "type": "webkit",
-            "port": 9221
+            "port": 9222
         }
     ]
 }
