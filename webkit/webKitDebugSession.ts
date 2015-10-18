@@ -25,6 +25,7 @@ export class WebKitDebugSession extends DebugSession {
 
     private _clientCWD: string;
     private _clientAttached: boolean;
+    private _targetAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
@@ -124,14 +125,6 @@ export class WebKitDebugSession extends DebugSession {
             console.error('chrome error: ' + err);
             this.terminateSession();
         });
-        this._chromeProc.on('exit', () => {
-            console.error('chrome exited');
-
-            // This event is fired when Chrome is starting on OS X for some reason
-            if (Utilities.getPlatform() === Utilities.Platform.Windows) {
-                this.terminateSession();
-            }
-        });
 
         this.attach(port).then(
             () => this.sendResponse(response),
@@ -183,6 +176,7 @@ export class WebKitDebugSession extends DebugSession {
     private clearEverything(): void {
         this.clearClientContext();
         this.clearTargetContext();
+        this._chromeProc = null;
 
         if (this._webKitConnection) {
             this._webKitConnection.close();
@@ -223,7 +217,11 @@ export class WebKitDebugSession extends DebugSession {
     }
 
     protected disconnectRequest(response: DebugProtocol.DisconnectResponse): void {
-        this._chromeProc.kill();
+        if (this._chromeProc) {
+            this._chromeProc.kill();
+            this._chromeProc = null;
+        }
+
         this.clearEverything();
         this.sendResponse(response);
 
@@ -569,6 +567,11 @@ function canonicalizeUrl(url: string): string {
     // Ensure osx path starts with /, it can be removed when file:/// was stripped
     if (url[0] !== '/' && Utilities.getPlatform() === Utilities.Platform.OSX) {
         url = '/' + url;
+    }
+
+    // VS Code gives a lowercase drive letter
+    if (url.match(/^[A-Z]:\//) && Utilities.getPlatform() === Utilities.Platform.Windows) {
+        url = url[0].toLowerCase() + url.substr(1);
     }
 
     return url;

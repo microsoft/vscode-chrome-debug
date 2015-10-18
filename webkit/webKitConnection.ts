@@ -37,14 +37,22 @@ class ResReqWebSocket extends EventEmitter {
             ws.on('open', () => {
                 // Replace the promise-rejecting handler
                 ws.removeListener('error', reject);
-                ws.on('error', e => this.emit('error', e));
+                
+                ws.on('error', e => {
+                    console.log('Websocket error: ' + e.toString());
+                    this.emit('error', e);
+                });
+
                 resolve(ws);
             });
             ws.on('message', msgStr => {
                 console.log('From target: ' + msgStr);
                 this.onMessage(JSON.parse(msgStr));
             });
-            ws.on('close', () => this.emit('close'));
+            ws.on('close', () => {
+                console.log('Websocket closed');
+                this.emit('close');
+            });
         });
 
         return <Promise<void>><any>this._wsAttached;
