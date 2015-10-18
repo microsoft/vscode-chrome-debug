@@ -78,7 +78,7 @@ export class WebKitDebugSession extends DebugSession {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
-        this._setBreakpointsRequestQ = Promise.resolve();
+        this._setBreakpointsRequestQ = Promise.resolve<void>();
     }
 
     private clearClientContext(): void {
