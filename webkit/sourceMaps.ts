@@ -296,7 +296,7 @@ class SourceMap {
 	 */
 	public originalPositionFor(line: number, column: number, bias: Bias = Bias.GREATEST_LOWER_BOUND): SourceMap.MappedPosition {
 
-		const mp = this._smc.originalPositionFor({
+		const mp = this._smc.originalPositionFor(<any>{
 			line: line,
 			column: column,
 			bias: bias

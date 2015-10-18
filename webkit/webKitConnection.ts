@@ -6,6 +6,12 @@ import WebSocket = require('ws');
 import http = require('http');
 import {EventEmitter} from 'events';
 
+interface IMessageWithId {
+    id: number;
+    method: string;
+    params?: string[];
+}
+
 /**
  * Implements a Request/Response API on top of a WebSocket for messages that are marked with an `id` property.
  * Emits `message.method` for messages that don't have `id`.
@@ -37,7 +43,7 @@ class ResReqWebSocket extends EventEmitter {
             ws.on('open', () => {
                 // Replace the promise-rejecting handler
                 ws.removeListener('error', reject);
-                
+
                 ws.on('error', e => {
                     console.log('Websocket error: ' + e.toString());
                     this.emit('error', e);
@@ -67,7 +73,7 @@ class ResReqWebSocket extends EventEmitter {
     /**
      * Send a message which must have an id. Ok to call immediately after attach. Messages will be queued until the websocket actually attaches.
      */
-    public sendMessage(message: { id: number }): Promise<any> {
+    public sendMessage(message: IMessageWithId): Promise<any> {
         return new Promise((resolve, reject) => {
             this._pendingRequests.set(message.id, resolve);
             this._wsAttached.then(ws => {

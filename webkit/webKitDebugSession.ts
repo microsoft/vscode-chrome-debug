@@ -78,7 +78,7 @@ export class WebKitDebugSession extends DebugSession {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
-        this._setBreakpointsRequestQ = Promise.resolve<void>();
+        this._setBreakpointsRequestQ = Promise.resolve();
     }
 
     private clearClientContext(): void {
@@ -101,15 +101,17 @@ export class WebKitDebugSession extends DebugSession {
         super.sendResponse(response);
     }
 
-    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: IInitializeRequestArgs): void {
-        if (args.sourceMaps) {
-            this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
+    protected initializeRequest(response: DebugProtocol.InitializeResponse, _args: DebugProtocol.InitializeRequestArguments): void {
+        const initArgs = <IInitializeRequestArgs>_args;
+        if (initArgs.sourceMaps) {
+            this._sourceMaps = new SourceMaps(initArgs.generatedCodeDirectory);
 		}
 
         this.sendResponse(response);
     }
 
-    protected launchRequest(response: DebugProtocol.LaunchResponse, args: ILaunchRequestArgs): void {
+    protected launchRequest(response: DebugProtocol.LaunchResponse, _args: DebugProtocol.LaunchRequestArguments): void {
+        const args = <ILaunchRequestArgs>_args;
         this._clientCWD = args.workingDirectory;
         const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
 
@@ -249,7 +251,8 @@ export class WebKitDebugSession extends DebugSession {
 
     }
 
-    protected attachRequest(response: DebugProtocol.AttachResponse, args: IAttachRequestArgs): void {
+    protected attachRequest(response: DebugProtocol.AttachResponse, _args: DebugProtocol.AttachRequestArguments): void {
+        const args = <IAttachRequestArgs>_args;
         if (args.address !== 'localhost') {
             response.success = false;
             response.message = 'Remote debugging is not supported';
