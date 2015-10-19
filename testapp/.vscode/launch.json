@@ -3,17 +3,17 @@
     "openDebug": "server=4712",
     "configurations": [
         {
-            "name": "test webkit",
+            "name": "test chrome",
             "type": "webkit",
             //"program": "out/client/index.html",
-            "runtimeArgs": ["http://localhost:8080/out/client/index.html?5"],
+            "runtimeArgs": ["http://localhost:8080/out/client/index.html?2"],
             "cwd": ".",
             "stopOnEntry": false,
             "sourceMaps": false,
             "outDir": "out"
         },
         {
-            "name": "attach to webkit",
+            "name": "attach to chrome",
             "type": "webkit",
             "port": 9222
         }
