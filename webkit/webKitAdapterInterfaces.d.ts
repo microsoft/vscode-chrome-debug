@@ -74,3 +74,26 @@ interface IDebugAdapter {
     threads(): Promise<ThreadsResponseBody>;
     evaluate(args: DebugProtocol.EvaluateArguments): Promise<EvaluateResponseBody>;
 }
+
+declare type PromiseOrNot<T> = T | Promise<T>;
+interface IDebugTranslator {
+    initialize?(args: IInitializeRequestArgs): PromiseOrNot<void>;
+    launch?(args: ILaunchRequestArgs): PromiseOrNot<void>;
+    attach?(args: IAttachRequestArgs): PromiseOrNot<void>;
+    setBreakpoints?(args: DebugProtocol.SetBreakpointsArguments): PromiseOrNot<void>;
+    setExceptionBreakpoints?(args: DebugProtocol.SetExceptionBreakpointsArguments): PromiseOrNot<void>;
+
+    stackTrace?(args: DebugProtocol.StackTraceArguments): PromiseOrNot<void>;
+    scopes?(args: DebugProtocol.ScopesArguments): PromiseOrNot<void>;
+    variables?(args: DebugProtocol.VariablesArguments): PromiseOrNot<void>;
+    source?(args: DebugProtocol.SourceArguments): PromiseOrNot<void>;
+    evaluate?(args: DebugProtocol.EvaluateArguments): PromiseOrNot<void>;
+
+    setBreakpointsResponse?(response: SetBreakpointsResponseBody): PromiseOrNot<void>;
+    stackTraceResponse?(response: StackTraceResponseBody): PromiseOrNot<void>;
+    scopesResponse?(response: ScopesResponseBody): PromiseOrNot<void>;
+    variablesResponse?(response: VariablesResponseBody): PromiseOrNot<void>;
+    sourceResponse?(response: SourceResponseBody): PromiseOrNot<void>;
+    threadsResponse?(response: ThreadsResponseBody): PromiseOrNot<void>;
+    evaluateResponse?(response: EvaluateResponseBody): PromiseOrNot<void>;
+}

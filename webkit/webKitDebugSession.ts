@@ -6,28 +6,54 @@ import {Response} from '../common/v8Protocol';
 import {DebugSession, ErrorDestination} from '../common/debugSession';
 import {WebKitDebugAdapter} from './webKitDebugAdapter';
 
+import {AdapterProxy} from '../adapter/adapterProxy';
+import {LineNumberTranslator} from '../adapter/lineNumberTranslator';
+
 export class WebKitDebugSession extends DebugSession {
-    private _debugAdapter: IDebugAdapter;
+    private _adapterProxy: AdapterProxy;
 
-    public constructor(debuggerLinesStartAt1: boolean, isServer: boolean = false) {
-        super(debuggerLinesStartAt1, isServer);
+    public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
+        super(targetLinesStartAt1, isServer);
 
-        this._debugAdapter = new WebKitDebugAdapter(debuggerLinesStartAt1, isServer);
-        this._debugAdapter.registerEventHandler(event => this.sendEvent(event));
+        this._adapterProxy = new AdapterProxy(
+            [new LineNumberTranslator(targetLinesStartAt1)],
+            new WebKitDebugAdapter(),
+            event => this.sendEvent(event));
     }
 
+    /**
+     * Overload sendEvent to log
+     */
     public sendEvent(event: DebugProtocol.Event): void {
         console.log(`To client: ${JSON.stringify(event) }`);
         super.sendEvent(event);
     }
 
+    /**
+     * Overload sendResponse to log
+     */
+    public sendResponse(response: DebugProtocol.Response): void {
+        console.log(`To client: ${JSON.stringify(response) }`);
+        super.sendResponse(response);
+    }
+
+    /**
+     * Takes a response and a promise to the response body. If the promise is successful, assigns the response body and sends the response.
+     * If the promise fails, sets the appropriate response parameters and sends the response.
+     */
     public sendResponseAsync(response: DebugProtocol.Response, responseP: Promise<any>): void {
         responseP.then(
-            (body) => {
+            (body?) => {
                 response.body = body;
                 this.sendResponse(response);
             },
             e => {
+                const eStr = e.toString();
+                if (eStr === 'unknowncommand') {
+                    this.sendErrorResponse(response, 1014, 'Unrecognized request', null, ErrorDestination.Telemetry);
+                    return;
+                }
+
                 console.log(e.toString());
                 response.message = e.toString();
                 response.success = false;
@@ -35,25 +61,18 @@ export class WebKitDebugSession extends DebugSession {
             });
     }
 
-    public sendResponse(response: DebugProtocol.Response): void {
-        console.log(`To client: ${JSON.stringify(response) }`);
-        super.sendResponse(response);
-    }
-
+    /**
+     * Overload dispatchRequest to dispatch to the adapter proxy instead of debugSession's methods for each request.
+     */
     protected dispatchRequest(request: DebugProtocol.Request): void {
-        console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
-
         const response = new Response(request);
         try {
-            if (request.command in this._debugAdapter) {
-                this.sendResponseAsync(
-                    response,
-                    this._debugAdapter[request.command](request.arguments));
-            } else {
-                this.sendErrorResponse(response, 1014, "unrecognized request", null, ErrorDestination.Telemetry);
-            }
+            console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
+            this.sendResponseAsync(
+                response,
+                this._adapterProxy.dispatchRequest(request));
         } catch (e) {
-            this.sendErrorResponse(response, 1104, "exception while processing request (exception: {_exception})", { _exception: e.message }, ErrorDestination.Telemetry);
+            this.sendErrorResponse(response, 1104, 'Exception while processing request (exception: {_exception})', { _exception: e.message }, ErrorDestination.Telemetry);
         }
     }
 }

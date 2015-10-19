@@ -68,3 +68,10 @@ export class DebounceHelper {
         fn();
     }
 }
+
+export function reversedArr(arr: any[]): any[] {
+    return arr.reduce((reversed: any[], x: any) => {
+        reversed.unshift(x);
+        return reversed;
+    }, []);
+}

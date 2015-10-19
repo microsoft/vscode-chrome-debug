@@ -23,7 +23,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 
-    private _debuggerLinesStartAt1: boolean;
     private _clientLinesStartAt1: boolean;
 
     private _clientCWD: string;
@@ -46,8 +45,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     private _setBreakpointsRequestQ: Promise<any>;
 
-    public constructor(debuggerLinesStartAt1: boolean, isServer: boolean = false) {
-        this._debuggerLinesStartAt1 = debuggerLinesStartAt1;
+    public constructor() {
         this._variableHandles = new Handles<string>();
         this._overlayHelper = new Utilities.DebounceHelper(/*timeoutMs=*/200);
 
@@ -72,10 +70,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
         this._eventHandler = eventHandler;
-    }
-
-    private sendEvent(event: DebugProtocol.Event): void {
-        this._eventHandler(event);
     }
 
     public initialize(args: IInitializeRequestArgs): Promise<void> {
@@ -145,7 +139,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
             return this._webKitConnection.attach(port)
                 .then(
-                    () => this.sendEvent(new InitializedEvent()),
+                    () => this._eventHandler(new InitializedEvent()),
                     e => {
                         this.clearEverything();
                         return Promise.reject(e);
@@ -160,7 +154,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
      */
     private terminateSession(): void {
         if (this._clientAttached) {
-            this.sendEvent(new TerminatedEvent());
+            this._eventHandler(new TerminatedEvent());
         }
 
         this.clearEverything();
@@ -188,7 +182,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
         const exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
-        this.sendEvent(new StoppedEvent('pause', /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
+        this._eventHandler(new StoppedEvent('pause', /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
     }
 
     private onDebuggerResumed(): void {
@@ -267,7 +261,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Adjust lines for sourcemaps, call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
-            .map(clientLine => this.convertClientLineToDebugger(clientLine))
             .map(debuggerLine => {
                 // Sourcemap lines
                 if (this._sourceMaps) {
@@ -305,7 +298,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
                 return <DebugProtocol.Breakpoint>{
                     verified: true,
-                    line: this.convertDebuggerLineToClient(line)
+                    line: line
                 }
             });
     }
@@ -373,7 +366,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 id: i,
                 name: callFrame.functionName || '(eval code)', // anything else?
                 source,
-                line: this.convertDebuggerLineToClient(line),
+                line: line,
                 column
             };
         });
@@ -521,20 +514,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         return '';
-    }
-
-    private convertClientLineToDebugger(line): number {
-        if (this._debuggerLinesStartAt1) {
-            return this._clientLinesStartAt1 ? line : line + 1;
-        }
-        return this._clientLinesStartAt1 ? line - 1 : line;
-    }
-
-    private convertDebuggerLineToClient(line): number {
-        if (this._debuggerLinesStartAt1) {
-            return this._clientLinesStartAt1 ? line : line - 1;
-        }
-        return this._clientLinesStartAt1 ? line + 1 : line;
     }
 }
 
