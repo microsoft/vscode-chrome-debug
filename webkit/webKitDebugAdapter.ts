@@ -33,6 +33,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
     private _sourceMaps: ISourceMaps;
+    private _generatedCodeDirectory: string;
     private _overlayHelper: Utilities.DebounceHelper;
 
     private _chromeProc: ChildProcess;
@@ -76,6 +77,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._clientLinesStartAt1 = args.linesStartAt1;
         if (args.sourceMaps) {
             this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
+            this._generatedCodeDirectory = args.generatedCodeDirectory;
 		}
 
         return Promise.resolve<void>();
@@ -504,7 +506,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const rootDir = this._sourceMaps ? this._sourceMaps['outDir'] : this._clientCWD;
+            const rootDir = this._sourceMaps ? this._generatedCodeDirectory : this._clientCWD;
             const clientUrl = path.join(rootDir, pathParts.join('/'));
             if (fs.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
