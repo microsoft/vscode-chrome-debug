@@ -1,4 +1,4 @@
-function printHello() {
+function locals() {
     var arr1 = [1, 2, 3];
 
 
@@ -27,17 +27,18 @@ function printHello() {
     anotherFn();
     fn();
 
+    throwCaught();
+    throwUncaught();
+}
+
+function throwCaught() {
+    try { throw new Error('Caught exception') } catch (e) {}
+}
+
+function throwUncaught() {
+    throw new Error('Uncaught exception');
+}
+
+function evalDebugger() {
     eval('var x = 1; debugger;');
-
-    try { throwSomething() } catch (e) {}
-    throwSomething();
-}
-
-function anotherFn() {
-    var zzzz = 1;
-    return 2345;
-}
-
-function throwSomething() {
-    throw new Error('error!');
 }

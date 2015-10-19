@@ -2,11 +2,17 @@
 <html>
   <head>
     <script src="test1.js"></script>
+    <script src="test2.js"></script>
+    <script src="workerHost.js"></script>
   </head>
 
   <body>
     <h1>Hello, world!</h1>
     <h2 id="result"></h2>
-    <input type="button" value="Click!" onclick="printHello()" />
+    <input type="button" value="Test locals" onclick="locals()" />
+    <input type="button" value="Eval" onclick="evalDebugger()" />
+    <input type="button" value="Start webworker" onclick="startWorker()" />
+    <input type="button" value="Send webworker message" onclick="sendWorkerMessage()" />
+    <input type="button" value="Terminate webworker" onclick="killWorker()" />
   </body>
 </html>
