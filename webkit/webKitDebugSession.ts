@@ -7,7 +7,7 @@ import {DebugSession, ErrorDestination} from '../common/debugSession';
 import {WebKitDebugAdapter} from './webKitDebugAdapter';
 
 import {AdapterProxy} from '../adapter/adapterProxy';
-import {LineNumberTranslator} from '../adapter/lineNumberTranslator';
+import {LineNumberTransformer} from '../adapter/lineNumberTransformer';
 
 export class WebKitDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
@@ -16,7 +16,7 @@ export class WebKitDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         this._adapterProxy = new AdapterProxy(
-            [new LineNumberTranslator(targetLinesStartAt1)],
+            [new LineNumberTransformer(targetLinesStartAt1)],
             new WebKitDebugAdapter(),
             event => this.sendEvent(event));
     }

@@ -5,7 +5,7 @@
 /**
  * Converts from 1 based lines on the client side to 0 based lines on the target side
  */
-export class LineNumberTranslator  {
+export class LineNumberTransformer implements IDebugTransformer  {
     private _targetLinesStartAt1: boolean;
     private _clientLinesStartAt1: boolean;
 

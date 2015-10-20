@@ -9,7 +9,7 @@
     },
     "files": [
         "adapter/adapterProxy.ts",
-        "adapter/lineNumberTranslator.ts",
+        "adapter/lineNumberTransformer.ts",
         "webkit/openDebugWebKit.ts",
         "webkit/pathUtilities.ts",
         "webkit/sourceMaps.ts",

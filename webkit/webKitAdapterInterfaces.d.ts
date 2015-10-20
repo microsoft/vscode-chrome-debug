@@ -76,7 +76,7 @@ interface IDebugAdapter {
 }
 
 declare type PromiseOrNot<T> = T | Promise<T>;
-interface IDebugTranslator {
+interface IDebugTransformer {
     initialize?(args: IInitializeRequestArgs): PromiseOrNot<void>;
     launch?(args: ILaunchRequestArgs): PromiseOrNot<void>;
     attach?(args: IAttachRequestArgs): PromiseOrNot<void>;
