@@ -37,7 +37,7 @@ export class AdapterProxy {
                 return request.command in transformer ?
                     p.then(() => transformer[request.command](request.arguments)) :
                     p;
-            }, Promise.resolve<void>())
+            }, Promise.resolve<void>());
     }
 
     /**

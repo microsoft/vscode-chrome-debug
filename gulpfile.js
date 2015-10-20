@@ -8,13 +8,14 @@ var ts = require('gulp-typescript');
 var log = require('gulp-util').log;
 var typescript = require('typescript');
 var sourcemaps = require('gulp-sourcemaps');
+var mocha = require('gulp-mocha');
 
 var sources = [
     'adapter',
     'common',
-    'node',
-    'webkit',
+    'test',
     'typings',
+    'webkit',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
 var projectConfig = {
@@ -26,16 +27,30 @@ var projectConfig = {
 };
 
 gulp.task('build', function () {
-    gulp.src(sources, { base: '.' })
+    return gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig))
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/opendebug-webkit' }))
         .pipe(gulp.dest('out'));
 });
 
-gulp.task('ts-watch', ['build'], function(cb) {
+gulp.task('watch', ['build'], function(cb) {
     log('Watching build sources...');
-    gulp.watch(sources, ['build']);
+    return gulp.watch(sources, ['build']);
 });
 
 gulp.task('default', ['build']);
+
+
+function test() {
+    return gulp.src('out/test/**/*.test.js', { read: false })
+        .pipe(mocha())
+        .on('error', function() { });
+}
+
+gulp.task('build-test', ['build'], test);
+gulp.task('test', test);
+
+gulp.task('watch-build-test', ['build', 'build-test'], function(cb) {
+    return gulp.watch(sources, ['build', 'build-test']);
+});

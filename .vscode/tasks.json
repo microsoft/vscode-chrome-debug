@@ -4,13 +4,17 @@
     "isShellCommand": true,
     "tasks": [
        {
-            "taskName": "ts-watch",
+            "taskName": "watch",
             "args": [],
             "isBuildCommand": true,
             "isWatching": true,
             "problemMatcher": [
                 "$tsc"
             ]
+        },
+        {
+            "taskName": "build-test-watch",
+            "isWatching": true
         }
     ]
 }
