@@ -70,7 +70,7 @@ declare module WebKitProtocol {
             result: {
                 breakpointId: BreakpointId;
                 actualLocation: Location;
-            }
+            };
         }
 
         interface RemoveBreakpointParams {
@@ -100,8 +100,8 @@ declare module WebKitProtocol {
                     line: number;
                     column: number;
                     stackTrace: ExceptionStackFrame[];
-                }
-            }
+                };
+            };
         }
 
         interface SetPauseOnExceptionsParams {
@@ -115,7 +115,7 @@ declare module WebKitProtocol {
         interface GetScriptSourceResponse extends Response {
             result: {
                 scriptSource: string;
-            }
+            };
         }
     }
 
@@ -128,7 +128,7 @@ declare module WebKitProtocol {
         interface GetPropertiesResponse extends Response {
             result: {
                 result: PropertyDescriptor[];
-            }
+            };
         }
 
         interface PropertyDescriptor {
@@ -162,7 +162,7 @@ declare module WebKitProtocol {
             result: {
                 result: Runtime.RemoteObject;
                 wasThrown: boolean;
-            }
+            };
         }
     }
 

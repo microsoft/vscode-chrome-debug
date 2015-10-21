@@ -120,7 +120,7 @@ export class WebKitConnection {
      */
     public attach(port: number): Promise<void> {
         return getUrlWithRetry(`http://localhost:${port}/json`).then(jsonResponse => {
-            const pages = JSON.parse(jsonResponse).filter(target => target.type === "page");
+            const pages = JSON.parse(jsonResponse).filter(target => target.type === 'page');
             const wsUrl = pages[0].webSocketDebuggerUrl;
             return this._socket.attach(wsUrl);
         }).then(() => <Promise<void>><any>this.sendMessage('Debugger.enable'));
@@ -130,12 +130,12 @@ export class WebKitConnection {
         this._socket.close();
     }
 
-    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string):Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
+    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
         return this.sendMessage('Debugger.setBreakpoint', <WebKitProtocol.Debugger.SetBreakpointParams>{ location, condition });
     }
 
     public debugger_removeBreakpoint(breakpointId: string): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.removeBreakpoint', <WebKitProtocol.Debugger.RemoveBreakpointParams>{ breakpointId })
+        return this.sendMessage('Debugger.removeBreakpoint', <WebKitProtocol.Debugger.RemoveBreakpointParams>{ breakpointId });
     }
 
     public debugger_stepOver(): Promise<WebKitProtocol.Response> {

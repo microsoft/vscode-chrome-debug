@@ -27,8 +27,6 @@
     "member-access": true,
     "member-ordering": [
       true,
-      //"public-before-private",
-      //"static-before-instance",
       "variables-before-functions"
     ],
     "no-any": false,
@@ -50,7 +48,7 @@
     "no-empty": false,
     "no-eval": true,
     "no-inferrable-types": false,
-    "no-internal-module": true,
+    "no-internal-module": false,
     "no-keyword-named-variables": true,
     "no-require-imports": true,
     "no-shadowed-variable": true,

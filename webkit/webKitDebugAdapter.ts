@@ -2,15 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
+import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
-import nodeUrl = require('url');
-import path = require('path');
-import fs = require('fs');
+import * as nodeUrl from 'url';
+import * as path from 'path';
+import * as fs from 'fs';
 
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
@@ -26,7 +26,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     private _clientCWD: string;
     private _clientAttached: boolean;
-    private _targetAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
@@ -101,7 +100,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             chromeArgs.push(...args.arguments);
         }
 
-        console.log(`Spawning chrome: "${chromeExe}", ${JSON.stringify(chromeArgs)}`);
+        console.log(`Spawning chrome: '${chromeExe}', ${JSON.stringify(chromeArgs)}`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
             console.error('chrome error: ' + err);
@@ -185,9 +184,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsById.set(script.scriptId, script);
 
         if (this._pendingBreakpointsByUrl.has(clientUrl)) {
-            const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
+            ///const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
             this._pendingBreakpointsByUrl.delete(clientUrl);
-            // TODO this.setBreakpoints(pendingBreakpoint.response, pendingBreakpoint.args);
+            ///TODO this.setBreakpoints(pendingBreakpoint.response, pendingBreakpoint.args);
         }
     }
 
@@ -240,9 +239,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             // TODO caching by source.path seems wrong because it may not exist? But this implies that we haven't told ODP about this script so it may have to be set. Assert non-null?
             return new Promise((resolve: (response: SetBreakpointsResponseBody) => void, reject) => {
                 this._pendingBreakpointsByUrl.set(canonicalizeUrl(args.source.path), { resolve, reject, args });
-            })
+            });
         }
     }
+
 
     private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Call setBreakpoint for all breakpoints in the script simultaneously
@@ -275,12 +275,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void> {
         let state: string;
-        if (args.filters.indexOf("all") >= 0) {
-            state = "all";
-        } else if (args.filters.indexOf("uncaught") >= 0) {
-            state = "uncaught";
+        if (args.filters.indexOf('all') >= 0) {
+            state = 'all';
+        } else if (args.filters.indexOf('uncaught') >= 0) {
+            state = 'uncaught';
         } else {
-            state = "none";
+            state = 'none';
         }
 
         return this._webKitConnection.debugger_setPauseOnExceptions(state)
@@ -437,7 +437,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
         // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
-        // state where later adds on the same line will fail with "breakpoint already exists" even though it
+        // state where later adds on the same line will fail with 'breakpoint already exists' even though it
         // does not break there.
         return committedBps.reduce<Promise<void>>((p, bpId) => {
             return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
@@ -450,7 +450,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
      */
     private webkitUrlToClientUrl(url: string): string {
         // If a file:/// url is loaded in the client, just send the absolute path of the file
-        if (url.substr(0, 8) === "file:///") {
+        if (url.substr(0, 8) === 'file:///') {
             return canonicalizeUrl(url);
         }
 
@@ -504,7 +504,7 @@ function canonicalizeUrl(url: string): string {
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {
-    return parseInt(scriptId);
+    return parseInt(scriptId, 10);
 }
 
 function sourceReferenceToScriptId(sourceReference: number): WebKitProtocol.Debugger.ScriptId {

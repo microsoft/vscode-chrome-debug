@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import Utilities = require('../webkit/utilities');
+import * as Utilities from '../webkit/utilities';
 
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
@@ -52,7 +52,7 @@ export class AdapterProxy {
         return reversedTransformers.reduce(
             (p, transformer) => {
                 // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
-                const bodyTransformMethodName = request.command + "Response";
+                const bodyTransformMethodName = request.command + 'Response';
                 return bodyTransformMethodName in transformer ?
                     p.then(() => transformer[bodyTransformMethodName](body, request.seq)) :
                     p;
