@@ -1,4 +1,4 @@
-declare module WebKitProtocol {
+declare namespace WebKitProtocol {
     interface Notification {
         method: string;
         params: any;
@@ -16,7 +16,7 @@ declare module WebKitProtocol {
         result?: any;
     }
 
-    module Debugger {
+    namespace Debugger {
         type ScriptId = string;
         type BreakpointId = string;
 
@@ -119,7 +119,7 @@ declare module WebKitProtocol {
         }
     }
 
-    module Runtime {
+    namespace Runtime {
         interface GetPropertiesParams {
             objectId: string;
             ownProperties: boolean;
@@ -166,7 +166,7 @@ declare module WebKitProtocol {
         }
     }
 
-    module Page {
+    namespace Page {
         interface SetOverlayMessageRequest extends Request {
             message: string;
         }
