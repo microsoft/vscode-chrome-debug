@@ -6,27 +6,5 @@
         "target": "ES5",
         "sourceMap": true,
         "outDir": "out"
-    },
-    "files": [
-        "adapter/adapterProxy.ts",
-        "adapter/lineNumberTransformer.ts",
-        "webkit/openDebugWebKit.ts",
-        "webkit/pathUtilities.ts",
-        "webkit/sourceMaps.ts",
-        "webkit/utilities.ts",
-        "webkit/webKitConnection.ts",
-        "webkit/webKitDebugAdapter.ts",
-        "webkit/webKitDebugSession.ts",
-        "webkit/webKitProtocol.d.ts",
-        "webkit/webKitAdapterInterfaces.d.ts",
-        "common/debugProtocol.d.ts",
-        "common/debugSession.ts",
-        "common/handles.ts",
-        "common/v8Protocol.ts",
-        "typings/es6-collections/es6-collections.d.ts",
-        "typings/es6-promise/es6-promise.d.ts",
-        "typings/node/node.d.ts",
-        "typings/source-map/source-map.d.ts",
-        "typings/ws/ws.d.ts"
-    ]
+    }
 }

@@ -13,8 +13,9 @@
             ]
         },
         {
-            "taskName": "build-test-watch",
-            "isWatching": true
+            "taskName": "watch-build-test",
+            "isWatching": true,
+            "isTestCommand": true
         }
     ]
 }

@@ -8,6 +8,7 @@ import {WebKitDebugAdapter} from './webKitDebugAdapter';
 
 import {AdapterProxy} from '../adapter/adapterProxy';
 import {LineNumberTransformer} from '../adapter/lineNumberTransformer';
+import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
 
 export class WebKitDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
@@ -16,7 +17,10 @@ export class WebKitDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         this._adapterProxy = new AdapterProxy(
-            [new LineNumberTransformer(targetLinesStartAt1)],
+            [
+                new LineNumberTransformer(targetLinesStartAt1),
+                new SourceMapTransformer()
+            ],
             new WebKitDebugAdapter(),
             event => this.sendEvent(event));
     }

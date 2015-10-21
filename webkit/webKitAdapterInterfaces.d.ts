@@ -77,23 +77,23 @@ interface IDebugAdapter {
 
 declare type PromiseOrNot<T> = T | Promise<T>;
 interface IDebugTransformer {
-    initialize?(args: IInitializeRequestArgs): PromiseOrNot<void>;
-    launch?(args: ILaunchRequestArgs): PromiseOrNot<void>;
-    attach?(args: IAttachRequestArgs): PromiseOrNot<void>;
-    setBreakpoints?(args: DebugProtocol.SetBreakpointsArguments): PromiseOrNot<void>;
-    setExceptionBreakpoints?(args: DebugProtocol.SetExceptionBreakpointsArguments): PromiseOrNot<void>;
+    initialize?(args: IInitializeRequestArgs, requestSeq?: number): PromiseOrNot<void>;
+    launch?(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
+    attach?(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;
+    setBreakpoints?(args: DebugProtocol.SetBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;
+    setExceptionBreakpoints?(args: DebugProtocol.SetExceptionBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;
 
-    stackTrace?(args: DebugProtocol.StackTraceArguments): PromiseOrNot<void>;
-    scopes?(args: DebugProtocol.ScopesArguments): PromiseOrNot<void>;
-    variables?(args: DebugProtocol.VariablesArguments): PromiseOrNot<void>;
-    source?(args: DebugProtocol.SourceArguments): PromiseOrNot<void>;
-    evaluate?(args: DebugProtocol.EvaluateArguments): PromiseOrNot<void>;
+    stackTrace?(args: DebugProtocol.StackTraceArguments, requestSeq?: number): PromiseOrNot<void>;
+    scopes?(args: DebugProtocol.ScopesArguments, requestSeq?: number): PromiseOrNot<void>;
+    variables?(args: DebugProtocol.VariablesArguments, requestSeq?: number): PromiseOrNot<void>;
+    source?(args: DebugProtocol.SourceArguments, requestSeq?: number): PromiseOrNot<void>;
+    evaluate?(args: DebugProtocol.EvaluateArguments, requestSeq?: number): PromiseOrNot<void>;
 
-    setBreakpointsResponse?(response: SetBreakpointsResponseBody): PromiseOrNot<void>;
-    stackTraceResponse?(response: StackTraceResponseBody): PromiseOrNot<void>;
-    scopesResponse?(response: ScopesResponseBody): PromiseOrNot<void>;
-    variablesResponse?(response: VariablesResponseBody): PromiseOrNot<void>;
-    sourceResponse?(response: SourceResponseBody): PromiseOrNot<void>;
-    threadsResponse?(response: ThreadsResponseBody): PromiseOrNot<void>;
-    evaluateResponse?(response: EvaluateResponseBody): PromiseOrNot<void>;
+    setBreakpointsResponse?(response: SetBreakpointsResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    stackTraceResponse?(response: StackTraceResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    scopesResponse?(response: ScopesResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    variablesResponse?(response: VariablesResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    sourceResponse?(response: SourceResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    threadsResponse?(response: ThreadsResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    evaluateResponse?(response: EvaluateResponseBody, requestSeq?: number): PromiseOrNot<void>;
 }

@@ -35,7 +35,7 @@ export class AdapterProxy {
             (p, transformer) => {
                 // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
                 return request.command in transformer ?
-                    p.then(() => transformer[request.command](request.arguments)) :
+                    p.then(() => transformer[request.command](request.arguments, request.seq)) :
                     p;
             }, Promise.resolve<void>());
     }
@@ -54,7 +54,7 @@ export class AdapterProxy {
                 // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
                 const bodyTransformMethodName = request.command + "Response";
                 return bodyTransformMethodName in transformer ?
-                    p.then(() => transformer[bodyTransformMethodName](body)) :
+                    p.then(() => transformer[bodyTransformMethodName](body, request.seq)) :
                     p;
             }, Promise.resolve<void>());
     }

@@ -6,7 +6,6 @@ import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import Utilities = require('./utilities');
-import {ISourceMaps, SourceMaps} from './sourceMaps';
 
 import {spawn, ChildProcess} from 'child_process';
 import nodeUrl = require('url');
@@ -32,8 +31,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
-    private _sourceMaps: ISourceMaps;
-    private _generatedCodeDirectory: string;
     private _overlayHelper: Utilities.DebounceHelper;
 
     private _chromeProc: ChildProcess;
@@ -75,11 +72,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public initialize(args: IInitializeRequestArgs): Promise<void> {
         this._clientLinesStartAt1 = args.linesStartAt1;
-        if (args.sourceMaps) {
-            this._sourceMaps = new SourceMaps(args.generatedCodeDirectory);
-            this._generatedCodeDirectory = args.generatedCodeDirectory;
-		}
-
         return Promise.resolve<void>();
     }
 
@@ -98,17 +90,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         if (args.program) {
-            // Can html files be sourcemapped? May as well try.
-            if (this._sourceMaps) {
-                const generatedPath = this._sourceMaps.MapPathFromSource(args.program);
-                if (generatedPath) {
-                    args.program = generatedPath;
-                }
-            }
-
             chromeArgs.push(args.program);
         } else if (args.url) {
             chromeArgs.push(args.url);
+        } else {
+            // TODO fail
         }
 
         if (args.arguments) {
@@ -234,9 +220,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _setAllBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody> {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
-            const path = (this._sourceMaps && this._sourceMaps.MapPathFromSource(args.source.path)) || args.source.path;
-            const canPath = canonicalizeUrl(path);
-            targetScript = this._scriptsByUrl.get(canPath);
+            targetScript = this._scriptsByUrl.get(canonicalizeUrl(args.source.path));
         } else if (args.source.sourceReference) {
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
         } else if (args.source.name) {
@@ -263,15 +247,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Adjust lines for sourcemaps, call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
-            .map(debuggerLine => {
-                // Sourcemap lines
-                if (this._sourceMaps) {
-                    const mapped = this._sourceMaps.MapFromSource(sourcePath, debuggerLine, /*column=*/0);
-                    return mapped ? mapped.line : debuggerLine;
-                } else {
-                    return debuggerLine;
-                }
-            })
             .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber }));
 
         // Join all setBreakpoint requests to a single promise
@@ -290,18 +265,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return successfulResponses
             .map(response => {
                 let line = response.result.actualLocation.lineNumber;
-                if (this._sourceMaps) {
-                    const clientUrl = this.webkitUrlToClientUrl(script.url);
-                    const mapped = this._sourceMaps.MapToSource(clientUrl, response.result.actualLocation.lineNumber, response.result.actualLocation.columnNumber);
-                    if (mapped) {
-                        line = mapped.line;
-                    }
-                }
-
                 return <DebugProtocol.Breakpoint>{
                     verified: true,
-                    line: line
-                }
+                    line,
+                    column: response.result.actualLocation.columnNumber
+                };
             });
     }
 
@@ -350,15 +318,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             let path = this.webkitUrlToClientUrl(script.url);
             let line = callFrame.location.lineNumber;
             let column = callFrame.location.columnNumber;
-            if (this._sourceMaps) {
-                const mapped = this._sourceMaps.MapToSource(path, line, column);
-                if (mapped) {
-                    path = mapped.path;
-                    line = mapped.line;
-                    column = mapped.column;
-                }
-            }
 
+            // Both?
             const source = <DebugProtocol.Source>{
                 path,
                 sourceReference: scriptIdToSourceReference(script.scriptId)
@@ -398,7 +359,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 return { variables };
             });
         } else {
-            return Promise.resolve<VariablesResponseBody>();
+            return Promise.resolve(null);
         }
     }
 
@@ -506,8 +467,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const rootDir = this._sourceMaps ? this._generatedCodeDirectory : this._clientCWD;
-            const clientUrl = path.join(rootDir, pathParts.join('/'));
+            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
             if (fs.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
             }

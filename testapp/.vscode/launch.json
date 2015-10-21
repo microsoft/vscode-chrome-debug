@@ -9,7 +9,7 @@
             "runtimeArgs": ["http://localhost:8080/out/client/index.html?2"],
             "cwd": ".",
             "stopOnEntry": false,
-            "sourceMaps": false,
+            "sourceMaps": true,
             "outDir": "out"
         },
         {

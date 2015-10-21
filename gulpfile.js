@@ -44,13 +44,16 @@ gulp.task('default', ['build']);
 
 function test() {
     return gulp.src('out/test/**/*.test.js', { read: false })
-        .pipe(mocha())
-        .on('error', function() { });
+        .pipe(mocha({ ui: 'tdd' }))
+        .on('error', function(e) {
+            log(e ? e.toString() : 'error in test task!');
+            this.emit('end');
+        });
 }
 
 gulp.task('build-test', ['build'], test);
 gulp.task('test', test);
 
-gulp.task('watch-build-test', ['build', 'build-test'], function(cb) {
+gulp.task('watch-build-test', ['build', 'build-test'], function() {
     return gulp.watch(sources, ['build', 'build-test']);
 });

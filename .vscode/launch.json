@@ -13,18 +13,10 @@
         },
         {
             "name": "test",
-            "type": "webkit",
-            "program": "./webkit/test/index.html",
-            "stopOnEntry": false,
-            "sourceMaps": false,
-            "outDir": "out"
-        },
-        {
-            "name": "opendebug-node",
             "type": "node",
-            "program": "./out/node/openDebugNode.js",
+            "program": "./node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
-            "args": [ "--server=4712" ],
+            "args": [ "test" ],
             "sourceMaps": false,
             "outDir": "out"
         }
