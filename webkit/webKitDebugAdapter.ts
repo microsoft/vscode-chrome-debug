@@ -245,7 +245,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
-        // Adjust lines for sourcemaps, call setBreakpoint for all breakpoints in the script simultaneously
+        // Call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
             .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber }));
 

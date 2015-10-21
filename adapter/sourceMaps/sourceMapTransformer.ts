@@ -30,6 +30,9 @@ export class SourceMapTransformer implements IDebugTransformer {
         }
     }
 
+    /**
+     * Apply sourcemapping to the setBreakpoints request path/lines
+     */
     public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments, requestSeq: number): void {
         if (this._sourceMaps && args.source.path) {
             const argsPath = args.source.path;
@@ -44,6 +47,9 @@ export class SourceMapTransformer implements IDebugTransformer {
         }
     }
 
+    /**
+     * Apply sourcemapping back to authored files from the response
+     */
     public setBreakpointsResponse(response: SetBreakpointsResponseBody, requestSeq: number): void {
         if (this._sourceMaps && this._requestSeqToSetBreakpointsArgs.has(requestSeq)) {
             const args = this._requestSeqToSetBreakpointsArgs.get(requestSeq);
@@ -65,6 +71,9 @@ export class SourceMapTransformer implements IDebugTransformer {
         }
     }
 
+    /**
+     * Apply sourcemapping to the stacktrace response
+     */
     public stackTraceResponse(response: StackTraceResponseBody): void {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
