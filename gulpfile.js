@@ -41,6 +41,22 @@ gulp.task('watch', ['build'], function(cb) {
 
 gulp.task('default', ['build']);
 
+var lintSources = [
+    'test',
+    'webkit',
+].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
+lintSources = lintSources.concat([
+    'adapter/sourceMaps/ourceMapsSourceMapTransformer.ts',
+    'adapter/adapterProxy.ts',
+    'adapter/lineNumberTransformer.ts',
+])
+
+var tslint = require('gulp-tslint');
+gulp.task('tslint', function(){
+      return gulp.src(lintSources, { base: '.' })
+        .pipe(tslint())
+        .pipe(tslint.report('verbose'));
+});
 
 function test() {
     return gulp.src('out/test/**/*.test.js', { read: false })

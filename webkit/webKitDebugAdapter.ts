@@ -5,7 +5,7 @@
 import {DebugSession, StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
-import Utilities = require('./utilities');
+import * as Utilities from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
 import nodeUrl = require('url');

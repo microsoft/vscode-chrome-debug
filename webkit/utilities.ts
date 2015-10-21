@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import os = require('os');
-import fs = require('fs');
+import * as os from 'os';
+import * as fs from 'fs';
 
 export function getBrowserPath(): string {
     function existsSync(path: string): boolean {
@@ -55,7 +55,8 @@ export class DebounceHelper {
             this.waitToken = setTimeout(() => {
                 this.waitToken = null;
                 fn();
-            }, this.timeoutMs)
+            },
+            this.timeoutMs);
         }
     }
 

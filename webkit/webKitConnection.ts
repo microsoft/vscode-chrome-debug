@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import WebSocket = require('ws');
-import http = require('http');
+import * as WebSocket from 'ws';
+import * as http from 'http';
 import {EventEmitter} from 'events';
 
 interface IMessageWithId {
@@ -71,7 +71,8 @@ class ResReqWebSocket extends EventEmitter {
     }
 
     /**
-     * Send a message which must have an id. Ok to call immediately after attach. Messages will be queued until the websocket actually attaches.
+     * Send a message which must have an id. Ok to call immediately after attach. Messages will be queued until
+     * the websocket actually attaches.
      */
     public sendMessage(message: IMessageWithId): Promise<any> {
         return new Promise((resolve, reject) => {
@@ -129,7 +130,7 @@ export class WebKitConnection {
         this._socket.close();
     }
 
-    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
+    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string):Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
         return this.sendMessage('Debugger.setBreakpoint', <WebKitProtocol.Debugger.SetBreakpointParams>{ location, condition });
     }
 

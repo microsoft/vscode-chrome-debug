@@ -2,8 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import assert = require('assert');
-import mockery = require('mockery');
+import * as assert from 'assert';
+import * as mockery from 'mockery';
 import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
 
 const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/sourceMapTransformer';
@@ -71,7 +71,7 @@ suite('SourceMapTransformer', () => {
     });
 
     suite('setBreakpoints()', () => {
-        function createArgs(path: string, lines:number[]): DebugProtocol.SetBreakpointsArguments {
+        function createArgs(path: string, lines: number[]): DebugProtocol.SetBreakpointsArguments {
             return {
                 source: { path },
                 lines

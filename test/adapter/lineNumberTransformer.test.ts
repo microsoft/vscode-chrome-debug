@@ -1,10 +1,10 @@
-/// <reference path="../../typings/tsd.d.ts" />
+/// <reference path='../../typings/tsd.d.ts' />
 
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import assert = require('assert');
+import * as assert from 'assert';
 import { LineNumberTransformer } from '../../adapter/lineNumberTransformer';
 
 function createTransformer(clientLinesStartAt1: boolean, targetLinesStartAt1: boolean): LineNumberTransformer {
@@ -23,7 +23,7 @@ suite('LineNumberTransformer', () => {
     suite('setBreakpoints()', () => {
         function getArgs(lines: number[]): DebugProtocol.SetBreakpointsArguments {
             return {
-                source: { path: "test/path" },
+                source: { path: 'test/path' },
                 lines
             };
         }
