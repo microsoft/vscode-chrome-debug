@@ -449,6 +449,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
      * file:///d:/scripts/code.js => d:/scripts/code.js
      */
     private webkitUrlToClientUrl(url: string): string {
+        if (!url) {
+            return '';
+        }
+
         // If a file:/// url is loaded in the client, just send the absolute path of the file
         if (url.substr(0, 8) === 'file:///') {
             return canonicalizeUrl(url);
