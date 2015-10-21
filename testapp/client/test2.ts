@@ -1,4 +1,6 @@
+declare function scriptTagFn();
+
 function anotherFn() {
-    var zzzz = 1;
+    var zzzz = scriptTagFn();
     return 2345;
 }
