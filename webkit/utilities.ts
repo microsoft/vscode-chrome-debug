@@ -5,6 +5,13 @@
 import * as os from 'os';
 import * as fs from 'fs';
 
+const DEFAULT_CHROME_PATH = {
+    OSX: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    WIN: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    WINx86: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    LINUX: '/usr/bin/google-chrome'
+};
+
 export function getBrowserPath(): string {
     function existsSync(path: string): boolean {
         try {
@@ -18,19 +25,17 @@ export function getBrowserPath(): string {
 
     const platform = getPlatform();
     if (platform === Platform.OSX) {
-        return '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+        return existsSync(DEFAULT_CHROME_PATH.OSX) ? DEFAULT_CHROME_PATH.OSX : null;
     } else if (platform === Platform.Windows) {
-        const pfx86ChromePath = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
-        const pfChromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-        if (existsSync(pfx86ChromePath)) {
-            return pfx86ChromePath;
-        } else if (existsSync(pfChromePath)) {
-            return pfChromePath;
+        if (existsSync(DEFAULT_CHROME_PATH.WINx86)) {
+            return DEFAULT_CHROME_PATH.WINx86;
+        } else if (existsSync(DEFAULT_CHROME_PATH.WIN)) {
+            return DEFAULT_CHROME_PATH.WIN;
         } else {
-            // TODO not installed, fail
+            return null;
         }
     } else {
-        return '/usr/bin/google-chrome';
+        return existsSync(DEFAULT_CHROME_PATH.LINUX) ? DEFAULT_CHROME_PATH.LINUX : null;
     }
 }
 

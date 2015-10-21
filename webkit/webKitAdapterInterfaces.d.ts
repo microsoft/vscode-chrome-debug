@@ -9,7 +9,6 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     runtimeExecutable?: string;
     program?: string;
     url?: string;
-    arguments?: string[];
     stopOnEntry?: boolean;
 }
 

@@ -77,6 +77,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     public launch(args: ILaunchRequestArgs): Promise<void> {
         this._clientCWD = args.workingDirectory;
         const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
+        if (!chromeExe) {
+            return Promise.reject(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
+        }
 
         // Start with remote debugging enabled
         const port = 9222;
@@ -93,11 +96,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else if (args.url) {
             chromeArgs.push(args.url);
         } else {
-            // TODO fail
-        }
-
-        if (args.arguments) {
-            chromeArgs.push(...args.arguments);
+            // TODO uncomment when the url field is supported
+            //return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
         console.log(`Spawning chrome: '${chromeExe}', ${JSON.stringify(chromeArgs)}`);

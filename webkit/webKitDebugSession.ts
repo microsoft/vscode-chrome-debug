@@ -59,7 +59,7 @@ export class WebKitDebugSession extends DebugSession {
                 }
 
                 console.log(e.toString());
-                response.message = e.toString();
+                response.message = '[webkit-debug-adapter] ' + e.toString();
                 response.success = false;
                 this.sendResponse(response);
             });
