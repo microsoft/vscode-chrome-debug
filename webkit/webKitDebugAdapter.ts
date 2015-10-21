@@ -206,6 +206,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return Promise.reject('Remote debugging is not supported');
         }
 
+        if (args.port == null) {
+            return Promise.reject('The "port" field is required in the attach config.');
+        }
+
         this._attach(args.port);
     }
 
