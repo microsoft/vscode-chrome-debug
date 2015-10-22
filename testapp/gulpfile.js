@@ -21,14 +21,16 @@ var projectConfig = {
     typescript: typescript
 };
 
-gulp.task('build', function () {
-    gulp.src(sources, { base: '.' })
+gulp.task('copy-html', function() {
+    return gulp.src('client/index.html', { base: '.' })
+        .pipe(gulp.dest('out'));
+});
+
+gulp.task('build', ['copy-html'], function () {
+    return gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig))
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '../../' }))
-        .pipe(gulp.dest('out'));
-
-    gulp.src('client/index.html', { base: '.' })
         .pipe(gulp.dest('out'));
 });
 

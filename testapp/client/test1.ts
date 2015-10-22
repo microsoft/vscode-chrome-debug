@@ -3,9 +3,6 @@ function locals() {
 
 
 
-
-
-
     var arr2 = new Array();
     arr2.push('array element');
     var buffer = new ArrayBuffer(8);
@@ -29,6 +26,12 @@ function locals() {
 
     throwCaught();
     throwUncaught();
+}
+
+function loadScript() {
+    var s = document.createElement('script');
+    s.src = 'test2.js';
+    document.head.appendChild(s);
 }
 
 function throwCaught() {

@@ -184,9 +184,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsById.set(script.scriptId, script);
 
         if (this._pendingBreakpointsByUrl.has(clientUrl)) {
-            ///const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
+            const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
             this._pendingBreakpointsByUrl.delete(clientUrl);
-            ///TODO this.setBreakpoints(pendingBreakpoint.response, pendingBreakpoint.args);
+            this.setBreakpoints(pendingBreakpoint.args).then(
+                pendingBreakpoint.resolve,
+                pendingBreakpoint.reject);
         }
     }
 
@@ -214,13 +216,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody> {
-        // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome
-        return this._setBreakpointsRequestQ = this._setBreakpointsRequestQ.then(() => {
-            return this._setAllBreakpoints(args);
-        });
-    }
-
-    private _setAllBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody> {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
             targetScript = this._scriptsByUrl.get(canonicalizeUrl(args.source.path));
@@ -231,12 +226,18 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         if (targetScript) {
-            // ODP sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-            return this.clearAllBreakpoints(targetScript.scriptId)
+            // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
+            const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
+                .then(() => this.clearAllBreakpoints(targetScript.scriptId))
                 .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines))
-                .then(responses => {
-                    return { breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses) };
-                });
+                .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses) }));
+
+            const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+
+            // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
+            // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
+            this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
+            return setBreakpointsPTimeout;
         } else {
             // We could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
             // This seems easier
@@ -266,7 +267,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._committedBreakpointsByScriptId.set(script.scriptId, successfulResponses.map(response => response.result.breakpointId));
 
         // Map committed breakpoints to ODP response breakpoints
-        return successfulResponses
+        const bps = successfulResponses
             .map(response => {
                 let line = response.result.actualLocation.lineNumber;
                 return <DebugProtocol.Breakpoint>{
@@ -275,6 +276,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     column: response.result.actualLocation.columnNumber
                 };
             });
+
+        return bps;
     }
 
     public setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void> {

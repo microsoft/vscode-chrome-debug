@@ -81,3 +81,23 @@ export function reversedArr(arr: any[]): any[] {
         return reversed;
     }, []);
 }
+
+export function promiseTimeout(p?: Promise<any>, timeoutMs: number = 1000, timeoutMsg?: string): Promise<any> {
+    if (timeoutMsg === undefined) {
+        timeoutMsg = `Promise timed out after ${timeoutMs}ms`;
+    }
+
+    return new Promise((resolve, reject) => {
+        if (p) {
+            p.then(resolve, reject);
+        }
+
+        setTimeout(() => {
+            if (p) {
+                reject();
+            } else {
+                resolve();
+            }
+        }, timeoutMs);
+    });
+}
