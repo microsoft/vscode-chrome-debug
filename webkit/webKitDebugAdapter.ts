@@ -97,7 +97,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             chromeArgs.push(args.url);
         } else {
             // TODO uncomment when the url field is supported
-            //return Promise.reject('The launch config must specify either the "program" or "url" field.');
+            ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
         console.log(`Spawning chrome: '${chromeExe}', ${JSON.stringify(chromeArgs)}`);
