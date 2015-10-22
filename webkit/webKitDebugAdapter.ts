@@ -230,7 +230,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
                 .then(() => this.clearAllBreakpoints(targetScript.scriptId))
                 .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines))
-                .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses) }));
+                .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses, args.lines) }));
 
             const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
 
@@ -258,7 +258,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return Promise.all(responsePs);
     }
 
-    private _webkitBreakpointResponsesToODPBreakpoints(script: WebKitProtocol.Debugger.Script, responses: WebKitProtocol.Debugger.SetBreakpointResponse[]): DebugProtocol.Breakpoint[] {
+    private _webkitBreakpointResponsesToODPBreakpoints(script: WebKitProtocol.Debugger.Script, responses: WebKitProtocol.Debugger.SetBreakpointResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
         // Ignore errors
         const successfulResponses = responses
             .filter(response => !response.error);
@@ -267,8 +267,16 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._committedBreakpointsByScriptId.set(script.scriptId, successfulResponses.map(response => response.result.breakpointId));
 
         // Map committed breakpoints to ODP response breakpoints
-        const bps = successfulResponses
-            .map(response => {
+        const bps = responses
+            .map((response, i) => {
+                if (!response.error) {
+                    return <DebugProtocol.Breakpoint>{
+                        verified: false,
+                        line: requestLines[i],
+                        column: 0
+                    };
+                }
+
                 let line = response.result.actualLocation.lineNumber;
                 return <DebugProtocol.Breakpoint>{
                     verified: true,
