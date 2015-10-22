@@ -335,10 +335,19 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             let column = callFrame.location.columnNumber;
 
             // Both? Name?
-            const source = <DebugProtocol.Source>{
-                path,
-                sourceReference: scriptIdToSourceReference(script.scriptId)
-            };
+            let source: DebugProtocol.Source;
+            if (path) {
+                source = {
+                    name: Path.basename(path),
+                    path
+                };
+            } else {
+                source = {
+                    name: script.url,
+                    sourceReference: scriptIdToSourceReference(script.scriptId)
+                };
+            }
+
 
             return {
                 id: i,
