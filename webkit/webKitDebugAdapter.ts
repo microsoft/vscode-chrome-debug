@@ -336,22 +336,27 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
             // Both? Name?
             let source: DebugProtocol.Source;
+            let sourceName: string;
             if (path) {
+                sourceName = Path.basename(path);
                 source = {
-                    name: Path.basename(path),
+                    name: sourceName,
                     path
                 };
             } else {
+                sourceName = script.url;
                 source = {
-                    name: script.url,
+                    name: sourceName,
                     sourceReference: scriptIdToSourceReference(script.scriptId)
                 };
             }
 
-
+            // If the frame doesn't have a function name, it's either an anonymous function
+            // or eval script. If its source has a name, it's probably an anonymous function.
+            const frameName = callFrame.functionName || (sourceName ? '(anonymous function)' : '(eval code)');
             return {
                 id: i,
-                name: callFrame.functionName || '(eval code)', // anything else?
+                name: frameName,
                 source,
                 line: line,
                 column

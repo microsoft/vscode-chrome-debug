@@ -5,9 +5,13 @@ function locals() {
 
     var arr2 = new Array();
     arr2.push('array element');
+    arr2.forEach(x => {
+        console.log(x);
+    });
     var buffer = new ArrayBuffer(8);
     var buffView   = new Int32Array(buffer);
     buffView[0] = 234;
+    var s = Symbol('hi');
 
     var bool = true;
     var fn = function() {
