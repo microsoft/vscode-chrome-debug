@@ -266,10 +266,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         // Cache breakpoint ids from webkit in committedBreakpoints set
         this._committedBreakpointsByScriptId.set(script.scriptId, successfulResponses.map(response => response.result.breakpointId));
 
-        // Map committed breakpoints to ODP response breakpoints
+        // Map committed breakpoints to DebugProtocol response breakpoints
         const bps = responses
             .map((response, i) => {
-                if (!response.error) {
+                // The output list needs to be the same length as the input list, so map errors to
+                // unverified breakpoints.
+                if (response.error) {
                     return <DebugProtocol.Breakpoint>{
                         verified: false,
                         line: requestLines[i],
@@ -277,10 +279,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     };
                 }
 
-                let line = response.result.actualLocation.lineNumber;
                 return <DebugProtocol.Breakpoint>{
                     verified: true,
-                    line,
+                    line: response.result.actualLocation.lineNumber,
                     column: response.result.actualLocation.columnNumber
                 };
             });
@@ -334,7 +335,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             let line = callFrame.location.lineNumber;
             let column = callFrame.location.columnNumber;
 
-            // Both?
+            // Both? Name?
             const source = <DebugProtocol.Source>{
                 path,
                 sourceReference: scriptIdToSourceReference(script.scriptId)
