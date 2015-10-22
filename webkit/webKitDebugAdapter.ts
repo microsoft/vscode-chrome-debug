@@ -168,7 +168,17 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
         const exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
-        this._eventHandler(new StoppedEvent('pause', /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
+
+        // We can tell when we've broken on an exception. Otherwise if hitBreakpoints is set, assume we hit a
+        // breakpoint. If not set, assume it was a step. We can't tell the difference between step and 'break on anything'.
+        let reason: string;
+        if (notification.reason === 'exception') {
+            reason = 'exception';
+        } else {
+            reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
+        }
+
+        this._eventHandler(new StoppedEvent(reason, /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
     }
 
     private onDebuggerResumed(): void {

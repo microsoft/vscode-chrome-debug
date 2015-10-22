@@ -51,8 +51,10 @@ declare namespace WebKitProtocol {
 
         interface PausedNotificationParams {
             callFrames: CallFrame[];
+            // 'exception' or 'other'
             reason: string;
             data: any;
+            hitBreakpoints: BreakpointId[];
         }
 
         interface Location {
