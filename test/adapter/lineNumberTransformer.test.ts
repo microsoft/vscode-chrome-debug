@@ -1,5 +1,3 @@
-/// <reference path='../../typings/tsd.d.ts' />
-
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/

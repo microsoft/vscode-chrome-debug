@@ -75,6 +75,9 @@ export class DebounceHelper {
     }
 }
 
+/**
+ * Returns a reversed version of arr. Doesn't modify the input.
+ */
 export function reversedArr(arr: any[]): any[] {
     return arr.reduce((reversed: any[], x: any) => {
         reversed.unshift(x);
