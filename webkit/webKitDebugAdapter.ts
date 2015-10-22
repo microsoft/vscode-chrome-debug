@@ -358,7 +358,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return <DebugProtocol.Scope>{
                 name: scope.type,
                 variablesReference: this._variableHandles.create(scope.object.objectId),
-                expensive: true // ?
+                expensive: scope.type === "global"
             };
         });
 
