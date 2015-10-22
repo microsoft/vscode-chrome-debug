@@ -12,7 +12,7 @@ const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
     setup(() => {
         mockery.enable({ useCleanCache: true });
-        mockery.registerMock('fs', { statSync: () => { }});
+        mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
         mockery.registerAllowable(MODULE_UNDER_TEST);
     });
@@ -94,6 +94,19 @@ suite('Utilities', () => {
                 Utilities.reversedArr([-1, 'hello', null, undefined, [1, 2]]),
                 [[1, 2], undefined, null, 'hello', -1]
             );
+        });
+    });
+
+    suite('existsSync()', () => {
+        test('it returns false when statSync throws', () => {
+            const statSync = (path: string) => {
+                if (path.indexOf('notfound') >= 0) throw new Error('Not found');
+            };
+            mockery.registerMock('fs', { statSync });
+
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            assert.equal(Utilities.existsSync('exists'), true);
+            assert.equal(Utilities.existsSync('thisfilenotfound'), false);
         });
     });
 });

@@ -13,16 +13,6 @@ const DEFAULT_CHROME_PATH = {
 };
 
 export function getBrowserPath(): string {
-    function existsSync(path: string): boolean {
-        try {
-            fs.statSync(path);
-            return true;
-        } catch (e) {
-            // doesn't exist
-            return false;
-        }
-    }
-
     const platform = getPlatform();
     if (platform === Platform.OSX) {
         return existsSync(DEFAULT_CHROME_PATH.OSX) ? DEFAULT_CHROME_PATH.OSX : null;
@@ -48,6 +38,19 @@ export function getPlatform(): Platform {
     return platform === 'darwin' ? Platform.OSX :
         platform === 'win32' ? Platform.Windows :
         Platform.Linux;
+}
+
+/**
+ * Node's fs.existsSync is deprecated, implement it in terms of statSync
+ */
+export function existsSync(path: string): boolean {
+    try {
+        fs.statSync(path);
+        return true;
+    } catch (e) {
+        // doesn't exist
+        return false;
+    }
 }
 
 export class DebounceHelper {

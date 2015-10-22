@@ -8,9 +8,8 @@ import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
-import * as nodeUrl from 'url';
-import * as path from 'path';
-import * as fs from 'fs';
+import * as NodeUrl from 'url';
+import * as Path from 'path';
 
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
@@ -480,15 +479,15 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         // Search the filesystem under our cwd for the file that best matches the given url
-        const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+        const pathName = NodeUrl.parse(canonicalizeUrl(url)).pathname;
         if (!pathName) {
             return '';
         }
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
-            if (fs.existsSync(clientUrl)) {
+            const clientUrl = Path.join(this._clientCWD, pathParts.join('/'));
+            if (Utilities.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
             }
 
