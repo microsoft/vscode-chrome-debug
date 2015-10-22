@@ -8,31 +8,24 @@ import * as assert from 'assert';
 /** Utilities without mocks - use for type only */
 import * as _Utilities from '../../webkit/utilities';
 
-class FSMock {
-    /** Throws if the path doesn't exist */
-    public statSync(path: string): void { }
-}
-
 const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
+    setup(() => {
+        mockery.enable({ useCleanCache: true });
+        mockery.registerMock('fs', { statSync: () => { }});
+        mockery.registerMock('os', { platform: () => 'win32' });
+        mockery.registerAllowable(MODULE_UNDER_TEST);
+    });
+
+    teardown(() => {
+        mockery.deregisterAll();
+        mockery.disable();
+    });
+
     suite('getPlatform()/getBrowserPath()', () => {
-        const fsMock = new FSMock();
-
-        setup(() => {
-            // Set up mockery with SourceMaps mock
-            mockery.enable({ useCleanCache: true });
-            mockery.registerMock('fs', fsMock);
-            mockery.registerAllowable(MODULE_UNDER_TEST);
-        });
-
-        teardown(() => {
-            mockery.deregisterAll();
-            mockery.disable();
-        });
-
         test('osx', () => {
             mockery.registerMock('os', { platform: () => 'darwin' });
-            let Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.OSX);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -40,14 +33,14 @@ suite('Utilities', () => {
         });
 
         test('win', () => {
-            mockery.registerMock('os', { platform: () => 'win32' });
-
             // Overwrite the statSync mock to say the x86 path doesn't exist
-            fsMock.statSync = (path: string) => {
+            const statSync = (path: string) => {
                 if (path.indexOf('(x86)') >= 0) throw new Error('Not found');
             };
+            mockery.registerMock('fs', { statSync });
+            mockery.registerMock('os', { platform: () => 'win32' });
 
-            let Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -56,7 +49,7 @@ suite('Utilities', () => {
 
         test('winx86', () => {
             mockery.registerMock('os', { platform: () => 'win32' });
-            let Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -65,7 +58,7 @@ suite('Utilities', () => {
 
         test('linux', () => {
             mockery.registerMock('os', { platform: () => 'linux' });
-            let Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Linux);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -74,7 +67,7 @@ suite('Utilities', () => {
 
         test('freebsd (default to Linux for anything unknown)', () => {
             mockery.registerMock('os', { platform: () => 'freebsd' });
-            let Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Linux);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -83,6 +76,24 @@ suite('Utilities', () => {
     });
 
     suite('reversedArr', () => {
+        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
+        test('it does not modify the input array', () => {
+            let arr = [2, 4, 6];
+            Utilities.reversedArr(arr);
+            assert.deepEqual(arr, [2, 4, 6]);
+
+            arr = [1];
+            Utilities.reversedArr(arr);
+            assert.deepEqual(arr, [1]);
+        });
+
+        test('it reverses the array', () => {
+            assert.deepEqual(Utilities.reversedArr([1, 3, 5, 7]), [7, 5, 3, 1]);
+            assert.deepEqual(
+                Utilities.reversedArr([-1, 'hello', null, undefined, [1, 2]]),
+                [[1, 2], undefined, null, 'hello', -1]
+            );
+        });
     });
 });
