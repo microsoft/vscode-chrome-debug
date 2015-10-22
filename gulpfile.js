@@ -41,15 +41,16 @@ gulp.task('watch', ['build'], function(cb) {
 
 gulp.task('default', ['build']);
 
+// Don't lint code from tsd or common, and whitelist my files under adapter
 var lintSources = [
     'test',
     'webkit',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 lintSources = lintSources.concat([
-    'adapter/sourceMaps/ourceMapsSourceMapTransformer.ts',
+    'adapter/sourceMaps/sourceMapTransformer.ts',
     'adapter/adapterProxy.ts',
     'adapter/lineNumberTransformer.ts',
-])
+]);
 
 var tslint = require('gulp-tslint');
 gulp.task('tslint', function(){

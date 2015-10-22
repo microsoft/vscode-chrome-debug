@@ -11,7 +11,7 @@ import * as _Utilities from '../../webkit/utilities';
 const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
     setup(() => {
-        mockery.enable({ useCleanCache: true });
+        mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
         mockery.registerAllowable(MODULE_UNDER_TEST);
@@ -38,7 +38,6 @@ suite('Utilities', () => {
                 if (path.indexOf('(x86)') >= 0) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            mockery.registerMock('os', { platform: () => 'win32' });
 
             const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
@@ -48,7 +47,6 @@ suite('Utilities', () => {
         });
 
         test('winx86', () => {
-            mockery.registerMock('os', { platform: () => 'win32' });
             const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
             assert.equal(
