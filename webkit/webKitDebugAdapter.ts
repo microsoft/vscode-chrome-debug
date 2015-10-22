@@ -328,40 +328,48 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public stackTrace(args: DebugProtocol.StackTraceArguments): Promise<StackTraceResponseBody> {
-        const stackFrames: DebugProtocol.StackFrame[] = this._currentStack.map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
-            const script = this._scriptsById.get(callFrame.location.scriptId);
-            let path = this.webkitUrlToClientUrl(script.url);
-            let line = callFrame.location.lineNumber;
-            let column = callFrame.location.columnNumber;
+        // Only process at the requested number of frames, if 'levels' is specified
+        let stack = this._currentStack;
+        if (args.levels) {
+            stack = this._currentStack.filter((_, i) => i < args.levels);
+        }
 
-            // Both? Name?
-            let source: DebugProtocol.Source;
-            let sourceName: string;
-            if (path) {
-                sourceName = Path.basename(path);
-                source = {
-                    name: sourceName,
-                    path
-                };
-            } else {
-                sourceName = script.url;
-                source = {
-                    name: sourceName,
-                    sourceReference: scriptIdToSourceReference(script.scriptId)
-                };
-            }
+        const stackFrames: DebugProtocol.StackFrame[] = stack
+            .map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
+                const script = this._scriptsById.get(callFrame.location.scriptId);
+                let path = this.webkitUrlToClientUrl(script.url);
+                let line = callFrame.location.lineNumber;
+                let column = callFrame.location.columnNumber;
 
-            // If the frame doesn't have a function name, it's either an anonymous function
-            // or eval script. If its source has a name, it's probably an anonymous function.
-            const frameName = callFrame.functionName || (sourceName ? '(anonymous function)' : '(eval code)');
-            return {
-                id: i,
-                name: frameName,
-                source,
-                line: line,
-                column
-            };
-        });
+                // When the frame source has a path, send the name and path fields.
+                // Otherwise, send the name and sourceReference fields
+                let source: DebugProtocol.Source;
+                let sourceName: string;
+                if (path) {
+                    sourceName = Path.basename(path);
+                    source = {
+                        name: sourceName,
+                        path
+                    };
+                } else {
+                    sourceName = script.url;
+                    source = {
+                        name: sourceName,
+                        sourceReference: scriptIdToSourceReference(script.scriptId)
+                    };
+                }
+
+                // If the frame doesn't have a function name, it's either an anonymous function
+                // or eval script. If its source has a name, it's probably an anonymous function.
+                const frameName = callFrame.functionName || (sourceName ? '(anonymous function)' : '(eval code)');
+                return {
+                    id: i,
+                    name: frameName,
+                    source,
+                    line: line,
+                    column
+                };
+            });
 
         return Promise.resolve({ stackFrames });
     }
@@ -371,7 +379,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return <DebugProtocol.Scope>{
                 name: scope.type,
                 variablesReference: this._variableHandles.create(scope.object.objectId),
-                expensive: scope.type === "global"
+                expensive: scope.type === 'global'
             };
         });
 
