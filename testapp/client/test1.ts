@@ -43,7 +43,9 @@ function throwCaught() {
 }
 
 function throwUncaught() {
-    throw new Error('Uncaught exception');
+    var e = new Error('Uncaught exception');
+    e.code = 123;
+    throw e;
 }
 
 function evalDebugger() {

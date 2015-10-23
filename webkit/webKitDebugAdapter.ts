@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {Event} from '../common/v8protocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
@@ -167,13 +168,18 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
-        const exceptionText = notification.reason === 'exception' ? notification.data.description : undefined;
 
         // We can tell when we've broken on an exception. Otherwise if hitBreakpoints is set, assume we hit a
         // breakpoint. If not set, assume it was a step. We can't tell the difference between step and 'break on anything'.
         let reason: string;
+        let exceptionText: string;
         if (notification.reason === 'exception') {
             reason = 'exception';
+            exceptionText = notification.data.description;
+            if (notification.data && notification.data.objectId && this._currentStack.length) {
+                // Insert a scope to wrap the exception object. exceptionText is unused at the moment
+                this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: notification.data });
+            }
         } else {
             reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
         }
@@ -182,9 +188,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onDebuggerResumed(): void {
-        // Called when the resume button on the page is pressed, but ODP doesn't have an event to support it.
         this._overlayHelper.wait(() => this._webKitConnection.page_clearOverlayMessage());
         this._currentStack = null;
+
+        // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
+        let resumedEvent = new Event('running', { threadId: WebKitDebugAdapter.THREAD_ID });
+        this._eventHandler(resumedEvent);
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
