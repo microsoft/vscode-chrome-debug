@@ -107,3 +107,19 @@ export function promiseTimeout(p?: Promise<any>, timeoutMs: number = 1000, timeo
         }, timeoutMs);
     });
 }
+
+export function retryAsync(fn: () => Promise<any>, attempts: number, timeoutBetweenAttempts = 200): Promise<any> {
+    if (attempts <= 0) return Promise.reject('Must specify > 0 attempts');
+
+    return fn().catch(
+        e => {
+            if (--attempts > 0) {
+                // Wait some ms, then recurse
+                return promiseTimeout(null, timeoutBetweenAttempts)
+                    .then(() => retryAsync(fn, attempts, timeoutBetweenAttempts));
+            } else {
+                return Promise.reject(e);
+            }
+        });
+}
+

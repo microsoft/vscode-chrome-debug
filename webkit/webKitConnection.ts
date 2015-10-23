@@ -5,6 +5,7 @@
 import * as WebSocket from 'ws';
 import * as http from 'http';
 import {EventEmitter} from 'events';
+import * as Utilities from './utilities';
 
 interface IMessageWithId {
     id: number;
@@ -119,11 +120,21 @@ export class WebKitConnection {
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
     public attach(port: number): Promise<void> {
-        return getUrlWithRetry(`http://localhost:${port}/json`).then(jsonResponse => {
-            const pages = JSON.parse(jsonResponse).filter(target => target.type === 'page');
-            const wsUrl = pages[0].webSocketDebuggerUrl;
-            return this._socket.attach(wsUrl);
-        }).then(() => <Promise<void>><any>this.sendMessage('Debugger.enable'));
+        // Retrying the download 7x * (retry download + attach 5x), and 200 ms between attempts, so like 8s total to attach to Chrome
+        return Utilities.retryAsync(() => this._attach(port), 5)
+            .then(() => this.sendMessage('Debugger.enable'))
+            .then(() => { });
+    }
+
+    public _attach(port: number): Promise<void> {
+        return Utilities.retryAsync(() => getUrl(`http://localhost:${port}/json`), 7)
+            .then(jsonResponse => {
+                const pages = JSON.parse(jsonResponse).filter(target => target.type === 'page');
+                if (!pages.length) return Promise.reject('No valid pages found');
+
+                const wsUrl = pages[0].webSocketDebuggerUrl;
+                return this._socket.attach(wsUrl);
+            });
     }
 
     public close(): void {
@@ -195,19 +206,6 @@ export class WebKitConnection {
     }
 }
 
-function getUrlWithRetry(url: string, retryCount = 500): Promise<string> {
-    return getUrl(url).catch(
-        e => {
-            if (retryCount > 0) {
-                // Wait 200ms, then recurse
-                return setTimeoutP(200)
-                    .then(() => getUrlWithRetry(url, retryCount - 1));
-            } else {
-                return Promise.reject(e);
-            }
-        });
-}
-
 /**
  * Helper function to GET the contents of a url
  */
@@ -222,11 +220,5 @@ function getUrl(url: string): Promise<string> {
         }).on('error', e => {
             reject('Cannot connect to the target');
         });
-    });
-}
-
-function setTimeoutP(timeout: number): Promise<any> {
-    return new Promise(resolve => {
-        setTimeout(resolve, timeout);
     });
 }

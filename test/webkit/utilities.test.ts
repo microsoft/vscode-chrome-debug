@@ -73,7 +73,20 @@ suite('Utilities', () => {
         });
     });
 
-    suite('reversedArr', () => {
+    suite('existsSync()', () => {
+        test('it returns false when statSync throws', () => {
+            const statSync = (path: string) => {
+                if (path.indexOf('notfound') >= 0) throw new Error('Not found');
+            };
+            mockery.registerMock('fs', { statSync });
+
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            assert.equal(Utilities.existsSync('exists'), true);
+            assert.equal(Utilities.existsSync('thisfilenotfound'), false);
+        });
+    });
+
+    suite('reversedArr()', () => {
         const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
         test('it does not modify the input array', () => {
@@ -94,16 +107,73 @@ suite('Utilities', () => {
         });
     });
 
-    suite('existsSync()', () => {
-        test('it returns false when statSync throws', () => {
-            const statSync = (path: string) => {
-                if (path.indexOf('notfound') >= 0) throw new Error('Not found');
-            };
-            mockery.registerMock('fs', { statSync });
+    suite('promiseTimeout()', () => {
+        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
-            assert.equal(Utilities.existsSync('exists'), true);
-            assert.equal(Utilities.existsSync('thisfilenotfound'), false);
+        test('when given a promise it fails if the promise never resolves', done => {
+            Utilities.promiseTimeout(new Promise(() => { }), 5).then(
+                () => assert.fail('This promise should fail'),
+                e => done()
+            );
+        });
+
+        test('when given a promise it succeeds if the promise resolves', done => {
+            Utilities.promiseTimeout(Promise.resolve('test'), 5).then(
+                result => {
+                    assert.equal(result, 'test');
+                    done();
+                },
+                e => assert.fail('This promise should pass')
+            );
+        });
+
+        test('when not given a promise it resolves', done => {
+            Utilities.promiseTimeout(null, 5).then(
+                done,
+                () => assert.fail('This promise should pass')
+            );
+        });
+    });
+
+    suite('retryAsync()', () => {
+        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+
+        test('when the function passes, it resolves with the value', done => {
+            let callCount = 0;
+            const pass5times = () => {
+                if (callCount > 5) {
+                    assert.fail('Should not be called more than 5 times');
+                }
+
+                return (++callCount === 5) ?
+                    Promise.resolve('test') :
+                    Promise.reject('fail');
+            };
+
+            Utilities.retryAsync(pass5times, 10, /*timeoutBetweenAttempts=*/0).then(
+                result => {
+                    assert.equal(result, 'test');
+                    done();
+                },
+                e => {
+                    assert.fail('This should have passed');
+                });
+        });
+
+        test('when the function fails, it rejects', done => {
+            let callCount = 0;
+            Utilities.retryAsync(() => {
+                if (++callCount > 10) {
+                    assert.fail('Should not be called more than 10 times');
+                }
+
+                return Promise.reject('fail');
+            }, 10, /*timeoutBetweenAttempts=*/0).then(
+                () => assert.fail('This promise should fail'),
+                e => {
+                    assert.equal(e, 'fail');
+                    done();
+                });
         });
     });
 });
