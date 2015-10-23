@@ -3,11 +3,13 @@ function locals() {
 
 
 
-    var arr2 = new Array();
-    arr2.push('array element');
-    arr2.forEach(x => {
+    arr1.forEach(x => {
         console.log(x);
     });
+    var r = /^asdf.*$/g;
+    var longStr = `this is a
+string with
+newlines`;
     var buffer = new ArrayBuffer(8);
     var buffView   = new Int32Array(buffer);
     buffView[0] = 234;

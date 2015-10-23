@@ -456,7 +456,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 result = 'undefined';
             } else {
                 // The result was a primitive value, or something which has a description (not object, primitive, or undefined)
-                result = '' + (typeof resultObj.value === 'undefined' ? resultObj.description : resultObj.value);
+                result = typeof resultObj.value === 'undefined' ? resultObj.description : JSON.stringify(resultObj.value);
             }
 
             return { result, variablesReference };
@@ -480,7 +480,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             value = 'getter';
         } else {
             // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
-            value = '' + (typeof propDesc.value.value === 'undefined' ? propDesc.value.description : propDesc.value.value);
+            value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : JSON.stringify(propDesc.value.value);
         }
 
         return { name: propDesc.name, value, variablesReference: 0 };
