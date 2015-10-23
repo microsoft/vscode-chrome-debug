@@ -408,7 +408,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (id != null) {
             return this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
                 const variables = getPropsResponse.error ? [] :
-                    getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToODPVariable(propDesc));
+                    getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToVariable(propDesc));
 
                 return { variables };
             });
@@ -444,46 +444,55 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         return evalPromise.then(evalResponse => {
-            const resultObj: WebKitProtocol.Runtime.RemoteObject = evalResponse.result.result;
-            let result: string;
-            let variablesReference = 0;
-            if (evalResponse.result.wasThrown) {
-                return Promise.reject(evalResponse.result.exceptionDetails.text);
-            } else if (resultObj.type === 'object') {
-                result = 'Object';
-                variablesReference = this._variableHandles.create(resultObj.objectId);
-            } else if (resultObj.type === 'undefined') {
-                result = 'undefined';
-            } else {
-                // The result was a primitive value, or something which has a description (not object, primitive, or undefined)
-                result = typeof resultObj.value === 'undefined' ? resultObj.description : JSON.stringify(resultObj.value);
-            }
-
-            return { result, variablesReference };
+            const { value, variablesReference } = this.remoteObjectToValue(evalResponse.result.result);
+            return { result: value, variablesReference };
         });
     }
 
-    private propertyDescriptorToODPVariable(propDesc: WebKitProtocol.Runtime.PropertyDescriptor): DebugProtocol.Variable {
-        if (propDesc.value && propDesc.value.type === 'object') {
-            if (propDesc.value.subtype === 'null') {
-                return { name: propDesc.name, value: 'null', variablesReference: 0 };
+    private propertyDescriptorToVariable(propDesc: WebKitProtocol.Runtime.PropertyDescriptor): DebugProtocol.Variable {
+        if (propDesc.get || propDesc.set) {
+            // A property doesn't have a value here, and we shouldn't evaluate the getter because it may have side effects.
+            // Node adapter shows 'undefined', Chrome can eval the getter on demand.
+            return { name: propDesc.name, value: 'property', variablesReference: 0 };
+        } else {
+            const { value, variablesReference } = this.remoteObjectToValue(propDesc.value);
+            return { name: propDesc.name, value, variablesReference };
+        }
+    }
+
+    private remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject): { value: string, variablesReference: number } {
+        var e = new Error('fail');
+        let value = '';
+        let variablesReference = 0;
+
+        if (object) { // just paranoia?
+            if (object && object.type === 'object') {
+                if (object.subtype === 'null') {
+                    value = 'null';
+                } else {
+                    // If it's a non-null object, create a variable reference so the client can ask for its props
+                    variablesReference = this._variableHandles.create(object.objectId)
+                    value = object.description;
+                }
+            } else if (object && object.type === 'undefined') {
+                value = 'undefined';
+            } else if (object.type === 'function') {
+                const firstBraceIdx = object.description.indexOf('{');
+                if (firstBraceIdx >= 0) {
+                    value = object.description.substring(0, firstBraceIdx) + '{ … }'
+                } else {
+                    const firstArrowIdx = object.description.indexOf('=>');
+                    value = firstArrowIdx >= 0 ?
+                        object.description.substring(0, firstArrowIdx + 2) + ' …' :
+                        object.description;
+                }
             } else {
-                // We don't have the full set of values for this object yet, create a variable reference so the ODP client can ask for them
-                return { name: propDesc.name, value: propDesc.value.description + '', variablesReference: this._variableHandles.create(propDesc.value.objectId) };
+                // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+                value = typeof object.value === 'undefined' ? object.description : JSON.stringify(object.value);
             }
         }
 
-        let value: string;
-        if (propDesc.value && propDesc.value.type === 'undefined') {
-            value = 'undefined';
-        } else if (typeof propDesc.get !== 'undefined') {
-            value = 'getter';
-        } else {
-            // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
-            value = typeof propDesc.value.value === 'undefined' ? propDesc.value.description : JSON.stringify(propDesc.value.value);
-        }
-
-        return { name: propDesc.name, value, variablesReference: 0 };
+        return { value, variablesReference };
     }
 
     private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {

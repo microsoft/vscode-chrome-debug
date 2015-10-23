@@ -14,6 +14,7 @@ newlines`;
     var buffView   = new Int32Array(buffer);
     buffView[0] = 234;
     var s = Symbol('hi');
+    var e = new Error('hi');
 
     var bool = true;
     var fn = function() {
