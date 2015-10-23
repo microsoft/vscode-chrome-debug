@@ -17,10 +17,13 @@ newlines`;
     var e = new Error('hi');
 
     var bool = true;
-    var fn = function() {
+    var fn = () => {
         // Some fn
         var xyz = 321;
         anotherFn();
+    };
+    var fn2 = function() {
+        var zzz = 333;
     };
     var qqq;
     var str = 'hello';
@@ -53,4 +56,6 @@ function throwUncaught() {
 
 function evalDebugger() {
     eval('var x = 1; debugger;');
+    eval('throwCaught()');
+    eval('throwUncaught()');
 }

@@ -354,7 +354,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const stackFrames: DebugProtocol.StackFrame[] = stack
             .map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
                 const script = this._scriptsById.get(callFrame.location.scriptId);
-                let path = this.webkitUrlToClientUrl(script.url);
                 let line = callFrame.location.lineNumber;
                 let column = callFrame.location.columnNumber;
 
@@ -362,16 +361,27 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 // Otherwise, send the name and sourceReference fields
                 let source: DebugProtocol.Source;
                 let sourceName: string;
-                if (path) {
-                    sourceName = Path.basename(path);
+                if (script.url) {
+                    // Try to resolve the url to a path in the workspace. If it's not in the workspace,
+                    // just use the script.url as-is.
+                    let path = this.webkitUrlToClientUrl(script.url);
+                    let sourceName: string;
+                    if (path) {
+                        sourceName = Path.basename(path);
+                    } else {
+                        path = script.url;
+                        sourceName = Path.basename(path);
+                    }
+
                     source = {
                         name: sourceName,
-                        path
+                        path,
+                        sourceReference: 0
                     };
                 } else {
-                    sourceName = script.url;
                     source = {
-                        name: sourceName,
+                        // Should be undefined, work around a VS Code bug
+                        name: 'eval: ' + script.scriptId,
                         sourceReference: scriptIdToSourceReference(script.scriptId)
                     };
                 }
