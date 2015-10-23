@@ -461,7 +461,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject): { value: string, variablesReference: number } {
-        var e = new Error('fail');
         let value = '';
         let variablesReference = 0;
 
