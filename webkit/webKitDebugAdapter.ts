@@ -365,7 +365,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     // Try to resolve the url to a path in the workspace. If it's not in the workspace,
                     // just use the script.url as-is.
                     let path = this.webkitUrlToClientUrl(script.url);
-                    let sourceName: string;
                     if (path) {
                         sourceName = Path.basename(path);
                     } else {
@@ -485,7 +484,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     value = 'null';
                 } else {
                     // If it's a non-null object, create a variable reference so the client can ask for its props
-                    variablesReference = this._variableHandles.create(object.objectId)
+                    variablesReference = this._variableHandles.create(object.objectId);
                     value = object.description;
                 }
             } else if (object && object.type === 'undefined') {
@@ -493,7 +492,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             } else if (object.type === 'function') {
                 const firstBraceIdx = object.description.indexOf('{');
                 if (firstBraceIdx >= 0) {
-                    value = object.description.substring(0, firstBraceIdx) + '{ … }'
+                    value = object.description.substring(0, firstBraceIdx) + '{ … }';
                 } else {
                     const firstArrowIdx = object.description.indexOf('=>');
                     value = firstArrowIdx >= 0 ?
