@@ -69,9 +69,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._eventHandler = eventHandler;
     }
 
-    public initialize(args: IInitializeRequestArgs): Promise<void> {
+    public initialize(args: IInitializeRequestArgs): void {
         this._clientLinesStartAt1 = args.linesStartAt1;
-        return Promise.resolve<void>();
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
@@ -231,8 +230,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             targetScript = this._scriptsByUrl.get(canonicalizeUrl(args.source.path));
         } else if (args.source.sourceReference) {
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
-        } else if (args.source.name) {
-            // ??
         }
 
         if (targetScript) {
@@ -338,7 +335,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             .then(() => { });
     }
 
-    public stackTrace(args: DebugProtocol.StackTraceArguments): Promise<StackTraceResponseBody> {
+    public stackTrace(args: DebugProtocol.StackTraceArguments): StackTraceResponseBody {
         // Only process at the requested number of frames, if 'levels' is specified
         let stack = this._currentStack;
         if (args.levels) {
@@ -382,10 +379,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 };
             });
 
-        return Promise.resolve({ stackFrames });
+        return { stackFrames };
     }
 
-    public scopes(args: DebugProtocol.ScopesArguments): Promise<ScopesResponseBody> {
+    public scopes(args: DebugProtocol.ScopesArguments): ScopesResponseBody {
         const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
             return <DebugProtocol.Scope>{
                 name: scope.type,
@@ -394,7 +391,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             };
         });
 
-        return Promise.resolve({ scopes });
+        return { scopes };
     }
 
     public variables(args: DebugProtocol.VariablesArguments): Promise<VariablesResponseBody> {
@@ -407,7 +404,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 return { variables };
             });
         } else {
-            return Promise.resolve(null);
+            return Promise.resolve();
         }
     }
 
@@ -417,15 +414,15 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         });
     }
 
-    public threads(): Promise<ThreadsResponseBody> {
-        return Promise.resolve({
+    public threads(): ThreadsResponseBody {
+        return {
             threads: [
                 {
                     id: WebKitDebugAdapter.THREAD_ID,
                     name: 'Thread ' + WebKitDebugAdapter.THREAD_ID
                 }
             ]
-        });
+        };
     }
 
     public evaluate(args: DebugProtocol.EvaluateArguments): Promise<EvaluateResponseBody> {

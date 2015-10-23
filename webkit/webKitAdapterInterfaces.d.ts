@@ -50,31 +50,31 @@ interface EvaluateResponseBody {
     variablesReference: number;
 }
 
+declare type PromiseOrNot<T> = T | Promise<T>;
 interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
 
-    initialize(args: IInitializeRequestArgs): Promise<void>;
-    launch(args: ILaunchRequestArgs): Promise<void>;
-    disconnect(): Promise<void>;
-    attach(args: IAttachRequestArgs): Promise<void>;
-    setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody>;
-    setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void>;
+    initialize(args: IInitializeRequestArgs): PromiseOrNot<void>;
+    launch(args: ILaunchRequestArgs): PromiseOrNot<void>;
+    disconnect(): PromiseOrNot<void>;
+    attach(args: IAttachRequestArgs): PromiseOrNot<void>;
+    setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): PromiseOrNot<SetBreakpointsResponseBody>;
+    setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): PromiseOrNot<void>;
 
-    continue(): Promise<void>;
-    next(): Promise<void>;
-    stepIn(): Promise<void>;
-    stepOut(): Promise<void>;
-    pause(): Promise<void>;
+    continue(): PromiseOrNot<void>;
+    next(): PromiseOrNot<void>;
+    stepIn(): PromiseOrNot<void>;
+    stepOut(): PromiseOrNot<void>;
+    pause(): PromiseOrNot<void>;
 
-    stackTrace(args: DebugProtocol.StackTraceArguments): Promise<StackTraceResponseBody>;
-    scopes(args: DebugProtocol.ScopesArguments): Promise<ScopesResponseBody>;
-    variables(args: DebugProtocol.VariablesArguments): Promise<VariablesResponseBody>;
-    source(args: DebugProtocol.SourceArguments): Promise<SourceResponseBody>;
-    threads(): Promise<ThreadsResponseBody>;
-    evaluate(args: DebugProtocol.EvaluateArguments): Promise<EvaluateResponseBody>;
+    stackTrace(args: DebugProtocol.StackTraceArguments): PromiseOrNot<StackTraceResponseBody>;
+    scopes(args: DebugProtocol.ScopesArguments): PromiseOrNot<ScopesResponseBody>;
+    variables(args: DebugProtocol.VariablesArguments): PromiseOrNot<VariablesResponseBody>;
+    source(args: DebugProtocol.SourceArguments): PromiseOrNot<SourceResponseBody>;
+    threads(): PromiseOrNot<ThreadsResponseBody>;
+    evaluate(args: DebugProtocol.EvaluateArguments): PromiseOrNot<EvaluateResponseBody>;
 }
 
-declare type PromiseOrNot<T> = T | Promise<T>;
 interface IDebugTransformer {
     initialize?(args: IInitializeRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     launch?(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
