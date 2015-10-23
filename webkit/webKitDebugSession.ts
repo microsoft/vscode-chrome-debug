@@ -45,7 +45,7 @@ export class WebKitDebugSession extends DebugSession {
      * Takes a response and a promise to the response body. If the promise is successful, assigns the response body and sends the response.
      * If the promise fails, sets the appropriate response parameters and sends the response.
      */
-    public sendResponseAsync(response: DebugProtocol.Response, responseP: Promise<any>): void {
+    private sendResponseAsync(request: DebugProtocol.Request, response: DebugProtocol.Response, responseP: Promise<any>): void {
         responseP.then(
             (body?) => {
                 response.body = body;
@@ -59,7 +59,16 @@ export class WebKitDebugSession extends DebugSession {
                 }
 
                 console.log(e.toString());
-                response.message = '[webkit-debug-adapter] ' + e.toString();
+                if (request.command === 'evaluate') {
+                    // Errors from evaluate show up in the console or watches pane. Doesn't seem right
+                    // as it's not really a failed request. So it doesn't need the tag and worth special casing.
+                    response.message = e.toString();
+                } else {
+                    // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
+                    // come from the adapter
+                    response.message = '[webkit-debug-adapter] ' + e.toString();
+                }
+
                 response.success = false;
                 this.sendResponse(response);
             });
@@ -73,6 +82,7 @@ export class WebKitDebugSession extends DebugSession {
         try {
             console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
             this.sendResponseAsync(
+                request,
                 response,
                 this._adapterProxy.dispatchRequest(request));
         } catch (e) {
