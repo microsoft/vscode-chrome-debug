@@ -10,6 +10,7 @@ import * as Utilities from './utilities';
 import {spawn, ChildProcess} from 'child_process';
 import * as NodeUrl from 'url';
 import * as Path from 'path';
+import * as Os from 'os';
 
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
@@ -84,8 +85,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const port = 9222;
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
 
-        // Also start with extra stuff disabled, and no user-data-dir so previously open tabs aren't opened.
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
+        // Also start with extra stuff disabled, and user-data-dir in tmp directory
+        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${Os.tmpdir()}/webkitdebugadapter${Date.now()}`]);
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
@@ -99,7 +100,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
-        console.log(`Spawning chrome: '${chromeExe}', ${JSON.stringify(chromeArgs)}`);
+        console.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
             console.error('chrome error: ' + err);

@@ -90,8 +90,7 @@ suite('Utilities', () => {
             assert.deepEqual(Utilities.reversedArr([1, 3, 5, 7]), [7, 5, 3, 1]);
             assert.deepEqual(
                 Utilities.reversedArr([-1, 'hello', null, undefined, [1, 2]]),
-                [[1, 2], undefined, null, 'hello', -1]
-            );
+                [[1, 2], undefined, null, 'hello', -1]);
         });
     });
 
