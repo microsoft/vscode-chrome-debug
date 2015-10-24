@@ -111,14 +111,14 @@ suite('Utilities', () => {
         const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
         test('when given a promise it fails if the promise never resolves', done => {
-            Utilities.promiseTimeout(new Promise(() => { }), 5).then(
+            Utilities.promiseTimeout(new Promise(() => { }), 0).then(
                 () => assert.fail('This promise should fail'),
                 e => done()
             );
         });
 
         test('when given a promise it succeeds if the promise resolves', done => {
-            Utilities.promiseTimeout(Promise.resolve('test'), 5).then(
+            Utilities.promiseTimeout(Promise.resolve('test'), 0).then(
                 result => {
                     assert.equal(result, 'test');
                     done();
@@ -128,7 +128,7 @@ suite('Utilities', () => {
         });
 
         test('when not given a promise it resolves', done => {
-            Utilities.promiseTimeout(null, 5).then(
+            Utilities.promiseTimeout(null, 0).then(
                 done,
                 () => assert.fail('This promise should pass')
             );

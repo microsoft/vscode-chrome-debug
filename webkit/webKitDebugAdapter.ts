@@ -58,7 +58,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
-        this._setBreakpointsRequestQ = Promise.resolve<void>();
+        this._setBreakpointsRequestQ = Promise.resolve();
     }
 
     private clearClientContext(): void {
@@ -132,7 +132,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                         return Promise.reject(e);
                     });
         } else {
-            return Promise.resolve<void>();
+            return Promise.resolve();
         }
     }
 
@@ -218,7 +218,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         this.clearEverything();
 
-        return Promise.resolve<void>();
+        return Promise.resolve();
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
@@ -422,7 +422,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 return { variables };
             });
         } else {
-            return Promise.resolve();
+            return Promise.resolve(null);
         }
     }
 
@@ -455,7 +455,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
                 const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
-                return Promise.reject(errorMessage);
+                return Promise.reject<EvaluateResponseBody>(errorMessage);
             }
 
             const { value, variablesReference } = this.remoteObjectToValue(evalResponse.result.result);
@@ -517,7 +517,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         // does not break there.
         return committedBps.reduce<Promise<void>>((p, bpId) => {
             return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
-        }, Promise.resolve<void>());
+        }, Promise.resolve());
     }
 
     /**

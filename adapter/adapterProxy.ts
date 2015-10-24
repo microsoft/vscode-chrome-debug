@@ -37,7 +37,7 @@ export class AdapterProxy {
                 return request.command in transformer ?
                     p.then(() => transformer[request.command](request.arguments, request.seq)) :
                     p;
-            }, Promise.resolve<void>());
+            }, Promise.resolve());
     }
 
     /**
@@ -45,7 +45,7 @@ export class AdapterProxy {
      */
     private transformResponse(request: DebugProtocol.Request, body: any): Promise<void> {
         if (!body) {
-            return Promise.resolve<void>();
+            return Promise.resolve();
         }
 
         const reversedTransformers = Utilities.reversedArr(this._requestTransformers);
@@ -56,6 +56,6 @@ export class AdapterProxy {
                 return bodyTransformMethodName in transformer ?
                     p.then(() => transformer[bodyTransformMethodName](body, request.seq)) :
                     p;
-            }, Promise.resolve<void>());
+            }, Promise.resolve());
     }
 }
