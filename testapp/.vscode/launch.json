@@ -1,22 +1,30 @@
 {
     "version": "0.1.0",
-    "openDebug": "server=4712",
     "configurations": [
         {
             "name": "test chrome",
             "type": "webkit",
             "program": "out/client/index.html",
-            //"url": "http://localhost:8080/out/client/index.html?2",
-            //"runtimeArgs": ["http://localhost:8080/out/client/index.html?2"],
-            //"cwd": ".",
+            //"runtimeArgs": ["http://localhost:8080/out/client/index.html?3"],
             "stopOnEntry": false,
-            "sourceMaps": false,
+            "sourceMaps": true,
             "outDir": "out"
         },
         {
             "name": "attach to chrome",
             "type": "webkit",
             "port": 9222
+        },
+        {
+            "name": "test node",
+            "type": "node",
+            "program": "D:/opendebug-node/node/test.js",
+            //"url": "http://localhost:8080/out/client/index.html?2",
+            //"runtimeArgs": ["http://localhost:8080/out/client/index.html?3"],
+            //"cwd": ".",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outDir": "out"
         }
     ]
 }
