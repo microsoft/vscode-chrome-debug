@@ -5,9 +5,8 @@
             "name": "test chrome",
             "type": "webkit",
             "program": "out/client/index.html",
-            //"runtimeArgs": ["http://localhost:8080/out/client/index.html?3"],
-            "stopOnEntry": false,
-            "sourceMaps": true,
+            //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
+            "sourceMaps": false,
             "outDir": "out"
         },
         {

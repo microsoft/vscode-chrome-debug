@@ -7,6 +7,7 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSe
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
+import {Logger} from './webKitDebugSession';
 
 import {spawn, ChildProcess} from 'child_process';
 import * as NodeUrl from 'url';
@@ -100,10 +101,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
-        console.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
+        Logger.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
-            console.error('chrome error: ' + err);
+            Logger.log('chrome error: ' + err);
             this.terminateSession();
         });
 
@@ -365,7 +366,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     // Try to resolve the url to a path in the workspace. If it's not in the workspace,
                     // just use the script.url as-is.
                     let path = this.webkitUrlToClientUrl(script.url);
-                    let sourceName: string;
                     if (path) {
                         sourceName = Path.basename(path);
                     } else {
@@ -454,6 +454,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         return evalPromise.then(evalResponse => {
+            if (evalResponse.result.wasThrown) {
+                const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
+                return Promise.reject(errorMessage);
+            }
+
             const { value, variablesReference } = this.remoteObjectToValue(evalResponse.result.result);
             return { result: value, variablesReference };
         });
@@ -480,7 +485,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     value = 'null';
                 } else {
                     // If it's a non-null object, create a variable reference so the client can ask for its props
-                    variablesReference = this._variableHandles.create(object.objectId)
+                    variablesReference = this._variableHandles.create(object.objectId);
                     value = object.description;
                 }
             } else if (object && object.type === 'undefined') {
@@ -488,7 +493,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             } else if (object.type === 'function') {
                 const firstBraceIdx = object.description.indexOf('{');
                 if (firstBraceIdx >= 0) {
-                    value = object.description.substring(0, firstBraceIdx) + '{ … }'
+                    value = object.description.substring(0, firstBraceIdx) + '{ … }';
                 } else {
                     const firstArrowIdx = object.description.indexOf('=>');
                     value = firstArrowIdx >= 0 ?
