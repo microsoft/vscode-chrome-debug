@@ -6,6 +6,7 @@ import * as WebSocket from 'ws';
 import * as http from 'http';
 import {EventEmitter} from 'events';
 import * as Utilities from './utilities';
+import {Logger} from './webKitDebugSession';
 
 interface IMessageWithId {
     id: number;
@@ -46,18 +47,18 @@ class ResReqWebSocket extends EventEmitter {
                 ws.removeListener('error', reject);
 
                 ws.on('error', e => {
-                    console.log('Websocket error: ' + e.toString());
+                    Logger.log('Websocket error: ' + e.toString());
                     this.emit('error', e);
                 });
 
                 resolve(ws);
             });
             ws.on('message', msgStr => {
-                console.log('From target: ' + msgStr);
+                Logger.log('From target: ' + msgStr);
                 this.onMessage(JSON.parse(msgStr));
             });
             ws.on('close', () => {
-                console.log('Websocket closed');
+                Logger.log('Websocket closed');
                 this.emit('close');
             });
         });
@@ -80,7 +81,7 @@ class ResReqWebSocket extends EventEmitter {
             this._pendingRequests.set(message.id, resolve);
             this._wsAttached.then(ws => {
                 const msgStr = JSON.stringify(message);
-                console.log('To target: ' + msgStr);
+                Logger.log('To target: ' + msgStr);
                 ws.send(msgStr);
             });
         });

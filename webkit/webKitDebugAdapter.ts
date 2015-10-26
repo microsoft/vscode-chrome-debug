@@ -7,6 +7,7 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSe
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
+import {Logger} from './webKitDebugSession';
 
 import {spawn, ChildProcess} from 'child_process';
 import * as NodeUrl from 'url';
@@ -100,10 +101,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
-        console.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
+        Logger.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
-            console.error('chrome error: ' + err);
+            Logger.log('chrome error: ' + err);
             this.terminateSession();
         });
 
