@@ -30,7 +30,7 @@ gulp.task('build', function () {
     return gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig))
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/opendebug-webkit' }))
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: __dirname }))
         .pipe(gulp.dest('out'));
 });
 

@@ -8,7 +8,7 @@
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
-            "sourceMaps": false,
+            "sourceMaps": true,
             "outDir": "out"
         },
         {
