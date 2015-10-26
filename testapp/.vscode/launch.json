@@ -14,17 +14,6 @@
             "name": "attach to chrome",
             "type": "webkit",
             "port": 9222
-        },
-        {
-            "name": "test node",
-            "type": "node",
-            "program": "D:/opendebug-node/node/test.js",
-            //"url": "http://localhost:8080/out/client/index.html?2",
-            //"runtimeArgs": ["http://localhost:8080/out/client/index.html?3"],
-            //"cwd": ".",
-            "stopOnEntry": false,
-            "sourceMaps": true,
-            "outDir": "out"
         }
     ]
 }
