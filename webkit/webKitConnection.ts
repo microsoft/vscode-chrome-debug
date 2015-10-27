@@ -6,7 +6,7 @@ import * as WebSocket from 'ws';
 import * as http from 'http';
 import {EventEmitter} from 'events';
 import * as Utilities from './utilities';
-import {Logger} from './webKitDebugSession';
+import {Logger} from './utilities';
 
 interface IMessageWithId {
     id: number;

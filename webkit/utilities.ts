@@ -123,3 +123,34 @@ export function retryAsync(fn: () => Promise<any>, attempts: number, timeoutBetw
         });
 }
 
+/**
+ * Holds a singleton to manage access to console.log.
+ * Logging is only allowed when running in server mode, because otherwise it goes through the same channel that Code uses to
+ * communicate with the adapter, which can cause communication issues.
+ * ALLOW_LOGGING should be set to false when packaging and releasing to ensure it's always disabled.
+ */
+export class Logger {
+    private static ALLOW_LOGGING = true;
+
+    private static _logger: Logger;
+    private _isServer: boolean;
+
+    public static log(msg: string): void {
+        if (this._logger) this._logger._log(msg);
+    }
+
+    public static init(isServer: boolean): void {
+        this._logger = new Logger(isServer);
+
+        // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
+        setInterval(() => Logger.log('-'), 1000);
+    }
+
+    constructor(isServer: boolean) {
+        this._isServer = isServer;
+    }
+
+    private _log(msg: string): void {
+        if (this._isServer && Logger.ALLOW_LOGGING) console.log(msg);
+    }
+}

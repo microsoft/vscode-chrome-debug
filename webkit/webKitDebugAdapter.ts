@@ -2,17 +2,21 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {Event} from '../common/v8protocol';
+import {Event} from '../common/v8Protocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
-import {Logger} from './webKitDebugSession';
+import {Logger} from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
 import * as NodeUrl from 'url';
 import * as Path from 'path';
 import * as Os from 'os';
+
+class B {
+	private _a = new A();
+}
 
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
@@ -231,7 +235,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return Promise.reject('The "port" field is required in the attach config.');
         }
 
-        this._attach(args.port);
+        return this._attach(args.port);
     }
 
     public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody> {
