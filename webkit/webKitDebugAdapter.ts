@@ -14,10 +14,6 @@ import * as NodeUrl from 'url';
 import * as Path from 'path';
 import * as Os from 'os';
 
-class B {
-	private _a = new A();
-}
-
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
     reject: (error?: any) => void;

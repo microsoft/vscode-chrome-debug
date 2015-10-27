@@ -11,10 +11,6 @@ import {AdapterProxy} from '../adapter/adapterProxy';
 import {LineNumberTransformer} from '../adapter/lineNumberTransformer';
 import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
 
-class A {
-    
-}
-
 export class WebKitDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 

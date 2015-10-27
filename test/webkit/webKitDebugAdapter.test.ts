@@ -42,24 +42,21 @@ suite('WebKitDebugAdapter', () => {
     });
 
     suite('attach()', () => {
-        test('fail', done => done('failed!!!!'));
-        test('if successful, an initialized event is fired', done => {
+        test('if successful, an initialized event is fired', () => {
             const WebKitDebugAdapter: typeof _WebKitDebugAdapter = require(MODULE_UNDER_TEST).WebKitDebugAdapter;
             const wkda = new WebKitDebugAdapter();
 
             let initializedFired = false;
             wkda.registerEventHandler((event: DebugProtocol.Event) => {
-                if (event.type === 'initialize2') {
+                if (event.event === 'initialized') {
                     initializedFired = true;
                 } else {
                     assert.fail('An unexpected event was fired');
                 }
             });
 
-            wkda.attach({ address: 'localhost', 'port': 9222 }).then(() => {
-                if (initializedFired) {
-                    done();
-                } else {
+            return wkda.attach({ address: 'localhost', 'port': 9222 }).then(() => {
+                if (!initializedFired) {
                     assert.fail('Attach completed without firing the initialized event');
                 }
             });
