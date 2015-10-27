@@ -26,7 +26,7 @@ suite('WebKitDebugAdapter', () => {
             './v8Protocol',
             'events']);
 
-        mockery.registerMock('./webKitConnection', { WebKitConnection: MockWebKitConnection });
+        registerMockWebKitConnection();
         mockery.registerMock('child_process', { });
         mockery.registerMock('url', { });
         mockery.registerMock('path', { });
@@ -43,9 +43,7 @@ suite('WebKitDebugAdapter', () => {
 
     suite('attach()', () => {
         test('if successful, an initialized event is fired', () => {
-            const WebKitDebugAdapter: typeof _WebKitDebugAdapter = require(MODULE_UNDER_TEST).WebKitDebugAdapter;
-            const wkda = new WebKitDebugAdapter();
-
+            const wkda = instantiateWKDA();
             let initializedFired = false;
             wkda.registerEventHandler((event: DebugProtocol.Event) => {
                 if (event.event === 'initialized') {
@@ -61,14 +59,47 @@ suite('WebKitDebugAdapter', () => {
                 }
             });
         });
+
+        test('if unsuccessful, the promise is rejected and an initialized event is not fired', done => {
+            registerMockWebKitConnection({
+                attach: () => Promise.reject('Testing attach failed')
+            });
+
+            const wkda = instantiateWKDA();
+            wkda.registerEventHandler((event: DebugProtocol.Event) => {
+                assert.fail('Not expecting any event in this scenario');
+            });
+
+            return wkda.attach({ address: 'localhost', 'port': 9222 }).then(
+                () => assert.fail('Expecting promise to be rejected'),
+                e => done());
+        });
     });
 });
 
-class MockWebKitConnection {
+class DefaultMockWebKitConnection {
     public on(eventName: string, handler: (msg: any) => void): void {
     }
 
     public attach(port: number): Promise<void> {
         return Promise.resolve<void>();
     }
+}
+
+function registerMockWebKitConnection(partialImpl?: any): void {
+    const mock = {};
+    for (let name in DefaultMockWebKitConnection) {
+        mock[name] = DefaultMockWebKitConnection[name];
+    }
+
+    for (let name in partialImpl) {
+        mock[name] = partialImpl[name];
+    }
+
+    mockery.registerMock('./webKitConnection', { WebKitConnection: mock });
+}
+
+function instantiateWKDA(): _WebKitDebugAdapter {
+    const WebKitDebugAdapter: typeof _WebKitDebugAdapter = require(MODULE_UNDER_TEST).WebKitDebugAdapter;
+    return new WebKitDebugAdapter();
 }
