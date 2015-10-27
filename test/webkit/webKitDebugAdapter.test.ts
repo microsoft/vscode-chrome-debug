@@ -87,13 +87,15 @@ class DefaultMockWebKitConnection {
 }
 
 function registerMockWebKitConnection(partialImpl?: any): void {
-    const mock = {};
-    for (let name in DefaultMockWebKitConnection) {
+    const mock = () => { };
+    Object.getOwnPropertyNames(DefaultMockWebKitConnection).forEach(name => {
         mock[name] = DefaultMockWebKitConnection[name];
-    }
+    });
 
-    for (let name in partialImpl) {
-        mock[name] = partialImpl[name];
+    if (partialImpl) {
+        Object.getOwnPropertyNames(partialImpl).forEach(name => {
+            mock[name] = partialImpl[name];
+        });
     }
 
     mockery.registerMock('./webKitConnection', { WebKitConnection: mock });

@@ -2,8 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as assert from 'assert';
-
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
 }
