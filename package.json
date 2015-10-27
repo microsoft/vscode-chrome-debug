@@ -23,6 +23,7 @@
     "gulp-util": "^3.0.5",
     "mocha": "^2.3.3",
     "mockery": "^1.4.0",
+    "sinon": "^1.17.2",
     "tsd": "^0.6.3",
     "tslint": "^2.5.1",
     "typescript": "^1.6.2"

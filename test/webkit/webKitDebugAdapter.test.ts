@@ -13,7 +13,7 @@ import {WebKitDebugAdapter as _WebKitDebugAdapter} from '../../webkit/webKitDebu
 
 const MODULE_UNDER_TEST = '../../webkit/webKitDebugAdapter';
 suite('WebKitDebugAdapter', () => {
-    let mockEventEmitter: EventEmitter;
+    let webKitConnectionMock: Sinon.SinonMock;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
@@ -30,7 +30,7 @@ suite('WebKitDebugAdapter', () => {
             './v8Protocol',
             'events']);
 
-        mockEventEmitter = registerMockWebKitConnection();
+        webKitConnectionMock = registerMockWebKitConnection();
         mockery.registerMock('child_process', { });
         mockery.registerMock('url', { });
         mockery.registerMock('path', { });
@@ -84,8 +84,14 @@ suite('WebKitDebugAdapter', () => {
         test('works', () => {
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                mockEventEmitter.emit('Debugger.scriptParsed', { id: "id", url: "a.js" });
-                wkda.setBreakpoints({ source: { path: "a.js" }, lines: [1] });
+                webKitConnectionMock
+                    .expects('debugger_setBreakpoint')
+                    .withArgs({ scriptId: "id", lineNumber: 5, columnNumber: 0 });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { id: "id", url: "a.js" });
+                return wkda.setBreakpoints({ source: { path: "a.js" }, lines: [5] });
+            }).then(response => {
+                webKitConnectionMock.verify();
+                assert.deepEqual(response.breakpoints.length, 1);
             });
         });
     });
@@ -110,6 +116,12 @@ function attach(wkda: _WebKitDebugAdapter): Promise<void> {
 }
 
 class DefaultMockWebKitConnection {
+    public static EE = new EventEmitter();
+
+    public on(eventName: string, handler: (msg: any) => void): void {
+        DefaultMockWebKitConnection.EE.on(eventName, handler);
+    }
+
     public attach(port: number): Promise<void> {
         return Promise.resolve<void>();
     }
@@ -118,7 +130,7 @@ class DefaultMockWebKitConnection {
 /**
  * Registers a mock WebKitConnection based off the above default impl, patched when whatever is in partialImpl
  */
-function registerMockWebKitConnection(partialImpl?: any): EventEmitter {
+function registerMockWebKitConnection(partialImpl?: any): Sinon.SinonMock {
     const mockType = () => { };
     Object.getOwnPropertyNames(DefaultMockWebKitConnection).forEach(name => {
         mockType[name] = DefaultMockWebKitConnection[name];
@@ -130,15 +142,13 @@ function registerMockWebKitConnection(partialImpl?: any): EventEmitter {
         });
     }
 
-    // Instantiate the mock so we can inject an event emitter to simulate events from the WebKitConnection
-    const mockInstance = new mockType();
-    const ee = new EventEmitter();
-    mockInstance['on'] = ee.on.bind(ee);
+    // Instantiate the mock type so we can wrap it in a sinon mock
+    const mock = sinon.mock(new mockType());
 
     // Register a fake constructor so that our instance will be called when the adapter does 'new WebKitConnection'
-    mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
+    mockery.registerMock('./webKitConnection', { WebKitConnection: () => mock });
 
-    return ee;
+    return mock;
 }
 
 function instantiateWKDA(): _WebKitDebugAdapter {
