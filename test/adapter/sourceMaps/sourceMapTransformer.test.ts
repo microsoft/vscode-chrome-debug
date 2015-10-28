@@ -44,32 +44,6 @@ suite('SourceMapTransformer', () => {
         transformerSMDisabled = null;
     });
 
-    suite('launch()', () => {
-        test('modifies args.path when present', () => {
-            const args = <ILaunchRequestArgs>{ workingDirectory: 'C:/code', program: 'authored.ts' };
-            const expected = <ILaunchRequestArgs>{ workingDirectory: 'C:/code', program: 'runtime.js' };
-
-            transformer.launch(args);
-            assert.deepEqual(args, expected);
-        });
-
-        test('doesn\'t do anything when args.path is missing, e.g. args.url was set', () => {
-            const args = <ILaunchRequestArgs>{ workingDirectory: 'C:/code' };
-            const expected = <ILaunchRequestArgs>{ workingDirectory: 'C:/code' };
-
-            transformer.launch(args);
-            assert.deepEqual(args, expected);
-        });
-
-        test('doesn\'t do anything when sourcemaps are disabled', () => {
-            const args = <ILaunchRequestArgs>{ workingDirectory: 'C:/code' };
-            const expected = <ILaunchRequestArgs>{ workingDirectory: 'C:/code' };
-
-            transformerSMDisabled.launch(args);
-            assert.deepEqual(args, expected);
-        });
-    });
-
     suite('setBreakpoints()', () => {
         function createArgs(path: string, lines: number[]): DebugProtocol.SetBreakpointsArguments {
             return {

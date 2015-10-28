@@ -201,6 +201,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const clientUrl = this.webkitUrlToClientUrl(script.url);
         this._scriptsByUrl.set(clientUrl, script);
         this._scriptsById.set(script.scriptId, script);
+        this._eventHandler(new Event('scriptParsed', { scriptUrl: clientUrl }));
 
         if (this._pendingBreakpointsByUrl.has(clientUrl)) {
             const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
@@ -234,7 +235,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._attach(args.port);
     }
 
-    public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): Promise<SetBreakpointsResponseBody> {
+    public setBreakpoints(args: ISetBreakpointsArgs): Promise<SetBreakpointsResponseBody> {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
             targetScript = this._scriptsByUrl.get(canonicalizeUrl(args.source.path));
@@ -246,7 +247,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
                 .then(() => this.clearAllBreakpoints(targetScript.scriptId))
-                .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines))
+                .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines, args.cols))
                 .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses, args.lines) }));
 
             const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
@@ -266,10 +267,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
 
-    private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
+    private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
-            .map(lineNumber => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber }));
+            .map((lineNumber, i) => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
 
         // Join all setBreakpoint requests to a single promise
         return Promise.all(responsePs);
