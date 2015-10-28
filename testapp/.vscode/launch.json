@@ -1,25 +1,19 @@
 {
     "version": "0.1.0",
-    //"openDebug": "server=4711",
     "configurations": [
         {
             "name": "test chrome",
             "type": "webkit",
+            // index.html is copied to out when this project is built - run gulp build!
             "program": "out/client/index.html",
             //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
-            "sourceMaps": true,
+            "sourceMaps": false,
             "outDir": "out"
         },
         {
             "name": "attach to chrome",
             "type": "webkit",
             "port": 9222
-        },
-        {
-            "name": "node",
-            "type": "node",
-            "program": "out/client/test3.js",
-            "sourceMaps": true
         }
     ]
 }
