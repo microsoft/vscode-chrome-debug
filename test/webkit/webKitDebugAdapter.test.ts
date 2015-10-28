@@ -8,14 +8,13 @@ import {EventEmitter} from 'events';
 import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
-import {WebKitConnection} from '../../webkit/webKitConnection';
 
 /** Not mocked - use for type only */
 import {WebKitDebugAdapter as _WebKitDebugAdapter} from '../../webkit/webKitDebugAdapter';
 
 const MODULE_UNDER_TEST = '../../webkit/webKitDebugAdapter';
 suite('WebKitDebugAdapter', () => {
-    let webKitConnectionMock: Sinon.SinonMock;
+    let mockWebKitConnection: Sinon.SinonMock;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
@@ -32,13 +31,14 @@ suite('WebKitDebugAdapter', () => {
             './v8Protocol',
             'events']);
 
-        webKitConnectionMock = registerMockWebKitConnection();
         mockery.registerMock('os', { platform: () => 'win32' });
-        mockery.registerMock('child_process', { });
-        mockery.registerMock('url', { });
-        mockery.registerMock('path', { });
-        mockery.registerMock('net', { });
-        mockery.registerMock('fs', { });
+        mockery.registerMock('child_process', {});
+        mockery.registerMock('url', {});
+        mockery.registerMock('path', {});
+        mockery.registerMock('net', {});
+        mockery.registerMock('fs', {});
+
+        mockWebKitConnection = registerMockWebKitConnection();
     });
 
     teardown(() => {
@@ -67,9 +67,7 @@ suite('WebKitDebugAdapter', () => {
         });
 
         test('if unsuccessful, the promise is rejected and an initialized event is not fired', done => {
-            registerMockWebKitConnection({
-                attach: () => Promise.reject('Testing attach failed')
-            });
+            mockWebKitConnection.expects('attach').returns(Promise.reject('Testing attach failed'));
 
             const wkda = instantiateWKDA();
             wkda.registerEventHandler((event: DebugProtocol.Event) => {
@@ -83,46 +81,46 @@ suite('WebKitDebugAdapter', () => {
     });
 
     class SomethingElse {
-        /*public helper(arg: number): number {
+        public helper(arg: any): number {
             return 5;
-        }*/
+        }
     }
 
     class ToTest {
         public testMe(s: SomethingElse): number {
-            return s.helper(1);
+            return s.helper({ a: { b: 1 } });
         }
     }
 
     suite('asdf()', () => {
         test('sinontest', () => {
-            var s: SomethingElse = new SomethingElse();
-            var m = sinon.mock(s);
-            m.expects('helper').once().returned(2);
+            let s: SomethingElse = new SomethingElse();
+            let m = sinon.mock(s);
+            m.expects('helper')
+                .once()
+                .withArgs(1).returns(2)
+                .withArgs({ a: { b: 1 } }).returns(4);
 
-            assert.equal(new ToTest().testMe(s), 2);
-            m.verify();
+            assert.equal(new ToTest().testMe(s), 4);
+            mockWebKitConnection.verify();
         });
     });
 
     suite('setBreakpoints()', () => {
-        test('works', () => {
-            let mockInstance = new WebKitConnection();
-            mockInstance['debugger_setBreakpoint'] =
-                sinon.stub().returns(Promise.resolve({result: { breakpointId: "hi" } }));
-            mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
-            let mock = sinon.mock(mockInstance);
+        test('When setting one breakpoint, returns the correct result', () => {
+            // Set up connection mock
+            mockWebKitConnection.expects('debugger_setBreakpoint')
+                .once()
+                .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: 'id', lineNumber: 5 })
+                .returns(<WebKitProtocol.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: 'bpId', actualLocation: { scriptId: 'id', lineNumber: 5, columnNumber: 0 } } });
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                mock
-                    .expects('debugger_setBreakpoint')
-                    .withArgs({ scriptId: "id", lineNumber: 5, columnNumber: 0 });
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { id: "id", url: "file:///a.js" });
-                return wkda.setBreakpoints({ source: { path: "a.js" }, lines: [5] });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: 'id', url: 'file:///a.js' });
+                return wkda.setBreakpoints({ source: { path: 'a.js' }, lines: [5] });
             }).then(response => {
-                mock.verify();
-                assert.deepEqual(response.breakpoints.length, 1);
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, { breakpoints: [{ line: 5, column: 0, verified: true }] });
             });
         });
     });
@@ -159,28 +157,23 @@ class DefaultMockWebKitConnection {
 }
 
 /**
- * Registers a mock WebKitConnection based off the above default impl, patched when whatever is in partialImpl
+ * Creates an instance of the default mock WKC, registers it with mockery.
+ * Then creates a sinon mock against it, and customizes sinon's 'expects'
  */
-function registerMockWebKitConnection(partialImpl?: any): Sinon.SinonMock {
-    const mockType = () => { };
-    Object.getOwnPropertyNames(DefaultMockWebKitConnection).forEach(name => {
-        mockType[name] = DefaultMockWebKitConnection[name];
-    });
-
-    if (partialImpl) {
-        Object.getOwnPropertyNames(partialImpl).forEach(name => {
-            mockType[name] = partialImpl[name];
-        });
-    }
-
-    // Instantiate the mock type so we can wrap it in a sinon mock
-    const mockInstance = new mockType();
-    const mock = sinon.mock(mockInstance);
-
-    // Register a fake constructor so that our instance will be called when the adapter does 'new WebKitConnection'
+function registerMockWebKitConnection(): Sinon.SinonMock {
+    const mockInstance = new DefaultMockWebKitConnection();
     mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
+    const m = sinon.mock(mockInstance);
 
-    return mock;
+    // Prevent sinon from complaining that the mocked object doesn't have an implementation of
+    // the expected method.
+    const originalMExpects = m.expects.bind(m);
+    m.expects = methodName => {
+        mockInstance[methodName] = () => Promise.resolve();
+        return originalMExpects(methodName);
+    };
+
+    return m;
 }
 
 function instantiateWKDA(): _WebKitDebugAdapter {
