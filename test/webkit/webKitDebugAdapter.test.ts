@@ -2,13 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as sinon from 'sinon';
 import * as mockery from 'mockery';
-import * as assert from 'assert';
-import * as testUtils from '../testUtils';
-
 import {EventEmitter} from 'events';
+import * as assert from 'assert';
 
-/** Utilities without mocks - use for type only */
+import * as testUtils from '../testUtils';
+import {WebKitConnection} from '../../webkit/webKitConnection';
+
+/** Not mocked - use for type only */
 import {WebKitDebugAdapter as _WebKitDebugAdapter} from '../../webkit/webKitDebugAdapter';
 
 const MODULE_UNDER_TEST = '../../webkit/webKitDebugAdapter';
@@ -31,10 +33,10 @@ suite('WebKitDebugAdapter', () => {
             'events']);
 
         webKitConnectionMock = registerMockWebKitConnection();
+        mockery.registerMock('os', { platform: () => 'win32' });
         mockery.registerMock('child_process', { });
         mockery.registerMock('url', { });
         mockery.registerMock('path', { });
-        mockery.registerMock('os', { });
         mockery.registerMock('net', { });
         mockery.registerMock('fs', { });
     });
@@ -80,17 +82,46 @@ suite('WebKitDebugAdapter', () => {
         });
     });
 
+    class SomethingElse {
+        /*public helper(arg: number): number {
+            return 5;
+        }*/
+    }
+
+    class ToTest {
+        public testMe(s: SomethingElse): number {
+            return s.helper(1);
+        }
+    }
+
+    suite('asdf()', () => {
+        test('sinontest', () => {
+            var s: SomethingElse = new SomethingElse();
+            var m = sinon.mock(s);
+            m.expects('helper').once().returned(2);
+
+            assert.equal(new ToTest().testMe(s), 2);
+            m.verify();
+        });
+    });
+
     suite('setBreakpoints()', () => {
         test('works', () => {
+            let mockInstance = new WebKitConnection();
+            mockInstance['debugger_setBreakpoint'] =
+                sinon.stub().returns(Promise.resolve({result: { breakpointId: "hi" } }));
+            mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
+            let mock = sinon.mock(mockInstance);
+
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                webKitConnectionMock
+                mock
                     .expects('debugger_setBreakpoint')
                     .withArgs({ scriptId: "id", lineNumber: 5, columnNumber: 0 });
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { id: "id", url: "a.js" });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { id: "id", url: "file:///a.js" });
                 return wkda.setBreakpoints({ source: { path: "a.js" }, lines: [5] });
             }).then(response => {
-                webKitConnectionMock.verify();
+                mock.verify();
                 assert.deepEqual(response.breakpoints.length, 1);
             });
         });
@@ -143,10 +174,11 @@ function registerMockWebKitConnection(partialImpl?: any): Sinon.SinonMock {
     }
 
     // Instantiate the mock type so we can wrap it in a sinon mock
-    const mock = sinon.mock(new mockType());
+    const mockInstance = new mockType();
+    const mock = sinon.mock(mockInstance);
 
     // Register a fake constructor so that our instance will be called when the adapter does 'new WebKitConnection'
-    mockery.registerMock('./webKitConnection', { WebKitConnection: () => mock });
+    mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
 
     return mock;
 }

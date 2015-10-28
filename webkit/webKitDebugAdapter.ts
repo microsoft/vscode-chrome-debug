@@ -127,7 +127,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
             return this._webKitConnection.attach(port)
                 .then(
-                    () => this._eventHandler(new InitializedEvent()),
+                    () => this.fireEvent(new InitializedEvent()),
                     e => {
                         this.clearEverything();
                         return Promise.reject(e);
@@ -137,12 +137,18 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
     }
 
+    private fireEvent(event: DebugProtocol.Event): void {
+        if (this._eventHandler) {
+            this._eventHandler(event);
+        }
+    }
+
     /**
      * Chrome is closing, or error'd somehow, stop the debug session
      */
     private terminateSession(): void {
         if (this._clientAttached) {
-            this._eventHandler(new TerminatedEvent());
+            this.fireEvent(new TerminatedEvent());
         }
 
         this.clearEverything();
@@ -185,7 +191,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
         }
 
-        this._eventHandler(new StoppedEvent(reason, /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
+        this.fireEvent(new StoppedEvent(reason, /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
     }
 
     private onDebuggerResumed(): void {
@@ -194,7 +200,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
         let resumedEvent = new Event('running', { threadId: WebKitDebugAdapter.THREAD_ID });
-        this._eventHandler(resumedEvent);
+        this.fireEvent(resumedEvent);
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
