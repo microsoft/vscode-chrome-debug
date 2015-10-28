@@ -17,6 +17,11 @@ interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     address: string;
 }
 
+interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
+    /** DebugProtocol does not send cols, maybe it will someday, but this is used internally when a location is sourcemapped */
+    cols?: number[];
+}
+
 /*
  * The ResponseBody interfaces are copied from debugProtocol.d.ts which defines these inline in the Response interfaces.
  * They should always match those interfaces, see the original for comments.

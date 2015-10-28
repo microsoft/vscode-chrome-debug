@@ -20,28 +20,29 @@ export class SourceMapTransformer implements IDebugTransformer {
         }
     }
 
-    public launch(args: ILaunchRequestArgs): void {
-        // Can html files be sourcemapped? May as well try.
-        if (this._sourceMaps && args.program) {
-            const generatedPath = this._sourceMaps.MapPathFromSource(args.program);
-            if (generatedPath) {
-                args.program = generatedPath;
-            }
-        }
-    }
-
     /**
      * Apply sourcemapping to the setBreakpoints request path/lines
      */
-    public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments, requestSeq: number): void {
+    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): void {
         if (this._sourceMaps && args.source.path) {
             const argsPath = args.source.path;
 
-            args.source.path = this._sourceMaps.MapPathFromSource(argsPath) || argsPath;
-            args.lines = args.lines.map(line => {
-                const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
-                return mapped ? mapped.line : line;
-            });
+            const mappedPath = this._sourceMaps.MapPathFromSource(argsPath);
+            if (mappedPath) {
+                args.source.path = mappedPath;
+
+                // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
+                args.cols = [];
+                args.lines = args.lines.map((line, i) => {
+                    const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
+                    if (mapped) {
+                        args.cols[i] = mapped.column;
+                        return mapped.line;
+                    } else {
+                        return line;
+                    }
+                });
+            }
 
             this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
         }
@@ -84,6 +85,14 @@ export class SourceMapTransformer implements IDebugTransformer {
                     stackFrame.column = mapped.column;
                 }
             });
+        }
+    }
+
+    public scriptParsed(event: DebugProtocol.Event): void {
+        if (this._sourceMaps) {
+            // Send a dummy request just to get this file into the cache. SourceMaps can't trace a source file to a generated file
+            // unless its already in its cache, without falling back on heuristics which may be wrong.
+            this._sourceMaps.MapToSource(event.body.scriptUrl, 0, 0);
         }
     }
 }

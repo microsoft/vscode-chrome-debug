@@ -7,8 +7,10 @@ import * as Utilities from '../webkit/utilities';
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
 export class AdapterProxy {
+    private static INTERNAL_EVENTS = ['scriptParsed'];
+
     public constructor(private _requestTransformers: IDebugTransformer[], private _debugAdapter: IDebugAdapter, private _eventHandler: EventHandler) {
-        this._debugAdapter.registerEventHandler(this._eventHandler);
+        this._debugAdapter.registerEventHandler(event => this.onAdapterEvent(event));
     }
 
     public dispatchRequest(request: DebugProtocol.Request): Promise<any> {
@@ -25,6 +27,20 @@ export class AdapterProxy {
                 return this.transformResponse(request, body)
                     .then(() => body);
             });
+    }
+
+    private onAdapterEvent(event: DebugProtocol.Event): void {
+        // No need for transformers to modify events yet
+        this._requestTransformers.forEach(transformer => {
+            if (event.event in transformer) {
+                transformer[event.event](event);
+            }
+        });
+
+        // Internal events should not be passed back through DebugProtocol
+        if (AdapterProxy.INTERNAL_EVENTS.indexOf(event.event) < 0) {
+            this._eventHandler(event);
+        }
     }
 
     /**
