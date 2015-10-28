@@ -3,10 +3,6 @@
  *--------------------------------------------------------*/
 
 import * as mockery from 'mockery';
-import * as assert from 'assert';
-
-/** Utilities without mocks - use for type only */
-import * as _Utilities from '../../webkit/webKitDebugAdapter';
 
 const MODULE_UNDER_TEST = '../../webkit/webKitDebugAdapter';
 suite('WebKitDebugAdapter', () => {
@@ -30,6 +26,5 @@ suite('WebKitDebugAdapter', () => {
     });
 
     suite('launch()', () => {
-        
     });
 });

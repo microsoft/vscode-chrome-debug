@@ -11,6 +11,7 @@ const AUTHORED_PATH = 'authored.ts';
 const RUNTIME_PATH = 'runtime.js';
 const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
+const RUNTIME_COLS = [3, 7, 11];
 
 suite('SourceMapTransformer', () => {
     let transformer: IDebugTransformer;
@@ -45,16 +46,17 @@ suite('SourceMapTransformer', () => {
     });
 
     suite('setBreakpoints()', () => {
-        function createArgs(path: string, lines: number[]): DebugProtocol.SetBreakpointsArguments {
+        function createArgs(path: string, lines: number[], cols?: number[]): ISetBreakpointsArgs {
             return {
                 source: { path },
-                lines
+                lines,
+                cols
             };
         }
 
         test('modifies the source and lines', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
-            const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES);
+            const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
             transformer.setBreakpoints(args);
             assert.deepEqual(args, expected);
@@ -155,8 +157,10 @@ class MockSourceMaps implements ISourceMaps {
         assert.equal(path, AUTHORED_PATH);
         assert.equal(column, 0);
 
-        const mappedLine = RUNTIME_LINES[AUTHORED_LINES.indexOf(line)];
-        return { path: RUNTIME_PATH, line: mappedLine, column: 0 };
+        const index = AUTHORED_LINES.indexOf(line);
+        const mappedLine = RUNTIME_LINES[index];
+        const mappedCol = RUNTIME_COLS[index];
+        return { path: RUNTIME_PATH, line: mappedLine, column: mappedCol };
     }
 
 	/*
