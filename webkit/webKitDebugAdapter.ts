@@ -87,7 +87,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
 
         // Also start with extra stuff disabled, and user-data-dir in tmp directory
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${Os.tmpdir()}/webkitdebugadapter${Date.now()}`]);
+        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${Os.tmpdir() }/webkitdebugadapter${Date.now() }`]);
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
@@ -101,7 +101,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
-        Logger.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs)})`);
+        Logger.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromeExe, chromeArgs);
         this._chromeProc.on('error', (err) => {
             Logger.log('chrome error: ' + err);
@@ -127,11 +127,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
             return this._webKitConnection.attach(port)
                 .then(
-                    () => this.fireEvent(new InitializedEvent()),
-                    e => {
-                        this.clearEverything();
-                        return Promise.reject(e);
-                    });
+                () => this.fireEvent(new InitializedEvent()),
+                e => {
+                    this.clearEverything();
+                    return Promise.reject(e);
+                });
         } else {
             return Promise.resolve<void>();
         }
@@ -252,7 +252,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (targetScript) {
             // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                .then(() => this.clearAllBreakpoints(targetScript.scriptId))
+                .then(() => this._clearAllBreakpoints(targetScript.scriptId))
                 .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines, args.cols))
                 .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses, args.lines) }));
 
@@ -272,6 +272,17 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
     }
 
+    private _clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
+        const committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
+
+        // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
+        // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
+        // state where later adds on the same line will fail with 'breakpoint already exists' even though it
+        // does not break there.
+        return committedBps.reduce<Promise<void>>((p, bpId) => {
+            return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
+        }, Promise.resolve<void>());
+    }
 
     private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Call setBreakpoint for all breakpoints in the script simultaneously
@@ -514,18 +525,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         return { value, variablesReference };
-    }
-
-    private clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
-        const committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
-
-        // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
-        // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
-        // state where later adds on the same line will fail with 'breakpoint already exists' even though it
-        // does not break there.
-        return committedBps.reduce<Promise<void>>((p, bpId) => {
-            return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
-        }, Promise.resolve<void>());
     }
 
     /**

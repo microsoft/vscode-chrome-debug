@@ -111,7 +111,7 @@ suite('WebKitDebugAdapter', () => {
         function makeExpectedResponse(lines: number[], cols?: number[]): SetBreakpointsResponseBody {
             const breakpoints = lines.map((line, i) => ({
                 line,
-                column: cols ? cols[i] : 0,
+                column: cols? cols[i] : 0,
                 verified: true
             }));
 
@@ -170,7 +170,6 @@ suite('WebKitDebugAdapter', () => {
             const lines = [14, 200];
             const cols = [33, 16];
             expectSetBreakpoint(lines, cols);
-            expectRemoveBreakpoint([0, 1]);
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
@@ -179,6 +178,8 @@ suite('WebKitDebugAdapter', () => {
             }).then(response => {
                 lines.push(321);
                 cols.push(123);
+                
+                expectRemoveBreakpoint([0, 1]);
                 expectSetBreakpoint(lines, cols);
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
