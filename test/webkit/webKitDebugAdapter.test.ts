@@ -84,7 +84,7 @@ suite('WebKitDebugAdapter', () => {
     suite('setBreakpoints()', () => {
         const SCRIPT_ID = 'id';
         const BP_ID = 'bpId';
-        const FILE_NAME = 'a.js';
+        const FILE_NAME = 'file:///a.js';
         function expectSetBreakpoint(lines: number[], cols?: number[]): void {
             lines.forEach((lineNumber, i) => {
                 let columnNumber;
@@ -127,7 +127,7 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 mockWebKitConnection.verify();
@@ -142,24 +142,8 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockWebKitConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
-        });
-
-        test(`When a breakpoint is set in a script that hasn't been loaded, the call resolves when the script is loaded`, () => {
-            const lines = [14, 200, 151];
-            const cols = [33, 16, 1];
-            expectSetBreakpoint(lines, cols);
-
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                const setBreakpointsP = wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
-                return setBreakpointsP;
             }).then(response => {
                 mockWebKitConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
@@ -173,7 +157,7 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 lines.push(321);
