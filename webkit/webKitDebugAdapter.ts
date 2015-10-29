@@ -10,9 +10,9 @@ import * as Utilities from './utilities';
 import {Logger} from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
-import * as NodeUrl from 'url';
-import * as Path from 'path';
-import * as Os from 'os';
+import * as nodeUrl from 'url';
+import * as path from 'path';
+import * as os from 'os';
 
 interface IPendingBreakpoint {
     resolve: (response: SetBreakpointsResponseBody) => void;
@@ -87,7 +87,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
 
         // Also start with extra stuff disabled, and user-data-dir in tmp directory
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${Os.tmpdir() }/webkitdebugadapter${Date.now() }`]);
+        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${os.tmpdir() }/webkitdebugadapter${Date.now() }`]);
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
@@ -383,17 +383,17 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 if (script.url) {
                     // Try to resolve the url to a path in the workspace. If it's not in the workspace,
                     // just use the script.url as-is.
-                    let path = this.webkitUrlToClientUrl(script.url);
-                    if (path) {
-                        sourceName = Path.basename(path);
+                    let clientUrl = this.webkitUrlToClientUrl(script.url);
+                    if (clientUrl) {
+                        sourceName = path.basename(clientUrl);
                     } else {
-                        path = script.url;
-                        sourceName = Path.basename(path);
+                        clientUrl = script.url;
+                        sourceName = path.basename(clientUrl);
                     }
 
                     source = {
                         name: sourceName,
-                        path,
+                        path: clientUrl,
                         sourceReference: 0
                     };
                 } else {
@@ -547,14 +547,14 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         // Search the filesystem under our cwd for the file that best matches the given url
-        const pathName = NodeUrl.parse(canonicalizeUrl(url)).pathname;
+        const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
         if (!pathName) {
             return '';
         }
 
         const pathParts = pathName.split('/');
         while (pathParts.length > 0) {
-            const clientUrl = Path.join(this._clientCWD, pathParts.join('/'));
+            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
             if (Utilities.existsSync(clientUrl)) {
                 return canonicalizeUrl(clientUrl); // path.join will change / to \
             }
