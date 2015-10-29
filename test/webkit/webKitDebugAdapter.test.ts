@@ -81,47 +81,109 @@ suite('WebKitDebugAdapter', () => {
         });
     });
 
-    class SomethingElse {
-        public helper(arg: any): number {
-            return 5;
-        }
-    }
-
-    class ToTest {
-        public testMe(s: SomethingElse): number {
-            return s.helper({ a: { b: 1 } });
-        }
-    }
-
-    suite('asdf()', () => {
-        test('sinontest', () => {
-            let s: SomethingElse = new SomethingElse();
-            let m = sinon.mock(s);
-            m.expects('helper')
-                .once()
-                .withArgs(1).returns(2)
-                .withArgs({ a: { b: 1 } }).returns(4);
-
-            assert.equal(new ToTest().testMe(s), 4);
-            mockWebKitConnection.verify();
-        });
-    });
-
     suite('setBreakpoints()', () => {
+        const SCRIPT_ID = 'id';
+        const BP_ID = 'bpId';
+        const FILE_NAME = 'a.js';
+        function expectSetBreakpoint(lines: number[], cols?: number[]): void {
+            lines.forEach((lineNumber, i) => {
+                let columnNumber;
+                if (cols) {
+                    columnNumber = cols[i];
+                }
+
+                mockWebKitConnection.expects('debugger_setBreakpoint')
+                    .once()
+                    .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: SCRIPT_ID, lineNumber, columnNumber })
+                    .returns(<WebKitProtocol.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: BP_ID + i, actualLocation: { scriptId: SCRIPT_ID, lineNumber, columnNumber } } });
+            });
+        }
+
+        function expectRemoveBreakpoint(indicies: number[]): void {
+            indicies.forEach(i => {
+                mockWebKitConnection.expects('debugger_removeBreakpoint')
+                    .once()
+                    .withArgs(BP_ID + i)
+                    .returns(<WebKitProtocol.Response>{ id: 0 });
+            });
+        }
+
+        function makeExpectedResponse(lines: number[], cols?: number[]): SetBreakpointsResponseBody {
+            const breakpoints = lines.map((line, i) => ({
+                line,
+                column: cols ? cols[i] : 0,
+                verified: true
+            }));
+
+            return {
+                breakpoints
+            };
+        }
+
         test('When setting one breakpoint, returns the correct result', () => {
-            // Set up connection mock
-            mockWebKitConnection.expects('debugger_setBreakpoint')
-                .once()
-                .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: 'id', lineNumber: 5, columnNumber: 0 })
-                .returns(<WebKitProtocol.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: 'bpId', actualLocation: { scriptId: 'id', lineNumber: 5, columnNumber: 0 } } });
+            const lines = [5];
+            const cols = [6];
+            expectSetBreakpoint(lines, cols);
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: 'id', url: 'file:///a.js' });
-                return wkda.setBreakpoints({ source: { path: 'a.js' }, lines: [5] });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 mockWebKitConnection.verify();
-                assert.deepEqual(response, { breakpoints: [{ line: 5, column: 0, verified: true }] });
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            });
+        });
+
+        test('When setting multiple breakpoints, returns the correct result', () => {
+            const lines = [14, 200, 151];
+            const cols = [33, 16, 1];
+            expectSetBreakpoint(lines, cols);
+
+            const wkda = instantiateWKDA();
+            return attach(wkda).then(() => {
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            });
+        });
+
+        test(`When a breakpoint is set in a script that hasn't been loaded, the call resolves when the script is loaded`, () => {
+            const lines = [14, 200, 151];
+            const cols = [33, 16, 1];
+            expectSetBreakpoint(lines, cols);
+
+            const wkda = instantiateWKDA();
+            return attach(wkda).then(() => {
+                const setBreakpointsP = wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                return setBreakpointsP;
+            }).then(response => {
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            });
+        });
+
+        test('The adapter clears all previous breakpoints in a script before setting the new ones', () => {
+            const lines = [14, 200];
+            const cols = [33, 16];
+            expectSetBreakpoint(lines, cols);
+            expectRemoveBreakpoint([0, 1]);
+
+            const wkda = instantiateWKDA();
+            return attach(wkda).then(() => {
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: 'file:///' + FILE_NAME });
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                lines.push(321);
+                cols.push(123);
+                expectSetBreakpoint(lines, cols);
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
     });
@@ -170,7 +232,10 @@ function registerMockWebKitConnection(): Sinon.SinonMock {
     // the expected method.
     const originalMExpects = m.expects.bind(m);
     m.expects = methodName => {
-        mockInstance[methodName] = () => Promise.resolve();
+        if (!mockInstance[methodName]) {
+            mockInstance[methodName] = () => Promise.resolve();
+        }
+
         return originalMExpects(methodName);
     };
 
