@@ -14,6 +14,8 @@ suite('Utilities', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
+        mockery.registerMock('url', { });
+        mockery.registerMock('path', { });
         mockery.registerAllowable(MODULE_UNDER_TEST);
     });
 

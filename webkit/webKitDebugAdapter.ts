@@ -10,7 +10,6 @@ import * as Utilities from './utilities';
 import {Logger} from './utilities';
 
 import {spawn, ChildProcess} from 'child_process';
-import * as nodeUrl from 'url';
 import * as path from 'path';
 import * as os from 'os';
 
