@@ -13,3 +13,10 @@ export function removeUnhandledRejectionListener(): void {
 function unhandledRejectionListener(reason, p) {
     console.log(`ERROR!! Unhandled promise rejection: ${reason}`);
 }
+
+export class MockEvent implements DebugProtocol.Event {
+    public seq = 0;
+    public type = 'event';
+
+    constructor(public event: string, public body?: any) { }
+}

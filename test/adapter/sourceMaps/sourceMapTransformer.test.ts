@@ -4,6 +4,7 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
+import * as testUtils from '../../testUtils';
 import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
 
 const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/sourceMapTransformer';
@@ -13,9 +14,12 @@ const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
 const RUNTIME_COLS = [3, 7, 11];
 
+// Not mocked, use for type only
+import {SourceMapTransformer as _SourceMapTransformer} from '../../../adapter/sourceMaps/sourceMapTransformer';
+
 suite('SourceMapTransformer', () => {
-    let transformer: IDebugTransformer;
-    let transformerSMDisabled: IDebugTransformer;
+    let transformer: _SourceMapTransformer;
+    let transformerSMDisabled: _SourceMapTransformer;
 
     setup(() => {
         // Set up mockery with SourceMaps mock
@@ -58,15 +62,15 @@ suite('SourceMapTransformer', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
-            transformer.setBreakpoints(args);
+            transformer.setBreakpoints(args, 0);
             assert.deepEqual(args, expected);
         });
 
-        test('doesn\'t do anything when sourcemaps are disabled', () => {
+        test(`doesn't do anything when sourcemaps are disabled`, () => {
             const args = createArgs(RUNTIME_PATH, RUNTIME_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES);
 
-            transformerSMDisabled.setBreakpoints(args);
+            transformerSMDisabled.setBreakpoints(args, 0);
             assert.deepEqual(args, expected);
         });
 
@@ -91,20 +95,20 @@ suite('SourceMapTransformer', () => {
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: AUTHORED_PATH },
                     lines: AUTHORED_LINES
-                });
-                transformer.setBreakpointsResponse(response);
+                }, 0);
+                transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
 
-            test('doesn\'t do anything when sourcemaps are disabled except remove the column', () => {
+            test(`doesn't do anything when sourcemaps are disabled except remove the column`, () => {
                 const response = getResponseBody(RUNTIME_LINES, /*column=*/0);
                 const expected = getResponseBody(RUNTIME_LINES);
 
                 transformerSMDisabled.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: RUNTIME_PATH },
                     lines: RUNTIME_LINES
-                });
-                transformerSMDisabled.setBreakpointsResponse(response);
+                }, 0);
+                transformerSMDisabled.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
         });
@@ -137,6 +141,12 @@ suite('SourceMapTransformer', () => {
 
             transformerSMDisabled.stackTraceResponse(response);
             assert.deepEqual(response, expected);
+        });
+    });
+
+    suite('scriptParsed()', () => {
+        test('calls MapToSource', () => {
+            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
         });
     });
 });
