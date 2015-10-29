@@ -207,7 +207,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const clientUrl = this.webkitUrlToClientUrl(script.url);
         this._scriptsByUrl.set(clientUrl, script);
         this._scriptsById.set(script.scriptId, script);
-        this._eventHandler(new Event('scriptParsed', { scriptUrl: clientUrl }));
+        this.fireEvent(new Event('scriptParsed', { scriptUrl: clientUrl }));
 
         if (this._pendingBreakpointsByUrl.has(clientUrl)) {
             const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);

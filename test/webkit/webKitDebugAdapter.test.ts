@@ -42,6 +42,7 @@ suite('WebKitDebugAdapter', () => {
     });
 
     teardown(() => {
+        DefaultMockWebKitConnection.EE.removeAllListeners();
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
@@ -111,7 +112,7 @@ suite('WebKitDebugAdapter', () => {
             // Set up connection mock
             mockWebKitConnection.expects('debugger_setBreakpoint')
                 .once()
-                .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: 'id', lineNumber: 5 })
+                .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: 'id', lineNumber: 5, columnNumber: 0 })
                 .returns(<WebKitProtocol.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: 'bpId', actualLocation: { scriptId: 'id', lineNumber: 5, columnNumber: 0 } } });
 
             const wkda = instantiateWKDA();
