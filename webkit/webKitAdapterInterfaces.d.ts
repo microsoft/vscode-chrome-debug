@@ -100,4 +100,6 @@ interface IDebugTransformer {
     sourceResponse?(response: SourceResponseBody, requestSeq?: number): PromiseOrNot<void>;
     threadsResponse?(response: ThreadsResponseBody, requestSeq?: number): PromiseOrNot<void>;
     evaluateResponse?(response: EvaluateResponseBody, requestSeq?: number): PromiseOrNot<void>;
+
+    scriptParsed?(event: DebugProtocol.Event);
 }

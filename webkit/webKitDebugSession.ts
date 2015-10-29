@@ -9,6 +9,7 @@ import {Logger} from './utilities';
 
 import {AdapterProxy} from '../adapter/adapterProxy';
 import {LineNumberTransformer} from '../adapter/lineNumberTransformer';
+import {PathTransformer} from '../adapter/pathTransformer';
 import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
 
 export class WebKitDebugSession extends DebugSession {
@@ -21,7 +22,8 @@ export class WebKitDebugSession extends DebugSession {
         this._adapterProxy = new AdapterProxy(
             [
                 new LineNumberTransformer(targetLinesStartAt1),
-                new SourceMapTransformer()
+                new SourceMapTransformer(),
+                new PathTransformer()
             ],
             new WebKitDebugAdapter(),
             event => this.sendEvent(event));
@@ -54,13 +56,12 @@ export class WebKitDebugSession extends DebugSession {
                 this.sendResponse(response);
             },
             e => {
-                const eStr = e.toString();
+                const eStr = e ? e.toString() : 'Unknown error';
                 if (eStr === 'unknowncommand') {
                     this.sendErrorResponse(response, 1014, 'Unrecognized request', null, ErrorDestination.Telemetry);
                     return;
                 }
 
-                Logger.log(e.toString());
                 if (request.command === 'evaluate') {
                     // Errors from evaluate show up in the console or watches pane. Doesn't seem right
                     // as it's not really a failed request. So it doesn't need the tag and worth special casing.
@@ -69,6 +70,7 @@ export class WebKitDebugSession extends DebugSession {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
                     response.message = '[webkit-debug-adapter] ' + e.toString();
+                    Logger.log('Error: ' + e.toString());
                 }
 
                 response.success = false;

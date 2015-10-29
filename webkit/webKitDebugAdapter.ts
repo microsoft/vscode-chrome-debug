@@ -14,23 +14,15 @@ import * as nodeUrl from 'url';
 import * as path from 'path';
 import * as os from 'os';
 
-interface IPendingBreakpoint {
-    resolve: (response: SetBreakpointsResponseBody) => void;
-    reject: (error?: any) => void;
-    args: DebugProtocol.SetBreakpointsArguments;
-}
-
 export class WebKitDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
 
     private _clientLinesStartAt1: boolean;
 
-    private _clientCWD: string;
     private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
-    private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
     private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
     private _overlayHelper: Utilities.DebounceHelper;
 
@@ -60,11 +52,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
+        this.fireEvent(new Event('clearTargetContext'));
     }
 
     private clearClientContext(): void {
         this._clientAttached = false;
-        this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
+        this.fireEvent(new Event('clearClientContext'));
     }
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
@@ -76,7 +69,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        this._clientCWD = args.workingDirectory;
         const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
         if (!chromeExe) {
             return Promise.reject(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
@@ -204,18 +196,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
-        const clientUrl = this.webkitUrlToClientUrl(script.url);
-        this._scriptsByUrl.set(clientUrl, script);
+        this._scriptsByUrl.set(script.url, script);
         this._scriptsById.set(script.scriptId, script);
-        this.fireEvent(new Event('scriptParsed', { scriptUrl: clientUrl }));
-
-        if (this._pendingBreakpointsByUrl.has(clientUrl)) {
-            const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientUrl);
-            this._pendingBreakpointsByUrl.delete(clientUrl);
-            this.setBreakpoints(pendingBreakpoint.args).then(
-                pendingBreakpoint.resolve,
-                pendingBreakpoint.reject);
-        }
+        this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
     }
 
     public disconnect(): Promise<void> {
@@ -244,7 +227,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<SetBreakpointsResponseBody> {
         let targetScript: WebKitProtocol.Debugger.Script;
         if (args.source.path) {
-            targetScript = this._scriptsByUrl.get(canonicalizeUrl(args.source.path));
+            targetScript = this._scriptsByUrl.get(args.source.path);
         } else if (args.source.sourceReference) {
             targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
         }
@@ -253,7 +236,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
                 .then(() => this._clearAllBreakpoints(targetScript.scriptId))
-                .then(() => this._addBreakpoints(args.source.path, targetScript.scriptId, args.lines, args.cols))
+                .then(() => this._addBreakpoints(targetScript.scriptId, args.lines, args.cols))
                 .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses, args.lines) }));
 
             const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
@@ -263,12 +246,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
             return setBreakpointsPTimeout;
         } else {
-            // We could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
-            // This seems easier
-            // TODO caching by source.path seems wrong because it may not exist? But this implies that we haven't told ODP about this script so it may have to be set. Assert non-null?
-            return new Promise((resolve: (response: SetBreakpointsResponseBody) => void, reject) => {
-                this._pendingBreakpointsByUrl.set(canonicalizeUrl(args.source.path), { resolve, reject, args });
-            });
+            // Implies that PathTransformer is out of sync with the scripts here
+            return Promise.reject(`Can't find script for breakpoint request`);
         }
     }
 
@@ -284,7 +263,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }, Promise.resolve<void>());
     }
 
-    private _addBreakpoints(sourcePath: string, scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
+    private _addBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
         // Call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
             .map((lineNumber, i) => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
@@ -373,40 +352,27 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const stackFrames: DebugProtocol.StackFrame[] = stack
             .map((callFrame: WebKitProtocol.Debugger.CallFrame, i: number) => {
                 const script = this._scriptsById.get(callFrame.location.scriptId);
-                let line = callFrame.location.lineNumber;
-                let column = callFrame.location.columnNumber;
+                const line = callFrame.location.lineNumber;
+                const column = callFrame.location.columnNumber;
 
-                // When the frame source has a path, send the name and path fields.
+                // When the script has a url, send the name and path fields.
                 // Otherwise, send the name and sourceReference fields
-                let source: DebugProtocol.Source;
-                let sourceName: string;
-                if (script.url) {
-                    // Try to resolve the url to a path in the workspace. If it's not in the workspace,
-                    // just use the script.url as-is.
-                    let clientUrl = this.webkitUrlToClientUrl(script.url);
-                    if (clientUrl) {
-                        sourceName = path.basename(clientUrl);
-                    } else {
-                        clientUrl = script.url;
-                        sourceName = path.basename(clientUrl);
-                    }
-
-                    source = {
-                        name: sourceName,
-                        path: clientUrl,
-                        sourceReference: 0
-                    };
-                } else {
-                    source = {
-                        // Should be undefined, work around a VS Code bug
-                        name: 'eval: ' + script.scriptId,
-                        sourceReference: scriptIdToSourceReference(script.scriptId)
-                    };
-                }
+                const source: DebugProtocol.Source =
+                    script.url ?
+                        {
+                            name: path.basename(script.url),
+                            path: script.url,
+                            sourceReference: 0
+                        } :
+                        {
+                            // Name should be undefined, work around a VS Code bug
+                            name: 'eval: ' + script.scriptId,
+                            sourceReference: scriptIdToSourceReference(script.scriptId)
+                        };
 
                 // If the frame doesn't have a function name, it's either an anonymous function
                 // or eval script. If its source has a name, it's probably an anonymous function.
-                const frameName = callFrame.functionName || (sourceName ? '(anonymous function)' : '(eval code)');
+                const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
                 return {
                     id: i,
                     name: frameName,
@@ -526,68 +492,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         return { value, variablesReference };
     }
-
-    /**
-     * http://localhost/app/scripts/code.js => d:/scripts/code.js
-     * file:///d:/scripts/code.js => d:/scripts/code.js
-     */
-    private webkitUrlToClientUrl(url: string): string {
-        if (!url) {
-            return '';
-        }
-
-        // If a file:/// url is loaded in the client, just send the absolute path of the file
-        if (url.substr(0, 8) === 'file:///') {
-            return canonicalizeUrl(url);
-        }
-
-        // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
-        if (!this._clientCWD) {
-            return '';
-        }
-
-        // Search the filesystem under our cwd for the file that best matches the given url
-        const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
-        if (!pathName) {
-            return '';
-        }
-
-        const pathParts = pathName.split('/');
-        while (pathParts.length > 0) {
-            const clientUrl = path.join(this._clientCWD, pathParts.join('/'));
-            if (Utilities.existsSync(clientUrl)) {
-                return canonicalizeUrl(clientUrl); // path.join will change / to \
-            }
-
-            pathParts.shift();
-        }
-
-        return '';
-    }
-}
-
-/**
- * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
- * The ODP client can handle urls in this format too.
- * file:///d:\\scripts\\code.js => d:/scripts/code.js
- * file:///Users/me/project/code.js => /Users/me/project/code.js
- */
-function canonicalizeUrl(url: string): string {
-    url = url
-        .replace('file:///', '')
-        .replace(/\\/g, '/'); // \ to /
-
-    // Ensure osx path starts with /, it can be removed when file:/// was stripped
-    if (url[0] !== '/' && Utilities.getPlatform() === Utilities.Platform.OSX) {
-        url = '/' + url;
-    }
-
-    // VS Code gives a lowercase drive letter
-    if (url.match(/^[A-Z]:\//) && Utilities.getPlatform() === Utilities.Platform.Windows) {
-        url = url[0].toLowerCase() + url.substr(1);
-    }
-
-    return url;
 }
 
 function scriptIdToSourceReference(scriptId: WebKitProtocol.Debugger.ScriptId): number {

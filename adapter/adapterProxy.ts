@@ -7,7 +7,7 @@ import * as Utilities from '../webkit/utilities';
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
 export class AdapterProxy {
-    private static INTERNAL_EVENTS = ['scriptParsed'];
+    private static INTERNAL_EVENTS = ['scriptParsed', 'clearClientContext', 'clearTargetContext'];
 
     public constructor(private _requestTransformers: IDebugTransformer[], private _debugAdapter: IDebugAdapter, private _eventHandler: EventHandler) {
         this._debugAdapter.registerEventHandler(event => this.onAdapterEvent(event));
@@ -29,31 +29,16 @@ export class AdapterProxy {
             });
     }
 
-    private onAdapterEvent(event: DebugProtocol.Event): void {
-        // No need for transformers to modify events yet
-        this._requestTransformers.forEach(transformer => {
-            if (event.event in transformer) {
-                transformer[event.event](event);
-            }
-        });
-
-        // Internal events should not be passed back through DebugProtocol
-        if (AdapterProxy.INTERNAL_EVENTS.indexOf(event.event) < 0) {
-            this._eventHandler(event);
-        }
-    }
-
     /**
      * Pass the request arguments through the transformers. They modify the object in place.
      */
     private transformRequest(request: DebugProtocol.Request): Promise<void> {
-        return this._requestTransformers.reduce(
-            (p, transformer) => {
-                // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
-                return request.command in transformer ?
-                    p.then(() => transformer[request.command](request.arguments, request.seq)) :
-                    p;
-            }, Promise.resolve<void>());
+        return this._requestTransformers
+            // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
+            .filter(transformer => request.command in transformer)
+            .reduce(
+                (p, transformer) => p.then(() => transformer[request.command](request.arguments, request.seq)),
+                Promise.resolve<void>());
     }
 
     /**
@@ -64,14 +49,29 @@ export class AdapterProxy {
             return Promise.resolve<void>();
         }
 
+        const bodyTransformMethodName = request.command + 'Response';
         const reversedTransformers = Utilities.reversedArr(this._requestTransformers);
-        return reversedTransformers.reduce(
-            (p, transformer) => {
-                // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
-                const bodyTransformMethodName = request.command + 'Response';
-                return bodyTransformMethodName in transformer ?
-                    p.then(() => transformer[bodyTransformMethodName](body, request.seq)) :
-                    p;
-            }, Promise.resolve<void>());
+        return reversedTransformers
+            // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
+            .filter(transformer => bodyTransformMethodName in transformer)
+            .reduce(
+                (p, transformer) => p.then(() => transformer[bodyTransformMethodName](body, request.seq)),
+                Promise.resolve<void>());
+    }
+
+    /**
+     * Pass the event back through the transformers in reverse. They modify the object in place.
+     */
+    private onAdapterEvent(event: DebugProtocol.Event): void {
+        const reversedTransformers = Utilities.reversedArr(this._requestTransformers);
+        reversedTransformers
+            .filter(transformer => event.event in transformer)
+            .forEach(
+                transformer => transformer[event.event](event));
+
+        // Internal events should not be passed back through DebugProtocol
+        if (AdapterProxy.INTERNAL_EVENTS.indexOf(event.event) < 0) {
+            this._eventHandler(event);
+        }
     }
 }

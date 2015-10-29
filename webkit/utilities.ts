@@ -4,6 +4,8 @@
 
 import * as os from 'os';
 import * as fs from 'fs';
+import * as nodeUrl from 'url';
+import * as path from 'path';
 
 const DEFAULT_CHROME_PATH = {
     OSX: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
@@ -140,10 +142,12 @@ export class Logger {
     }
 
     public static init(isServer: boolean): void {
-        this._logger = new Logger(isServer);
+        if (!this._logger) {
+            this._logger = new Logger(isServer);
 
-        // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
-        setInterval(() => Logger.log('-'), 1000);
+            // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
+            setInterval(() => Logger.log('-'), 1000);
+        }
     }
 
     constructor(isServer: boolean) {
@@ -153,4 +157,67 @@ export class Logger {
     private _log(msg: string): void {
         if (this._isServer && Logger.ALLOW_LOGGING) console.log(msg);
     }
+}
+
+/**
+ * http://localhost/app/scripts/code.js => d:/scripts/code.js
+ * file:///d:/scripts/code.js => d:/scripts/code.js
+ */
+export function webkitUrlToClientUrl(cwd: string, url: string): string {
+    if (!url) {
+        return '';
+    }
+
+    // If a file:/// url is loaded in the client, just send the absolute path of the file
+    const prefix = 'file:///';
+    if (url.substr(0, prefix.length) === prefix) {
+        return canonicalizeUrl(url);
+    }
+
+    // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
+    if (!cwd) {
+        return '';
+    }
+
+    // Search the filesystem under our cwd for the file that best matches the given url
+    const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+    if (!pathName) {
+        return '';
+    }
+
+    const pathParts = pathName.split('/');
+    while (pathParts.length > 0) {
+        const clientUrl = path.join(cwd, pathParts.join('/'));
+        if (existsSync(clientUrl)) {
+            return canonicalizeUrl(clientUrl); // path.join will change / to \
+        }
+
+        pathParts.shift();
+    }
+
+    return '';
+}
+
+/**
+ * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
+ * The ODP client can handle urls in this format too.
+ * file:///d:\\scripts\\code.js => d:/scripts/code.js
+ * file:///Users/me/project/code.js => /Users/me/project/code.js
+ */
+export function canonicalizeUrl(url: string): string {
+    url = url
+        .replace('file:///', '')
+        .replace(/\\/g, '/'); // \ to /
+
+    // Ensure osx path starts with /, it can be removed when file:/// was stripped
+    if (url[0] !== '/' && getPlatform() === Platform.OSX) {
+        url = '/' + url;
+    }
+
+    // VS Code gives a lowercase drive letter
+    if (url.match(/^[A-Z]:\//) && getPlatform() === Platform.Windows) {
+        url = url[0].toLowerCase() + url.substr(1);
+    }
+
+    return url;
 }
