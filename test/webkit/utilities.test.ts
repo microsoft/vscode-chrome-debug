@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as sinon from 'sinon';
 import * as mockery from 'mockery';
 import * as assert from 'assert';
 
@@ -14,9 +15,9 @@ suite('Utilities', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
-        mockery.registerMock('url', { });
-        mockery.registerMock('path', { });
-        mockery.registerAllowable(MODULE_UNDER_TEST);
+
+        mockery.registerAllowables([
+            'url', 'path', MODULE_UNDER_TEST]);
     });
 
     teardown(() => {
@@ -177,5 +178,83 @@ suite('Utilities', () => {
                     done();
                 });
         });
+    });
+
+    suite('webkitUrlToClientUrl()', () => {
+        const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
+        const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
+        const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
+        const TEST_CWD = 'c:/site';
+
+        function Utilities(): typeof _Utilities {
+            return require(MODULE_UNDER_TEST);
+        }
+
+        test('file:/// urls are returned canonicalized', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
+        });
+
+        test('an empty string is returned for a missing url', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl('', ''), '');
+        });
+
+        test('an empty string is returned when the cwd is missing', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl(null, TEST_WEBKIT_HTTP_URL), '');
+        });
+
+        test('a url without a path returns an empty string', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, 'http://site.com'), '');
+        });
+
+        test('it searches the disk for a path that exists, built from the url', () => {
+            const statSync = (path: string) => {
+                if (path !== TEST_CLIENT_PATH) throw new Error('Not found');
+            };
+            mockery.registerMock('fs', { statSync });
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
+        });
+
+        test(`returns an empty string when it can't resolve a url`, () => {
+            const statSync = (path: string) => {
+                throw new Error('Not found');
+            };
+            mockery.registerMock('fs', { statSync });
+            const Utilities = require(MODULE_UNDER_TEST);
+            assert.equal(Utilities.webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+        });
+    });
+
+    suite('canonicalizeUrl()', () => {
+        function testCanUrl(inUrl: string, expectedUrl: string): void {
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            assert.equal(Utilities.canonicalizeUrl(inUrl), expectedUrl);
+        }
+
+        test('removes file:///', () => {
+            testCanUrl('file:///c:/file.js', 'c:/file.js');
+        });
+
+        test('enforces forward slash', () => {
+            testCanUrl('c:\\thing\\file.js', 'c:/thing/file.js');
+        });
+
+        test('removes file:///', () => {
+            testCanUrl('file:///c:/file.js', 'c:/file.js');
+        });
+
+        test('ensures local path starts with / on OSX', () => {
+            mockery.registerMock('os', { platform: () => 'darwin' });
+            testCanUrl('file:///Users/scripts/app.js', '/Users/scripts/app.js');
+        });
+
+        test('force lowercase drive letter on Win to match VS Code', () => {
+            // note default 'os' mock is win32
+            testCanUrl('file:///D:/FILE.js', 'd:/FILE.js');
+        });
+
+        test('http:// url - no change', () => {
+            const url = 'http://site.com/My/Cool/Site/script.js?stuff';
+            testCanUrl(url, url);
+        })
     });
 });

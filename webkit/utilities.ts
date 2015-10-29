@@ -160,7 +160,9 @@ export class Logger {
 }
 
 /**
- * http://localhost/app/scripts/code.js => d:/scripts/code.js
+ * Maps a url from webkit to an absolute local path.
+ * If not given an absolute path (with file: prefix), searches the current working directory for a matching file. 
+ * http://localhost/scripts/code.js => d:/app/scripts/code.js
  * file:///d:/scripts/code.js => d:/scripts/code.js
  */
 export function webkitUrlToClientUrl(cwd: string, url: string): string {
@@ -181,15 +183,16 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
 
     // Search the filesystem under our cwd for the file that best matches the given url
     const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
-    if (!pathName) {
+    if (!pathName || pathName === '/') {
         return '';
     }
 
     const pathParts = pathName.split('/');
     while (pathParts.length > 0) {
         const clientUrl = path.join(cwd, pathParts.join('/'));
-        if (existsSync(clientUrl)) {
-            return canonicalizeUrl(clientUrl); // path.join will change / to \
+        const canClientUrl = canonicalizeUrl(clientUrl); // path.join will change / to \
+        if (existsSync(canClientUrl)) {
+            return canonicalizeUrl(canClientUrl);
         }
 
         pathParts.shift();
@@ -199,18 +202,21 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
 }
 
 /**
- * Modify a url either from the ODP client or the webkit target to a canonical version for comparing.
- * The ODP client can handle urls in this format too.
- * file:///d:\\scripts\\code.js => d:/scripts/code.js
+ * Modify a url either from the client or the webkit target to a platform-independent format for comparing.
+ * The client can handle urls in this format too.
+ * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
+ * c:\scripts\code.js => c:/scripts/code.js 
+ * http://site.com/scripts/code.js => (no change) 
  */
 export function canonicalizeUrl(url: string): string {
     url = url
         .replace('file:///', '')
         .replace(/\\/g, '/'); // \ to /
 
-    // Ensure osx path starts with /, it can be removed when file:/// was stripped
-    if (url[0] !== '/' && getPlatform() === Platform.OSX) {
+    // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+    // Don't add if the url still has a protocol
+    if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
         url = '/' + url;
     }
 
