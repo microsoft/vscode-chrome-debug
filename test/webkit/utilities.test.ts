@@ -2,7 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as sinon from 'sinon';
 import * as mockery from 'mockery';
 import * as assert from 'assert';
 
@@ -255,6 +254,6 @@ suite('Utilities', () => {
         test('http:// url - no change', () => {
             const url = 'http://site.com/My/Cool/Site/script.js?stuff';
             testCanUrl(url, url);
-        })
+        });
     });
 });

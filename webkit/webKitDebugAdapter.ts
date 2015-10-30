@@ -68,8 +68,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        const chromeExe = args.runtimeExecutable || Utilities.getBrowserPath();
-        if (!chromeExe) {
+        // Check exists?
+        const chromePath = args.runtimeExecutable || Utilities.getBrowserPath();
+        if (!chromePath) {
             return Promise.reject(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
         }
 
@@ -92,8 +93,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
         }
 
-        Logger.log(`spawn('${chromeExe}', ${JSON.stringify(chromeArgs) })`);
-        this._chromeProc = spawn(chromeExe, chromeArgs);
+        Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+        this._chromeProc = spawn(chromePath, chromeArgs);
         this._chromeProc.on('error', (err) => {
             Logger.log('chrome error: ' + err);
             this.terminateSession();

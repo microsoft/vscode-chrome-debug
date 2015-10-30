@@ -173,7 +173,34 @@ suite('WebKitDebugAdapter', () => {
         });
     });
 
-    suite('launch()', () => { });
+    suite('launch()', () => {
+        test('launches with minimal correct args', () => {
+            let spawnCalled = false;
+            function spawn(chromePath: string, args: string[]): any {
+                // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
+                assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
+                assert(args.indexOf('--remote-debugging-port=9222') >= 0);
+                assert(args.indexOf('a.js') >= 0);
+                assert(args.indexOf('abc') >= 0);
+                assert(args.indexOf('def') >= 0);
+                spawnCalled = true;
+
+                return { on: () => { } };
+            }
+
+            mockery.registerMock('child_process', { spawn });
+            mockery.registerMock('fs', { statSync: () => true });
+            mockery.registerMock('os', {
+                tmpdir: () => 'c:/tmp',
+                platform: () => 'win32'
+            });
+            const wkda = instantiateWKDA();
+            return wkda.launch({ program: 'a.js', runtimeArguments: ['abc', 'def'], workingDirectory: 'c:/' }).then(() => {
+                assert(spawnCalled);
+            });
+        });
+    });
+
     suite('setExceptionBreakpoints()', () => { });
     suite('stepping', () => { });
     suite('stackTrace()', () => { });

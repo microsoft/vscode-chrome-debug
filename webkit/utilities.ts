@@ -60,6 +60,9 @@ export class DebounceHelper {
 
     constructor(private timeoutMs: number) { }
 
+    /**
+     * If not waiting already, call fn after the timeout
+     */
     public wait(fn: () => any): void {
         if (!this.waitToken) {
             this.waitToken = setTimeout(() => {
@@ -70,6 +73,9 @@ export class DebounceHelper {
         }
     }
 
+    /**
+     * If waiting for something, cancel it and call fn immediately
+     */
     public doAndCancel(fn: () => any): void {
         if (this.waitToken) {
             clearTimeout(this.waitToken);
@@ -161,7 +167,7 @@ export class Logger {
 
 /**
  * Maps a url from webkit to an absolute local path.
- * If not given an absolute path (with file: prefix), searches the current working directory for a matching file. 
+ * If not given an absolute path (with file: prefix), searches the current working directory for a matching file.
  * http://localhost/scripts/code.js => d:/app/scripts/code.js
  * file:///d:/scripts/code.js => d:/scripts/code.js
  */
@@ -206,8 +212,8 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
- * c:\scripts\code.js => c:/scripts/code.js 
- * http://site.com/scripts/code.js => (no change) 
+ * c:\scripts\code.js => c:/scripts/code.js
+ * http://site.com/scripts/code.js => (no change)
  */
 export function canonicalizeUrl(url: string): string {
     url = url
