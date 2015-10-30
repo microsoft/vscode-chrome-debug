@@ -32,7 +32,7 @@ An example `launch.json` config.
             "name": "test chrome",
             // This is required to use this extension
             "type": "webkit",
-            // Set either "program" or "runtimeArgs" - "program" if you want to open a local file using the file:/// protocol, or "runtimeArgs" (which must be an array) if you want to open a url
+            // Set either "program" or "runtimeArgs" - "program" if you want to open a local file using the file:/// protocol, or "runtimeArgs" (which must be an array of one item) if you want to open a url. This is temporary until Code supports custom fields here - later there will just be one field for files and urls.
             "program": "out/client/index.html",
             //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
             // You can set breakpoints in and debug your source files if this is true
@@ -43,6 +43,8 @@ An example `launch.json` config.
     ]
 }
 ```
+
+If you want to use Chrome from a different directory, you can also set the "runtimeExecutable" field with a path to the Chrome app.
 
 ### Attach
 You must launch Chrome with remote debugging enabled in order for the extension to attach to it.
@@ -57,11 +59,11 @@ An example `launch.json` config.
 ```
 {
     "version": "0.1.0",
-    "openDebug": "server=4712",
     "configurations": [
         {
             "name": "attach to chrome",
             "type": "webkit",
+            // Or whatever port you used in the step above
             "port": 9222
         }
     ]
