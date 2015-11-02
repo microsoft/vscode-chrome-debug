@@ -12,6 +12,8 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
 interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     port: number;
     address: string;
+    sourceMaps?: boolean;
+    outDir?: string;
 }
 
 interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {

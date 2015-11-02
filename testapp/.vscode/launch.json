@@ -15,7 +15,9 @@
             "name": "attach to chrome",
             "type": "webkit",
             "port": 9222,
-            "request": "attach"
+            "request": "attach",
+            "sourceMaps": true,
+            "outDir": "out"
         }
     ]
 }

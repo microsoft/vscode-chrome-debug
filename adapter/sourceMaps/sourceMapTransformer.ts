@@ -13,6 +13,14 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _requestSeqToSetBreakpointsArgs: Map<number, DebugProtocol.SetBreakpointsArguments>;
 
     public launch(args: ILaunchRequestArgs): void {
+        this.init(args);
+    }
+
+    public attach(args: IAttachRequestArgs): void {
+        this.init(args);
+    }
+
+    private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
             this._sourceMaps = new SourceMaps(args.outDir);
             this._generatedCodeDirectory = args.outDir;
