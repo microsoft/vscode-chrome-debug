@@ -142,6 +142,7 @@ export class Logger {
 
     private static _logger: Logger;
     private _isServer: boolean;
+    private _logSeparatorTimeoutToken: NodeJS.Timer;
 
     public static log(msg: string): void {
         if (this._logger) this._logger._log(msg);
@@ -150,9 +151,6 @@ export class Logger {
     public static init(isServer: boolean): void {
         if (!this._logger) {
             this._logger = new Logger(isServer);
-
-            // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
-            setInterval(() => Logger.log('-'), 1000);
         }
     }
 
@@ -161,7 +159,18 @@ export class Logger {
     }
 
     private _log(msg: string): void {
-        if (this._isServer && Logger.ALLOW_LOGGING) console.log(msg);
+        if (this._isServer && Logger.ALLOW_LOGGING) {
+            console.log(msg);
+
+            if (this._logSeparatorTimeoutToken) {
+                clearTimeout(this._logSeparatorTimeoutToken);
+            }
+
+            this._logSeparatorTimeoutToken = setTimeout(() => {
+                // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
+                console.log('-\n-\n-');
+            }, 2000);
+        }
     }
 }
 
