@@ -22,7 +22,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _clientAttached: boolean;
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
-    private _committedBreakpointsByScriptId: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>;
+    private _committedBreakpointsByUrl: Map<string, WebKitProtocol.Debugger.BreakpointId[]>;
     private _overlayHelper: Utilities.DebounceHelper;
 
     private _chromeProc: ChildProcess;
@@ -31,7 +31,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     // Scripts
     private _scriptsById: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>;
-    private _scriptsByUrl: Map<string, WebKitProtocol.Debugger.Script>;
 
     private _setBreakpointsRequestQ: Promise<any>;
 
@@ -48,8 +47,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     private clearTargetContext(): void {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
-        this._scriptsByUrl = new Map<string, WebKitProtocol.Debugger.Script>();
-        this._committedBreakpointsByScriptId = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.BreakpointId[]>();
+        this._committedBreakpointsByUrl = new Map<string, WebKitProtocol.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
         this.fireEvent(new Event('clearTargetContext'));
     }
@@ -112,6 +110,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this._webKitConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._webKitConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
+            this._webKitConnection.on('Debugger.breakpointResolved', params => this.onBreakpointResolved(params));
 
             this._webKitConnection.on('Inspector.detached', () => this.terminateSession());
             this._webKitConnection.on('close', () => this.terminateSession());
@@ -196,9 +195,20 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
-        this._scriptsByUrl.set(script.url, script);
         this._scriptsById.set(script.scriptId, script);
         this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
+    }
+
+    private onBreakpointResolved(params: WebKitProtocol.Debugger.BreakpointResolvedParams): void {
+        const script = this._scriptsById.get(params.location.scriptId);
+        if (!script) {
+            // Breakpoint resolved for a script we don't know about
+            return;
+        }
+
+        const committedBps = this._committedBreakpointsByUrl.get(script.url) || [];
+        committedBps.push(params.breakpointId);
+        this._committedBreakpointsByUrl.set(script.url, committedBps);
     }
 
     public disconnect(): Promise<void> {
@@ -225,19 +235,22 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<SetBreakpointsResponseBody> {
-        let targetScript: WebKitProtocol.Debugger.Script;
+        let targetScriptUrl: string;
         if (args.source.path) {
-            targetScript = this._scriptsByUrl.get(args.source.path);
+            targetScriptUrl = args.source.path;
         } else if (args.source.sourceReference) {
-            targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
+            const targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
+            if (targetScript) {
+                targetScriptUrl = targetScript.url;
+            }
         }
 
-        if (targetScript) {
+        if (targetScriptUrl) {
             // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                .then(() => this._clearAllBreakpoints(targetScript.scriptId))
-                .then(() => this._addBreakpoints(targetScript.scriptId, args.lines, args.cols))
-                .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScript, responses, args.lines) }));
+                .then(() => this._clearAllBreakpoints(targetScriptUrl))
+                .then(() => this._addBreakpoints(targetScriptUrl, args.lines, args.cols))
+                .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
 
             const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
 
@@ -246,46 +259,50 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
             return setBreakpointsPTimeout;
         } else {
-            // Implies that PathTransformer is out of sync with the scripts here
             return Promise.reject(`Can't find script for breakpoint request`);
         }
     }
 
-    private _clearAllBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<void> {
-        const committedBps = this._committedBreakpointsByScriptId.get(scriptId) || [];
+    private _clearAllBreakpoints(url: string): Promise<void> {
+        if (!this._committedBreakpointsByUrl.has(url)) {
+            return Promise.resolve<void>();
+        }
 
         // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
         // but there is a chrome bug where when removing 5+ or so breakpoints at once, it gets into a weird
         // state where later adds on the same line will fail with 'breakpoint already exists' even though it
         // does not break there.
-        return committedBps.reduce<Promise<void>>((p, bpId) => {
+        return this._committedBreakpointsByUrl.get(url).reduce((p, bpId) => {
             return p.then(() => this._webKitConnection.debugger_removeBreakpoint(bpId)).then(() => { });
-        }, Promise.resolve<void>());
+        }, Promise.resolve<void>()).then(() => {
+            this._committedBreakpointsByUrl.set(url, null);
+        });
     }
 
-    private _addBreakpoints(scriptId: WebKitProtocol.Debugger.ScriptId, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointResponse[]> {
+    private _addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<WebKitProtocol.Debugger.SetBreakpointByUrlResponse[]> {
         // Call setBreakpoint for all breakpoints in the script simultaneously
         const responsePs = lines
-            .map((lineNumber, i) => this._webKitConnection.debugger_setBreakpoint({ scriptId: scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
+            .map((lineNumber, i) => this._webKitConnection.debugger_setBreakpointByUrl(url, lineNumber, cols ? cols[i] : 0));
 
         // Join all setBreakpoint requests to a single promise
         return Promise.all(responsePs);
     }
 
-    private _webkitBreakpointResponsesToODPBreakpoints(script: WebKitProtocol.Debugger.Script, responses: WebKitProtocol.Debugger.SetBreakpointResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
-        // Ignore errors
-        const successfulResponses = responses
-            .filter(response => !response.error);
+    private _webkitBreakpointResponsesToODPBreakpoints(url: string, responses: WebKitProtocol.Debugger.SetBreakpointByUrlResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
+        // Don't cache errored responses
+        const committedBpIds = responses
+            .filter(response => !response.error)
+            .map(response => response.result.breakpointId);
 
-        // Cache breakpoint ids from webkit in committedBreakpoints set
-        this._committedBreakpointsByScriptId.set(script.scriptId, successfulResponses.map(response => response.result.breakpointId));
+        // Cache successfully set breakpoint ids from webkit in committedBreakpoints set
+        this._committedBreakpointsByUrl.set(url, committedBpIds);
 
         // Map committed breakpoints to DebugProtocol response breakpoints
         const bps = responses
             .map((response, i) => {
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
-                if (response.error) {
+                if (response.error || !response.result.locations.length) {
                     return <DebugProtocol.Breakpoint>{
                         verified: false,
                         line: requestLines[i],
@@ -295,8 +312,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
                 return <DebugProtocol.Breakpoint>{
                     verified: true,
-                    line: response.result.actualLocation.lineNumber,
-                    column: response.result.actualLocation.columnNumber
+                    line: response.result.locations[0].lineNumber,
+                    column: response.result.locations[0].columnNumber
                 };
             });
 

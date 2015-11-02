@@ -82,20 +82,19 @@ suite('WebKitDebugAdapter', () => {
     });
 
     suite('setBreakpoints()', () => {
-        const SCRIPT_ID = 'id';
         const BP_ID = 'bpId';
         const FILE_NAME = 'file:///a.js';
-        function expectSetBreakpoint(lines: number[], cols?: number[]): void {
+        function expectSetBreakpoint(lines: number[], cols?: number[], scriptId: string = 'SCRIPT_ID'): void {
             lines.forEach((lineNumber, i) => {
                 let columnNumber;
                 if (cols) {
                     columnNumber = cols[i];
                 }
 
-                mockWebKitConnection.expects('debugger_setBreakpoint')
+                mockWebKitConnection.expects('debugger_setBreakpointByUrl')
                     .once()
-                    .withArgs(<WebKitProtocol.Debugger.Location>{ scriptId: SCRIPT_ID, lineNumber, columnNumber })
-                    .returns(<WebKitProtocol.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: BP_ID + i, actualLocation: { scriptId: SCRIPT_ID, lineNumber, columnNumber } } });
+                    .withArgs(FILE_NAME, lineNumber, columnNumber)
+                    .returns(<WebKitProtocol.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } });
             });
         }
 
@@ -127,7 +126,6 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 mockWebKitConnection.verify();
@@ -142,7 +140,6 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 mockWebKitConnection.verify();
@@ -157,7 +154,6 @@ suite('WebKitDebugAdapter', () => {
 
             const wkda = instantiateWKDA();
             return attach(wkda).then(() => {
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', { scriptId: SCRIPT_ID, url: FILE_NAME });
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 lines.push(321);
@@ -165,6 +161,52 @@ suite('WebKitDebugAdapter', () => {
 
                 expectRemoveBreakpoint([0, 1]);
                 expectSetBreakpoint(lines, cols);
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            });
+        });
+
+        test('The adapter handles removing a breakpoint', () => {
+            const lines = [14, 200];
+            const cols = [33, 16];
+            expectSetBreakpoint(lines, cols);
+
+            const wkda = instantiateWKDA();
+            return attach(wkda).then(() => {
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                lines.shift();
+                cols.shift();
+
+                expectRemoveBreakpoint([0, 1]);
+                expectSetBreakpoint(lines, cols);
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                mockWebKitConnection.verify();
+                assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            });
+        });
+
+        test('After a page refresh, clears the newly resolved breakpoints before adding new ones', () => {
+            const lines = [14, 200];
+            const cols = [33, 16];
+            expectSetBreakpoint(lines, cols);
+
+            const wkda = instantiateWKDA();
+            return attach(wkda).then(() => {
+                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+            }).then(response => {
+                expectRemoveBreakpoint([2, 3]);
+                DefaultMockWebKitConnection.EE.emit('Debugger.globalObjectCleared');
+                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', <WebKitProtocol.Debugger.Script>{ scriptId: 'afterRefreshScriptId', url: FILE_NAME });
+                DefaultMockWebKitConnection.EE.emit('Debugger.breakpointResolved', <WebKitProtocol.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
+                DefaultMockWebKitConnection.EE.emit('Debugger.breakpointResolved', <WebKitProtocol.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
+
+                lines.push(321);
+                cols.push(123);
+                expectSetBreakpoint(lines, cols, 'afterRefreshScriptId');
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 mockWebKitConnection.verify();

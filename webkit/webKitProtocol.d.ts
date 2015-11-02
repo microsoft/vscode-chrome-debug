@@ -45,16 +45,17 @@ declare namespace WebKitProtocol {
             type: string;
         }
 
-        interface ScriptParsedNotification extends Notification {
-            params: Script;
-        }
-
         interface PausedNotificationParams {
             callFrames: CallFrame[];
             // 'exception' or 'other'
             reason: string;
             data: any;
             hitBreakpoints: BreakpointId[];
+        }
+
+        interface BreakpointResolvedParams {
+            breakpointId: BreakpointId;
+            location: Location;
         }
 
         interface Location {
@@ -72,6 +73,21 @@ declare namespace WebKitProtocol {
             result: {
                 breakpointId: BreakpointId;
                 actualLocation: Location;
+            };
+        }
+
+        interface SetBreakpointByUrlParams {
+            url?: string;
+            urlRegex?: string;
+            lineNumber: number;
+            columnNumber: number;
+            condition?: string;
+        }
+
+        interface SetBreakpointByUrlResponse extends Response {
+            result: {
+                breakpointId: BreakpointId;
+                locations: Location[];
             };
         }
 

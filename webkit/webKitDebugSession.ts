@@ -65,12 +65,12 @@ export class WebKitDebugSession extends DebugSession {
                 if (request.command === 'evaluate') {
                     // Errors from evaluate show up in the console or watches pane. Doesn't seem right
                     // as it's not really a failed request. So it doesn't need the tag and worth special casing.
-                    response.message = e.toString();
+                    response.message = eStr;
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
-                    response.message = '[webkit-debug-adapter] ' + e.toString();
-                    Logger.log('Error: ' + e.toString());
+                    response.message = '[webkit-debug-adapter] ' + eStr;
+                    Logger.log('Error: ' + eStr);
                 }
 
                 response.success = false;
