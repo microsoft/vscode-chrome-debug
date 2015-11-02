@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    //"openDebug": "server=4711",
+    "debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",
@@ -14,12 +14,6 @@
             "name": "attach to chrome",
             "type": "webkit",
             "port": 9222
-        },
-        {
-            "name": "node",
-            "type": "node",
-            "program": "out/client/test3.js",
-            "sourceMaps": true
         }
     ]
 }

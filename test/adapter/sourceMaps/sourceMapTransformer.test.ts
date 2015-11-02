@@ -30,13 +30,13 @@ suite('SourceMapTransformer', () => {
         // Grab the test class with mock injected, instantiate with and without sourcemaps enabled
         let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
         transformer = new SourceMapTransformer();
-        transformer.initialize(<IInitializeRequestArgs><any>{
+        transformer.launch(<ILaunchRequestArgs><any>{
             sourceMaps: true,
             generatedCodeDirectory: 'test'
         });
 
         transformerSMDisabled = new SourceMapTransformer();
-        transformerSMDisabled.initialize(<IInitializeRequestArgs><any>{
+        transformerSMDisabled.launch(<ILaunchRequestArgs><any>{
             sourceMaps: false,
             generatedCodeDirectory: 'test'
         });

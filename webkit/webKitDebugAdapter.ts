@@ -61,7 +61,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._eventHandler = eventHandler;
     }
 
-    public initialize(args: IInitializeRequestArgs): void {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): void {
         this._clientLinesStartAt1 = args.linesStartAt1;
     }
 
@@ -382,7 +382,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                             sourceReference: 0
                         } :
                         {
-                            // Name should be undefined, work around a VS Code bug
+                            // Name should be undefined, work around VS Code bug 20274
                             name: 'eval: ' + script.scriptId,
                             sourceReference: scriptIdToSourceReference(script.scriptId)
                         };

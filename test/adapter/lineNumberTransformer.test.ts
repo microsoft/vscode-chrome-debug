@@ -7,7 +7,7 @@ import { LineNumberTransformer } from '../../adapter/lineNumberTransformer';
 
 function createTransformer(clientLinesStartAt1: boolean, targetLinesStartAt1: boolean): LineNumberTransformer {
     const transformer = new LineNumberTransformer(targetLinesStartAt1);
-    transformer.initialize(<IInitializeRequestArgs><any>{ linesStartAt1: clientLinesStartAt1 });
+    transformer.initialize(<DebugProtocol.InitializeRequestArguments><any>{ linesStartAt1: clientLinesStartAt1 });
 
     return transformer;
 }

@@ -13,7 +13,7 @@ export class LineNumberTransformer implements IDebugTransformer  {
         this._targetLinesStartAt1 = targetLinesStartAt1;
     }
 
-    public initialize(args: IInitializeRequestArgs): void {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): void {
         this._clientLinesStartAt1 = args.linesStartAt1;
     }
 

@@ -1,8 +1,3 @@
-interface IInitializeRequestArgs extends DebugProtocol.InitializeRequestArguments {
-    sourceMaps?: boolean;
-    generatedCodeDirectory?: string;
-}
-
 interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     workingDirectory: string;
     runtimeArguments?: string[];
@@ -10,6 +5,8 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     program?: string;
     url?: string;
     stopOnEntry?: boolean;
+    sourceMaps?: boolean;
+    outDir?: string;
 }
 
 interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
@@ -59,7 +56,7 @@ declare type PromiseOrNot<T> = T | Promise<T>;
 interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
 
-    initialize(args: IInitializeRequestArgs): PromiseOrNot<void>;
+    initialize(args: DebugProtocol.InitializeRequestArguments): PromiseOrNot<void>;
     launch(args: ILaunchRequestArgs): PromiseOrNot<void>;
     disconnect(): PromiseOrNot<void>;
     attach(args: IAttachRequestArgs): PromiseOrNot<void>;
@@ -81,7 +78,7 @@ interface IDebugAdapter {
 }
 
 interface IDebugTransformer {
-    initialize?(args: IInitializeRequestArgs, requestSeq?: number): PromiseOrNot<void>;
+    initialize?(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<void>;
     launch?(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     attach?(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     setBreakpoints?(args: DebugProtocol.SetBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;

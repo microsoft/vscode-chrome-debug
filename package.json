@@ -37,7 +37,7 @@
                     "javascript"
                 ]
             },
-            "program": "./out/node/openDebugWebkit.js",
+            "program": "./out/webkit/openDebugWebkit.js",
             "runtime": "node",
             "initialConfigurations": [
                 {
