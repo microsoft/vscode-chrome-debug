@@ -441,7 +441,7 @@ declare module DebugProtocol {
 
 	/** A Source .*/
 	export interface Source {
-		/** The short name of the source. Every source returned from the debu adapter has a name. When specifying a source to the debug adapter this name is optional. */
+		/** The short name of the source. Every source returned from the debug adapter has a name. When specifying a source to the debug adapter this name is optional. */
 		name?: string;
 		/** The long (absolute) path of the source. It is not guaranteed that the source exists at this location. */
 		path?: string;

@@ -230,7 +230,7 @@ export class DebugSession extends V8Protocol {
 	}
 
 	protected dispatchRequest(request: DebugProtocol.Request): void {
-
+		console.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
 		const response = new Response(request);
 
 		try {

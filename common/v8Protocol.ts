@@ -105,6 +105,7 @@ export class V8Protocol extends ee.EventEmitter {
 	}
 
 	public sendResponse(response: DebugProtocol.Response): void {
+		console.log(`To client: ${JSON.stringify(response) }`);
 		if (response.seq > 0) {
 			console.error('attempt to send more than one response for command {0}', response.command);
 		} else {
