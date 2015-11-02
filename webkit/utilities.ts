@@ -143,8 +143,8 @@ export class Logger {
     private static _logger: Logger;
     private _isServer: boolean;
 
-    public static log(msg: string): void {
-        if (this._logger) this._logger._log(msg);
+    public static log(msg: string, timestamp = true): void {
+        if (this._logger) this._logger._log(msg, timestamp);
     }
 
     public static init(isServer: boolean): void {
@@ -152,7 +152,7 @@ export class Logger {
             this._logger = new Logger(isServer);
 
             // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
-            setInterval(() => Logger.log('-'), 1000);
+            setInterval(() => Logger.log('-', false), 1000);
         }
     }
 
@@ -160,8 +160,16 @@ export class Logger {
         this._isServer = isServer;
     }
 
-    private _log(msg: string): void {
-        if (this._isServer && Logger.ALLOW_LOGGING) console.log(msg);
+    private _log(msg: string, timestamp: boolean): void {
+        if (this._isServer && Logger.ALLOW_LOGGING) {
+            const d = new Date();
+            if (timestamp) {
+                const timeStamp = `[${d.getMinutes()}:${d.getSeconds()}:${d.getMilliseconds()}]`;
+                console.log(timeStamp + msg);
+            } else {
+                console.log(msg);
+            }
+        }
     }
 }
 
@@ -174,12 +182,6 @@ export class Logger {
 export function webkitUrlToClientUrl(cwd: string, url: string): string {
     if (!url) {
         return '';
-    }
-
-    // If a file:/// url is loaded in the client, just send the absolute path of the file
-    const prefix = 'file:///';
-    if (url.substr(0, prefix.length) === prefix) {
-        return canonicalizeUrl(url);
     }
 
     // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
