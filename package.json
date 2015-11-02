@@ -1,47 +1,111 @@
 {
-  "name": "opendebug-webkit",
-  "version": "0.0.0",
-  "description": "OpenDebug adapters for the WebKit protocol",
-  "author": {
-    "name": "Microsoft Corporation, Visual Studio Code Team"
-  },
-  "publisher": "Microsoft",
-  "engines": {
-    "vscode": "*"
-  },
-  "license": "",
-  "dependencies": {
-    "ws": "0.8.0",
-    "source-map": "*"
-  },
-  "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-mocha": "^2.1.3",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-tslint": "^3.3.1",
-    "gulp-typescript": "^2.8.0",
-    "gulp-util": "^3.0.5",
-    "mocha": "^2.3.3",
-    "mockery": "^1.4.0",
-    "sinon": "^1.17.2",
-    "tsd": "^0.6.3",
-    "tslint": "^2.5.1",
-    "typescript": "^1.6.2"
-  },
-  "contributes": {
-    "debugAdapter": [
-      {
-        "type": "webkit",
-        "enableBreakpointsFor": {
-          "languageIds": [
-            "javascript",
-            "typescript",
-            "coffeescript"
-          ]
-        },
-        "program": "./out/webkit/openDebugWebkit.js",
-        "runtime": "node"
-      }
-    ]
-  }
+    "name": "opendebug-webkit",
+    "version": "0.0.0",
+    "description": "OpenDebug adapters for the WebKit protocol",
+    "author": {
+        "name": "Microsoft Corporation, Visual Studio Code Team"
+    },
+    "publisher": "Microsoft",
+    "engines": {
+        "vscode": "*"
+    },
+    "license": "",
+    "dependencies": {
+        "ws": "0.8.0",
+        "source-map": "*"
+    },
+    "devDependencies": {
+        "gulp": "^3.9.0",
+        "gulp-mocha": "^2.1.3",
+        "gulp-sourcemaps": "^1.5.2",
+        "gulp-tslint": "^3.3.1",
+        "gulp-typescript": "^2.8.0",
+        "gulp-util": "^3.0.5",
+        "mocha": "^2.3.3",
+        "mockery": "^1.4.0",
+        "sinon": "^1.17.2",
+        "tsd": "^0.6.3",
+        "tslint": "^2.5.1",
+        "typescript": "^1.6.2"
+    },
+    "contributes": {
+        "debuggers": [{
+            "type": "webkit",
+            "label": "Webkit",
+            "enableBreakpointsFor": {
+                "languageIds": [
+                    "javascript"
+                ]
+            },
+            "program": "./out/node/openDebugWebkit.js",
+            "runtime": "node",
+            "initialConfigurations": [
+                {
+                    "name": "Launch index.html",
+                    "type": "webkit",
+                    "request": "launch",
+                    "program": "index.html",
+                    "cwd": ".",
+                    "runtimeExecutable": null,
+                    "runtimeArgs": [
+                        ""
+                    ],
+                    "sourceMaps": false,
+                    "outDir": null
+                },
+                {
+                    "name": "Attach",
+                    "type": "node",
+                    "request": "attach",
+                    "port": 9222
+                }
+            ],
+            "configurationAttributes": {
+                "file": {
+                    "type": "string",
+                    "description": "A local html file to open in the browser",
+                    "default": "index.html"
+                },
+                "cwd": {
+                    "type": "string",
+                    "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+                    "default": "."
+                },
+                "runtimeExecutable": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "Workspace relative or absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.",
+                    "default": null
+                },
+                "runtimeArgs": {
+                    "type": "array",
+                    "description": "Optional arguments passed to the runtime executable.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "sourceMaps": {
+                    "type": "boolean",
+                    "description": "Use JavaScript source maps (if they exist).",
+                    "default": true
+                },
+                "outDir": {
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "description": "If source maps are enabled, the generated code is expected in this directory. If not specified, the generated code is expected in the same directory as its source.",
+                    "default": null
+                },
+                "port": {
+                    "type": "number",
+                    "description": "Port to attach to.",
+                    "default": "undefined"
+                }
+            }
+        }]
+    }
 }
