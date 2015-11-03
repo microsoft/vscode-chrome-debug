@@ -213,7 +213,53 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onConsoleMessage(params: WebKitProtocol.Console.MessageAddedParams): void {
-        this.fireEvent(new OutputEvent(params.message.text + '\n'));
+        let outputText: string;
+        const m = params.message;
+        if (m.type === 'log') {
+            outputText = this.resolveParams(m);
+        } else if (m.type in ['startGroup', 'startGroupCollapsed']) {
+            outputText = '<Start group>';
+            if (m.text) {
+                // Or wherever the label is
+                outputText += ': ' + m.text;
+            }
+        } else if (m.type === 'endGroup') {
+            outputText = '<End group>'
+        }
+
+        this.fireEvent(new OutputEvent(outputText + '\n'));
+    }
+
+    private resolveParams(m: WebKitProtocol.Console.Message): string {
+        let text = m.text;
+        if (!m.parameters || !m.parameters.length) {
+            return text;
+        }
+
+        // Find all %s, %i, etc. Strip %
+        const formatSpecifiers = text.match(/\%[sidfoOc]/g);
+        formatSpecifiers.map(spec => spec[1]);
+
+        // Append all parameters, formatting properly if there's a format specifier
+        m.parameters.forEach((param, i) => {
+            let formatted: any;
+            if (formatSpecifiers[i] === 's') {
+                formatted = param;
+            } else if (formatSpecifiers[i] in ['i', 'd']) {
+                formatted = Math.floor(+param);
+            } else if (formatSpecifiers[i] === 'f') {
+                formatted = +param;
+            } else if (formatSpecifiers[i] in ['o', 'O', 'c']) {
+                // um
+                formatted = param;
+            } else {
+                formatted = param;
+            }
+
+            text += formatted;
+        });
+
+        return text;
     }
 
     public disconnect(): Promise<void> {
