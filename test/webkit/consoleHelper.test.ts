@@ -16,30 +16,32 @@ suite('ConsoleHelper', () => {
     }
 
     suite('console.log()', () => {
-        test('handles simple log', () => {
+        test('simple log', () => {
             doAssert(Console.makeLog('Hello'), 'Hello');
             doAssert(Console.makeLog('Hello', 123, 'world!'), 'Hello 123 world!');
         });
 
-        test('handles basic format specifiers', () => {
+        test('basic format specifiers', () => {
             doAssert(Console.makeLog('%s, %d', 'test', 123), 'test, 123');
         });
 
-        test('handles numeric format specifiers correctly', () => {
+        test('numeric format specifiers correctly', () => {
             doAssert(Console.makeLog('%d %i %f', 1.9, 324, 9.4), '1 324 9.4');
             doAssert(Console.makeLog('%d %i %f', -19, -32.5, -9.4), '-19 -33 -9.4');
             doAssert(Console.makeLog('%d %i %f', 'not', 'a', 'number'), 'NaN NaN NaN');
         });
 
-        test('handles unmatched format specifiers', () => {
+        test('unmatched format specifiers', () => {
             doAssert(Console.makeLog('%s %s %s', 'test'), 'test %s %s');
             doAssert(Console.makeLog('%s %s end', 'test1', 'test2', 'test3'), 'test1 test2 end test3');
         });
 
-        test('weird cases', () => {
+        test('null/undefined cases', () => {
             doAssert(Console.makeLog('%s %s %s', null, undefined, 'test'), 'null undefined test');
             doAssert(Console.makeLog('test', null, undefined), 'test null undefined');
         });
+
+        test('objects- waiting on VS Code bug 20343');
     });
 
     suite('console.assert()', () => {
@@ -71,7 +73,12 @@ namespace Console {
             url: 'file:///c:/page/script.js',
             executionContextId: 2,
             parameters: params.map(param => {
-                return { type: typeof param, value: param }
+                const remoteObj = { type: typeof param, value: param };
+                if (param === null) {
+                    remoteObj['subtype'] = 'null';
+                }
+
+                return remoteObj;
             })
         };
 

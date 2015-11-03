@@ -59,6 +59,8 @@ function evalDebugger() {
 }
 
 function consoleAPIs() {
+    console.log({ a: 1, b: 'asdf', c: { d: 4 } });
+    console.log({ a: 1}, {b: 2});
     console.time('timing');
     console.group('my group');
     console.log('hello', 'world!');
@@ -68,7 +70,6 @@ function consoleAPIs() {
     console.timeEnd('timing');
     console.trace();
 
-    console.dir({ a: 1, b: 2 });
     (<any>console).table([1, 2, 3]);
     console.assert(1 == 2, '1 is not 2');
 }

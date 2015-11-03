@@ -167,6 +167,20 @@ declare namespace WebKitProtocol {
             subtype?: string;
             type: string;
             value?: any;
+            preview?: {
+                type: string;
+                description: string;
+                lossless: boolean;
+                overflow: boolean;
+                properties: PropertyPreview[];
+            };
+        }
+
+        interface PropertyPreview {
+            name: string;
+            type: string;
+            subtype?: string;
+            value: string;
         }
 
         interface EvaluateParams {

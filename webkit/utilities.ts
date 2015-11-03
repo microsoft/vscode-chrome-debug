@@ -39,7 +39,7 @@ export function getPlatform(): Platform {
     const platform = os.platform();
     return platform === 'darwin' ? Platform.OSX :
         platform === 'win32' ? Platform.Windows :
-        Platform.Linux;
+            Platform.Linux;
 }
 
 /**
@@ -69,7 +69,7 @@ export class DebounceHelper {
                 this.waitToken = null;
                 fn();
             },
-            this.timeoutMs);
+                this.timeoutMs);
         }
     }
 
@@ -162,7 +162,7 @@ export class Logger {
         if (this._isServer && Logger.ALLOW_LOGGING) {
             if (timestamp) {
                 const d = new Date();
-                const timeStamp = `[${d.getMinutes()}:${d.getSeconds()}:${d.getMilliseconds()}]`;
+                const timeStamp = `[${d.getMinutes() }:${d.getSeconds() }:${d.getMilliseconds() }]`;
                 console.log(timeStamp + msg);
             } else {
                 console.log(msg);
@@ -241,4 +241,42 @@ export function canonicalizeUrl(url: string): string {
     }
 
     return url;
+}
+
+export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef: string } {
+    let value = '';
+    let variableHandleRef: string;
+
+    if (object) { // just paranoia?
+        if (object && object.type === 'object') {
+            if (object.subtype === 'null') {
+                value = 'null';
+            } else {
+                // If it's a non-null object, create a variable reference so the client can ask for its props
+                variableHandleRef = object.objectId;
+                value = object.description;
+            }
+        } else if (object && object.type === 'undefined') {
+            value = 'undefined';
+        } else if (object.type === 'function') {
+            const firstBraceIdx = object.description.indexOf('{');
+            if (firstBraceIdx >= 0) {
+                value = object.description.substring(0, firstBraceIdx) + '{ … }';
+            } else {
+                const firstArrowIdx = object.description.indexOf('=>');
+                value = firstArrowIdx >= 0 ?
+                    object.description.substring(0, firstArrowIdx + 2) + ' …' :
+                    object.description;
+            }
+        } else {
+            // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+            if (typeof object.value === 'undefined') {
+                value = object.description;
+            } else {
+                value = stringify ? JSON.stringify(object.value) : object.value;
+            }
+        }
+    }
+
+    return { value, variableHandleRef };
 }

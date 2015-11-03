@@ -215,9 +215,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     private onConsoleMessage(params: WebKitProtocol.Console.MessageAddedParams): void {
         const formattedMessage = formatConsoleMessage(params.message);
-        this.fireEvent(new OutputEvent(
-            formattedMessage.text + '\n',
-            formattedMessage.isError ? 'stderr' : 'console'));
+        if (formattedMessage) {
+            this.fireEvent(new OutputEvent(
+                formattedMessage.text + '\n',
+                formattedMessage.isError ? 'stderr' : 'console'));
+        }
     }
 
     public disconnect(): Promise<void> {
@@ -485,38 +487,18 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
     }
 
+    /**
+     * Run the object through Utilities.remoteObjectToValue, and if it returns a variableHandle reference,
+     * use it with this instance's variableHandles to create a variable handle.
+     */
     private remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject): { value: string, variablesReference: number } {
-        let value = '';
-        let variablesReference = 0;
-
-        if (object) { // just paranoia?
-            if (object && object.type === 'object') {
-                if (object.subtype === 'null') {
-                    value = 'null';
-                } else {
-                    // If it's a non-null object, create a variable reference so the client can ask for its props
-                    variablesReference = this._variableHandles.create(object.objectId);
-                    value = object.description;
-                }
-            } else if (object && object.type === 'undefined') {
-                value = 'undefined';
-            } else if (object.type === 'function') {
-                const firstBraceIdx = object.description.indexOf('{');
-                if (firstBraceIdx >= 0) {
-                    value = object.description.substring(0, firstBraceIdx) + '{ … }';
-                } else {
-                    const firstArrowIdx = object.description.indexOf('=>');
-                    value = firstArrowIdx >= 0 ?
-                        object.description.substring(0, firstArrowIdx + 2) + ' …' :
-                        object.description;
-                }
-            } else {
-                // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
-                value = typeof object.value === 'undefined' ? object.description : JSON.stringify(object.value);
-            }
+        const { value, variableHandleRef } = Utilities.remoteObjectToValue(object);
+        const result = { value, variablesReference: 0 };
+        if (variableHandleRef) {
+            result.variablesReference = this._variableHandles.create(variableHandleRef);
         }
 
-        return { value, variablesReference };
+        return result;
     }
 }
 
