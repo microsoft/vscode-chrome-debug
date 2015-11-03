@@ -128,7 +128,7 @@ export class WebKitConnection {
     }
 
     public _attach(port: number): Promise<void> {
-        return Utilities.retryAsync(() => getUrl(`http://localhost:${port}/json`), 7)
+        return Utilities.retryAsync(() => getUrl(`http://127.0.0.1:${port}/json`), 7)
             .then(jsonResponse => {
                 const pages = JSON.parse(jsonResponse).filter(target => target.type === 'page');
                 if (!pages.length) return Promise.reject('No valid pages found');

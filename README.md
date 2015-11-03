@@ -4,8 +4,13 @@ A Visual Studio Code extension to debug your Javascript code on targets that sup
 When this extension is published to the Code extension gallery, installing will be easy! Until then, you need to follow these steps to install it yourself to your user extension directory.
 
 ## Install
+* Install VS Code from code.visualstudio.com
+* Install Python 2.7 (needed to build one of the npm packages)
+* Install Chrome
+* Install Node
+
 ### Windows
-* In `C:/Users/<username>/.vscode/extension/`, `git clone` this repository
+* In `C:/Users/<username>/.vscode/extensions/`, `git clone` this repository
 
 ### OS X
 * `git clone` this repository
@@ -13,8 +18,9 @@ When this extension is published to the Code extension gallery, installing will 
 * You could clone it to the extensions directory if you want, but working with hidden folders in OS X can be a pain.
 
 ### Then...
-1. Run `npm install` and `npm install -g gulp`
-2. Run `gulp build`
+1. `cd` to the folder you just cloned
+2. Run `npm install` and `npm install -g gulp`
+3. Run `gulp build`
 
 ## Starting
 The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
@@ -32,7 +38,7 @@ An example `launch.json` config.
             "name": "test chrome",
             // This is required to use this extension
             "type": "webkit",
-            // Set either "program" or "runtimeArgs" - "program" if you want to open a local file using the file:/// protocol, or "runtimeArgs" (which must be an array) if you want to open a url
+            // Set either "program" or "runtimeArgs" - "program" if you want to open a local file using the file:/// protocol, or "runtimeArgs" (which must be an array of one item) if you want to open a url. This is temporary until Code supports custom fields here - later there will just be one field for files and urls.
             "program": "out/client/index.html",
             //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
             // You can set breakpoints in and debug your source files if this is true
@@ -43,6 +49,8 @@ An example `launch.json` config.
     ]
 }
 ```
+
+If you want to use Chrome from a different directory, you can also set the "runtimeExecutable" field with a path to the Chrome app.
 
 ### Attach
 You must launch Chrome with remote debugging enabled in order for the extension to attach to it.
@@ -57,11 +65,11 @@ An example `launch.json` config.
 ```
 {
     "version": "0.1.0",
-    "openDebug": "server=4712",
     "configurations": [
         {
             "name": "attach to chrome",
             "type": "webkit",
+            // Or whatever port you used in the step above
             "port": 9222
         }
     ]
