@@ -44,14 +44,15 @@
                     "name": "Launch index.html",
                     "type": "webkit",
                     "request": "launch",
-                    "program": "index.html",
-                    "cwd": ".",
-                    "runtimeExecutable": null,
-                    "runtimeArgs": [
-                        ""
-                    ],
-                    "sourceMaps": false,
-                    "outDir": null
+                    "file": "index.html",
+                },
+                {
+                    "name": "Launch localhost with sourcemaps",
+                    "type": "webkit",
+                    "request": "launch",
+                    "file": "localhost/mypage.html",
+                    "sourceMaps": true,
+                    "outDir": "out"
                 },
                 {
                     "name": "Attach",
@@ -66,6 +67,11 @@
                     "description": "A local html file to open in the browser",
                     "default": "index.html"
                 },
+                "url": {
+                    "type": "string",
+                    "description": "A url to open in the browser",
+                    "default": "mysite.com/index.html"
+                },
                 "cwd": {
                     "type": "string",
                     "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
@@ -76,7 +82,7 @@
                         "string",
                         "null"
                     ],
-                    "description": "Workspace relative or absolute path to the runtime executable to be used. Default is the runtime executable on the PATH.",
+                    "description": "Workspace relative or absolute path to the runtime executable to be used.",
                     "default": null
                 },
                 "runtimeArgs": {
@@ -102,8 +108,8 @@
                 },
                 "port": {
                     "type": "number",
-                    "description": "Port to attach to.",
-                    "default": "undefined"
+                    "description": "Port to use for Chrome remote debugging.",
+                    "default": 9222
                 }
             }
         }]

@@ -73,7 +73,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         // Start with remote debugging enabled
-        const port = 9222;
+        const port = args.port || 9222;
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
 
         // Also start with extra stuff disabled, and user-data-dir in tmp directory
@@ -82,13 +82,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             chromeArgs.push(...args.runtimeArguments);
         }
 
-        if (args.program) {
-            chromeArgs.push(args.program);
+        if (args.file) {
+            chromeArgs.push(path.resolve(args.cwd, args.file));
         } else if (args.url) {
             chromeArgs.push(args.url);
         } else {
-            // TODO uncomment when the url field is supported
-            ///return Promise.reject('The launch config must specify either the "program" or "url" field.');
+            return Promise.reject('The launch config must specify either the "file" or "url" field.');
         }
 
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
@@ -190,7 +189,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._currentStack = null;
 
         // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
-        let resumedEvent = new Event('running', { threadId: WebKitDebugAdapter.THREAD_ID });
+        let resumedEvent = new Event('continued', { threadId: WebKitDebugAdapter.THREAD_ID });
         this.fireEvent(resumedEvent);
     }
 

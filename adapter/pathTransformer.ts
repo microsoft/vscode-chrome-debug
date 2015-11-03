@@ -21,7 +21,11 @@ export class PathTransformer implements IDebugTransformer {
     }
 
     public launch(args: ILaunchRequestArgs): void {
-        this._clientCWD = args.workingDirectory;
+        this._clientCWD = args.cwd;
+    }
+
+    public attach(args: IAttachRequestArgs): void {
+        this._clientCWD = args.cwd;
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
