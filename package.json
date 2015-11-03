@@ -44,7 +44,7 @@
                     "name": "Launch index.html",
                     "type": "webkit",
                     "request": "launch",
-                    "file": "index.html",
+                    "file": "index.html"
                 },
                 {
                     "name": "Launch localhost with sourcemaps",
