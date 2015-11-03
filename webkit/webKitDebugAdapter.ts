@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {Event} from '../common/v8Protocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent} from '../common/debugSession';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
 import * as Utilities from './utilities';
@@ -111,6 +111,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this._webKitConnection.on('Debugger.globalObjectCleared', () => this.onGlobalObjectCleared());
             this._webKitConnection.on('Debugger.breakpointResolved', params => this.onBreakpointResolved(params));
 
+            this._webKitConnection.on('Console.messageAdded', params => this.onConsoleMessage(params));
+
             this._webKitConnection.on('Inspector.detached', () => this.terminateSession());
             this._webKitConnection.on('close', () => this.terminateSession());
             this._webKitConnection.on('error', () => this.terminateSession());
@@ -162,7 +164,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this.clearTargetContext();
     }
 
-    private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedNotificationParams): void {
+    private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedParams): void {
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
@@ -208,6 +210,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const committedBps = this._committedBreakpointsByUrl.get(script.url) || [];
         committedBps.push(params.breakpointId);
         this._committedBreakpointsByUrl.set(script.url, committedBps);
+    }
+
+    private onConsoleMessage(params: WebKitProtocol.Console.MessageAddedParams): void {
+        this.fireEvent(new OutputEvent(params.message.text + '\n'));
     }
 
     public disconnect(): Promise<void> {

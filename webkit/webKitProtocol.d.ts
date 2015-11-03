@@ -45,7 +45,7 @@ declare namespace WebKitProtocol {
             type: string;
         }
 
-        interface PausedNotificationParams {
+        interface PausedParams {
             callFrames: CallFrame[];
             // 'exception' or 'other'
             reason: string;
@@ -187,6 +187,39 @@ declare namespace WebKitProtocol {
     namespace Page {
         interface SetOverlayMessageRequest extends Request {
             message: string;
+        }
+    }
+
+    namespace Console {
+        interface CallFrame {
+            lineNumber: number;
+            columnNumber: number;
+            functionName: string;
+            scriptId: Debugger.ScriptId;
+            url: string;
+        }
+
+        type StackTrace = CallFrame[];
+
+        interface MessageAddedParams {
+            message: Message;
+        }
+
+        interface Message {
+            line?: number;
+            column?: number;
+
+            // 'debug', 'error', 'log', 'warning'
+            level: string;
+            parameters?: Runtime.RemoteObject[];
+            repeatCount?: string;
+            stackTrace?: StackTrace;
+            text: string;
+            url?: string;
+
+            // 'assert', 'clear', 'dir', 'dirxml', 'endGroup', 'log', 'profile', 'profileEnd',
+            // 'startGroup', 'startGroupCollapsed', 'table', 'timing', 'trace'
+            type?: string;
         }
     }
 }

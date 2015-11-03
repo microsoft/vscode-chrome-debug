@@ -124,6 +124,7 @@ export class WebKitConnection {
         // Retrying the download 7x * (retry download + attach 5x), and 200 ms between attempts, so like 8s total to attach to Chrome
         return Utilities.retryAsync(() => this._attach(port), 5)
             .then(() => this.sendMessage('Debugger.enable'))
+            .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
     }
 

@@ -1,6 +1,5 @@
 function locals() {
-    var arr1 = [1, 2, 3];
-
+    var arr1 = [1, 2];
 
 
     arr1.forEach(x => {
@@ -11,7 +10,7 @@ function locals() {
 string with
 newlines`;
     var buffer = new ArrayBuffer(8);
-    var buffView   = new Int32Array(buffer);
+    var buffView = new Int32Array(buffer);
     buffView[0] = 234;
     var s = Symbol('hi');
     var e = new Error('hi');
@@ -30,7 +29,6 @@ newlines`;
     var xyz = 1;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
     xyz++;                     xyz++;
-    console.log(str + obj.a);
     anotherFn();
     fn();
 
@@ -58,4 +56,17 @@ function evalDebugger() {
     eval('var x = 1; debugger;');
     eval('throwCaught()');
     eval('throwUncaught()');
+}
+
+function consoleAPIs() {
+    console.time('timing');
+    console.group('my group');
+    console.log('hi');
+    console.assert(1 == 2);
+    console.groupEnd();
+    console.timeEnd('timing');
+    console.trace();
+
+    console.dir({ a: 1, b: 2 });
+    (<any>console).table([1, 2, 3]);
 }
