@@ -24,6 +24,8 @@ export function formatConsoleMessage(m: WebKitProtocol.Console.Message): { text:
         }
     } else if (m.type === 'endGroup') {
         outputText = '‹End group›'
+    } else if (m.type === 'trace') {
+        outputText = 'console.trace()\n' + stackTraceToString(m.stackTrace);
     } else {
         // Some types we have to ignore
         outputText = 'Unimplemented console API: ' + m.type;
@@ -106,6 +108,6 @@ function remoteObjectToString(obj: WebKitProtocol.Runtime.RemoteObject): string 
 
 function stackTraceToString(stackTrace: WebKitProtocol.Console.StackTrace): string {
     return stackTrace
-        .map(frame => `${frame.functionName} @${url.parse(frame.url).pathname}:${frame.lineNumber}`)
+        .map(frame => `  ${frame.functionName} @${url.parse(frame.url).pathname}:${frame.lineNumber}`)
         .join('\n');
 }
