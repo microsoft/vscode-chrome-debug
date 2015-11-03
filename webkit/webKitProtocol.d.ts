@@ -211,15 +211,19 @@ declare namespace WebKitProtocol {
 
             // 'debug', 'error', 'log', 'warning'
             level: string;
+
+            // 'assert', 'clear', 'dir', 'dirxml', 'endGroup', 'log', 'profile', 'profileEnd',
+            // 'startGroup', 'startGroupCollapsed', 'table', 'timing', 'trace'
+            type?: string;
+
             parameters?: Runtime.RemoteObject[];
             repeatCount?: string;
             stackTrace?: StackTrace;
             text: string;
             url?: string;
-
-            // 'assert', 'clear', 'dir', 'dirxml', 'endGroup', 'log', 'profile', 'profileEnd',
-            // 'startGroup', 'startGroupCollapsed', 'table', 'timing', 'trace'
-            type?: string;
+            source?: string;
+            timestamp?: number;
+            executionContextId?: number;
         }
     }
 }

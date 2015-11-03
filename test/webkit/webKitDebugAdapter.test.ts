@@ -29,6 +29,7 @@ suite('WebKitDebugAdapter', () => {
             '../common/handles',
             '../common/v8Protocol',
             './v8Protocol',
+            './consoleHelper',
             'events']);
 
         mockery.registerMock('os', { platform: () => 'win32' });
@@ -241,6 +242,39 @@ suite('WebKitDebugAdapter', () => {
             const wkda = instantiateWKDA();
             return wkda.launch({ file: 'a.js', runtimeArguments: ['abc', 'def'], cwd: 'c:/' }).then(() => {
                 assert(spawnCalled);
+            });
+        });
+    });
+
+    suite('Console.onMessageAdded', () => {
+        test('Fires an output event when a console message is added', () => {
+            const testLog = 'Hello, world!';
+            const wkda = instantiateWKDA();
+            let outputEventFired = false;
+            wkda.registerEventHandler((event: DebugProtocol.Event) => {
+                if (event.event === 'output') {
+                    outputEventFired = true;
+                    assert.equal(event.body.text, testLog);
+                } else {
+                    assert.fail('An unexpected event was fired');
+                }
+            });
+
+            DefaultMockWebKitConnection.EE.emit('Console.onMessageAdded', {
+                message: {
+                    source: 'console-api',
+                    level: 'log',
+                    type: 'log',
+                    text: testLog,
+                    timestamp: Date.now(),
+                    line: 2,
+                    column: 13,
+                    url: 'file:///c:/page/script.js',
+                    executionContextId: 2,
+                    parameters: [
+                        {type: 'string', value: testLog }
+                    ]
+                }
             });
         });
     });

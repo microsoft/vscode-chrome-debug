@@ -61,12 +61,14 @@ function evalDebugger() {
 function consoleAPIs() {
     console.time('timing');
     console.group('my group');
-    console.log('hi');
-    console.assert(1 == 2);
+    console.log('hello', 'world!');
+    console.error('with formatter:  %s world!', 'hello');
+    console.log('%d %i %f', -19, -32.5, -9.4);
     console.groupEnd();
     console.timeEnd('timing');
     console.trace();
 
     console.dir({ a: 1, b: 2 });
     (<any>console).table([1, 2, 3]);
+    console.assert(1 == 2, '1 is not 2');
 }
