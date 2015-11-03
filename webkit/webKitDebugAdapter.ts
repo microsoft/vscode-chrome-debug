@@ -222,7 +222,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
-        if (args.address !== 'localhost') {
+        if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
             return Promise.reject('Remote debugging is not supported');
         }
 

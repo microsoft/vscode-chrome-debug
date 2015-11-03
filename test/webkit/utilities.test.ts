@@ -181,17 +181,12 @@ suite('Utilities', () => {
 
     suite('webkitUrlToClientUrl()', () => {
         const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
-        const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
         const TEST_CWD = 'c:/site';
 
         function Utilities(): typeof _Utilities {
             return require(MODULE_UNDER_TEST);
         }
-
-        test('file:/// urls are returned canonicalized', () => {
-            assert.equal(Utilities().webkitUrlToClientUrl('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
-        });
 
         test('an empty string is returned for a missing url', () => {
             assert.equal(Utilities().webkitUrlToClientUrl('', ''), '');
