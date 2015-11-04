@@ -35,12 +35,14 @@ An example `launch.json` config.
     "configurations": [
         {
             // Name your config something useful
-            "name": "test chrome",
+            "name": "launch chrome to index.html",
             // This is required to use this extension
             "type": "webkit",
-            // Set either "program" or "runtimeArgs" - "program" if you want to open a local file using the file:/// protocol, or "runtimeArgs" (which must be an array of one item) if you want to open a url. This is temporary until Code supports custom fields here - later there will just be one field for files and urls.
-            "program": "out/client/index.html",
-            //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
+            // To launch Chrome
+            "request": "launch",
+            // Set either "file" or "url" - "file" if you want to open a local file using the file:/// protocol, or "url" if you want to open a url.
+            "file": "out/client/index.html",
+            //"url": ["http://localhost:8080/out/client/index.html"],
             // You can set breakpoints in and debug your source files if this is true
             "sourceMaps": true,
             // Required if sourceMaps is enabled, if your output files are not in the same directory as your source files
@@ -70,7 +72,8 @@ An example `launch.json` config.
             "name": "attach to chrome",
             "type": "webkit",
             // Or whatever port you used in the step above
-            "port": 9222
+            "port": 9222,
+            "request": "attach"
         }
     ]
 }
@@ -86,6 +89,7 @@ When your launch config is set up, you can debug your project! Pick a launch con
 * Debugging eval scripts, script tags, and scripts that are added dynamically
 * Watches
 * The debug console
+* Most console APIs
 
 **Unsupported scenarios**
 * Debugging webworkers

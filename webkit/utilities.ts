@@ -159,7 +159,9 @@ export class Logger {
     }
 
     public static disableDiagnosticLogging(): void {
-        this._logger._diagnosticLogCallback = null;
+        if (this._logger) {
+            this._logger._diagnosticLogCallback = null;
+        }
     }
 
     constructor(isServer: boolean) {
