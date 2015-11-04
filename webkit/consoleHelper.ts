@@ -23,7 +23,7 @@ export function formatConsoleMessage(m: WebKitProtocol.Console.Message): { text:
             outputText += ': ' + m.text;
         }
     } else if (m.type === 'endGroup') {
-        outputText = '‹End group›'
+        outputText = '‹End group›';
     } else if (m.type === 'trace') {
         outputText = 'console.trace()\n' + stackTraceToString(m.stackTrace);
     } else {

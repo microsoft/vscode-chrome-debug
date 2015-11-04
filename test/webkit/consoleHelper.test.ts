@@ -2,11 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as sinon from 'sinon';
-import * as mockery from 'mockery';
 import * as assert from 'assert';
-
-import * as testUtils from '../testUtils';
 
 import * as ConsoleHelper from '../../webkit/consoleHelper';
 
@@ -75,7 +71,7 @@ namespace Console {
             parameters: params.map(param => {
                 const remoteObj = { type: typeof param, value: param };
                 if (param === null) {
-                    remoteObj['subtype'] = 'null';
+                    (<any>remoteObj).subtype = 'null';
                 }
 
                 return remoteObj;
