@@ -7,7 +7,7 @@
             "type": "webkit",
             "file": "out/client/index.html",
             "request": "launch",
-            //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
+            //"url": "http://localhost:8080/out/client/index.html",
             "sourceMaps": true,
             "outDir": "out",
             "diagnosticLogging": true
