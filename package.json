@@ -112,6 +112,11 @@
             "type": "number",
             "description": "Port to use for Chrome remote debugging.",
             "default": 9222
+          },
+          "diagnosticLogging": {
+            "type": "boolean",
+            "description": "When true, the adapter logs its own diagnostic info to the console",
+            "default": false
           }
         }
       }

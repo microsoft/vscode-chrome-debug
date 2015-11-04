@@ -54,6 +54,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private clearClientContext(): void {
+        Logger.disableDiagnosticLogging();
         this._clientAttached = false;
         this.fireEvent(new Event('clearClientContext'));
     }
@@ -67,6 +68,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        if (args.diagnosticLogging) {
+            this.setupDiagnosticLogging();
+        }
+
         // Check exists?
         const chromePath = args.runtimeExecutable || Utilities.getBrowserPath();
         if (!chromePath) {
@@ -101,6 +106,22 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return this._attach(port);
     }
 
+    public attach(args: IAttachRequestArgs): Promise<void> {
+        if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
+            return Promise.reject('Remote debugging is not supported');
+        }
+
+        if (args.port == null) {
+            return Promise.reject('The "port" field is required in the attach config.');
+        }
+
+        if (args.diagnosticLogging) {
+            this.setupDiagnosticLogging();
+        }
+
+        return this._attach(args.port);
+    }
+
     private _attach(port: number): Promise<void> {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
         this._clientAttached = true;
@@ -128,6 +149,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else {
             return Promise.resolve<void>();
         }
+    }
+
+    private setupDiagnosticLogging(): void {
+        Logger.enableDiagnosticLogging(msg => this.fireEvent(new OutputEvent(` › ${msg}\n`)));
     }
 
     private fireEvent(event: DebugProtocol.Event): void {
@@ -218,7 +243,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (formattedMessage) {
             this.fireEvent(new OutputEvent(
                 formattedMessage.text + '\n',
-                formattedMessage.isError ? 'stderr' : 'console'));
+                formattedMessage.isError ? 'stderr' : 'stdout'));
         }
     }
 
@@ -231,18 +256,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this.clearEverything();
 
         return Promise.resolve<void>();
-    }
-
-    public attach(args: IAttachRequestArgs): Promise<void> {
-        if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
-            return Promise.reject('Remote debugging is not supported');
-        }
-
-        if (args.port == null) {
-            return Promise.reject('The "port" field is required in the attach config.');
-        }
-
-        return this._attach(args.port);
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<SetBreakpointsResponseBody> {

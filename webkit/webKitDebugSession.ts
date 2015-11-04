@@ -33,7 +33,11 @@ export class WebKitDebugSession extends DebugSession {
      * Overload sendEvent to log
      */
     public sendEvent(event: DebugProtocol.Event): void {
-        Logger.log(`To client: ${JSON.stringify(event) }`);
+        if (event.event !== 'output') {
+            // Don't create an infinite loop...
+            Logger.log(`To client: ${JSON.stringify(event) }`);
+        }
+
         super.sendEvent(event);
     }
 

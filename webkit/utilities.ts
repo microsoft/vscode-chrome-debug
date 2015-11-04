@@ -138,11 +138,9 @@ export function retryAsync(fn: () => Promise<any>, attempts: number, timeoutBetw
  * ALLOW_LOGGING should be set to false when packaging and releasing to ensure it's always disabled.
  */
 export class Logger {
-    private static ALLOW_LOGGING = true;
-
     private static _logger: Logger;
     private _isServer: boolean;
-    private _logSeparatorTimeoutToken: NodeJS.Timer;
+    private _diagnosticLogCallback: (msg: string) => void;
 
     public static log(msg: string, timestamp = true): void {
         if (this._logger) this._logger._log(msg, timestamp);
@@ -154,28 +152,37 @@ export class Logger {
         }
     }
 
+    public static enableDiagnosticLogging(logCallback: (msg: string) => void): void {
+        if (this._logger) {
+            this._logger._diagnosticLogCallback = logCallback;
+        }
+    }
+
+    public static disableDiagnosticLogging(): void {
+        this._logger._diagnosticLogCallback = null;
+    }
+
     constructor(isServer: boolean) {
         this._isServer = isServer;
     }
 
     private _log(msg: string, timestamp: boolean): void {
-        if (this._isServer && Logger.ALLOW_LOGGING) {
+        if (this._isServer || this._diagnosticLogCallback) {
             if (timestamp) {
                 const d = new Date();
-                const timeStamp = `[${d.getMinutes() }:${d.getSeconds() }:${d.getMilliseconds() }]`;
-                console.log(timeStamp + msg);
+                const timeStamp = `[${d.getMinutes() }:${d.getSeconds() }.${d.getMilliseconds() }] `;
+                this._sendLog(timeStamp + msg);
             } else {
-                console.log(msg);
+                this._sendLog(msg);
             }
+        }
+    }
 
-            if (this._logSeparatorTimeoutToken) {
-                clearTimeout(this._logSeparatorTimeoutToken);
-            }
-
-            this._logSeparatorTimeoutToken = setTimeout(() => {
-                // Logs tend to come in bursts, so this is useful for providing separation between groups of events that were logged at the same time
-                console.log('-\n-\n-');
-            }, 2000);
+    private _sendLog(msg: string): void {
+        if (this._isServer) {
+            console.log(msg);
+        } else if (this._diagnosticLogCallback) {
+            this._diagnosticLogCallback(msg);
         }
     }
 }

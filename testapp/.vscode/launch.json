@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
+    //"debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",
@@ -9,7 +9,8 @@
             "request": "launch",
             //"runtimeArgs": ["http://localhost:8080/out/client/index.html"],
             "sourceMaps": true,
-            "outDir": "out"
+            "outDir": "out",
+            "diagnosticLogging": true
         },
         {
             "name": "attach to chrome",
