@@ -2,13 +2,13 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "opendebug-webkit",
+            "name": "launch as server",
             "type": "node",
             "program": "./out/webkit/openDebugWebKit.js",
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
-            //"sourceMaps": true,
+            "sourceMaps": true,
             "outDir": "out"
         },
         {

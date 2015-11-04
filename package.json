@@ -1,117 +1,120 @@
 {
-    "name": "opendebug-webkit",
-    "version": "0.0.0",
-    "description": "OpenDebug adapters for the WebKit protocol",
-    "author": {
-        "name": "Microsoft Corporation, Visual Studio Code Team"
-    },
-    "publisher": "Microsoft",
-    "engines": {
-        "vscode": "*"
-    },
-    "license": "",
-    "dependencies": {
-        "ws": "0.8.0",
-        "source-map": "*"
-    },
-    "devDependencies": {
-        "gulp": "^3.9.0",
-        "gulp-mocha": "^2.1.3",
-        "gulp-sourcemaps": "^1.5.2",
-        "gulp-tslint": "^3.3.1",
-        "gulp-typescript": "^2.8.0",
-        "gulp-util": "^3.0.5",
-        "mocha": "^2.3.3",
-        "mockery": "^1.4.0",
-        "sinon": "^1.17.2",
-        "tsd": "^0.6.3",
-        "tslint": "^2.5.1",
-        "typescript": "^1.6.2"
-    },
-    "contributes": {
-        "debuggers": [{
+  "name": "vscode-webkit-debug",
+  "version": "0.1.0",
+  "description": "A Visual Studio Code extension to debug your Javascript code on targets that support the WebKit Debug Protocol, such as the Chrome browser.",
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/Microsoft/vscode-webkit-debug"
+  },
+  "publisher": "Microsoft",
+  "engines": {
+    "vscode": "*"
+  },
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "dependencies": {
+    "source-map": "^0.5.3",
+    "ws": "0.8.0"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-mocha": "^2.1.3",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-tslint": "^3.3.1",
+    "gulp-typescript": "^2.8.0",
+    "gulp-util": "^3.0.5",
+    "mocha": "^2.3.3",
+    "mockery": "^1.4.0",
+    "sinon": "^1.17.2",
+    "tsd": "^0.6.3",
+    "tslint": "^2.5.1",
+    "typescript": "^1.6.2"
+  },
+  "contributes": {
+    "debuggers": [
+      {
+        "type": "webkit",
+        "label": "Webkit",
+        "enableBreakpointsFor": {
+          "languageIds": [
+            "javascript"
+          ]
+        },
+        "program": "./out/webkit/openDebugWebkit.js",
+        "runtime": "node",
+        "initialConfigurations": [
+          {
+            "name": "Launch index.html",
             "type": "webkit",
-            "label": "Webkit",
-            "enableBreakpointsFor": {
-                "languageIds": [
-                    "javascript"
-                ]
-            },
-            "program": "./out/webkit/openDebugWebkit.js",
-            "runtime": "node",
-            "initialConfigurations": [
-                {
-                    "name": "Launch index.html",
-                    "type": "webkit",
-                    "request": "launch",
-                    "file": "index.html"
-                },
-                {
-                    "name": "Launch localhost with sourcemaps",
-                    "type": "webkit",
-                    "request": "launch",
-                    "file": "localhost/mypage.html",
-                    "sourceMaps": true,
-                    "outDir": "out"
-                },
-                {
-                    "name": "Attach",
-                    "type": "node",
-                    "request": "attach",
-                    "port": 9222
-                }
+            "request": "launch",
+            "file": "index.html"
+          },
+          {
+            "name": "Launch localhost with sourcemaps",
+            "type": "webkit",
+            "request": "launch",
+            "file": "localhost/mypage.html",
+            "sourceMaps": true,
+            "outDir": "out"
+          },
+          {
+            "name": "Attach",
+            "type": "node",
+            "request": "attach",
+            "port": 9222
+          }
+        ],
+        "configurationAttributes": {
+          "file": {
+            "type": "string",
+            "description": "A local html file to open in the browser",
+            "default": "index.html"
+          },
+          "url": {
+            "type": "string",
+            "description": "A url to open in the browser",
+            "default": "mysite.com/index.html"
+          },
+          "cwd": {
+            "type": "string",
+            "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+            "default": "."
+          },
+          "runtimeExecutable": {
+            "type": [
+              "string",
+              "null"
             ],
-            "configurationAttributes": {
-                "file": {
-                    "type": "string",
-                    "description": "A local html file to open in the browser",
-                    "default": "index.html"
-                },
-                "url": {
-                    "type": "string",
-                    "description": "A url to open in the browser",
-                    "default": "mysite.com/index.html"
-                },
-                "cwd": {
-                    "type": "string",
-                    "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
-                    "default": "."
-                },
-                "runtimeExecutable": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
-                    "description": "Workspace relative or absolute path to the runtime executable to be used.",
-                    "default": null
-                },
-                "runtimeArgs": {
-                    "type": "array",
-                    "description": "Optional arguments passed to the runtime executable.",
-                    "items": {
-                        "type": "string"
-                    },
-                    "default": []
-                },
-                "sourceMaps": {
-                    "type": "boolean",
-                    "description": "Use JavaScript source maps (if they exist).",
-                    "default": true
-                },
-                "outDir": {
-                    "type": [
-                        "string",
-                        "null"
-                    ],
-                    "description": "If source maps are enabled, the generated code is expected in this directory. If not specified, the generated code is expected in the same directory as its source.",
-                    "default": null
-                },
-                "port": {
-                    "type": "number",
-                    "description": "Port to use for Chrome remote debugging.",
-                    "default": 9222
-                }
-            }
-        }]
-    }
+            "description": "Workspace relative or absolute path to the runtime executable to be used.",
+            "default": null
+          },
+          "runtimeArgs": {
+            "type": "array",
+            "description": "Optional arguments passed to the runtime executable.",
+            "items": {
+              "type": "string"
+            },
+            "default": []
+          },
+          "sourceMaps": {
+            "type": "boolean",
+            "description": "Use JavaScript source maps (if they exist).",
+            "default": true
+          },
+          "outDir": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "If source maps are enabled, the generated code is expected in this directory. If not specified, the generated code is expected in the same directory as its source.",
+            "default": null
+          },
+          "port": {
+            "type": "number",
+            "description": "Port to use for Chrome remote debugging.",
+            "default": 9222
+          }
+        }
+      }
+    ]
+  }
 }
