@@ -4,9 +4,18 @@
 
 import * as assert from 'assert';
 
+import * as testUtils from '../testUtils';
 import * as ConsoleHelper from '../../webkit/consoleHelper';
 
 suite('ConsoleHelper', () => {
+    setup(() => {
+        testUtils.setupUnhandledRejectionListener();
+    });
+
+    teardown(() => {
+        testUtils.removeUnhandledRejectionListener();
+    });
+
     function doAssert(message: WebKitProtocol.Console.Message, expectedText: string, expectedIsError = false): void {
         assert.deepEqual(ConsoleHelper.formatConsoleMessage(message), { text: expectedText, isError: expectedIsError });
     }

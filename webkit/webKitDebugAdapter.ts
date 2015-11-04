@@ -152,7 +152,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private setupDiagnosticLogging(): void {
-        Logger.enableDiagnosticLogging(msg => this.fireEvent(new OutputEvent(` › ${msg}\n`)));
+        Logger.enableDiagnosticLogging(msg => this.fireEvent(new OutputEvent(`  ›${msg}\n`)));
     }
 
     private fireEvent(event: DebugProtocol.Event): void {

@@ -121,21 +121,33 @@ export class WebKitConnection {
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
     public attach(port: number): Promise<void> {
-        // Retrying the download 7x * (retry download + attach 5x), and 200 ms between attempts, so like 8s total to attach to Chrome
-        return Utilities.retryAsync(() => this._attach(port), 5)
+        Logger.log('Attempting to attach on port ' + port);
+        return Utilities.retryAsync(() => this._attach(port), 6000)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
     }
 
     public _attach(port: number): Promise<void> {
-        return Utilities.retryAsync(() => getUrl(`http://127.0.0.1:${port}/json`), 7)
+        return getUrl(`http://127.0.0.1:${port}/json`)
             .then(jsonResponse => {
-                const pages = JSON.parse(jsonResponse).filter(target => target.type === 'page');
-                if (!pages.length) return Promise.reject('No valid pages found');
+                // Validate every step of processing the response
+                try {
+                    const responseArray = JSON.parse(jsonResponse);
+                    if (Array.isArray(responseArray)) {
+                        const pages = responseArray.filter(target => target && target.type === 'page');
+                        if (pages.length) {
+                            const wsUrl = pages[0].webSocketDebuggerUrl;
+                            if (wsUrl) {
+                                return this._socket.attach(wsUrl);
+                            }
+                        }
+                    }
+                } catch (e) {
+                    // JSON.parse can throw
+                }
 
-                const wsUrl = pages[0].webSocketDebuggerUrl;
-                return this._socket.attach(wsUrl);
+                return Promise.reject('Got response, but no valid target pages found');
             });
     }
 
@@ -224,7 +236,7 @@ function getUrl(url: string): Promise<string> {
                 resolve(jsonResponse);
             });
         }).on('error', e => {
-            reject('Cannot connect to the target');
+            reject('Cannot connect to the target: ' + e.message);
         });
     });
 }

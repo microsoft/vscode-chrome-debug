@@ -61,8 +61,8 @@ function evalDebugger() {
 function consoleAPIs() {
     console.log({ a: 1, b: 'asdf', c: { d: 4 } });
     console.log({ a: 1}, {b: 2});
-    console.count('a');
-    console.count('a');
+    console.count('count label');
+    console.count('count label');
     console.dir({ z: 5 });
     console.time('timing');
     console.group('my group');

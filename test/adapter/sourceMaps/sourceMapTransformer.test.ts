@@ -22,6 +22,8 @@ suite('SourceMapTransformer', () => {
     let transformerSMDisabled: _SourceMapTransformer;
 
     setup(() => {
+        testUtils.setupUnhandledRejectionListener();
+
         // Set up mockery with SourceMaps mock
         mockery.enable();
         mockery.registerMock('./sourceMaps', { SourceMaps: MockSourceMaps });
@@ -43,6 +45,7 @@ suite('SourceMapTransformer', () => {
     });
 
     teardown(() => {
+        testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
         transformer = null;

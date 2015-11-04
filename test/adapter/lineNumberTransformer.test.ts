@@ -3,7 +3,9 @@
  *--------------------------------------------------------*/
 
 import * as assert from 'assert';
+
 import { LineNumberTransformer } from '../../adapter/lineNumberTransformer';
+import * as testUtils from '../testUtils';
 
 function createTransformer(clientLinesStartAt1: boolean, targetLinesStartAt1: boolean): LineNumberTransformer {
     const transformer = new LineNumberTransformer(targetLinesStartAt1);
@@ -13,6 +15,14 @@ function createTransformer(clientLinesStartAt1: boolean, targetLinesStartAt1: bo
 }
 
 suite('LineNumberTransformer', () => {
+    setup(() => {
+        testUtils.setupUnhandledRejectionListener();
+    });
+
+    teardown(() => {
+        testUtils.removeUnhandledRejectionListener();
+    });
+
     const c0t0Transformer = createTransformer(false, false);
     const c0t1Transformer = createTransformer(false, true);
     const c1t0Transformer = createTransformer(true, false);

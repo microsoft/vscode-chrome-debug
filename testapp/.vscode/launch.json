@@ -18,7 +18,8 @@
             "port": 9222,
             "request": "attach",
             "sourceMaps": true,
-            "outDir": "out"
+            "outDir": "out",
+            "diagnosticLogging": true
         }
     ]
 }

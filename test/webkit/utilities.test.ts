@@ -5,12 +5,16 @@
 import * as mockery from 'mockery';
 import * as assert from 'assert';
 
+import * as testUtils from '../testUtils';
+
 /** Utilities without mocks - use for type only */
 import * as _Utilities from '../../webkit/utilities';
 
 const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
     setup(() => {
+        testUtils.setupUnhandledRejectionListener();
+
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
@@ -20,6 +24,8 @@ suite('Utilities', () => {
     });
 
     teardown(() => {
+        testUtils.removeUnhandledRejectionListener();
+
         mockery.deregisterAll();
         mockery.disable();
     });
@@ -112,26 +118,25 @@ suite('Utilities', () => {
     suite('promiseTimeout()', () => {
         const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
-        test('when given a promise it fails if the promise never resolves', done => {
-            Utilities.promiseTimeout(new Promise(() => { }), 5).then(
+        test('when given a promise it fails if the promise never resolves', () => {
+            return Utilities.promiseTimeout(new Promise(() => { }), 5).then(
                 () => assert.fail('This promise should fail'),
-                e => done()
+                e => { }
             );
         });
 
-        test('when given a promise it succeeds if the promise resolves', done => {
-            Utilities.promiseTimeout(Promise.resolve('test'), 5).then(
+        test('when given a promise it succeeds if the promise resolves', () => {
+            return Utilities.promiseTimeout(Promise.resolve('test'), 5).then(
                 result => {
                     assert.equal(result, 'test');
-                    done();
                 },
                 e => assert.fail('This promise should pass')
             );
         });
 
-        test('when not given a promise it resolves', done => {
-            Utilities.promiseTimeout(null, 5).then(
-                done,
+        test('when not given a promise it resolves', () => {
+            return Utilities.promiseTimeout(null, 5).then(
+                null,
                 () => assert.fail('This promise should pass')
             );
         });
@@ -140,42 +145,23 @@ suite('Utilities', () => {
     suite('retryAsync()', () => {
         const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
 
-        test('when the function passes, it resolves with the value', done => {
-            let callCount = 0;
-            const pass5times = () => {
-                if (callCount > 5) {
-                    assert.fail('Should not be called more than 5 times');
-                }
-
-                return (++callCount === 5) ?
-                    Promise.resolve('test') :
-                    Promise.reject('fail');
-            };
-
-            Utilities.retryAsync(pass5times, 10, /*timeoutBetweenAttempts=*/0).then(
+        test('when the function passes, it resolves with the value', () => {
+            return Utilities.retryAsync(() => Promise.resolve('pass'), /*timeoutMs=*/5).then(
                 result => {
-                    assert.equal(result, 'test');
-                    done();
+                    assert.equal(result, 'pass');
                 },
                 e => {
                     assert.fail('This should have passed');
                 });
         });
 
-        test('when the function fails, it rejects', done => {
-            let callCount = 0;
-            Utilities.retryAsync(() => {
-                if (++callCount > 10) {
-                    assert.fail('Should not be called more than 10 times');
-                }
-
-                return Promise.reject('fail');
-            }, 10, /*timeoutBetweenAttempts=*/0).then(
-                () => assert.fail('This promise should fail'),
-                e => {
-                    assert.equal(e, 'fail');
-                    done();
-                });
+        test('when the function fails, it rejects', () => {
+            return Utilities.retryAsync(() => Promise.reject('fail'), /*timeoutMs=*/5)
+                .then(
+                    () => assert.fail('This promise should fail'),
+                    e => {
+                        assert.equal(e, 'fail');
+                    });
         });
     });
 
