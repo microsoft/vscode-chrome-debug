@@ -46,7 +46,7 @@ suite('ConsoleHelper', () => {
 
     suite('console.assert()', () => {
         test(`Prints params and doesn't resolve format specifiers`, () => {
-            doAssert(Console.makeAssert('Fail %s 123', 456), 'Assertion failed: Fail %s 123 456\nmyFn @/script/a.js:4', true);
+            doAssert(Console.makeAssert('Fail %s 123', 456), 'Assertion failed: Fail %s 123 456\n  myFn @/script/a.js:4', true);
         });
     });
 });
