@@ -50,7 +50,6 @@ export class PathTransformer implements IDebugTransformer {
     }
 
     public scriptParsed(event: DebugProtocol.Event): void {
-        // maybe cache canonicalized form? what about scripts with query args
         const webkitUrl: string = event.body.scriptUrl;
         const clientUrl = utils.webkitUrlToClientUrl(this._clientCWD, webkitUrl);
         this._clientUrlToWebkitUrl.set(clientUrl, webkitUrl);

@@ -160,7 +160,7 @@ suite('Utilities', () => {
                 .then(
                     () => assert.fail('This promise should fail'),
                     e => {
-                        assert.equal(e.message, 'Error: fail');
+                        assert.equal(e.message, 'fail');
                     });
         });
     });

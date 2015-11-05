@@ -2,7 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as sinon from 'sinon';
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
 import * as assert from 'assert';
@@ -312,25 +311,12 @@ class DefaultMockWebKitConnection {
 
 /**
  * Creates an instance of the default mock WKC, registers it with mockery.
- * Then creates a sinon mock against it, and customizes sinon's 'expects'
+ * Then creates a sinon mock against it.
  */
 function registerMockWebKitConnection(): Sinon.SinonMock {
     const mockInstance = new DefaultMockWebKitConnection();
     mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
-    const m = sinon.mock(mockInstance);
-
-    // Prevent sinon from complaining that the mocked object doesn't have an implementation of
-    // the expected method.
-    const originalMExpects = m.expects.bind(m);
-    m.expects = methodName => {
-        if (!mockInstance[methodName]) {
-            mockInstance[methodName] = () => Promise.resolve();
-        }
-
-        return originalMExpects(methodName);
-    };
-
-    return m;
+    return testUtils.getSinonMock(mockInstance);
 }
 
 function instantiateWKDA(): _WebKitDebugAdapter {
