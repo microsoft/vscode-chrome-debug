@@ -117,7 +117,7 @@ export function promiseTimeout(p?: Promise<any>, timeoutMs: number = 1000, timeo
 }
 
 export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<any> {
-    var startTime = Date.now();
+    const startTime = Date.now();
 
     function tryUntilTimeout(): Promise<any> {
         return fn().catch(
@@ -125,7 +125,7 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
                 if (Date.now() - startTime < timeoutMs) {
                     return tryUntilTimeout();
                 } else {
-                    return Promise.reject(e);
+                    return errP(e);
                 }
             });
     }
@@ -290,4 +290,8 @@ export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject,
     }
 
     return { value, variableHandleRef };
+}
+
+export function errP(msg: string): Promise<any> {
+    return Promise.reject(new Error(msg));
 }

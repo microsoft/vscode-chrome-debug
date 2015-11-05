@@ -8,6 +8,7 @@ import {EventEmitter} from 'events';
 import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
+import * as utils from '../../webkit/utilities';
 
 /** Not mocked - use for type only */
 import {WebKitDebugAdapter as _WebKitDebugAdapter} from '../../webkit/webKitDebugAdapter';
@@ -69,7 +70,7 @@ suite('WebKitDebugAdapter', () => {
         });
 
         test('if unsuccessful, the promise is rejected and an initialized event is not fired', done => {
-            mockWebKitConnection.expects('attach').returns(Promise.reject('Testing attach failed'));
+            mockWebKitConnection.expects('attach').returns(utils.errP('Testing attach failed'));
 
             const wkda = instantiateWKDA();
             wkda.registerEventHandler((event: DebugProtocol.Event) => {

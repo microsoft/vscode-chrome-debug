@@ -156,11 +156,11 @@ suite('Utilities', () => {
         });
 
         test('when the function fails, it rejects', () => {
-            return Utilities.retryAsync(() => Promise.reject('fail'), /*timeoutMs=*/5)
+            return Utilities.retryAsync(() => Utilities.errP('fail'), /*timeoutMs=*/5)
                 .then(
                     () => assert.fail('This promise should fail'),
                     e => {
-                        assert.equal(e, 'fail');
+                        assert.equal(e.message, 'Error: fail');
                     });
         });
     });

@@ -6,7 +6,7 @@ import {Event} from '../common/v8Protocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent} from '../common/debugSession';
 import {Handles} from '../common/handles';
 import {WebKitConnection} from './webKitConnection';
-import * as Utilities from './utilities';
+import * as utils from './utilities';
 import {Logger} from './utilities';
 import {formatConsoleMessage} from './consoleHelper';
 
@@ -24,7 +24,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _variableHandles: Handles<string>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, WebKitProtocol.Debugger.BreakpointId[]>;
-    private _overlayHelper: Utilities.DebounceHelper;
+    private _overlayHelper: utils.DebounceHelper;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -37,7 +37,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public constructor() {
         this._variableHandles = new Handles<string>();
-        this._overlayHelper = new Utilities.DebounceHelper(/*timeoutMs=*/200);
+        this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this.clearEverything();
     }
@@ -73,9 +73,9 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         // Check exists?
-        const chromePath = args.runtimeExecutable || Utilities.getBrowserPath();
+        const chromePath = args.runtimeExecutable || utils.getBrowserPath();
         if (!chromePath) {
-            return Promise.reject(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
+            return utils.errP(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
         }
 
         // Start with remote debugging enabled
@@ -93,7 +93,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else if (args.url) {
             chromeArgs.push(args.url);
         } else {
-            return Promise.reject('The launch config must specify either the "file" or "url" field.');
+            return utils.errP('The launch config must specify either the "file" or "url" field.');
         }
 
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
@@ -108,11 +108,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public attach(args: IAttachRequestArgs): Promise<void> {
         if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
-            return Promise.reject('Remote debugging is not supported');
+            return utils.errP('Remote debugging is not supported');
         }
 
         if (args.port == null) {
-            return Promise.reject('The "port" field is required in the attach config.');
+            return utils.errP('The "port" field is required in the attach config.');
         }
 
         if (args.diagnosticLogging) {
@@ -144,7 +144,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 () => this.fireEvent(new InitializedEvent()),
                 e => {
                     this.clearEverything();
-                    return Promise.reject(e);
+                    return utils.errP(e);
                 });
         } else {
             return Promise.resolve<void>();
@@ -276,14 +276,14 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 .then(() => this._addBreakpoints(targetScriptUrl, args.lines, args.cols))
                 .then(responses => ({ breakpoints: this._webkitBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
 
-            const setBreakpointsPTimeout = Utilities.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+            const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
 
             // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
             // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
             this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
             return setBreakpointsPTimeout;
         } else {
-            return Promise.reject(`Can't find script for breakpoint request`);
+            return utils.errP(`Can't find script for breakpoint request`);
         }
     }
 
@@ -481,7 +481,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
                 const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
-                return Promise.reject(errorMessage);
+                return utils.errP(errorMessage);
             }
 
             const { value, variablesReference } = this.remoteObjectToValue(evalResponse.result.result);
@@ -505,7 +505,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
      * use it with this instance's variableHandles to create a variable handle.
      */
     private remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject): { value: string, variablesReference: number } {
-        const { value, variableHandleRef } = Utilities.remoteObjectToValue(object);
+        const { value, variableHandleRef } = utils.remoteObjectToValue(object);
         const result = { value, variablesReference: 0 };
         if (variableHandleRef) {
             result.variablesReference = this._variableHandles.create(variableHandleRef);

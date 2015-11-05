@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as Utilities from '../webkit/utilities';
+import * as utils from '../webkit/utilities';
 
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
@@ -15,7 +15,7 @@ export class AdapterProxy {
 
     public dispatchRequest(request: DebugProtocol.Request): Promise<any> {
         if (!(request.command in this._debugAdapter)) {
-            Promise.reject('unknowncommand');
+            return utils.errP('unknowncommand');
         }
 
         return this.transformRequest(request)
@@ -50,7 +50,7 @@ export class AdapterProxy {
         }
 
         const bodyTransformMethodName = request.command + 'Response';
-        const reversedTransformers = Utilities.reversedArr(this._requestTransformers);
+        const reversedTransformers = utils.reversedArr(this._requestTransformers);
         return reversedTransformers
             // If the transformer implements this command, give it a chance to modify the args. Otherwise skip it
             .filter(transformer => bodyTransformMethodName in transformer)
@@ -63,7 +63,7 @@ export class AdapterProxy {
      * Pass the event back through the transformers in reverse. They modify the object in place.
      */
     private onAdapterEvent(event: DebugProtocol.Event): void {
-        const reversedTransformers = Utilities.reversedArr(this._requestTransformers);
+        const reversedTransformers = utils.reversedArr(this._requestTransformers);
         reversedTransformers
             .filter(transformer => event.event in transformer)
             .forEach(

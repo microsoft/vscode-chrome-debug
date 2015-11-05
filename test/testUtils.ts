@@ -11,7 +11,17 @@ export function removeUnhandledRejectionListener(): void {
 }
 
 function unhandledRejectionListener(reason, p) {
-    console.log(`ERROR!! Unhandled promise rejection: ${reason}`);
+    console.log('*');
+    console.log('**');
+    console.log('***');
+    console.log('****');
+    console.log('*****');
+    console.log(`ERROR!! Unhandled promise rejection: ${reason}. A previous test may have failed but reported success.`);
+    console.log('*****');
+    console.log('****');
+    console.log('***');
+    console.log('**');
+    console.log('*');
 }
 
 export class MockEvent implements DebugProtocol.Event {

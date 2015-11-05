@@ -5,7 +5,7 @@
 import * as WebSocket from 'ws';
 import * as http from 'http';
 import {EventEmitter} from 'events';
-import * as Utilities from './utilities';
+import * as utils from './utilities';
 import {Logger} from './utilities';
 
 interface IMessageWithId {
@@ -122,7 +122,7 @@ export class WebKitConnection {
      */
     public attach(port: number): Promise<void> {
         Logger.log('Attempting to attach on port ' + port);
-        return Utilities.retryAsync(() => this._attach(port), 6000)
+        return utils.retryAsync(() => this._attach(port), 6000)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
@@ -147,7 +147,7 @@ export class WebKitConnection {
                     // JSON.parse can throw
                 }
 
-                return Promise.reject('Got response, but no valid target pages found');
+                return utils.errP('Got response, but no valid target pages found');
             });
     }
 
