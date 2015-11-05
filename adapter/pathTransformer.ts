@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as Utilities from '../webkit/utilities';
+import * as utils from '../webkit/utilities';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -10,15 +10,12 @@ interface IPendingBreakpoint {
 }
 
 /**
- * Converts from paths formatted  to webkit paths
+ * Converts a local path from Code to a path on the target.
  */
 export class PathTransformer implements IDebugTransformer {
     private _clientCWD: string;
     private _clientUrlToWebkitUrl = new Map<string, string>();
     private _pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
-
-    constructor() {
-    }
 
     public launch(args: ILaunchRequestArgs): void {
         this._clientCWD = args.cwd;
@@ -31,14 +28,12 @@ export class PathTransformer implements IDebugTransformer {
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
         return new Promise<void>(resolve => {
             if (args.source.path) {
-                const url = Utilities.canonicalizeUrl(args.source.path);
+                const url = utils.canonicalizeUrl(args.source.path);
                 if (this._clientUrlToWebkitUrl.has(url)) {
                     args.source.path = this._clientUrlToWebkitUrl.get(url);
                     resolve();
                 } else {
-                    // Could set breakpoints by URL here. But ODP doesn't give any way to set the position of that breakpoint when it does resolve later.
-                    // This seems easier
-                    // TODO caching by source.path seems wrong because it may not exist? But this implies that we haven't told ODP about this script so it may have to be set. Assert non-null?
+                    utils.Logger.log(`No target url cached for client url: ${url}, waiting for target script to be loaded.`);
                     args.source.path = url;
                     this._pendingBreakpointsByUrl.set(args.source.path, { resolve, args });
                 }
@@ -57,7 +52,7 @@ export class PathTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         // maybe cache canonicalized form? what about scripts with query args
         const webkitUrl: string = event.body.scriptUrl;
-        const clientUrl = Utilities.webkitUrlToClientUrl(this._clientCWD, webkitUrl);
+        const clientUrl = utils.webkitUrlToClientUrl(this._clientCWD, webkitUrl);
         this._clientUrlToWebkitUrl.set(clientUrl, webkitUrl);
         event.body.scriptUrl = clientUrl;
 
@@ -73,7 +68,7 @@ export class PathTransformer implements IDebugTransformer {
             // Try to resolve the url to a path in the workspace. If it's not in the workspace,
             // just use the script.url as-is.
             if (frame.source.path) {
-                const clientUrl = Utilities.webkitUrlToClientUrl(this._clientCWD, frame.source.path);
+                const clientUrl = utils.webkitUrlToClientUrl(this._clientCWD, frame.source.path);
                 if (clientUrl) {
                     frame.source.path = clientUrl;
                 }
