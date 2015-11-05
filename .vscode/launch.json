@@ -17,7 +17,7 @@
             "program": "./node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
             "args": [ "test" ],
-            "sourceMaps": false,
+            "sourceMaps": true,
             "outDir": "out"
         }
     ]
