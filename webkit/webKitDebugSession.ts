@@ -17,6 +17,11 @@ export class WebKitDebugSession extends DebugSession {
 
     public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
         super(targetLinesStartAt1, isServer);
+
+        process.addListener('unhandledRejection', reason => {
+            Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
+        });
+
         Logger.init(isServer);
 
         this._adapterProxy = new AdapterProxy(
