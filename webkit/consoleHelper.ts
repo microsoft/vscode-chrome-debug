@@ -81,7 +81,9 @@ function remoteObjectToString(obj: WebKitProtocol.Runtime.RemoteObject): string 
     if (result.variableHandleRef) {
         // The DebugProtocol console API doesn't support returning a variable reference, so do our best to
         // build a useful string out of this object.
-        if (obj.preview && obj.preview.properties) {
+        if (obj.subtype === 'array') {
+            return arrayRemoteObjToString(obj);
+        } else if (obj.preview && obj.preview.properties) {
             let props: string = obj.preview.properties
                 .map(prop => {
                     let propStr = prop.name + ': ';
@@ -106,8 +108,28 @@ function remoteObjectToString(obj: WebKitProtocol.Runtime.RemoteObject): string 
     }
 }
 
+function arrayRemoteObjToString(obj: WebKitProtocol.Runtime.RemoteObject): string {
+    if (obj.preview && obj.preview.properties) {
+        let props: string = obj.preview.properties
+            .map(prop => prop.value)
+            .join(', ');
+
+        if (obj.preview.overflow) {
+            props += '…';
+        }
+
+        return `[${props}]`;
+    } else {
+        return obj.description;
+    }
+}
+
 function stackTraceToString(stackTrace: WebKitProtocol.Console.StackTrace): string {
     return stackTrace
-        .map(frame => `  ${frame.functionName} @${url.parse(frame.url).pathname}:${frame.lineNumber}`)
+        .map(frame => {
+            const fnName = frame.functionName || (frame.url ? '(anonymous)' : '(eval)');
+            const fileName = frame.url ? url.parse(frame.url).pathname : '(eval)';
+            return `  ${fnName} @${fileName}:${frame.lineNumber}`;
+        })
         .join('\n');
 }

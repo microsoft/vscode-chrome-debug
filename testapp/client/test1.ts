@@ -73,6 +73,9 @@ function consoleAPIs() {
     console.timeEnd('timing');
     console.trace();
 
+    eval('console.trace()');
+    (() => console.trace())();
+
     (<any>console).table([1, 2, 3]);
     console.assert(1 == 2, '1 is not 2');
 }
