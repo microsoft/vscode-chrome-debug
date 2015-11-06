@@ -236,6 +236,10 @@ suite('Utilities', () => {
             const url = 'http://site.com/My/Cool/Site/script.js?stuff';
             testCanUrl(url, url);
         });
+
+        test('strips trailing slash', () => {
+            testCanUrl('http://site.com/', 'http://site.com');
+        });
     });
 
     suite('remoteObjectToValue()', () => {

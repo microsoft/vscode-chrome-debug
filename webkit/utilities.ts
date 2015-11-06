@@ -233,11 +233,13 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
  * file:///Users/me/project/code.js => /Users/me/project/code.js
  * c:\scripts\code.js => c:/scripts/code.js
  * http://site.com/scripts/code.js => (no change)
+ * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(url: string): string {
     url = url
         .replace('file:///', '')
-        .replace(/\\/g, '/'); // \ to /
+        .replace(/\\/g, '/') // \ to /
+        .replace(/\/$/, ''); // strip trailing slash
 
     // Ensure osx path starts with /, it can be removed when file:/// was stripped.
     // Don't add if the url still has a protocol
