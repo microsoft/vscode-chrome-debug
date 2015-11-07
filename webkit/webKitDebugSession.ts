@@ -65,7 +65,7 @@ export class WebKitDebugSession extends DebugSession {
                 this.sendResponse(response);
             },
             e => {
-                const eStr = e ? e.toString() : 'Unknown error';
+                const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
                     this.sendErrorResponse(response, 1014, '[webkit-debug-adapter] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
                     return;

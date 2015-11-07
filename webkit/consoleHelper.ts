@@ -9,6 +9,9 @@ export function formatConsoleMessage(m: WebKitProtocol.Console.Message): { text:
     let outputText: string;
     if (m.type === 'log') {
         outputText = resolveParams(m);
+        if (m.source === 'network') {
+            outputText += ` (${m.url})`;
+        }
     } else if (m.type === 'assert') {
         outputText = 'Assertion failed';
         if (m.parameters && m.parameters.length) {

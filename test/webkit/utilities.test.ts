@@ -158,15 +158,16 @@ suite('Utilities', () => {
         test('when the function fails, it rejects', () => {
             return Utilities.retryAsync(() => Utilities.errP('fail'), /*timeoutMs=*/5)
                 .then(
-                    () => assert.fail('This promise should fail'),
-                    e => {
-                        assert.equal(e.message, 'Error: fail');
-                    });
+                () => assert.fail('This promise should fail'),
+                e => {
+                    assert.equal(e.message, 'fail');
+                });
         });
     });
 
     suite('webkitUrlToClientUrl()', () => {
         const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
+        const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
         const TEST_CWD = 'c:/site';
 
@@ -199,8 +200,16 @@ suite('Utilities', () => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            const Utilities = require(MODULE_UNDER_TEST);
-            assert.equal(Utilities.webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+        });
+
+        test('file:/// urls are returned canonicalized', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
+        });
+
+        test('uri encodings are fixed', () => {
+            const clientPath = 'c:/project/path with spaces/script.js';
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, 'file:///' + encodeURI(clientPath)), clientPath);
         });
     });
 
@@ -236,5 +245,72 @@ suite('Utilities', () => {
             const url = 'http://site.com/My/Cool/Site/script.js?stuff';
             testCanUrl(url, url);
         });
+
+        test('strips trailing slash', () => {
+            testCanUrl('http://site.com/', 'http://site.com');
+        });
+    });
+
+    suite('remoteObjectToValue()', () => {
+        const TEST_OBJ_ID = 'objectId';
+
+        function testRemoteObjectToValue(obj: any, value: string, variableHandleRef?: string, stringify?: boolean): void {
+            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+
+            assert.deepEqual(Utilities.remoteObjectToValue(obj, stringify), { value, variableHandleRef });
+        }
+
+        test('bool', () => {
+            testRemoteObjectToValue({ type: 'boolean', value: true }, 'true');
+        });
+
+        test('string', () => {
+            let value = 'test string';
+            testRemoteObjectToValue({ type: 'string', value }, `"${value}"`);
+            testRemoteObjectToValue({ type: 'string', value }, `${value}`, undefined, /*stringify=*/false);
+
+            value = 'test string\r\nwith\nnewlines\n\n';
+            const expValue = 'test string\\r\\nwith\\nnewlines\\n\\n';
+            testRemoteObjectToValue({ type: 'string', value }, `"${expValue}"`);
+        });
+
+        test('number', () => {
+            testRemoteObjectToValue({ type: 'number', value: 1, description: '1' }, '1');
+        });
+
+        test('array', () => {
+            const description = 'Array[2]';
+            testRemoteObjectToValue({ type: 'object', description, objectId: TEST_OBJ_ID }, description, TEST_OBJ_ID);
+        });
+
+        test('regexp', () => {
+            const description = '/^asdf/g';
+            testRemoteObjectToValue({ type: 'object', description, objectId: TEST_OBJ_ID }, description, TEST_OBJ_ID);
+        });
+
+        test('symbol', () => {
+            const description = 'Symbol(s)';
+            testRemoteObjectToValue({ type: 'symbol', description, objectId: TEST_OBJ_ID }, description);
+        });
+
+        test('function', () => {
+            // ES6 arrow fn
+            testRemoteObjectToValue({ type: 'function', description: '() => {\n  var x = 1;\n  var y = 1;\n}', objectId: TEST_OBJ_ID }, '() => { … }');
+
+            // named fn
+            testRemoteObjectToValue({ type: 'function', description: 'function asdf() {\n  var z = 5;\n}' }, 'function asdf() { … }');
+
+            // anonymous fn
+            testRemoteObjectToValue({ type: 'function', description: 'function () {\n  var z = 5;\n}' }, 'function () { … }');
+        });
+
+        test('undefined', () => {
+            testRemoteObjectToValue({ type: 'undefined' }, 'undefined');
+        });
+
+        test('null', () => {
+            testRemoteObjectToValue({ type: 'object', subtype: 'null' }, 'null');
+        });
+
     });
 });
