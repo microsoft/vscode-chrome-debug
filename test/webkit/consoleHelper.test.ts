@@ -46,6 +46,10 @@ suite('ConsoleHelper', () => {
             doAssert(Console.makeLog('test', null, undefined), 'test null undefined');
         });
 
+        test('network error', () => {
+            doAssert(Console.makeNetworkLog('neterror', 'myurl'), 'neterror (myurl)', true);
+        })
+
         test('objects- waiting on VS Code bug 20343');
     });
 
@@ -105,5 +109,9 @@ namespace Console {
     export function makeAssert(...params: any[]): WebKitProtocol.Console.Message {
         const fakeStackTrace = [{ url: '/script/a.js', lineNumber: 4, functionName: 'myFn' }];
         return makeMockMessage('assert', params, { level: 'error', stackTrace: fakeStackTrace });
+    }
+
+    export function makeNetworkLog(text: string, url: string): WebKitProtocol.Console.Message {
+        return makeMockMessage('log', [text], { source: 'network', url, level: 'error' });
     }
 }
