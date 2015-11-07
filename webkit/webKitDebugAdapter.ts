@@ -12,7 +12,6 @@ import {formatConsoleMessage} from './consoleHelper';
 
 import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
-import * as os from 'os';
 
 export class WebKitDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
@@ -82,20 +81,22 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const port = args.port || 9222;
         const chromeArgs: string[] = ['--remote-debugging-port=' + port];
 
-        // Also start with extra stuff disabled, and user-data-dir in tmp directory
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check', `--user-data-dir=${os.tmpdir() }/webkitdebugadapter${Date.now() }`]);
+        // Also start with extra stuff disabled
+        chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
         if (args.runtimeArguments) {
             chromeArgs.push(...args.runtimeArguments);
         }
 
+        let launchUrl: string;
         if (args.file) {
-            chromeArgs.push(path.resolve(args.cwd, args.file));
+            launchUrl = path.resolve(args.cwd, args.file);
         } else if (args.url) {
-            chromeArgs.push(args.url);
+            launchUrl = args.url;
         } else {
             return utils.errP('The launch config must specify either the "file" or "url" field.');
         }
 
+        chromeArgs.push(launchUrl);
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromePath, chromeArgs);
         this._chromeProc.on('error', (err) => {
@@ -103,7 +104,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this.terminateSession();
         });
 
-        return this._attach(port);
+        return this._attach(port, launchUrl);
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
@@ -122,7 +123,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return this._attach(args.port);
     }
 
-    private _attach(port: number): Promise<void> {
+    private _attach(port: number, url?: string): Promise<void> {
         // ODP client is attaching - if not attached to the webkit target, create a connection and attach
         this._clientAttached = true;
         if (!this._webKitConnection) {
@@ -139,7 +140,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             this._webKitConnection.on('close', () => this.terminateSession());
             this._webKitConnection.on('error', () => this.terminateSession());
 
-            return this._webKitConnection.attach(port)
+            return this._webKitConnection.attach(port, url)
                 .then(
                 () => this.fireEvent(new InitializedEvent()),
                 e => {

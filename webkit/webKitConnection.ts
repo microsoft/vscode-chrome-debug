@@ -120,35 +120,48 @@ export class WebKitConnection {
     /**
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
-    public attach(port: number): Promise<void> {
+    public attach(port: number, url?: string): Promise<void> {
         Logger.log('Attempting to attach on port ' + port);
-        return utils.retryAsync(() => this._attach(port), 6000)
+        return utils.retryAsync(() => this._attach(port, url), 6000)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
     }
 
-    public _attach(port: number): Promise<void> {
-        return getUrl(`http://127.0.0.1:${port}/json`)
-            .then(jsonResponse => {
-                // Validate every step of processing the response
-                try {
-                    const responseArray = JSON.parse(jsonResponse);
-                    if (Array.isArray(responseArray)) {
-                        const pages = responseArray.filter(target => target && target.type === 'page');
-                        if (pages.length) {
-                            const wsUrl = pages[0].webSocketDebuggerUrl;
-                            if (wsUrl) {
-                                return this._socket.attach(wsUrl);
-                            }
+    public _attach(port: number, url?: string): Promise<void> {
+        return getUrl(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
+            // Validate every step of processing the response
+            try {
+                const responseArray = JSON.parse(jsonResponse);
+                if (Array.isArray(responseArray)) {
+                    let pages = responseArray.filter(target => target && target.type === 'page');
+                    if (url) {
+                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === utils.canonicalizeUrl(url));
+                        if (!urlPages.length) {
+                            Logger.log(`Can't find a page with url: ` + url);
+                        } else {
+                            pages = urlPages;
                         }
                     }
-                } catch (e) {
-                    // JSON.parse can throw
-                }
 
-                return utils.errP('Got response, but no valid target pages found');
-            });
+                    if (pages.length) {
+                        if (pages.length > 1) {
+                            Logger.log('Warning! Found more than one valid target page. Attaching to the first one.');
+                            Logger.log('pages: ' + JSON.stringify(pages.map(page => page.url)));
+                        }
+
+                        const wsUrl = pages[0].webSocketDebuggerUrl;
+                        if (wsUrl) {
+                            return this._socket.attach(wsUrl);
+                        }
+                    }
+                }
+            } catch (e) {
+                // JSON.parse can throw
+            }
+
+            return utils.errP('Got response, but no valid target pages found');
+        });
     }
 
     public close(): void {

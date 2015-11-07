@@ -137,7 +137,6 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * Holds a singleton to manage access to console.log.
  * Logging is only allowed when running in server mode, because otherwise it goes through the same channel that Code uses to
  * communicate with the adapter, which can cause communication issues.
- * ALLOW_LOGGING should be set to false when packaging and releasing to ensure it's always disabled.
  */
 export class Logger {
     private static _logger: Logger;
@@ -234,11 +233,13 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
  * file:///Users/me/project/code.js => /Users/me/project/code.js
  * c:\scripts\code.js => c:/scripts/code.js
  * http://site.com/scripts/code.js => (no change)
+ * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(url: string): string {
     url = url
         .replace('file:///', '')
-        .replace(/\\/g, '/'); // \ to /
+        .replace(/\\/g, '/') // \ to /
+        .replace(/\/$/, ''); // strip trailing slash
 
     // Ensure osx path starts with /, it can be removed when file:/// was stripped.
     // Don't add if the url still has a protocol
@@ -292,6 +293,21 @@ export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject,
     return { value, variableHandleRef };
 }
 
-export function errP(msg: string): Promise<any> {
-    return Promise.reject(new Error(msg));
+/**
+ * A helper for returning a rejected promise with an Error object. Avoids double-wrapping an Error, which could happen
+ * when passing on a failure from a Promise error handler.
+ * @param msg - Should be either a string or an Error
+ */
+export function errP(msg: any): Promise<any> {
+    let e: Error;
+    if (!msg) {
+        e = new Error('Unknown error');
+    } else if (msg.message) {
+        // msg is already an Error object
+        e = msg;
+    } else {
+        e = new Error(msg);
+    }
+
+    return Promise.reject(e);
 }
