@@ -167,6 +167,7 @@ suite('Utilities', () => {
 
     suite('webkitUrlToClientUrl()', () => {
         const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
+        const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
         const TEST_CWD = 'c:/site';
 
@@ -199,8 +200,16 @@ suite('Utilities', () => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            const Utilities = require(MODULE_UNDER_TEST);
-            assert.equal(Utilities.webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+        });
+
+        test('file:/// urls are returned canonicalized', () => {
+            assert.equal(Utilities().webkitUrlToClientUrl('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
+        });
+
+        test('uri encodings are fixed', () => {
+            const clientPath = 'c:/project/path with spaces/script.js';
+            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, 'file:///' + encodeURI(clientPath)), clientPath);
         });
     });
 
@@ -276,7 +285,7 @@ suite('Utilities', () => {
 
         test('regexp', () => {
             const description = '/^asdf/g';
-            testRemoteObjectToValue({ type: 'object', description, objectId: TEST_OBJ_ID}, description, TEST_OBJ_ID);
+            testRemoteObjectToValue({ type: 'object', description, objectId: TEST_OBJ_ID }, description, TEST_OBJ_ID);
         });
 
         test('symbol', () => {
@@ -289,10 +298,10 @@ suite('Utilities', () => {
             testRemoteObjectToValue({ type: 'function', description: '() => {\n  var x = 1;\n  var y = 1;\n}', objectId: TEST_OBJ_ID }, '() => { … }');
 
             // named fn
-            testRemoteObjectToValue({ type: 'function', description: 'function asdf() {\n  var z = 5;\n}'}, 'function asdf() { … }');
+            testRemoteObjectToValue({ type: 'function', description: 'function asdf() {\n  var z = 5;\n}' }, 'function asdf() { … }');
 
             // anonymous fn
-            testRemoteObjectToValue({ type: 'function', description: 'function () {\n  var z = 5;\n}'}, 'function () { … }');
+            testRemoteObjectToValue({ type: 'function', description: 'function () {\n  var z = 5;\n}' }, 'function () { … }');
         });
 
         test('undefined', () => {
