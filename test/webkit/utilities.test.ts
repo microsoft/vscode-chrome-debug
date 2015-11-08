@@ -165,7 +165,7 @@ suite('Utilities', () => {
         });
     });
 
-    suite('webkitUrlToClientUrl()', () => {
+    suite('webkitUrlToClientPath()', () => {
         const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
         const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
@@ -176,15 +176,15 @@ suite('Utilities', () => {
         }
 
         test('an empty string is returned for a missing url', () => {
-            assert.equal(Utilities().webkitUrlToClientUrl('', ''), '');
+            assert.equal(Utilities().webkitUrlToClientPath('', ''), '');
         });
 
         test('an empty string is returned when the cwd is missing', () => {
-            assert.equal(Utilities().webkitUrlToClientUrl(null, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(Utilities().webkitUrlToClientPath(null, TEST_WEBKIT_HTTP_URL), '');
         });
 
         test('a url without a path returns an empty string', () => {
-            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, 'http://site.com'), '');
+            assert.equal(Utilities().webkitUrlToClientPath(TEST_CWD, 'http://site.com'), '');
         });
 
         test('it searches the disk for a path that exists, built from the url', () => {
@@ -192,7 +192,7 @@ suite('Utilities', () => {
                 if (path !== TEST_CLIENT_PATH) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
+            assert.equal(Utilities().webkitUrlToClientPath(TEST_CWD, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
         });
 
         test(`returns an empty string when it can't resolve a url`, () => {
@@ -200,16 +200,16 @@ suite('Utilities', () => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(Utilities().webkitUrlToClientPath(TEST_CWD, TEST_WEBKIT_HTTP_URL), '');
         });
 
         test('file:/// urls are returned canonicalized', () => {
-            assert.equal(Utilities().webkitUrlToClientUrl('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
+            assert.equal(Utilities().webkitUrlToClientPath('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
         });
 
         test('uri encodings are fixed', () => {
             const clientPath = 'c:/project/path with spaces/script.js';
-            assert.equal(Utilities().webkitUrlToClientUrl(TEST_CWD, 'file:///' + encodeURI(clientPath)), clientPath);
+            assert.equal(Utilities().webkitUrlToClientPath(TEST_CWD, 'file:///' + encodeURI(clientPath)), clientPath);
         });
     });
 

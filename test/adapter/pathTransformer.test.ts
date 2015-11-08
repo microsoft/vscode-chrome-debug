@@ -30,7 +30,7 @@ suite('PathTransformer', () => {
         // Mock the utils functions
         const mockedObj = testUtils.getDefaultUtilitiesMock();
         utilsMock = testUtils.getSinonMock(mockedObj);
-        utilsMock.expects('webkitUrlToClientUrl')
+        utilsMock.expects('webkitUrlToClientPath')
             .once()
             .withExactArgs(/*cwd=*/undefined, TARGET_URL).returns(CLIENT_URL);
 

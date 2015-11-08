@@ -196,7 +196,7 @@ export class Logger {
  * http://localhost/scripts/code.js => d:/app/scripts/code.js
  * file:///d:/scripts/code.js => d:/scripts/code.js
  */
-export function webkitUrlToClientUrl(cwd: string, url: string): string {
+export function webkitUrlToClientPath(cwd: string, url: string): string {
     if (!url) {
         return '';
     }
@@ -222,10 +222,10 @@ export function webkitUrlToClientUrl(cwd: string, url: string): string {
 
     const pathParts = pathName.split('/');
     while (pathParts.length > 0) {
-        const clientUrl = path.join(cwd, pathParts.join('/'));
-        const canClientUrl = canonicalizeUrl(clientUrl); // path.join will change / to \
-        if (existsSync(canClientUrl)) {
-            return canonicalizeUrl(canClientUrl);
+        const clientPath = path.join(cwd, pathParts.join('/'));
+        const canClientPath = canonicalizeUrl(clientPath); // path.join will change / to \
+        if (existsSync(canClientPath)) {
+            return canonicalizeUrl(canClientPath);
         }
 
         pathParts.shift();
