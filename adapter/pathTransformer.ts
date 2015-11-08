@@ -48,12 +48,14 @@ export class PathTransformer implements IDebugTransformer {
 
     public clearTargetContext(): void {
         this._clientPathToWebkitUrl = new Map<string, string>();
+        this._webkitUrlToClientPath = new Map<string, string>();
     }
 
     public scriptParsed(event: DebugProtocol.Event): void {
         const webkitUrl: string = event.body.scriptUrl;
         const clientPath = utils.webkitUrlToClientPath(this._clientCWD, webkitUrl);
         this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
+        this._webkitUrlToClientPath.set(webkitUrl, clientPath);
         event.body.scriptUrl = clientPath;
 
         if (this._pendingBreakpointsByUrl.has(clientPath)) {
@@ -68,7 +70,10 @@ export class PathTransformer implements IDebugTransformer {
             // Try to resolve the url to a path in the workspace. If it's not in the workspace,
             // just use the script.url as-is.
             if (frame.source.path) {
-                const clientPath = utils.webkitUrlToClientPath(this._clientCWD, frame.source.path);
+                const clientPath = this._webkitUrlToClientPath.has(frame.source.path) ?
+                    this._webkitUrlToClientPath.get(frame.source.path) :
+                    utils.webkitUrlToClientPath(this._clientCWD, frame.source.path);
+                    
                 if (clientPath) {
                     frame.source.path = clientPath;
                 }
