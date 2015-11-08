@@ -477,6 +477,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
                 const variables: DebugProtocol.Variable[] = [];
                 propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
+                variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
                 return { variables };
             });
         } else {

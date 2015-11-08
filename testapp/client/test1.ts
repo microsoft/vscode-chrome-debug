@@ -16,6 +16,10 @@ newlines`;
     var s = Symbol('hi');
     var e = new Error('hi');
 
+    eval('var evalVar3 = [1,2,3]');
+    eval('var evalVar1 = 16');
+    eval('var evalVar2 = "sdlfk"');
+
     var bool = true;
     var fn = () => {
         // Some fn
