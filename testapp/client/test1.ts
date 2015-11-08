@@ -9,6 +9,7 @@ function locals() {
     var longStr = `this is a
 string with
 newlines`;
+    var element = document.body;
     var buffer = new ArrayBuffer(8);
     var buffView = new Int32Array(buffer);
     buffView[0] = 234;
