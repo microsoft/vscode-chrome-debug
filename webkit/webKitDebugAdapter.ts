@@ -16,6 +16,7 @@ import * as path from 'path';
 export class WebKitDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
+    private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
 
     private _clientLinesStartAt1: boolean;
 
@@ -24,6 +25,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, WebKitProtocol.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
+    private _exceptionValueObject: WebKitProtocol.Runtime.RemoteObject;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -201,10 +203,23 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         let exceptionText: string;
         if (notification.reason === 'exception') {
             reason = 'exception';
-            exceptionText = notification.data.description;
-            if (notification.data && notification.data.objectId && this._currentStack.length) {
-                // Insert a scope to wrap the exception object. exceptionText is unused at the moment
-                this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: notification.data });
+            if (notification.data && this._currentStack.length) {
+                // Insert a scope to wrap the exception object. exceptionText is unused by Code at the moment.
+                const remoteObjValue = utils.remoteObjectToValue(notification.data, false);
+                let scopeObject: WebKitProtocol.Runtime.RemoteObject;
+
+                if (remoteObjValue.variableHandleRef) {
+                    // If the remote object is an object (probably an Error), treat the object like a scope.
+                    exceptionText = notification.data.description;
+                    scopeObject = notification.data;
+                } else {
+                    // If it's a value, use a special flag and save the value for later.
+                    exceptionText = notification.data.value;
+                    scopeObject = <any>{ objectId: WebKitDebugAdapter.EXCEPTION_VALUE_ID };
+                    this._exceptionValueObject = notification.data;
+                }
+
+                this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
             }
         } else {
             reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
@@ -441,7 +456,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public variables(args: DebugProtocol.VariablesArguments): Promise<VariablesResponseBody> {
         const id = this._variableHandles.get(args.variablesReference);
-        if (id != null) {
+        if (id === WebKitDebugAdapter.EXCEPTION_VALUE_ID) {
+            // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
+            const excValuePropDescriptor: WebKitProtocol.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
+            return Promise.resolve({ variables: [ this.propertyDescriptorToVariable(excValuePropDescriptor)] });
+        } else if (id != null) {
             return this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
                 const variables = getPropsResponse.error ? [] :
                     getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToVariable(propDesc));

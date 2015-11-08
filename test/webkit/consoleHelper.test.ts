@@ -48,7 +48,7 @@ suite('ConsoleHelper', () => {
 
         test('network error', () => {
             doAssert(Console.makeNetworkLog('neterror', 'myurl'), 'neterror (myurl)', true);
-        })
+        });
 
         test('objects- waiting on VS Code bug 20343');
     });
