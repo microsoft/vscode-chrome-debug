@@ -461,10 +461,22 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             const excValuePropDescriptor: WebKitProtocol.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
             return Promise.resolve({ variables: [ this.propertyDescriptorToVariable(excValuePropDescriptor)] });
         } else if (id != null) {
-            return this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true).then(getPropsResponse => {
-                const variables = getPropsResponse.error ? [] :
-                    getPropsResponse.result.result.map(propDesc => this.propertyDescriptorToVariable(propDesc));
+            return Promise.all([
+                // Need to make two requests to get all properties
+                this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
+                this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
+            ]).then(getPropsResponses => {
+                // Sometimes duplicates will be returned - merge all property descriptors returned
+                const propsByName = new Map<string, WebKitProtocol.Runtime.PropertyDescriptor>();
+                getPropsResponses.forEach(response => {
+                    if (!response.error) {
+                        response.result.result.forEach(propDesc =>
+                            propsByName.set(propDesc.name, propDesc));
+                    }
+                });
 
+                const variables: DebugProtocol.Variable[] = [];
+                propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
                 return { variables };
             });
         } else {

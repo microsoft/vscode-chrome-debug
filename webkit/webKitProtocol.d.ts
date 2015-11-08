@@ -141,6 +141,7 @@ declare namespace WebKitProtocol {
         interface GetPropertiesParams {
             objectId: string;
             ownProperties: boolean;
+            accessorPropertiesOnly: boolean;
         }
 
         interface GetPropertiesResponse extends Response {
