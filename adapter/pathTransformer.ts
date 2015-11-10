@@ -6,6 +6,7 @@ import * as utils from '../webkit/utilities';
 
 interface IPendingBreakpoint {
     resolve: () => void;
+    reject: (e: Error) => void;
     args: ISetBreakpointsArgs;
 }
 
@@ -16,7 +17,7 @@ export class PathTransformer implements IDebugTransformer {
     private _clientCWD: string;
     private _clientPathToWebkitUrl = new Map<string, string>();
     private _webkitUrlToClientPath = new Map<string, string>();
-    private _pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
+    private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
         this._clientCWD = args.cwd;
@@ -27,7 +28,7 @@ export class PathTransformer implements IDebugTransformer {
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        return new Promise<void>(resolve => {
+        return new Promise<void>((resolve, reject) => {
             if (args.source.path) {
                 const url = utils.canonicalizeUrl(args.source.path);
                 if (this._clientPathToWebkitUrl.has(url)) {
@@ -36,14 +37,16 @@ export class PathTransformer implements IDebugTransformer {
                 } else {
                     utils.Logger.log(`No target url cached for client url: ${url}, waiting for target script to be loaded.`);
                     args.source.path = url;
-                    this._pendingBreakpointsByUrl.set(args.source.path, { resolve, args });
+                    this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
                 }
+            } else {
+                resolve();
             }
         });
     }
 
     public clearClientContext(): void {
-        this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
+        this._pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
     }
 
     public clearTargetContext(): void {
@@ -58,10 +61,10 @@ export class PathTransformer implements IDebugTransformer {
         this._webkitUrlToClientPath.set(webkitUrl, clientPath);
         event.body.scriptUrl = clientPath;
 
-        if (this._pendingBreakpointsByUrl.has(clientPath)) {
-            const pendingBreakpoint = this._pendingBreakpointsByUrl.get(clientPath);
-            this._pendingBreakpointsByUrl.delete(clientPath);
-            this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve);
+        if (this._pendingBreakpointsByPath.has(clientPath)) {
+            const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
+            this._pendingBreakpointsByPath.delete(clientPath);
+            this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
         }
     }
 
@@ -73,7 +76,7 @@ export class PathTransformer implements IDebugTransformer {
                 const clientPath = this._webkitUrlToClientPath.has(frame.source.path) ?
                     this._webkitUrlToClientPath.get(frame.source.path) :
                     utils.webkitUrlToClientPath(this._clientCWD, frame.source.path);
-                    
+
                 if (clientPath) {
                     frame.source.path = clientPath;
                 }

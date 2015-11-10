@@ -63,15 +63,20 @@ export class AdapterProxy {
      * Pass the event back through the transformers in reverse. They modify the object in place.
      */
     private onAdapterEvent(event: DebugProtocol.Event): void {
-        const reversedTransformers = utils.reversedArr(this._requestTransformers);
-        reversedTransformers
-            .filter(transformer => event.event in transformer)
-            .forEach(
-                transformer => transformer[event.event](event));
+        // try/catch because this method isn't promise-based like the rest of the class
+        try {
+            const reversedTransformers = utils.reversedArr(this._requestTransformers);
+            reversedTransformers
+                .filter(transformer => event.event in transformer)
+                .forEach(
+                    transformer => transformer[event.event](event));
 
-        // Internal events should not be passed back through DebugProtocol
-        if (AdapterProxy.INTERNAL_EVENTS.indexOf(event.event) < 0) {
-            this._eventHandler(event);
+            // Internal events should not be passed back through DebugProtocol
+            if (AdapterProxy.INTERNAL_EVENTS.indexOf(event.event) < 0) {
+                this._eventHandler(event);
+            }
+        } catch (e) {
+            utils.Logger.log('Error handling adapter event: ' + (e ? e.stack : ''));
         }
     }
 }

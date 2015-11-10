@@ -3,6 +3,14 @@
  *--------------------------------------------------------*/
 
 import {ISourceMaps, SourceMaps} from './sourceMaps';
+import * as utils from '../../webkit/utilities';
+
+interface IPendingBreakpoint {
+    resolve: () => void;
+    reject: (e: Error) => void;
+    args: ISetBreakpointsArgs;
+    requestSeq: number;
+}
 
 /**
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
@@ -11,6 +19,8 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _sourceMaps: ISourceMaps;
     private _generatedCodeDirectory: string;
     private _requestSeqToSetBreakpointsArgs: Map<number, DebugProtocol.SetBreakpointsArguments>;
+    private _allRuntimeScriptPaths: Set<string>;
+    private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -25,35 +35,57 @@ export class SourceMapTransformer implements IDebugTransformer {
             this._sourceMaps = new SourceMaps(args.outDir);
             this._generatedCodeDirectory = args.outDir;
             this._requestSeqToSetBreakpointsArgs = new Map<number, DebugProtocol.SetBreakpointsArguments>();
+            this._allRuntimeScriptPaths = new Set<string>();
         }
+    }
+
+    public clearTargetContext(): void {
+        this._allRuntimeScriptPaths = new Set<string>();
     }
 
     /**
      * Apply sourcemapping to the setBreakpoints request path/lines
      */
-    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): void {
-        if (this._sourceMaps && args.source.path) {
-            const argsPath = args.source.path;
+    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<void> {
+        // TODO wrap SourceMaps to guarantee \ in and / out?
+        return new Promise<void>((resolve, reject) => {
+            if (this._sourceMaps && args.source.path) {
+                // SourceMaps needs \ paths on windows. But _allRuntimeScriptPaths and _pendingBreakpointsByPath need to compare against
+                // paths coming back from the PathTransformer which gives canonical paths
+                const canonicalArgsPath = utils.canonicalizeUrl(args.source.path);
 
-            const mappedPath = this._sourceMaps.MapPathFromSource(argsPath);
-            if (mappedPath) {
-                args.source.path = mappedPath;
+                const mappedPath = this._sourceMaps.MapPathFromSource(args.source.path);
+                if (mappedPath) {
+                    utils.Logger.log(`SourceMaps.setBreakpoints: Mapped ${args.source.path} to ${mappedPath}`);
+                    args.source.path = mappedPath;
 
-                // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
-                args.cols = [];
-                args.lines = args.lines.map((line, i) => {
-                    const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
-                    if (mapped) {
-                        args.cols[i] = mapped.column;
-                        return mapped.line;
-                    } else {
-                        return line;
-                    }
-                });
+                    // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
+                    args.cols = [];
+                    args.lines = args.lines.map((line, i) => {
+                        const mapped = this._sourceMaps.MapFromSource(args.source.path, line, /*column=*/0);
+                        if (mapped) {
+                            args.cols[i] = mapped.column;
+                            return mapped.line;
+                        } else {
+                            return line;
+                        }
+                    });
+                } else if (this._allRuntimeScriptPaths.has(canonicalArgsPath)) {
+                    // It's a generated file which is loaded
+                    utils.Logger.log(`SourceMaps.setBreakpoints: SourceMaps are enabled but ${canonicalArgsPath} is a runtime script`);
+                } else {
+                    // Source (or generated) file which is not loaded
+                    utils.Logger.log(`SourceMaps.setBreakpoints: ${canonicalArgsPath} can't be resolved to a loaded script.`);
+                    this._pendingBreakpointsByPath.set(canonicalArgsPath, { resolve, reject, args, requestSeq });
+                    return;
+                }
+
+                this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
+                resolve();
+            } else {
+                resolve();
             }
-
-            this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
-        }
+        });
     }
 
     /**
@@ -97,10 +129,26 @@ export class SourceMapTransformer implements IDebugTransformer {
     }
 
     public scriptParsed(event: DebugProtocol.Event): void {
+        setTimeout(() => {
+
         if (this._sourceMaps) {
-            // Send a dummy request just to get this file into the cache. SourceMaps can't trace a source file to a generated file
-            // unless its already in its cache, without falling back on heuristics which may be wrong.
-            this._sourceMaps.MapToSource(event.body.scriptUrl, 0, 0);
+            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+
+            // comment
+            const mapped = this._sourceMaps.MapToSource(event.body.scriptUrl, 0, 0);
+            if (mapped) {
+                event.body.scriptUrl = mapped.path;
+            }
+
+            if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
+                utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has pending breakpoints`);
+                const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
+                this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
+
+                this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
+                    .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+            }
         }
+        }, 2000);
     }
 }
