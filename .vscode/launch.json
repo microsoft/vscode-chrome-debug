@@ -4,7 +4,7 @@
         {
             "name": "launch as server",
             "type": "node",
-            "program": "./out/webkit/openDebugWebKit.js",
+            "program": "./out/webkit/webKitDebug.js",
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
