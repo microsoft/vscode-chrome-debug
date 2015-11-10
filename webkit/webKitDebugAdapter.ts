@@ -451,6 +451,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope, i: number) => {
             const scopeHandle: IScopeVarHandle = { objectId: scope.object.objectId };
             if (i === 0) {
+                // The first scope should include 'this'. Keep the RemoteObject reference for use by the variables request
                 scopeHandle.thisObj = this._currentStack[args.frameId]['this'];
             }
 
@@ -485,16 +486,14 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     }
                 });
 
+                // Convert WebKitProtocol prop descriptors to DebugProtocol vars, sort the result
                 const variables: DebugProtocol.Variable[] = [];
                 propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
                 variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
 
-                try {
-                    if (handle.thisObj) {
-                        variables.unshift(this.propertyDescriptorToVariable(<any>{ name: "this", value: handle.thisObj }));
-                    }
-                } catch(e) {
-                    
+                // If this is a scope that should have the 'this', prop, insert it at the top of the list
+                if (handle.thisObj) {
+                    variables.unshift(this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }));
                 }
 
                 return { variables };
