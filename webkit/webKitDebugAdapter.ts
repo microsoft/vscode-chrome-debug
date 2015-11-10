@@ -13,6 +13,11 @@ import {formatConsoleMessage} from './consoleHelper';
 import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
 
+interface IScopeVarHandle {
+    objectId: string;
+    thisObj?: WebKitProtocol.Runtime.RemoteObject;
+}
+
 export class WebKitDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -21,7 +26,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _clientLinesStartAt1: boolean;
 
     private _clientAttached: boolean;
-    private _variableHandles: Handles<string>;
+    private _variableHandles: Handles<IScopeVarHandle>;
     private _currentStack: WebKitProtocol.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, WebKitProtocol.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
@@ -37,7 +42,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _setBreakpointsRequestQ: Promise<any>;
 
     public constructor() {
-        this._variableHandles = new Handles<string>();
+        this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this.clearEverything();
@@ -443,10 +448,16 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public scopes(args: DebugProtocol.ScopesArguments): ScopesResponseBody {
-        const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope) => {
+        const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope, i: number) => {
+            const scopeHandle: IScopeVarHandle = { objectId: scope.object.objectId };
+            if (i === 0) {
+                // The first scope should include 'this'. Keep the RemoteObject reference for use by the variables request
+                scopeHandle.thisObj = this._currentStack[args.frameId]['this'];
+            }
+
             return <DebugProtocol.Scope>{
                 name: scope.type,
-                variablesReference: this._variableHandles.create(scope.object.objectId),
+                variablesReference: this._variableHandles.create(scopeHandle),
                 expensive: scope.type === 'global'
             };
         });
@@ -455,16 +466,16 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public variables(args: DebugProtocol.VariablesArguments): Promise<VariablesResponseBody> {
-        const id = this._variableHandles.get(args.variablesReference);
-        if (id === WebKitDebugAdapter.EXCEPTION_VALUE_ID) {
+        const handle = this._variableHandles.get(args.variablesReference);
+        if (handle.objectId === WebKitDebugAdapter.EXCEPTION_VALUE_ID) {
             // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
             const excValuePropDescriptor: WebKitProtocol.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
             return Promise.resolve({ variables: [ this.propertyDescriptorToVariable(excValuePropDescriptor)] });
-        } else if (id != null) {
+        } else if (handle != null) {
             return Promise.all([
                 // Need to make two requests to get all properties
-                this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
-                this._webKitConnection.runtime_getProperties(id, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
+                this._webKitConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
+                this._webKitConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
             ]).then(getPropsResponses => {
                 // Sometimes duplicates will be returned - merge all property descriptors returned
                 const propsByName = new Map<string, WebKitProtocol.Runtime.PropertyDescriptor>();
@@ -475,9 +486,16 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                     }
                 });
 
+                // Convert WebKitProtocol prop descriptors to DebugProtocol vars, sort the result
                 const variables: DebugProtocol.Variable[] = [];
                 propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
                 variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
+
+                // If this is a scope that should have the 'this', prop, insert it at the top of the list
+                if (handle.thisObj) {
+                    variables.unshift(this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }));
+                }
+
                 return { variables };
             });
         } else {
@@ -541,7 +559,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         const { value, variableHandleRef } = utils.remoteObjectToValue(object);
         const result = { value, variablesReference: 0 };
         if (variableHandleRef) {
-            result.variablesReference = this._variableHandles.create(variableHandleRef);
+            result.variablesReference = this._variableHandles.create({ objectId: variableHandleRef });
         }
 
         return result;

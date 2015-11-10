@@ -1,7 +1,7 @@
 {
-  "name": "opendebug-webkit",
+  "name": "Test app",
   "version": "0.0.0",
-  "description": "OpenDebug adapters for the WebKit protocol",
+  "description": "",
   "author": {
     "name": "Microsoft Corporation, Visual Studio Code Team"
   },
