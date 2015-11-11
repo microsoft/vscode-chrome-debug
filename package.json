@@ -1,7 +1,7 @@
 {
   "name": "Debug adapter for Chrome",
   "version": "0.1.0",
-  "description": "An extension to debug your Javascript code on targets that support the WebKit Debug Protocol, such as the Chrome browser.",
+  "description": "Debug your JavaScript code in the Chrome browser, or other targets that support the Chrome debug protocol.",
   "repository": {
       "type": "git",
       "url": "https://github.com/Microsoft/vscode-webkit-debug"
@@ -84,7 +84,7 @@
               "string",
               "null"
             ],
-            "description": "Workspace relative or absolute path to the runtime executable to be used.",
+            "description": "Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
             "default": null
           },
           "runtimeArgs": {
