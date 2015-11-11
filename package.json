@@ -1,7 +1,7 @@
 {
-  "name": "vscode-webkit-debug",
+  "name": "Debug adapter for Chrome",
   "version": "0.1.0",
-  "description": "A Visual Studio Code extension to debug your Javascript code on targets that support the WebKit Debug Protocol, such as the Chrome browser.",
+  "description": "An extension to debug your Javascript code on targets that support the WebKit Debug Protocol, such as the Chrome browser.",
   "repository": {
       "type": "git",
       "url": "https://github.com/Microsoft/vscode-webkit-debug"
@@ -32,8 +32,8 @@
   "contributes": {
     "debuggers": [
       {
-        "type": "webkit",
-        "label": "Webkit",
+        "type": "chrome",
+        "label": "Chrome",
         "enableBreakpointsFor": {
           "languageIds": [
             "javascript"
@@ -44,15 +44,15 @@
         "initialConfigurations": [
           {
             "name": "Launch index.html",
-            "type": "webkit",
+            "type": "chrome",
             "request": "launch",
             "file": "index.html"
           },
           {
             "name": "Launch localhost with sourcemaps",
-            "type": "webkit",
+            "type": "chrome",
             "request": "launch",
-            "file": "localhost/mypage.html",
+            "url": "http://localhost/mypage.html",
             "sourceMaps": true,
             "outDir": "out"
           },
