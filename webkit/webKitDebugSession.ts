@@ -2,8 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as os from 'os';
-
 import {Response} from '../common/v8Protocol';
 import {OutputEvent} from '../common/debugSession';
 import {DebugSession, ErrorDestination} from '../common/debugSession';
@@ -23,14 +21,6 @@ export class WebKitDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         Logger.init(isServer, msg => this.sendEvent(new OutputEvent(`  ›${msg}\n`)));
-        Logger.log(`OS: ${os.platform()} ${os.arch()}`);
-        Logger.log('Node version: ' + process.version);
-
-        // This seems weird
-        try {
-            Logger.log('Adapter version: ' + require('../../package.json').version);
-        } catch (e) { }
-
         process.addListener('unhandledRejection', reason => {
             Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
         });

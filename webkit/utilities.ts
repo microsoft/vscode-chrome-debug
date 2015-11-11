@@ -152,13 +152,30 @@ export class Logger {
         if (!this._logger) {
             this._logger = new Logger(isServer);
             this._logger._diagnosticLogCallback = logCallback;
+
+            if (isServer) {
+                Logger.logDiagnosticInfo();
+            }
         }
     }
 
     public static enableDiagnosticLogging(): void {
         if (this._logger) {
             this._logger._diagnosticLoggingEnabled = true;
+            if (!this._logger._isServer) {
+                Logger.logDiagnosticInfo();
+            }
         }
+    }
+
+    public static logDiagnosticInfo(): void {
+        Logger.log(`OS: ${os.platform()} ${os.arch()}`);
+        Logger.log('Node version: ' + process.version);
+
+        // This seems weird
+        try {
+            Logger.log('Adapter version: ' + require('../../package.json').version);
+        } catch (e) { }
     }
 
     constructor(isServer: boolean) {
