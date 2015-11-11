@@ -223,7 +223,7 @@ suite('WebKitDebugAdapter', () => {
                 // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('c:/a.js') >= 0);
+                assert(args.indexOf('file:///c:/a.js') >= 0);
                 assert(args.indexOf('abc') >= 0);
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;

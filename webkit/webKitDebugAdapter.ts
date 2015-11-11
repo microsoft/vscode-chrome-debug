@@ -96,7 +96,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         let launchUrl: string;
         if (args.file) {
-            launchUrl = path.resolve(args.cwd, args.file);
+            launchUrl = 'file:///' + path.resolve(args.cwd, args.file).replace(/\/\//g, '/');
         } else if (args.url) {
             launchUrl = args.url;
         } else {

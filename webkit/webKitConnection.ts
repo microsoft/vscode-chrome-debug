@@ -134,11 +134,15 @@ export class WebKitConnection {
             try {
                 const responseArray = JSON.parse(jsonResponse);
                 if (Array.isArray(responseArray)) {
+                    // Filter out extension targets and other things
                     let pages = responseArray.filter(target => target && target.type === 'page');
+
+                    // If a url was specified (launch mode), try to filter to that url
                     if (url) {
                         const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === utils.canonicalizeUrl(url));
                         if (!urlPages.length) {
                             Logger.log(`Can't find a page with url: ` + url);
+                            Logger.log('pages: ' + JSON.stringify(pages.map(page => page.url)));
                         } else {
                             pages = urlPages;
                         }
@@ -160,7 +164,7 @@ export class WebKitConnection {
                 // JSON.parse can throw
             }
 
-            return utils.errP('Got response, but no valid target pages found');
+            return utils.errP('Got response from target app, but no valid target pages found');
         });
     }
 
