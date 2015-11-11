@@ -39,7 +39,7 @@ suite('WebKitDebugAdapter', () => {
         mockery.registerMock('net', {});
         mockery.registerMock('fs', {});
 
-        mockWebKitConnection = registerMockWebKitConnection();
+        mockWebKitConnection = testUtils.getRegisteredSinonMock('./webKitConnection', new DefaultMockWebKitConnection(), 'WebKitConnection');
     });
 
     teardown(() => {
@@ -307,16 +307,6 @@ class DefaultMockWebKitConnection {
     public attach(port: number): Promise<void> {
         return Promise.resolve<void>();
     }
-}
-
-/**
- * Creates an instance of the default mock WKC, registers it with mockery.
- * Then creates a sinon mock against it.
- */
-function registerMockWebKitConnection(): Sinon.SinonMock {
-    const mockInstance = new DefaultMockWebKitConnection();
-    mockery.registerMock('./webKitConnection', { WebKitConnection: () => mockInstance });
-    return testUtils.getSinonMock(mockInstance);
 }
 
 function instantiateWKDA(): _WebKitDebugAdapter {

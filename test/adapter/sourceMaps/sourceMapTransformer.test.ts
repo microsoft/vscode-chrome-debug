@@ -18,39 +18,34 @@ const RUNTIME_COLS = [3, 7, 11];
 import {SourceMapTransformer as _SourceMapTransformer} from '../../../adapter/sourceMaps/sourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
-    let transformer: _SourceMapTransformer;
-    let transformerSMDisabled: _SourceMapTransformer;
-
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
         // Set up mockery with SourceMaps mock
-        mockery.enable();
-        mockery.registerMock('./sourceMaps', { SourceMaps: MockSourceMaps });
-        mockery.registerAllowable(MODULE_UNDER_TEST);
-
-        // Grab the test class with mock injected, instantiate with and without sourcemaps enabled
-        let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
-        transformer = new SourceMapTransformer();
-        transformer.launch(<ILaunchRequestArgs><any>{
-            sourceMaps: true,
-            generatedCodeDirectory: 'test'
-        });
-
-        transformerSMDisabled = new SourceMapTransformer();
-        transformerSMDisabled.launch(<ILaunchRequestArgs><any>{
-            sourceMaps: false,
-            generatedCodeDirectory: 'test'
-        });
+        mockery.enable({ warnOnReplace: false, useCleanCache: true });
+        mockery.registerAllowables(['os', 'fs', 'url', 'path', '../../webkit/utilities', MODULE_UNDER_TEST]);
     });
 
     teardown(() => {
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
-        transformer = null;
-        transformerSMDisabled = null;
     });
+
+    function getTransformer(sourceMaps = true, suppressDefaultMock = false): _SourceMapTransformer {
+        if (!suppressDefaultMock) {
+            mockery.registerMock('./sourceMaps', { SourceMaps: MockSourceMaps });
+        }
+
+        let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
+        const transformer = new SourceMapTransformer();
+        transformer.launch(<ILaunchRequestArgs><any>{
+            sourceMaps,
+            generatedCodeDirectory: 'test'
+        });
+
+        return transformer;
+    }
 
     suite('setBreakpoints()', () => {
         function createArgs(path: string, lines: number[], cols?: number[]): ISetBreakpointsArgs {
@@ -65,16 +60,48 @@ suite('SourceMapTransformer', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
-            transformer.setBreakpoints(args, 0);
-            assert.deepEqual(args, expected);
+            return getTransformer().setBreakpoints(args, 0).then(() => {
+                assert.deepEqual(args, expected);
+            });
         });
 
         test(`doesn't do anything when sourcemaps are disabled`, () => {
             const args = createArgs(RUNTIME_PATH, RUNTIME_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES);
 
-            transformerSMDisabled.setBreakpoints(args, 0);
-            assert.deepEqual(args, expected);
+            return getTransformer(false).setBreakpoints(args, 0).then(() => {
+                assert.deepEqual(args, expected);
+            });
+        });
+
+        test(`if the source can't be mapped, waits until the runtime script is loaded`, () => {
+            const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
+            const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
+
+            const mock = testUtils.getRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            mock.expects('MapPathFromSource')
+                .once()
+                .withArgs(AUTHORED_PATH).returns(null);
+            mock.expects('MapPathFromSource')
+                .once()
+                .withArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
+            args.lines.forEach((line, i) => {
+                mock.expects('MapFromSource')
+                    .once()
+                    .withArgs(AUTHORED_PATH, line, 0)
+                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
+            });
+            mock.expects('MapToSource')
+                .withArgs(RUNTIME_PATH, 0, 0).returns({ path: AUTHORED_PATH });
+
+            const transformer = getTransformer(true, true);
+            const setBreakpointsP = transformer.setBreakpoints(args, 0).then(() => {
+                assert.deepEqual(args, expected);
+                mock.verify();
+            });
+
+            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
+            return setBreakpointsP;
         });
 
         suite('setBreakpointsResponse()', () => {
@@ -95,6 +122,7 @@ suite('SourceMapTransformer', () => {
                 const response = getResponseBody(RUNTIME_LINES, /*column=*/0);
                 const expected = getResponseBody(AUTHORED_LINES);
 
+                const transformer = getTransformer();
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: AUTHORED_PATH },
                     lines: AUTHORED_LINES
@@ -107,11 +135,12 @@ suite('SourceMapTransformer', () => {
                 const response = getResponseBody(RUNTIME_LINES, /*column=*/0);
                 const expected = getResponseBody(RUNTIME_LINES);
 
-                transformerSMDisabled.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
+                const transformer = getTransformer(false);
+                transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: RUNTIME_PATH },
                     lines: RUNTIME_LINES
                 }, 0);
-                transformerSMDisabled.setBreakpointsResponse(response, 0);
+                transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
         });
@@ -134,7 +163,7 @@ suite('SourceMapTransformer', () => {
             const response = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
             const expected = getResponseBody(AUTHORED_PATH, AUTHORED_LINES);
 
-            transformer.stackTraceResponse(response);
+            getTransformer().stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
@@ -142,14 +171,14 @@ suite('SourceMapTransformer', () => {
             const response = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
             const expected = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
 
-            transformerSMDisabled.stackTraceResponse(response);
+            getTransformer(false).stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
     });
 
     suite('scriptParsed()', () => {
         test('calls MapToSource', () => {
-            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
+            getTransformer().scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
         });
     });
 });

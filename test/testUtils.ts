@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as sinon from 'sinon';
+import * as mockery from 'mockery';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -38,7 +39,7 @@ export class MockEvent implements DebugProtocol.Event {
  * Calls sinon.mock and patches its 'expects' method to not expect that the mock base object
  * already has an implementation of the expected method.
  */
-export function getSinonMock(mockBase: any): Sinon.SinonMock {
+export function getSinonMock(mockBase = {}): Sinon.SinonMock {
     const m = sinon.mock(mockBase);
 
     // Add a default implementation of every expected method so sinon doesn't complain if it doesn't exist.
@@ -52,6 +53,20 @@ export function getSinonMock(mockBase: any): Sinon.SinonMock {
     };
 
     return m;
+}
+
+export function getRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
+    const mock = getSinonMock(mockInstance);
+    const mockContainer = {};
+    if (asConstructor) {
+        mockContainer[name] = () => mockInstance;
+    } else {
+        mockContainer[name] = mockInstance;
+    }
+
+    mockery.registerMock(requireName, mockContainer);
+
+    return mock;
 }
 
 /**

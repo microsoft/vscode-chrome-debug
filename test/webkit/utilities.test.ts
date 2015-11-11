@@ -4,6 +4,7 @@
 
 import * as mockery from 'mockery';
 import * as assert from 'assert';
+import * as path from 'path';
 
 import * as testUtils from '../testUtils';
 
@@ -19,8 +20,11 @@ suite('Utilities', () => {
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('os', { platform: () => 'win32' });
 
+        path.sep = '\\';
+        mockery.registerMock('path', path);
+
         mockery.registerAllowables([
-            'url', 'path', MODULE_UNDER_TEST]);
+            'url', MODULE_UNDER_TEST]);
     });
 
     teardown(() => {
@@ -166,10 +170,10 @@ suite('Utilities', () => {
     });
 
     suite('webkitUrlToClientPath()', () => {
-        const TEST_CLIENT_PATH = 'c:/site/scripts/a.js';
+        const TEST_CLIENT_PATH = 'c:\\site\\scripts\\a.js';
         const TEST_WEBKIT_LOCAL_URL = 'file:///' + TEST_CLIENT_PATH;
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
-        const TEST_CWD = 'c:/site';
+        const TEST_CWD = 'c:\\site';
 
         function Utilities(): typeof _Utilities {
             return require(MODULE_UNDER_TEST);
@@ -208,7 +212,7 @@ suite('Utilities', () => {
         });
 
         test('uri encodings are fixed', () => {
-            const clientPath = 'c:/project/path with spaces/script.js';
+            const clientPath = 'c:\\project\\path with spaces\\script.js';
             assert.equal(Utilities().webkitUrlToClientPath(TEST_CWD, 'file:///' + encodeURI(clientPath)), clientPath);
         });
     });
@@ -219,16 +223,13 @@ suite('Utilities', () => {
             assert.equal(Utilities.canonicalizeUrl(inUrl), expectedUrl);
         }
 
-        test('removes file:///', () => {
-            testCanUrl('file:///c:/file.js', 'c:/file.js');
-        });
-
-        test('enforces forward slash', () => {
-            testCanUrl('c:\\thing\\file.js', 'c:/thing/file.js');
+        test('enforces path.sep slash', () => {
+            testCanUrl('c:\\thing\\file.js', 'c:\\thing\\file.js');
+            testCanUrl('c:/thing/file.js', 'c:\\thing\\file.js');
         });
 
         test('removes file:///', () => {
-            testCanUrl('file:///c:/file.js', 'c:/file.js');
+            testCanUrl('file:///c:/file.js', 'c:\\file.js');
         });
 
         test('ensures local path starts with / on OSX', () => {
@@ -238,7 +239,7 @@ suite('Utilities', () => {
 
         test('force lowercase drive letter on Win to match VS Code', () => {
             // note default 'os' mock is win32
-            testCanUrl('file:///D:/FILE.js', 'd:/FILE.js');
+            testCanUrl('file:///D:/FILE.js', 'd:\\FILE.js');
         });
 
         test('http:// url - no change', () => {

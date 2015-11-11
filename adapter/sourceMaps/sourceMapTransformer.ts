@@ -47,13 +47,9 @@ export class SourceMapTransformer implements IDebugTransformer {
      * Apply sourcemapping to the setBreakpoints request path/lines
      */
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<void> {
-        // TODO wrap SourceMaps to guarantee \ in and / out?
         return new Promise<void>((resolve, reject) => {
             if (this._sourceMaps && args.source.path) {
-                // SourceMaps needs \ paths on windows. But _allRuntimeScriptPaths and _pendingBreakpointsByPath need to compare against
-                // paths coming back from the PathTransformer which gives canonical paths
-                const canonicalArgsPath = utils.canonicalizeUrl(args.source.path);
-
+                const argsPath = args.source.path;
                 const mappedPath = this._sourceMaps.MapPathFromSource(args.source.path);
                 if (mappedPath) {
                     utils.Logger.log(`SourceMaps.setBreakpoints: Mapped ${args.source.path} to ${mappedPath}`);
@@ -62,7 +58,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
                     args.cols = [];
                     args.lines = args.lines.map((line, i) => {
-                        const mapped = this._sourceMaps.MapFromSource(args.source.path, line, /*column=*/0);
+                        const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
                         if (mapped) {
                             args.cols[i] = mapped.column;
                             return mapped.line;
@@ -70,13 +66,13 @@ export class SourceMapTransformer implements IDebugTransformer {
                             return line;
                         }
                     });
-                } else if (this._allRuntimeScriptPaths.has(canonicalArgsPath)) {
+                } else if (this._allRuntimeScriptPaths.has(argsPath)) {
                     // It's a generated file which is loaded
-                    utils.Logger.log(`SourceMaps.setBreakpoints: SourceMaps are enabled but ${canonicalArgsPath} is a runtime script`);
+                    utils.Logger.log(`SourceMaps.setBreakpoints: SourceMaps are enabled but ${argsPath} is a runtime script`);
                 } else {
-                    // Source (or generated) file which is not loaded
-                    utils.Logger.log(`SourceMaps.setBreakpoints: ${canonicalArgsPath} can't be resolved to a loaded script.`);
-                    this._pendingBreakpointsByPath.set(canonicalArgsPath, { resolve, reject, args, requestSeq });
+                    // Source (or generated) file which is not loaded, need to wait
+                    utils.Logger.log(`SourceMaps.setBreakpoints: ${argsPath} can't be resolved to a loaded script.`);
+                    this._pendingBreakpointsByPath.set(argsPath, { resolve, reject, args, requestSeq });
                     return;
                 }
 
@@ -129,17 +125,15 @@ export class SourceMapTransformer implements IDebugTransformer {
     }
 
     public scriptParsed(event: DebugProtocol.Event): void {
-        setTimeout(() => {
-
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(event.body.scriptUrl);
 
-            // comment
             const mapped = this._sourceMaps.MapToSource(event.body.scriptUrl, 0, 0);
             if (mapped) {
                 event.body.scriptUrl = mapped.path;
             }
 
+            // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
             if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
                 utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has pending breakpoints`);
                 const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
@@ -149,6 +143,5 @@ export class SourceMapTransformer implements IDebugTransformer {
                     .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
             }
         }
-        }, 2000);
     }
 }

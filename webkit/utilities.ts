@@ -215,17 +215,19 @@ export function webkitUrlToClientPath(cwd: string, url: string): string {
     }
 
     // Search the filesystem under our cwd for the file that best matches the given url
-    const pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+    let pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
     if (!pathName || pathName === '/') {
         return '';
     }
 
-    const pathParts = pathName.split('/');
+    // Dealing with the path portion of either a url or an absolute path to remote file.
+    // Need to force path.sep separator
+    pathName = pathName.replace(/\//g, path.sep);
+    const pathParts = pathName.split(path.sep);
     while (pathParts.length > 0) {
-        const clientPath = path.join(cwd, pathParts.join('/'));
-        const canClientPath = canonicalizeUrl(clientPath); // path.join will change / to \
-        if (existsSync(canClientPath)) {
-            return canonicalizeUrl(canClientPath);
+        const clientPath = path.join(cwd, pathParts.join(path.sep));
+        if (existsSync(clientPath)) {
+            return canonicalizeUrl(clientPath);
         }
 
         pathParts.shift();
@@ -239,25 +241,28 @@ export function webkitUrlToClientPath(cwd: string, url: string): string {
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
- * c:\scripts\code.js => c:/scripts/code.js
+ * c:\\scripts\\code.js => c:/scripts/code.js
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(url: string): string {
     url = url
         .replace('file:///', '')
-        .replace(/\\/g, '/') // \ to /
         .replace(/\/$/, ''); // strip trailing slash
 
-    // Ensure osx path starts with /, it can be removed when file:/// was stripped.
-    // Don't add if the url still has a protocol
-    if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
-        url = '/' + url;
-    }
+    if (getPlatform() === Platform.Windows) {
+        // If the url starts with a drive letter
+        if (url.match(/^[A-Za-z]:/)) {
+            // VS Code uses a lowercase drive letter
+            url = url[0].toLowerCase() + url.substr(1);
 
-    // VS Code gives a lowercase drive letter
-    if (url.match(/^[A-Z]:\//) && getPlatform() === Platform.Windows) {
-        url = url[0].toLowerCase() + url.substr(1);
+            // Replace any / with \\
+            url = url.replace(/\//g, path.sep);
+        }
+    } else if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+        // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+        // Don't add if the url still has a protocol
+        url = '/' + url;
     }
 
     return url;
