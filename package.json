@@ -1,5 +1,6 @@
 {
-  "name": "Debug adapter for Chrome",
+  "name": "debugger-for-chrome",
+  "displayName": "Debugger for Chrome",
   "version": "0.1.0",
   "description": "Debug your JavaScript code in the Chrome browser, or other targets that support the Chrome debug protocol.",
   "repository": {
@@ -58,7 +59,7 @@
           },
           {
             "name": "Attach",
-            "type": "node",
+            "type": "chrome",
             "request": "attach",
             "port": 9222
           }
