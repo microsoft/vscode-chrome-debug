@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as os from 'os';
+
 import {Response} from '../common/v8Protocol';
 import {DebugSession, ErrorDestination} from '../common/debugSession';
 import {WebKitDebugAdapter} from './webKitDebugAdapter';
@@ -18,11 +20,18 @@ export class WebKitDebugSession extends DebugSession {
     public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
         super(targetLinesStartAt1, isServer);
 
+        Logger.init(isServer);
+        Logger.log(`OS: ${os.platform()} ${os.arch()}`);
+        Logger.log('Node version: ' + process.version);
+
+        // This seems weird
+        try {
+            Logger.log('Adapter version: ' + require('../../package.json').version);
+        } catch (e) { }
+
         process.addListener('unhandledRejection', reason => {
             Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
         });
-
-        Logger.init(isServer);
 
         this._adapterProxy = new AdapterProxy(
             [
