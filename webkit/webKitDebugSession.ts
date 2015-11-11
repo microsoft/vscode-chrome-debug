@@ -5,7 +5,9 @@
 import * as os from 'os';
 
 import {Response} from '../common/v8Protocol';
+import {OutputEvent} from '../common/debugSession';
 import {DebugSession, ErrorDestination} from '../common/debugSession';
+
 import {WebKitDebugAdapter} from './webKitDebugAdapter';
 import {Logger} from './utilities';
 
@@ -20,7 +22,7 @@ export class WebKitDebugSession extends DebugSession {
     public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
         super(targetLinesStartAt1, isServer);
 
-        Logger.init(isServer);
+        Logger.init(isServer, msg => this.sendEvent(new OutputEvent(`  ›${msg}\n`)));
         Logger.log(`OS: ${os.platform()} ${os.arch()}`);
         Logger.log('Node version: ' + process.version);
 

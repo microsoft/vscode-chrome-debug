@@ -60,7 +60,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private clearClientContext(): void {
-        Logger.disableDiagnosticLogging();
         this._clientAttached = false;
         this.fireEvent(new Event('clearClientContext'));
     }
@@ -75,7 +74,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
         if (args.diagnosticLogging) {
-            this.setupDiagnosticLogging();
+            Logger.enableDiagnosticLogging();
         }
 
         // Check exists?
@@ -96,7 +95,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         let launchUrl: string;
         if (args.file) {
-            launchUrl = 'file:///' + path.resolve(args.cwd, args.file).replace(/\/\//g, '/');
+            launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
         } else if (args.url) {
             launchUrl = args.url;
         } else {
@@ -124,7 +123,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         if (args.diagnosticLogging) {
-            this.setupDiagnosticLogging();
+            Logger.enableDiagnosticLogging();
         }
 
         return this._attach(args.port);
@@ -157,10 +156,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else {
             return Promise.resolve<void>();
         }
-    }
-
-    private setupDiagnosticLogging(): void {
-        Logger.enableDiagnosticLogging(msg => this.fireEvent(new OutputEvent(`  ›${msg}\n`)));
     }
 
     private fireEvent(event: DebugProtocol.Event): void {

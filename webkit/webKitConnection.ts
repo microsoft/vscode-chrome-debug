@@ -141,8 +141,7 @@ export class WebKitConnection {
                     if (url) {
                         const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === utils.canonicalizeUrl(url));
                         if (!urlPages.length) {
-                            Logger.log(`Can't find a page with url: ` + url);
-                            Logger.log('pages: ' + JSON.stringify(pages.map(page => page.url)));
+                            Logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, true);
                         } else {
                             pages = urlPages;
                         }
@@ -150,8 +149,7 @@ export class WebKitConnection {
 
                     if (pages.length) {
                         if (pages.length > 1) {
-                            Logger.log('Warning! Found more than one valid target page. Attaching to the first one.');
-                            Logger.log('pages: ' + JSON.stringify(pages.map(page => page.url)));
+                            Logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), true);
                         }
 
                         const wsUrl = pages[0].webSocketDebuggerUrl;

@@ -142,26 +142,22 @@ export class Logger {
     private static _logger: Logger;
     private _isServer: boolean;
     private _diagnosticLogCallback: (msg: string) => void;
+    private _diagnosticLoggingEnabled: boolean;
 
-    public static log(msg: string, timestamp = true): void {
-        if (this._logger) this._logger._log(msg, timestamp);
+    public static log(msg: string, forceDiagnosticLogging = false): void {
+        if (this._logger) this._logger._log(msg, forceDiagnosticLogging);
     }
 
-    public static init(isServer: boolean): void {
+    public static init(isServer: boolean, logCallback: (msg: string) => void): void {
         if (!this._logger) {
             this._logger = new Logger(isServer);
-        }
-    }
-
-    public static enableDiagnosticLogging(logCallback: (msg: string) => void): void {
-        if (this._logger) {
             this._logger._diagnosticLogCallback = logCallback;
         }
     }
 
-    public static disableDiagnosticLogging(): void {
+    public static enableDiagnosticLogging(): void {
         if (this._logger) {
-            this._logger._diagnosticLogCallback = null;
+            this._logger._diagnosticLoggingEnabled = true;
         }
     }
 
@@ -169,15 +165,13 @@ export class Logger {
         this._isServer = isServer;
     }
 
-    private _log(msg: string, timestamp: boolean): void {
-        if (this._isServer || this._diagnosticLogCallback) {
-            if (timestamp) {
-                const d = new Date();
-                const timeStamp = `[${d.getMinutes() }:${d.getSeconds() }.${d.getMilliseconds() }] `;
-                this._sendLog(timeStamp + msg);
-            } else {
-                this._sendLog(msg);
-            }
+    private _log(msg: string, forceDiagnosticLogging: boolean): void {
+        if (this._isServer || this._diagnosticLoggingEnabled) {
+            const d = new Date();
+            const timeStamp = `[${pad0(d.getMinutes(), 2) }:${pad0(d.getSeconds(), 2) }.${pad0(d.getMilliseconds(), 3) }] `;
+            this._sendLog(timeStamp + msg);
+        } else if (forceDiagnosticLogging) {
+            this._sendLog(msg);
         }
     }
 
@@ -188,6 +182,15 @@ export class Logger {
             this._diagnosticLogCallback(msg);
         }
     }
+}
+
+function pad0(n: number, numChars: number): string {
+    let s = '' + n;
+    while (s.length < numChars) {
+        s = '0' + s;
+    }
+
+    return s;
 }
 
 /**
