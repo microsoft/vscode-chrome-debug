@@ -21,3 +21,5 @@ In VS Code, run the `launch as server` launch config - it will start the adapter
 
 ## Testing
 There is a set of mocha tests which can be run with `gulp test` or with the `test` launch config. Also run `gulp tslint` to check your code against our tslint rules.
+
+See the project under testapp/ for a bunch of test scenarios crammed onto one page.

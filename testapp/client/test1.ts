@@ -34,6 +34,8 @@ newlines`;
     var xyz = 1;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
     xyz++;                     xyz++;
+
+    // This is expected to be undefined until the "load test2.js" button is clicked
     anotherFn();
     fn();
 
