@@ -1,6 +1,8 @@
 ## Development setup
 I welcome any quality bugfixes or contributions!
 
+To avoid a conflict, delete the installed extension at `~/.vscode/extensions/msjsdiag.debugger-for-chrome`.
+
 ### Windows
 * In `C:/Users/<username>/.vscode/extensions/`, `git clone` this repository
 
