@@ -8,7 +8,9 @@
       "type": "git",
       "url": "https://github.com/Microsoft/vscode-webkit-debug"
   },
-  "publisher": "Microsoft",
+  "publisher": "Microsoft JS Diagnostics",
+  "homepage": "https://github.com/microsoft/vscode-webkit-debug",
+  "bugs": "https://github.com/microsoft/vscode-webkit-debug/issues",
   "engines": {
     "vscode": "*"
   },
