@@ -9,7 +9,6 @@
       "url": "https://github.com/Microsoft/vscode-webkit-debug"
   },
   "publisher": "msjsdiag",
-  "homepage": "https://github.com/microsoft/vscode-webkit-debug",
   "bugs": "https://github.com/microsoft/vscode-webkit-debug/issues",
   "engines": {
     "vscode": "*"
