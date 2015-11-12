@@ -1,6 +1,8 @@
 # Debugger for Chrome
 A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome debug protocol.
 
+![Screenshot](images/screenshot.png)
+
 ## Starting
 The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
@@ -79,3 +81,11 @@ When your launch config is set up, you can debug your project! Pick a launch con
 
 **Unsupported scenarios**
 * Debugging webworkers
+
+## Troubleshooting
+General things to try if you're having issues:
+* Close other running instances of Chrome
+* Ensure nothing else is using port 9222, or specify a different port in your launch config
+* Check the console for warnings that this extension prints in some cases when it can't attach
+* Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
+* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-webkit-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug.
