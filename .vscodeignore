@@ -1,7 +1,6 @@
 **/*.ts
 **/*.map
 .vscode/**
-images/**
 typings/**
 testapp/**
 test/**
