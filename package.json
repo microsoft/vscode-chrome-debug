@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
   "repository": {
@@ -13,6 +13,7 @@
   "engines": {
     "vscode": "*"
   },
+  "categories": ["Debuggers"],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "source-map": "^0.5.3",
