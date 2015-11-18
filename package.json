@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
   "repository": {
@@ -40,7 +40,8 @@
         "label": "Chrome",
         "enableBreakpointsFor": {
           "languageIds": [
-            "javascript"
+            "javascript",
+            "typescriptreact"
           ]
         },
         "program": "./out/webkit/webkitDebug.js",
