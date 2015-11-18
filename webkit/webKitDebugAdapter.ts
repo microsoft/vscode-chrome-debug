@@ -99,11 +99,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
         } else if (args.url) {
             launchUrl = args.url;
-        } else {
-            return utils.errP('The launch config must specify either the "file" or "url" field.');
         }
 
-        chromeArgs.push(launchUrl);
+        if (launchUrl) {
+            chromeArgs.push(launchUrl);
+        }
+        
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromePath, chromeArgs);
         this._chromeProc.on('error', (err) => {
@@ -195,6 +196,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedParams): void {
+
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
