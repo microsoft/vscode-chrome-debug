@@ -104,7 +104,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (launchUrl) {
             chromeArgs.push(launchUrl);
         }
-        
+
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromePath, chromeArgs);
         this._chromeProc.on('error', (err) => {
