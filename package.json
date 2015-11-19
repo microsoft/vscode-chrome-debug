@@ -150,6 +150,11 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
                 "default": false
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+                "default": "."
               }
             }
           }
