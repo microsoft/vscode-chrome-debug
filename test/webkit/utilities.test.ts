@@ -21,6 +21,13 @@ suite('Utilities', () => {
         mockery.registerMock('os', { platform: () => 'win32' });
 
         path.sep = '\\';
+        path.join = (a, b) => {
+            if (!a.endsWith(path.sep)) {
+                a = a + path.sep;
+            }
+
+            return a + b;
+        };
         mockery.registerMock('path', path);
 
         mockery.registerAllowables([

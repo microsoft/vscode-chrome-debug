@@ -1,10 +1,10 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
+    // "debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",
-            "type": "webkit",
+            "type": "chrome",
             "file": "out/client/index.html",
             "request": "launch",
             //"url": "http://localhost:8080/out/client/index.html",
@@ -14,7 +14,7 @@
         },
         {
             "name": "attach to chrome",
-            "type": "webkit",
+            "type": "chrome",
             "port": 9222,
             "request": "attach",
             "sourceMaps": true,
