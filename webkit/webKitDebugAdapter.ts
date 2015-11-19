@@ -116,10 +116,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
-        if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
-            return utils.errP('Remote debugging is not supported');
-        }
-
         if (args.port == null) {
             return utils.errP('The "port" field is required in the attach config.');
         }

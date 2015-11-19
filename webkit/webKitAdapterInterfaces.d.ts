@@ -14,7 +14,6 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
 interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     cwd: string;
     port: number;
-    address: string;
     sourceMaps?: boolean;
     outDir?: string;
     diagnosticLogging?: boolean;
