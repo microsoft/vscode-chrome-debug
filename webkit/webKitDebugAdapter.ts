@@ -90,8 +90,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         // Also start with extra stuff disabled
         chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args.runtimeArguments) {
-            chromeArgs.push(...args.runtimeArguments);
+        if (args.runtimeArgs) {
+            chromeArgs.push(...args.runtimeArgs);
         }
 
         let launchUrl: string;
