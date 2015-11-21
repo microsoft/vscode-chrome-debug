@@ -14,17 +14,17 @@ interface IPendingBreakpoint {
  * Converts a local path from Code to a path on the target.
  */
 export class PathTransformer implements IDebugTransformer {
-    private _clientCWD: string;
+    private _webRoot: string;
     private _clientPathToWebkitUrl = new Map<string, string>();
     private _webkitUrlToClientPath = new Map<string, string>();
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
-        this._clientCWD = args.cwd;
+        this._webRoot = args.webRoot || args.cwd;
     }
 
     public attach(args: IAttachRequestArgs): void {
-        this._clientCWD = args.cwd;
+        this._webRoot = args.webRoot || args.cwd;
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
@@ -56,7 +56,7 @@ export class PathTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         const webkitUrl: string = event.body.scriptUrl;
-        const clientPath = utils.webkitUrlToClientPath(this._clientCWD, webkitUrl);
+        const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
         this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
         this._webkitUrlToClientPath.set(webkitUrl, clientPath);
         event.body.scriptUrl = clientPath;
@@ -75,7 +75,7 @@ export class PathTransformer implements IDebugTransformer {
             if (frame.source.path) {
                 const clientPath = this._webkitUrlToClientPath.has(frame.source.path) ?
                     this._webkitUrlToClientPath.get(frame.source.path) :
-                    utils.webkitUrlToClientPath(this._clientCWD, frame.source.path);
+                    utils.webkitUrlToClientPath(this._webRoot, frame.source.path);
 
                 if (clientPath) {
                     frame.source.path = clientPath;

@@ -240,7 +240,7 @@ suite('WebKitDebugAdapter', () => {
                 platform: () => 'win32'
             });
             const wkda = instantiateWKDA();
-            return wkda.launch({ file: 'a.js', runtimeArguments: ['abc', 'def'], cwd: 'c:/' }).then(() => {
+            return wkda.launch({ file: 'a.js', runtimeArgs: ['abc', 'def'], cwd: 'c:/' }).then(() => {
                 assert(spawnCalled);
             });
         });

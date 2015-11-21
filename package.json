@@ -84,7 +84,12 @@
               },
               "cwd": {
                 "type": "string",
-                "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+                "description": "DEPRECATED - renamed to webRoot",
+                "default": "."
+              },
+              "webRoot": {
+                "type": "string",
+                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
                 "default": "."
               },
               "runtimeExecutable": {
@@ -153,7 +158,12 @@
               },
               "cwd": {
                 "type": "string",
-                "description": "Workspace relative or absolute path to the working directory of the program being debugged. Default is the current workspace.",
+                "description": "DEPRECATED - renamed to webRoot",
+                "default": "."
+              },
+              "webRoot": {
+                "type": "string",
+                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
                 "default": "."
               }
             }

@@ -1,6 +1,7 @@
 interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
-    cwd: string;
-    runtimeArguments?: string[];
+    cwd: string; /* Automatically set by VS Code to the currently opened folder */
+    webRoot?: string;
+    runtimeArgs?: string[];
     runtimeExecutable?: string;
     file?: string;
     url?: string;
@@ -12,7 +13,8 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
 }
 
 interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
-    cwd: string;
+    cwd: string; /* Automatically set by VS Code to the currently opened folder */
+    webRoot?: string;
     port: number;
     sourceMaps?: boolean;
     outDir?: string;

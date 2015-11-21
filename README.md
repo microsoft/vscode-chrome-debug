@@ -1,5 +1,5 @@
 # Debugger for Chrome
-A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome debug protocol.
+A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome Debugging Protocol.
 
 ![Screenshot](images/screenshot.png)
 
