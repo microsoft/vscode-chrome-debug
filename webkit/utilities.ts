@@ -171,11 +171,7 @@ export class Logger {
     public static logDiagnosticInfo(): void {
         Logger.log(`OS: ${os.platform()} ${os.arch()}`);
         Logger.log('Node version: ' + process.version);
-
-        // This seems weird
-        try {
-            Logger.log('Adapter version: ' + require('../../package.json').version);
-        } catch (e) { }
+        Logger.log('Adapter version: ' + require('../../package.json').version);
     }
 
     constructor(isServer: boolean) {
