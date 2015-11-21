@@ -1,0 +1,17 @@
+**/*.ts
+**/*.map
+.vscode/**
+typings/**
+testapp/**
+test/**
+*.vsix
+gulpfile.js
+tsconfig.json
+tsd.json
+tslint.json
+
+out/test/**
+
+node_modules/ws/node_modules/bufferutil/**
+node_modules/ws/node_modules/utf-8-validate/**
+node_modules/.bin/**

@@ -32,7 +32,7 @@ suite('PathTransformer', () => {
         utilsMock = testUtils.getSinonMock(mockedObj);
         utilsMock.expects('webkitUrlToClientPath')
             .once()
-            .withExactArgs(/*cwd=*/undefined, TARGET_URL).returns(CLIENT_URL);
+            .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_URL);
 
         mockery.registerMock('../webkit/utilities', mockedObj);
         transformer = createTransformer();

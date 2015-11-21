@@ -216,7 +216,7 @@ function pad0(n: number, numChars: number): string {
  * http://localhost/scripts/code.js => d:/app/scripts/code.js
  * file:///d:/scripts/code.js => d:/scripts/code.js
  */
-export function webkitUrlToClientPath(cwd: string, url: string): string {
+export function webkitUrlToClientPath(webRoot: string, url: string): string {
     if (!url) {
         return '';
     }
@@ -230,11 +230,11 @@ export function webkitUrlToClientPath(cwd: string, url: string): string {
     }
 
     // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
-    if (!cwd) {
+    if (!webRoot) {
         return '';
     }
 
-    // Search the filesystem under our cwd for the file that best matches the given url
+    // Search the filesystem under the webRoot for the file that best matches the given url
     let pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
     if (!pathName || pathName === '/') {
         return '';
@@ -245,7 +245,7 @@ export function webkitUrlToClientPath(cwd: string, url: string): string {
     pathName = pathName.replace(/\//g, path.sep);
     const pathParts = pathName.split(path.sep);
     while (pathParts.length > 0) {
-        const clientPath = path.join(cwd, pathParts.join(path.sep));
+        const clientPath = path.join(webRoot, pathParts.join(path.sep));
         if (existsSync(clientPath)) {
             return canonicalizeUrl(clientPath);
         }

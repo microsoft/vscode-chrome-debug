@@ -31,6 +31,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _committedBreakpointsByUrl: Map<string, WebKitProtocol.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
     private _exceptionValueObject: WebKitProtocol.Runtime.RemoteObject;
+    private _expectingResumedEvent: boolean;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
@@ -89,8 +90,8 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         // Also start with extra stuff disabled
         chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args.runtimeArguments) {
-            chromeArgs.push(...args.runtimeArguments);
+        if (args.runtimeArgs) {
+            chromeArgs.push(...args.runtimeArgs);
         }
 
         let launchUrl: string;
@@ -98,11 +99,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
         } else if (args.url) {
             launchUrl = args.url;
-        } else {
-            return utils.errP('The launch config must specify either the "file" or "url" field.');
         }
 
-        chromeArgs.push(launchUrl);
+        if (launchUrl) {
+            chromeArgs.push(launchUrl);
+        }
+
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromePath, chromeArgs);
         this._chromeProc.on('error', (err) => {
@@ -114,10 +116,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
-        if (args.address !== 'localhost' && args.address !== '127.0.0.1') {
-            return utils.errP('Remote debugging is not supported');
-        }
-
         if (args.port == null) {
             return utils.errP('The "port" field is required in the attach config.');
         }
@@ -194,6 +192,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     private onDebuggerPaused(notification: WebKitProtocol.Debugger.PausedParams): void {
+
         this._overlayHelper.doAndCancel(() => this._webKitConnection.page_setOverlayMessage(WebKitDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
@@ -232,9 +231,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._overlayHelper.wait(() => this._webKitConnection.page_clearOverlayMessage());
         this._currentStack = null;
 
-        // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
-        let resumedEvent = new Event('continued', { threadId: WebKitDebugAdapter.THREAD_ID });
-        this.fireEvent(resumedEvent);
+        if (!this._expectingResumedEvent) {
+            // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
+            let resumedEvent = new Event('continued', { threadId: WebKitDebugAdapter.THREAD_ID });
+            this.fireEvent(resumedEvent);
+        } else {
+            this._expectingResumedEvent = false;
+        }
     }
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
@@ -375,21 +378,25 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public continue(): Promise<void> {
+        this._expectingResumedEvent = true;
         return this._webKitConnection.debugger_resume()
             .then(() => { });
     }
 
     public next(): Promise<void> {
+        this._expectingResumedEvent = true;
         return this._webKitConnection.debugger_stepOver()
             .then(() => { });
     }
 
     public stepIn(): Promise<void> {
+        this._expectingResumedEvent = true;
         return this._webKitConnection.debugger_stepIn()
             .then(() => { });
     }
 
     public stepOut(): Promise<void> {
+        this._expectingResumedEvent = true;
         return this._webKitConnection.debugger_stepOut()
             .then(() => { });
     }

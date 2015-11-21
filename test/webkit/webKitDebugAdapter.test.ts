@@ -240,7 +240,7 @@ suite('WebKitDebugAdapter', () => {
                 platform: () => 'win32'
             });
             const wkda = instantiateWKDA();
-            return wkda.launch({ file: 'a.js', runtimeArguments: ['abc', 'def'], cwd: 'c:/' }).then(() => {
+            return wkda.launch({ file: 'a.js', runtimeArgs: ['abc', 'def'], cwd: 'c:/' }).then(() => {
                 assert(spawnCalled);
             });
         });
@@ -294,7 +294,7 @@ suite('WebKitDebugAdapter', () => {
 });
 
 function attach(wkda: _WebKitDebugAdapter): Promise<void> {
-    return wkda.attach({ address: '127.0.0.1', port: 9222, cwd: 'c:/' });
+    return wkda.attach({ port: 9222, cwd: 'c:/' });
 }
 
 class DefaultMockWebKitConnection {
