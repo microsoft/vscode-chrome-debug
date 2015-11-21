@@ -17,7 +17,6 @@ interface IPendingBreakpoint {
  */
 export class SourceMapTransformer implements IDebugTransformer {
     private _sourceMaps: ISourceMaps;
-    private _generatedCodeDirectory: string;
     private _requestSeqToSetBreakpointsArgs: Map<number, DebugProtocol.SetBreakpointsArguments>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
@@ -33,7 +32,6 @@ export class SourceMapTransformer implements IDebugTransformer {
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
             this._sourceMaps = new SourceMaps(args.outDir);
-            this._generatedCodeDirectory = args.outDir;
             this._requestSeqToSetBreakpointsArgs = new Map<number, DebugProtocol.SetBreakpointsArguments>();
             this._allRuntimeScriptPaths = new Set<string>();
         }
