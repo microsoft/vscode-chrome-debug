@@ -245,7 +245,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
         this._scriptsById.set(script.scriptId, script);
-        this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
+
+        if (!script.isContentScript) {
+            this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
+        }
     }
 
     private onBreakpointResolved(params: WebKitProtocol.Debugger.BreakpointResolvedParams): void {

@@ -30,6 +30,7 @@ declare namespace WebKitProtocol {
             endColumn?: number;
             isInternalScript?: boolean;
             sourceMapURL?: string;
+            isContentScript?: boolean;
         }
 
         interface CallFrame {
