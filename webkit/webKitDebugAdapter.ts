@@ -23,7 +23,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
 
-    private _clientLinesStartAt1: boolean;
+    private _initArgs: DebugProtocol.InitializeRequestArguments;
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
@@ -32,15 +32,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private _overlayHelper: utils.DebounceHelper;
     private _exceptionValueObject: WebKitProtocol.Runtime.RemoteObject;
     private _expectingResumedEvent: boolean;
+    private _scriptsById: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>;
+    private _setBreakpointsRequestQ: Promise<any>;
 
     private _chromeProc: ChildProcess;
     private _webKitConnection: WebKitConnection;
     private _eventHandler: (event: DebugProtocol.Event) => void;
 
-    // Scripts
-    private _scriptsById: Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>;
-
-    private _setBreakpointsRequestQ: Promise<any>;
 
     public constructor() {
         this._variableHandles = new Handles<IScopeVarHandle>();
@@ -70,13 +68,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): void {
-        this._clientLinesStartAt1 = args.linesStartAt1;
+        // Cache to log if diagnostic logging is enabled later
+        this._initArgs = args;
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        if (args.diagnosticLogging) {
-            Logger.enableDiagnosticLogging();
-        }
+        this.initDiagnosticLogging('launch', args);
 
         // Check exists?
         const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -120,11 +117,17 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return utils.errP('The "port" field is required in the attach config.');
         }
 
-        if (args.diagnosticLogging) {
-            Logger.enableDiagnosticLogging();
-        }
+        this.initDiagnosticLogging('attach', args);
 
         return this._attach(args.port);
+    }
+
+    private initDiagnosticLogging(name: string, args: IAttachRequestArgs|ILaunchRequestArgs): void {
+        if (args.diagnosticLogging) {
+            Logger.enableDiagnosticLogging();
+            utils.Logger.log(`initialize(${this._initArgs})`);
+            utils.Logger.log(`${name}(${JSON.stringify(args)})`);
+        }
     }
 
     private _attach(port: number, url?: string): Promise<void> {
