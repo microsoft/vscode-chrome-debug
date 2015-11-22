@@ -5,12 +5,13 @@
         {
             "name": "test chrome",
             "type": "chrome",
-            "file": "out/client/index.html",
+            // "file": "out/client/index.html",
             "request": "launch",
-            //"url": "http://localhost:8080/out/client/index.html",
+            "url": "http://localhost:8080/client/index.html",
             "sourceMaps": true,
             "outDir": "out",
-            "diagnosticLogging": true
+            "diagnosticLogging": true,
+            "webRoot": "out"
         },
         {
             "name": "attach to chrome",

@@ -154,7 +154,7 @@ export class Logger {
             this._logger._diagnosticLogCallback = logCallback;
 
             if (isServer) {
-                Logger.logDiagnosticInfo();
+                Logger.logVersionInfo();
             }
         }
     }
@@ -163,12 +163,12 @@ export class Logger {
         if (this._logger) {
             this._logger._diagnosticLoggingEnabled = true;
             if (!this._logger._isServer) {
-                Logger.logDiagnosticInfo();
+                Logger.logVersionInfo();
             }
         }
     }
 
-    public static logDiagnosticInfo(): void {
+    public static logVersionInfo(): void {
         Logger.log(`OS: ${os.platform()} ${os.arch()}`);
         Logger.log('Node version: ' + process.version);
         Logger.log('Adapter version: ' + require('../../package.json').version);

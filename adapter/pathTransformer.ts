@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as utils from '../webkit/utilities';
+import * as path from 'path';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -20,11 +21,22 @@ export class PathTransformer implements IDebugTransformer {
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
-        this._webRoot = args.webRoot || args.cwd;
+        this.initWebRoot(args);
     }
 
     public attach(args: IAttachRequestArgs): void {
-        this._webRoot = args.webRoot || args.cwd;
+        this.initWebRoot(args);
+    }
+
+    private initWebRoot(args: ILaunchRequestArgs|IAttachRequestArgs): void {
+        if (args.webRoot) {
+            this._webRoot = args.webRoot
+            if (!path.isAbsolute(this._webRoot)) {
+                this._webRoot = path.resolve(args.cwd, this._webRoot);
+            }
+        } else {
+            this._webRoot = args.cwd;
+        }
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
