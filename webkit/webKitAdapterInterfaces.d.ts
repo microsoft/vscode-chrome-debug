@@ -7,7 +7,6 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     url?: string;
     stopOnEntry?: boolean;
     sourceMaps?: boolean;
-    outDir?: string;
     port?: number;
     diagnosticLogging?: boolean;
 }
@@ -17,7 +16,6 @@ interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     webRoot?: string;
     port: number;
     sourceMaps?: boolean;
-    outDir?: string;
     diagnosticLogging?: boolean;
 }
 

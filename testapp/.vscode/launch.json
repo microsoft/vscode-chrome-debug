@@ -9,7 +9,6 @@
             "request": "launch",
             "url": "http://localhost:8080/client/index.html",
             "sourceMaps": true,
-            "outDir": "out",
             "diagnosticLogging": true,
             "webRoot": "out"
         },

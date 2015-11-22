@@ -113,14 +113,6 @@
                 "description": "Use JavaScript source maps (if they exist).",
                 "default": true
               },
-              "outDir": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "If source maps are enabled, the generated code is expected in this directory. If not specified, the generated code is expected in the same directory as its source.",
-                "default": null
-              },
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
@@ -142,14 +134,6 @@
                 "type": "boolean",
                 "description": "Use JavaScript source maps (if they exist).",
                 "default": true
-              },
-              "outDir": {
-                "type": [
-                  "string",
-                  "null"
-                ],
-                "description": "If source maps are enabled, the generated code is expected in this directory. If not specified, the generated code is expected in the same directory as its source.",
-                "default": null
               },
               "diagnosticLogging": {
                 "type": "boolean",

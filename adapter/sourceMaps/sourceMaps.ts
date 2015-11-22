@@ -43,11 +43,9 @@ export class SourceMaps implements ISourceMaps {
 
 	private _generatedToSourceMaps:  { [id: string] : SourceMap; } = {};		// generated -> source file
 	private _sourceToGeneratedMaps:  { [id: string] : SourceMap; } = {};		// source file -> generated
-	private _generatedCodeDirectory: string;
 
 
-	public constructor(generatedCodeDirectory: string) {
-		this._generatedCodeDirectory = generatedCodeDirectory;
+	public constructor() {
 	}
 
 	public MapPathFromSource(pathToSource: string): string {
@@ -100,50 +98,8 @@ export class SourceMaps implements ISourceMaps {
 					return m;
 				}
 			}
-			// not found in existing maps
 
-			// use heuristic: change extension to ".js" and find a map for it
-			let pathToGenerated = pathToSource;
-			const pos = pathToSource.lastIndexOf('.');
-			if (pos >= 0) {
-				pathToGenerated = pathToSource.substr(0, pos) + '.js';
-			}
-
-			let map = null;
-
-			// first look into the generated code directory
-			if (this._generatedCodeDirectory) {
-				let rest = PathUtils.makeRelative(this._generatedCodeDirectory, pathToGenerated);
-				while (rest) {
-					const path = Path.join(this._generatedCodeDirectory, rest);
-					map = this._findGeneratedToSourceMapping(path);
-					if (map) {
-						break;
-					}
-					rest = PathUtils.removeFirstSegment(rest)
-				}
-			}
-
-			// VSCode plugin host hack:
-			// we know that the plugin has an "out" directory next to the "src" directory
-			if (map === null) {
-				let srcSegment = Path.sep + 'src' + Path.sep;
-				if (pathToGenerated.indexOf(srcSegment) >= 0) {
-					let outSegment = Path.sep + 'out' + Path.sep;
-					pathToGenerated = pathToGenerated.replace(srcSegment, outSegment);
-					map = this._findGeneratedToSourceMapping(pathToGenerated);
-				}
-			}
-
-			// if not found look in the same directory as the source
-			if (map === null && pathToGenerated !== pathToSource) {
-				map = this._findGeneratedToSourceMapping(pathToGenerated);
-			}
-
-			if (map) {
-				this._sourceToGeneratedMaps[pathToSource] = map;
-				return map;
-			}
+            // not found in existing maps
 		}
 		return null;
 	}
