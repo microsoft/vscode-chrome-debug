@@ -246,7 +246,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private onScriptParsed(script: WebKitProtocol.Debugger.Script): void {
         this._scriptsById.set(script.scriptId, script);
 
-        if (!script.isContentScript) {
+        if (!this.isExtensionScript(script)) {
             this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
         }
     }
@@ -425,10 +425,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 const line = callFrame.location.lineNumber;
                 const column = callFrame.location.columnNumber;
 
-                // When the script has a url, send the name and path fields.
-                // Otherwise, send the name and sourceReference fields
+                // When the script has a url and isn't a content script, send the name and path fields.
+                // Otherwise, send the name and sourceReference fields.
                 const source: DebugProtocol.Source =
-                    script.url ?
+                    script.url && !this.isExtensionScript(script) ?
                         {
                             name: path.basename(script.url),
                             path: script.url,
@@ -571,6 +571,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         return result;
+    }
+
+    private isExtensionScript(script: WebKitProtocol.Debugger.Script): boolean {
+        return script.isContentScript || !script.url || script.url.startsWith('extensions::') || script.url.startsWith('chrome-extension://');
     }
 }
 
