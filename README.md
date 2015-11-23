@@ -25,8 +25,7 @@ An example `launch.json` config. You must specify either `file` or `url` to laun
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "sourceMaps": true,
-            "outDir": "out"
+            "sourceMaps": true
           }
     ]
 }
