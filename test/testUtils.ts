@@ -55,7 +55,7 @@ export function getSinonMock(mockBase = {}): Sinon.SinonMock {
     return m;
 }
 
-export function getRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
+export function createRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
     const mock = getSinonMock(mockInstance);
     const mockContainer = {};
     if (asConstructor) {

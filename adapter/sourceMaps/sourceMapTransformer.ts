@@ -126,19 +126,20 @@ export class SourceMapTransformer implements IDebugTransformer {
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(event.body.scriptUrl);
 
-            const mapped = this._sourceMaps.MapToSource(event.body.scriptUrl, 0, 0);
-            if (mapped) {
-                event.body.scriptUrl = mapped.path;
-            }
+            const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
+            if (sources) {
+                utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources)}`);
+                sources.forEach(sourcePath => {
+                    // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
+                    if (this._pendingBreakpointsByPath.has(sourcePath)) {
+                        utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${sourcePath}`);
+                        const pendingBreakpoint = this._pendingBreakpointsByPath.get(sourcePath);
+                        this._pendingBreakpointsByPath.delete(sourcePath);
 
-            // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
-            if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
-                utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has pending breakpoints`);
-                const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
-                this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
-
-                this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
-                    .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+                        this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
+                            .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+                    }
+                });
             }
         }
     }

@@ -39,7 +39,7 @@ suite('WebKitDebugAdapter', () => {
         mockery.registerMock('net', {});
         mockery.registerMock('fs', {});
 
-        mockWebKitConnection = testUtils.getRegisteredSinonMock('./webKitConnection', new DefaultMockWebKitConnection(), 'WebKitConnection');
+        mockWebKitConnection = testUtils.createRegisteredSinonMock('./webKitConnection', new DefaultMockWebKitConnection(), 'WebKitConnection');
     });
 
     teardown(() => {

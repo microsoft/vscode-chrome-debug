@@ -32,6 +32,11 @@ export interface ISourceMaps {
 	 * line and column are 0 based.
 	 */
 	MapToSource(path: string, line: number, column: number): MappingResult;
+
+    /*
+     * Get all the sources that map to this generated file
+     */
+    AllMappedSources(path: string): string[];
 }
 
 
@@ -80,6 +85,11 @@ export class SourceMaps implements ISourceMaps {
 		}
 		return null;
 	}
+
+    public AllMappedSources(pathToGenerated: string): string[] {
+        const map = this._findGeneratedToSourceMapping(pathToGenerated);
+		return map ? map.sources : null;
+    }
 
 	//---- private -----------------------------------------------------------------------
 
@@ -227,6 +237,13 @@ class SourceMap {
 		this._smc = new SourceMapConsumer(sm);
 	}
 
+    /*
+     * Return all mapped sources as absolute paths
+     */
+    public get sources(): string[] {
+        return this._sources.map(sourcePath => Path.join(this._sourceRoot, sourcePath));
+    }
+
 	/*
 	 * the generated file of this source map.
 	 */
@@ -250,7 +267,7 @@ class SourceMap {
 	/*
 	 * finds the nearest source location for the given location in the generated file.
 	 */
-	public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): SourceMap.MappedPosition {
+	public originalPositionFor(line: number, column: number, bias: Bias = Bias.GREATEST_LOWER_BOUND): SourceMap.MappedPosition {
 
 		const mp = this._smc.originalPositionFor(<any>{
 			line: line,
@@ -269,7 +286,7 @@ class SourceMap {
 	/*
 	 * finds the nearest location in the generated file for the given source location.
 	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): SourceMap.Position {
+	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
 
 		// make input path relative to sourceRoot
 		if (this._sourceRoot) {

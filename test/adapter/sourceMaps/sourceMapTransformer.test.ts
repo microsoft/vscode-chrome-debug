@@ -78,21 +78,22 @@ suite('SourceMapTransformer', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
-            const mock = testUtils.getRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
             mock.expects('MapPathFromSource')
                 .once()
                 .withArgs(AUTHORED_PATH).returns(null);
             mock.expects('MapPathFromSource')
                 .once()
                 .withArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
+            mock.expects('AllMappedSources')
+                .once()
+                .withArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
             args.lines.forEach((line, i) => {
                 mock.expects('MapFromSource')
                     .once()
                     .withArgs(AUTHORED_PATH, line, 0)
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
-            mock.expects('MapToSource')
-                .withArgs(RUNTIME_PATH, 0, 0).returns({ path: AUTHORED_PATH });
 
             const transformer = getTransformer(true, true);
             const setBreakpointsP = transformer.setBreakpoints(args, 0).then(() => {
@@ -175,12 +176,6 @@ suite('SourceMapTransformer', () => {
             assert.deepEqual(response, expected);
         });
     });
-
-    suite('scriptParsed()', () => {
-        test('calls MapToSource', () => {
-            getTransformer().scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
-        });
-    });
 });
 
 class MockSourceMaps implements ISourceMaps {
@@ -215,5 +210,9 @@ class MockSourceMaps implements ISourceMaps {
 
         const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
         return { path: AUTHORED_PATH, line: mappedLine, column: 0 };
+    }
+
+    public AllMappedSources(pathToGenerated: string): string[] {
+        return [AUTHORED_PATH];
     }
 }
