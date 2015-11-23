@@ -9,7 +9,7 @@ The extension operates in two modes - it can launch an instance of Chrome naviga
 To use this extension, you must first open the folder containing the project you want to work on.
 
 ### Launch
-An example `launch.json` config. You must specify either `file` or `url` to launch Chrome against a local file or a url.
+Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). If `webRoot` isn't set, it defaults to the workspace.
 ```
 {
     "version": "0.1.0",
@@ -19,14 +19,15 @@ An example `launch.json` config. You must specify either `file` or `url` to laun
             "type": "chrome",
             "request": "launch",
             "file": "index.html"
-          },
-          {
+        },
+        {
             "name": "Launch localhost with sourcemaps",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
+            "webRoot": "./app/files",
             "sourceMaps": true
-          }
+        }
     ]
 }
 ```
@@ -56,6 +57,13 @@ An example `launch.json` config.
             "type": "chrome",
             "request": "attach",
             "port": 9222
+        },
+        {
+            "name": "Attach to url with files served from ./out",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9222,
+            "webRoot": "out"
         }
     ]
 }
