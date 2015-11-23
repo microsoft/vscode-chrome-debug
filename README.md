@@ -77,6 +77,10 @@ You can also theoretically attach to other targets that support the same Chrome 
 * runtimeExecutable: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * runtimeArgs: Optional arguments passed to the runtime executable
 
+
+### Note on source maps
+If you're using `"sourceMaps": true` and debugging a URL, if `sourceRoot` is set in your generated source map, it must be an absolute path. See [#47](https://github.com/Microsoft/vscode-chrome-debug/issues/47).
+
 ## Usage
 When your launch config is set up, you can debug your project! Pick a launch config from the dropdown on the Debug pane in Code. Press the play button or F5 to start.
 
@@ -94,6 +98,8 @@ When your launch config is set up, you can debug your project! Pick a launch con
 
 ## Troubleshooting
 General things to try if you're having issues:
+* Ensure `webRoot` is set correctly if needed
+* If sourcemaps are enabled, ensure `sourceRoot` is an absolute path
 * Close other running instances of Chrome
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
