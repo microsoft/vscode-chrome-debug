@@ -125,7 +125,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private initDiagnosticLogging(name: string, args: IAttachRequestArgs|ILaunchRequestArgs): void {
         if (args.diagnosticLogging) {
             Logger.enableDiagnosticLogging();
-            utils.Logger.log(`initialize(${this._initArgs})`);
+            utils.Logger.log(`initialize(${JSON.stringify(this._initArgs)})`);
             utils.Logger.log(`${name}(${JSON.stringify(args)})`);
         }
     }
