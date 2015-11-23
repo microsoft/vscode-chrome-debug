@@ -18,8 +18,8 @@
             "port": 9222,
             "request": "attach",
             "sourceMaps": true,
-            "outDir": "out",
-            "diagnosticLogging": true
+            "diagnosticLogging": true,
+            "webRoot": "./out"
         }
     ]
 }
