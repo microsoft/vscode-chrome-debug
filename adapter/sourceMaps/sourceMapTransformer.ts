@@ -116,7 +116,7 @@ export class SourceMapTransformer implements IDebugTransformer {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped) {
-                    stackFrame.source.path = mapped.path;
+                    stackFrame.source.path = utils.canonicalizeUrl(mapped.path);
                     stackFrame.source.name = path.basename(mapped.path);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
