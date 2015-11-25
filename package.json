@@ -80,7 +80,7 @@
               "url": {
                 "type": "string",
                 "description": "A url to open in the browser",
-                "default": "mysite.com/index.html"
+                "default": "http://mysite.com/index.html"
               },
               "cwd": {
                 "type": "string",
