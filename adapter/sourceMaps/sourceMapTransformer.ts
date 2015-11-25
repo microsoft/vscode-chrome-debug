@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as path from 'path';
+
 import {ISourceMaps, SourceMaps} from './sourceMaps';
 import * as utils from '../../webkit/utilities';
 
@@ -115,6 +117,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped) {
                     stackFrame.source.path = mapped.path;
+                    stackFrame.source.name = path.basename(mapped.path);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
                 }
@@ -125,8 +128,12 @@ export class SourceMapTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
 
+            if (!event.body.sourceMapURL) {
+                return;
+            }
+
+            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
             const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
             if (sources) {
                 utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources)}`);

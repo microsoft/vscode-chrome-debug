@@ -103,7 +103,7 @@ suite('SourceMapTransformer', () => {
                 mock.verify();
             });
 
-            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH }));
+            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH, sourceMapURL: 'script.js.map' }));
             return setBreakpointsP;
         });
 
@@ -157,7 +157,7 @@ suite('SourceMapTransformer', () => {
                     name: 'line ' + i,
                     line,
                     column: 0,
-                    source: { path }
+                    source: { path, name: path }
                 }))
             };
         }

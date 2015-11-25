@@ -7,6 +7,7 @@ import * as URL from 'url';
 import * as FS from 'fs';
 import {SourceMapConsumer} from 'source-map';
 import * as PathUtils from './pathUtilities';
+import * as utils from '../../webkit/utilities';
 import {Logger} from '../../webkit/utilities';
 
 
@@ -225,13 +226,12 @@ enum Bias {
 }
 
 class SourceMap {
-
 	private _generatedFile: string;		// the generated file for this sourcemap
 	private _sources: string[];			// the sources of generated file (relative to sourceRoot)
 	private _absSourceRoot: string;		// the common prefix for the source (can be a URL)
 	private _smc: SourceMapConsumer;	// the source map
     private _webRoot: string;           // if the sourceRoot starts with /, it's resolved from this absolute path
-
+    private _sourcesAreURLs: boolean;   // if sources are specified with file:///
 
 	public constructor(generatedPath: string, json: string, webRoot: string) {
         Logger.log(`SourceMap: creating SM for ${generatedPath}`)
@@ -258,10 +258,8 @@ class SourceMap {
             Logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${this._absSourceRoot}`);
 		}
 
-        // Strip trailing /
-        if (this._absSourceRoot[this._absSourceRoot.length - 1] === Path.sep) {
-            this._absSourceRoot = this._absSourceRoot.substr(0, this._absSourceRoot.length - 1);
-        }
+        this._absSourceRoot = utils.stripTrailingSlash(this._absSourceRoot);
+        this._absSourceRoot = utils.fixDriveLetterAndSlashes(this._absSourceRoot);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
@@ -270,10 +268,17 @@ class SourceMap {
 
         // rewrite sources as absolute paths
         this._sources = sm.sources.map(sourcePath => {
+            if (URL.parse(sourcePath).protocol === 'file:') {
+                // If one source is a URL, assume all are
+                this._sourcesAreURLs = true;
+            }
+
             sourcePath = PathUtils.canonicalizeUrl(sourcePath);
-            return Path.isAbsolute(sourcePath) ?
-                sourcePath :
-                Path.resolve(this._absSourceRoot, sourcePath);
+            if (Path.isAbsolute(sourcePath)) {
+                return utils.fixDriveLetterAndSlashes(sourcePath);
+            } else {
+                return Path.resolve(this._absSourceRoot, sourcePath);
+            }
         });
 	}
 
@@ -320,16 +325,19 @@ class SourceMap {
 	 * finds the nearest location in the generated file for the given source location.
 	 */
 	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
-
-		// make input path relative to sourceRoot
-		if (this._absSourceRoot) {
+        if (this._sourcesAreURLs) {
+            // Force drive letter to uppercase, which seems to be more common outside of VS Code
+            src = 'file:///' + utils.upperCaseDriveLetter(src);
+        } else if (this._absSourceRoot) {
+            // make input path relative to sourceRoot
 			src = Path.relative(this._absSourceRoot, src);
+
+            // source-maps use forward slashes unless the source is specified with file:///
+            if (process.platform === 'win32') {
+                src = src.replace(/\\/g, '/');
+            }
 		}
 
-		// source-maps always use forward slashes
-		if (process.platform === 'win32') {
-			src = src.replace(/\\/g, '/');
-		}
 
 		const needle = {
 			source: src,

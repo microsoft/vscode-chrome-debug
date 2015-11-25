@@ -253,7 +253,7 @@ export function webkitUrlToClientPath(webRoot: string, url: string): string {
 }
 
 /**
- * Modify a url either from the client or the webkit target to a platform-independent format for comparing.
+ * Modify a url either from the client or the webkit target to a common format for comparing.
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
@@ -263,25 +263,47 @@ export function webkitUrlToClientPath(webRoot: string, url: string): string {
  */
 export function canonicalizeUrl(url: string): string {
     url = url
-        .replace('file:///', '')
-        .replace(/\/$/, ''); // strip trailing slash
+        .replace('file:///', '');
+    url = stripTrailingSlash(url);
 
-    if (getPlatform() === Platform.Windows) {
-        // If the url starts with a drive letter
-        if (url.match(/^[A-Za-z]:/)) {
-            // VS Code uses a lowercase drive letter
-            url = url[0].toLowerCase() + url.substr(1);
-
-            // Replace any / with \\
-            url = url.replace(/\//g, path.sep);
-        }
-    } else if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+    url = fixDriveLetterAndSlashes(url);
+    if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
         // Ensure osx path starts with /, it can be removed when file:/// was stripped.
         // Don't add if the url still has a protocol
         url = '/' + url;
     }
 
     return url;
+}
+
+export function fixDriveLetterAndSlashes(aPath: string): string {
+    if (getPlatform() === Platform.Windows && aPath.match(/^[A-Za-z]:/)) {
+         // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
+        aPath = aPath[0].toLowerCase() + aPath.substr(1);
+        aPath = aPath.replace(/\//g, path.sep);
+    }
+
+    return aPath;
+}
+
+/**
+ * If this is Windows and the path starts with a drive letter, ensure uppercase.
+ */
+export function upperCaseDriveLetter(aPath: string): string {
+    if (getPlatform() === Platform.Windows && aPath.match(/^[a-z]:/)) {
+        aPath = aPath[0].toUpperCase() + aPath.substr(1);
+    }
+
+    return aPath;
+}
+
+/**
+ * Remove a slash of any flavor from the end of the path
+ */
+export function stripTrailingSlash(aPath: string): string {
+    return aPath
+        .replace(/\/$/, '')
+        .replace(/\\$/, '');
 }
 
 export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef: string } {
