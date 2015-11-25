@@ -88,6 +88,8 @@ suite('SourceMapTransformer', () => {
             mock.expects('AllMappedSources')
                 .once()
                 .withArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
+            mock.expects('ProcessNewSourceMap')
+                .once();
             args.lines.forEach((line, i) => {
                 mock.expects('MapFromSource')
                     .once()
@@ -214,5 +216,8 @@ class MockSourceMaps implements ISourceMaps {
 
     public AllMappedSources(pathToGenerated: string): string[] {
         return [AUTHORED_PATH];
+    }
+
+    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): void {
     }
 }

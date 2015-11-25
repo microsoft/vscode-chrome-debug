@@ -3,9 +3,11 @@
  *--------------------------------------------------------*/
 
 import * as Path from 'path';
+import * as URL from 'url';
 import * as FS from 'fs';
 import {SourceMapConsumer} from 'source-map';
 import * as PathUtils from './pathUtilities';
+import {Logger} from '../../webkit/utilities';
 
 
 export interface MappingResult {
@@ -37,6 +39,11 @@ export interface ISourceMaps {
      * Get all the sources that map to this generated file
      */
     AllMappedSources(path: string): string[];
+
+    /**
+     * With a known sourceMapURL for a generated script, process create the SourceMap and cache for later
+     */
+    ProcessNewSourceMap(path: string, sourceMapURL: string): void;
 }
 
 
@@ -49,8 +56,11 @@ export class SourceMaps implements ISourceMaps {
 	private _generatedToSourceMaps:  { [id: string] : SourceMap; } = {};		// generated -> source file
 	private _sourceToGeneratedMaps:  { [id: string] : SourceMap; } = {};		// source file -> generated
 
+    /* Path to resolve / paths against */
+    private _webRoot: string;
 
-	public constructor() {
+	public constructor(webRoot: string) {
+        this._webRoot = webRoot;
 	}
 
 	public MapPathFromSource(pathToSource: string): string {
@@ -91,6 +101,10 @@ export class SourceMaps implements ISourceMaps {
 		return map ? map.sources : null;
     }
 
+    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): void {
+        this._findGeneratedToSourceMapping(pathToGenerated, sourceMapURL);
+    }
+
 	//---- private -----------------------------------------------------------------------
 
 	private _findSourceToGeneratedMapping(pathToSource: string): SourceMap {
@@ -114,7 +128,7 @@ export class SourceMaps implements ISourceMaps {
 		return null;
 	}
 
-	private _findGeneratedToSourceMapping(pathToGenerated: string): SourceMap {
+	private _findGeneratedToSourceMapping(pathToGenerated: string, map_path?: string): SourceMap {
 
 		if (pathToGenerated) {
 
@@ -124,31 +138,33 @@ export class SourceMaps implements ISourceMaps {
 
 			let map: SourceMap = null;
 
-			// try to find a source map URL in the generated source
-			let map_path: string = null;
-			const uri = this._findSourceMapInGeneratedSource(pathToGenerated);
-			if (uri) {
-				if (uri.indexOf("data:application/json;base64,") >= 0) {
-					const pos = uri.indexOf(',');
-					if (pos > 0) {
-						const data = uri.substr(pos+1);
-						try {
-							const buffer = new Buffer(data, 'base64');
-							const json = buffer.toString();
-							if (json) {
-								map = new SourceMap(pathToGenerated, json);
-								this._generatedToSourceMaps[pathToGenerated] = map;
-								return map;
-							}
-						}
-						catch (e) {
-							console.error(`FindGeneratedToSourceMapping: exception while processing data url (${e})`);
-						}
-					}
-				} else {
-					map_path = uri;
-				}
-			}
+            if (!map_path) {
+                // try to find a source map URL in the generated source
+                map_path = this._findSourceMapInGeneratedSource(pathToGenerated);
+            }
+
+            if (map_path) {
+                if (map_path.indexOf("data:application/json;base64,") >= 0) {
+                    const pos = map_path.indexOf(',');
+                    if (pos > 0) {
+                        const data = map_path.substr(pos+1);
+                        try {
+                            const buffer = new Buffer(data, 'base64');
+                            const json = buffer.toString();
+                            if (json) {
+                                map = new SourceMap(pathToGenerated, json, this._webRoot);
+                                this._generatedToSourceMaps[pathToGenerated] = map;
+                                return map;
+                            }
+                        }
+                        catch (e) {
+                            Logger.log(`FindGeneratedToSourceMapping: exception while processing data url (${e})`);
+                        }
+                    }
+                } else {
+                    map_path = map_path;
+                }
+            }
 
 			// if path is relative make it absolute
             if (map_path && !Path.isAbsolute(map_path)) {
@@ -174,7 +190,7 @@ export class SourceMaps implements ISourceMaps {
 	private _createSourceMap(map_path: string, path: string): SourceMap {
 		try {
 			const contents = FS.readFileSync(Path.join(map_path)).toString();
-			return new SourceMap(path, contents);
+			return new SourceMap(path, contents, this._webRoot);
 		}
 		catch (e) {
 			console.error(`CreateSourceMap: {e}`);
@@ -212,36 +228,55 @@ class SourceMap {
 
 	private _generatedFile: string;		// the generated file for this sourcemap
 	private _sources: string[];			// the sources of generated file (relative to sourceRoot)
-	private _sourceRoot: string;		// the common prefix for the source (can be a URL)
+	private _absSourceRoot: string;		// the common prefix for the source (can be a URL)
 	private _smc: SourceMapConsumer;	// the source map
+    private _webRoot: string;           // if the sourceRoot starts with /, it's resolved from this absolute path
 
 
-	public constructor(generatedPath: string, json: string) {
-
+	public constructor(generatedPath: string, json: string, webRoot: string) {
+        Logger.log(`SourceMap: creating SM for ${generatedPath}`)
 		this._generatedFile = generatedPath;
+        this._webRoot = webRoot;
 
 		const sm = JSON.parse(json);
-		this._sources = sm.sources;
 		let sr = <string> sm.sourceRoot;
 		if (sr) {
-			sr = PathUtils.canonicalizeUrl(sr);
-			this._sourceRoot = PathUtils.makePathAbsolute(generatedPath, sr);
+            if (URL.parse(sr).protocol === 'file:') {
+                // sourceRoot points to a local path like "file:///c:/project/src"
+                this._absSourceRoot = PathUtils.canonicalizeUrl(sr);
+            } else if (Path.isAbsolute(sr)) {
+                // like "/src", would be like http://localhost/src, resolve to a local path under webRoot
+                this._absSourceRoot = Path.join(this._webRoot, sr);
+            } else {
+                // like "src" or "../src", relative to the script
+                this._absSourceRoot = PathUtils.makePathAbsolute(generatedPath, sr);
+            }
+
+            Logger.log(`SourceMap: resolved sourceRoot ${sr} -> ${this._absSourceRoot}`);
 		} else {
-			this._sourceRoot = Path.dirname(generatedPath);
+			this._absSourceRoot = Path.dirname(generatedPath);
+            Logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${this._absSourceRoot}`);
 		}
 
-		if (this._sourceRoot[this._sourceRoot.length-1] !== Path.sep) {
-			this._sourceRoot += Path.sep;
-		}
-
+        // Strip trailing /
+        this._absSourceRoot = this._absSourceRoot.replace(new RegExp(Path.sep + '$'), '');
+        sm.sourceRoot = 'file:///' + this._absSourceRoot;
 		this._smc = new SourceMapConsumer(sm);
+
+        // rewrite sources as absolute paths
+        this._sources = sm.sources.map(sourcePath => {
+            sourcePath = PathUtils.canonicalizeUrl(sourcePath);
+            return Path.isAbsolute(sourcePath) ?
+                sourcePath :
+                Path.resolve(this._absSourceRoot, sourcePath);
+        });
 	}
 
     /*
      * Return all mapped sources as absolute paths
      */
     public get sources(): string[] {
-        return this._sources.map(sourcePath => Path.join(this._sourceRoot, sourcePath));
+        return this._sources;
     }
 
 	/*
@@ -255,13 +290,7 @@ class SourceMap {
 	 * returns true if this source map originates from the given source.
 	 */
 	public doesOriginateFrom(absPath: string): boolean {
-		for (let name of this._sources) {
-			const p = Path.join(this._sourceRoot, name);
-			if (p === absPath) {
-				return true;
-			}
-		}
-		return false;
+		return this.sources.some(path => path === absPath);
 	}
 
 	/*
@@ -277,7 +306,6 @@ class SourceMap {
 
 		if (mp.source) {
 			mp.source = PathUtils.canonicalizeUrl(mp.source);
-			mp.source = PathUtils.makePathAbsolute(this._generatedFile, mp.source);
 		}
 
 		return mp;
@@ -289,8 +317,8 @@ class SourceMap {
 	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
 
 		// make input path relative to sourceRoot
-		if (this._sourceRoot) {
-			src = Path.relative(this._sourceRoot, src);
+		if (this._absSourceRoot) {
+			src = Path.relative(this._absSourceRoot, src);
 		}
 
 		// source-maps always use forward slashes

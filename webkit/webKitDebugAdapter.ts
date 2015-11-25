@@ -247,7 +247,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsById.set(script.scriptId, script);
 
         if (!this.isExtensionScript(script)) {
-            this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url }));
+            this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url, sourceMapURL: script.sourceMapURL }));
         }
     }
 

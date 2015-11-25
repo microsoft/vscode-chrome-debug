@@ -31,7 +31,7 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
-            this._sourceMaps = new SourceMaps();
+            this._sourceMaps = new SourceMaps(utils.getWebRoot(args));
             this._requestSeqToSetBreakpointsArgs = new Map<number, DebugProtocol.SetBreakpointsArguments>();
             this._allRuntimeScriptPaths = new Set<string>();
         }
@@ -125,6 +125,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
 
             const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
             if (sources) {

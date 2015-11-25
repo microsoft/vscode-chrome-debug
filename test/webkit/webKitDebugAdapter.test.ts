@@ -272,7 +272,7 @@ suite('WebKitDebugAdapter', () => {
                     url: 'file:///c:/page/script.js',
                     executionContextId: 2,
                     parameters: [
-                        {type: 'string', value: testLog }
+                        { type: 'string', value: testLog }
                     ]
                 }
             });
