@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <script src="test1.js"></script>
-    <script src="workerHost.js"></script>
+    <script src="out/client/test1.js"></script>
+    <script src="out/client/test2.js"></script>
     <script>
       function scriptTagFn() {
         var s = Symbol('a symbol');
@@ -18,13 +18,6 @@
       <input type="button" value="Test locals" onclick="locals()" />
       <input type="button" value="Eval" onclick="evalDebugger()" />
       <input type="button" value="Console APIs" onclick="consoleAPIs()" />
-      <input type="button" value="Load test2.js" onclick="loadScript()" />
-    </div>
-
-    <div>
-      <input type="button" value="Start webworker" onclick="startWorker()" />
-      <input type="button" value="Send webworker message" onclick="sendWorkerMessage()" />
-      <input type="button" value="Terminate webworker" onclick="killWorker()" />
     </div>
   </body>
 </html>

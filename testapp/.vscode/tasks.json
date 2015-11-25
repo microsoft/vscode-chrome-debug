@@ -4,7 +4,7 @@
     "isShellCommand": true,
     "tasks": [
        {
-            "taskName": "ts-watch",
+            "taskName": "watch",
             "args": [],
             "isBuildCommand": true,
             "isWatching": true,

@@ -1,5 +1,5 @@
 function locals() {
-    var arr1 = [1, 2];
+    var arr1 = [5, 2];
 
 
     arr1.forEach(x => {
@@ -35,18 +35,11 @@ newlines`;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
     xyz++;                     xyz++;
 
-    // This is expected to be undefined until the "load test2.js" button is clicked
     anotherFn();
     fn();
 
     throwCaught();
     throwUncaught();
-}
-
-function loadScript() {
-    var s = document.createElement('script');
-    s.src = 'test2.js';
-    document.head.appendChild(s);
 }
 
 function throwCaught() {
@@ -55,7 +48,7 @@ function throwCaught() {
 
 function throwUncaught() {
     var e = new Error('Uncaught exception');
-    e.code = 123;
+    (<any>e).code = 123;
     throw e;
 }
 
