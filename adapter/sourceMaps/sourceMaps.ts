@@ -259,7 +259,12 @@ class SourceMap {
 		}
 
         // Strip trailing /
-        this._absSourceRoot = this._absSourceRoot.replace(new RegExp(Path.sep + '$'), '');
+        if (this._absSourceRoot[this._absSourceRoot.length - 1] === Path.sep) {
+            this._absSourceRoot = this._absSourceRoot.substr(0, this._absSourceRoot.length - 1);
+        }
+
+        // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
+        // so the work above only has to be done once
         sm.sourceRoot = 'file:///' + this._absSourceRoot;
 		this._smc = new SourceMapConsumer(sm);
 
