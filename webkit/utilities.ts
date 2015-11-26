@@ -179,11 +179,7 @@ export class Logger {
     }
 
     private _log(msg: string, forceDiagnosticLogging: boolean): void {
-        if (this._isServer || this._diagnosticLoggingEnabled) {
-            const d = new Date();
-            const timeStamp = `[${pad0(d.getMinutes(), 2) }:${pad0(d.getSeconds(), 2) }.${pad0(d.getMilliseconds(), 3) }] `;
-            this._sendLog(timeStamp + msg);
-        } else if (forceDiagnosticLogging) {
+        if (this._isServer || this._diagnosticLoggingEnabled || forceDiagnosticLogging) {
             this._sendLog(msg);
         }
     }
@@ -195,15 +191,6 @@ export class Logger {
             this._diagnosticLogCallback(msg);
         }
     }
-}
-
-function pad0(n: number, numChars: number): string {
-    let s = '' + n;
-    while (s.length < numChars) {
-        s = '0' + s;
-    }
-
-    return s;
 }
 
 /**
