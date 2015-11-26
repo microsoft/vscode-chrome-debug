@@ -13,6 +13,10 @@ import * as _Utilities from '../../webkit/utilities';
 
 const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
+    function getUtilities(): typeof _Utilities {
+        return require(MODULE_UNDER_TEST);
+    }
+
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
@@ -44,7 +48,7 @@ suite('Utilities', () => {
     suite('getPlatform()/getBrowserPath()', () => {
         test('osx', () => {
             mockery.registerMock('os', { platform: () => 'darwin' });
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.getPlatform(), Utilities.Platform.OSX);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -58,7 +62,7 @@ suite('Utilities', () => {
             };
             mockery.registerMock('fs', { statSync });
 
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -66,7 +70,7 @@ suite('Utilities', () => {
         });
 
         test('winx86', () => {
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Windows);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -75,7 +79,7 @@ suite('Utilities', () => {
 
         test('linux', () => {
             mockery.registerMock('os', { platform: () => 'linux' });
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Linux);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -84,7 +88,7 @@ suite('Utilities', () => {
 
         test('freebsd (default to Linux for anything unknown)', () => {
             mockery.registerMock('os', { platform: () => 'freebsd' });
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.getPlatform(), Utilities.Platform.Linux);
             assert.equal(
                 Utilities.getBrowserPath(),
@@ -99,14 +103,14 @@ suite('Utilities', () => {
             };
             mockery.registerMock('fs', { statSync });
 
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.existsSync('exists'), true);
             assert.equal(Utilities.existsSync('thisfilenotfound'), false);
         });
     });
 
     suite('reversedArr()', () => {
-        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+        const Utilities = getUtilities();
 
         test('it does not modify the input array', () => {
             let arr = [2, 4, 6];
@@ -127,7 +131,7 @@ suite('Utilities', () => {
     });
 
     suite('promiseTimeout()', () => {
-        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+        const Utilities = getUtilities();
 
         test('when given a promise it fails if the promise never resolves', () => {
             return Utilities.promiseTimeout(new Promise(() => { }), 5).then(
@@ -154,7 +158,7 @@ suite('Utilities', () => {
     });
 
     suite('retryAsync()', () => {
-        const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+        const Utilities = getUtilities();
 
         test('when the function passes, it resolves with the value', () => {
             return Utilities.retryAsync(() => Promise.resolve('pass'), /*timeoutMs=*/5).then(
@@ -182,20 +186,16 @@ suite('Utilities', () => {
         const TEST_WEBKIT_HTTP_URL = 'http://site.com/page/scripts/a.js';
         const TEST_WEB_ROOT = 'c:\\site';
 
-        function Utilities(): typeof _Utilities {
-            return require(MODULE_UNDER_TEST);
-        }
-
         test('an empty string is returned for a missing url', () => {
-            assert.equal(Utilities().webkitUrlToClientPath('', ''), '');
+            assert.equal(getUtilities().webkitUrlToClientPath('', ''), '');
         });
 
         test('an empty string is returned when the webRoot is missing', () => {
-            assert.equal(Utilities().webkitUrlToClientPath(null, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(getUtilities().webkitUrlToClientPath(null, TEST_WEBKIT_HTTP_URL), '');
         });
 
         test('a url without a path returns an empty string', () => {
-            assert.equal(Utilities().webkitUrlToClientPath(TEST_WEB_ROOT, 'http://site.com'), '');
+            assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, 'http://site.com'), '');
         });
 
         test('it searches the disk for a path that exists, built from the url', () => {
@@ -203,7 +203,7 @@ suite('Utilities', () => {
                 if (path !== TEST_CLIENT_PATH) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            assert.equal(Utilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
+            assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
         });
 
         test(`returns an empty string when it can't resolve a url`, () => {
@@ -211,22 +211,22 @@ suite('Utilities', () => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
-            assert.equal(Utilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), '');
+            assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), '');
         });
 
         test('file:/// urls are returned canonicalized', () => {
-            assert.equal(Utilities().webkitUrlToClientPath('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
+            assert.equal(getUtilities().webkitUrlToClientPath('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
         });
 
         test('uri encodings are fixed', () => {
             const clientPath = 'c:\\project\\path with spaces\\script.js';
-            assert.equal(Utilities().webkitUrlToClientPath(TEST_WEB_ROOT, 'file:///' + encodeURI(clientPath)), clientPath);
+            assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, 'file:///' + encodeURI(clientPath)), clientPath);
         });
     });
 
     suite('canonicalizeUrl()', () => {
         function testCanUrl(inUrl: string, expectedUrl: string): void {
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
             assert.equal(Utilities.canonicalizeUrl(inUrl), expectedUrl);
         }
 
@@ -259,11 +259,19 @@ suite('Utilities', () => {
         });
     });
 
+    suite('fixDriveLetterAndSlashes', () => {
+        const Utilities = getUtilities();
+
+        test('does what it says', () => {
+            assert.equal(Utilities.fixDriveLetterAndSlashes('C:/path/stuff'), 'c:\\path\\stuff');
+        });
+    });
+
     suite('remoteObjectToValue()', () => {
         const TEST_OBJ_ID = 'objectId';
 
         function testRemoteObjectToValue(obj: any, value: string, variableHandleRef?: string, stringify?: boolean): void {
-            const Utilities: typeof _Utilities = require(MODULE_UNDER_TEST);
+            const Utilities = getUtilities();
 
             assert.deepEqual(Utilities.remoteObjectToValue(obj, stringify), { value, variableHandleRef });
         }
@@ -319,6 +327,21 @@ suite('Utilities', () => {
         test('null', () => {
             testRemoteObjectToValue({ type: 'object', subtype: 'null' }, 'null');
         });
+    });
 
+    suite('getWebRoot()', () => {
+        const Utilities = getUtilities();
+
+        test('takes absolute webRoot as is', () => {
+            assert.equal(Utilities.getWebRoot({ webRoot: 'c:\\project\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
+        });
+
+        test('resolves relative webroot against cwd', () => {
+            assert.equal(Utilities.getWebRoot({ webRoot: '..\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
+        });
+
+        test('uses cwd when webRoot is missing', () => {
+            assert.equal(Utilities.getWebRoot({ webRoot: '', cwd: 'c:\\project\\cwd' }), 'c:\\project\\cwd');
+        });
     });
 });

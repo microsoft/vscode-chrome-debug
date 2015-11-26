@@ -169,7 +169,7 @@ export class Logger {
     }
 
     public static logVersionInfo(): void {
-        Logger.log(`OS: ${os.platform()} ${os.arch()}`);
+        Logger.log(`OS: ${os.platform() } ${os.arch() }`);
         Logger.log('Node version: ' + process.version);
         Logger.log('Adapter version: ' + require('../../package.json').version);
     }
@@ -262,8 +262,7 @@ export function webkitUrlToClientPath(webRoot: string, url: string): string {
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(url: string): string {
-    url = url
-        .replace('file:///', '');
+    url = url.replace('file:///', '');
     url = stripTrailingSlash(url);
 
     url = fixDriveLetterAndSlashes(url);
@@ -276,9 +275,12 @@ export function canonicalizeUrl(url: string): string {
     return url;
 }
 
+/**
+ * Ensure lower case drive letter and \ on Windows
+ */
 export function fixDriveLetterAndSlashes(aPath: string): string {
     if (getPlatform() === Platform.Windows && aPath.match(/^[A-Za-z]:/)) {
-         // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
+        // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
         aPath = aPath[0].toLowerCase() + aPath.substr(1);
         aPath = aPath.replace(/\//g, path.sep);
     }
@@ -368,7 +370,7 @@ export function errP(msg: any): Promise<any> {
  * files are served from by a web server, (or the directory that they would be served from, and which
  * sourceRoot may be relative to).
  */
-export function getWebRoot(args: ILaunchRequestArgs|IAttachRequestArgs): string {
+export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): string {
     let webRoot: string;
     if (args.webRoot) {
         webRoot = args.webRoot;
