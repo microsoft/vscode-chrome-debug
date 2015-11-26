@@ -81,6 +81,8 @@ export class PathTransformer implements IDebugTransformer {
 
                 if (clientPath) {
                     frame.source.path = clientPath;
+                } else {
+                    frame.source.path = undefined;
                 }
             }
         });

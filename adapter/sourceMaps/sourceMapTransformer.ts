@@ -127,8 +127,11 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
-            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+            if (!event.body.scriptUrl) {
+                return;
+            }
 
+            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
             if (!event.body.sourceMapURL) {
                 return;
             }
