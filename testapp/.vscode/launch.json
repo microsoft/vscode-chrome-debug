@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
+    // "debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",

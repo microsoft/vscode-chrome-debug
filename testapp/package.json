@@ -6,9 +6,9 @@
     "name": "Microsoft Corporation, Visual Studio Code Team"
   },
   "license": "",
-  "dependencies": {
-  },
+  "dependencies": {},
   "devDependencies": {
+    "browser-sync": "^2.10.0",
     "gulp": "^3.9.0",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-typescript": "^2.8.0",
