@@ -108,7 +108,7 @@ suite('SourceMapTransformer', () => {
         });
 
         suite('setBreakpointsResponse()', () => {
-            function getResponseBody(lines: number[], column?: number): SetBreakpointsResponseBody {
+            function getResponseBody(lines: number[], column?: number): ISetBreakpointsResponseBody {
                 return {
                     breakpoints: lines.map(line => {
                         const bp = { line, verified: true };
@@ -150,7 +150,7 @@ suite('SourceMapTransformer', () => {
     });
 
     suite('stackTraceResponse', () => {
-        function getResponseBody(path: string, lines: number[]): StackTraceResponseBody {
+        function getResponseBody(path: string, lines: number[]): IStackTraceResponseBody {
             return {
                 stackFrames: lines.map((line, i) => ({
                     id: i,

@@ -87,7 +87,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     /**
      * Apply sourcemapping back to authored files from the response
      */
-    public setBreakpointsResponse(response: SetBreakpointsResponseBody, requestSeq: number): void {
+    public setBreakpointsResponse(response: ISetBreakpointsResponseBody, requestSeq: number): void {
         if (this._sourceMaps && this._requestSeqToSetBreakpointsArgs.has(requestSeq)) {
             const args = this._requestSeqToSetBreakpointsArgs.get(requestSeq);
             response.breakpoints.forEach(bp => {
@@ -111,7 +111,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     /**
      * Apply sourcemapping to the stacktrace response
      */
-    public stackTraceResponse(response: StackTraceResponseBody): void {
+    public stackTraceResponse(response: IStackTraceResponseBody): void {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);

@@ -21,11 +21,11 @@ export class LineNumberTransformer implements IDebugTransformer  {
         args.lines = args.lines.map(line => this.convertClientLineToTarget(line));
     }
 
-    public setBreakpointsResponse(response: SetBreakpointsResponseBody): void {
+    public setBreakpointsResponse(response: ISetBreakpointsResponseBody): void {
         response.breakpoints.forEach(bp => bp.line = this.convertTargetLineToClient(bp.line));
     }
 
-    public stackTraceResponse(response: StackTraceResponseBody): void {
+    public stackTraceResponse(response: IStackTraceResponseBody): void {
         response.stackFrames.forEach(frame => frame.line = this.convertTargetLineToClient(frame.line));
     }
 

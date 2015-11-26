@@ -51,7 +51,7 @@ suite('LineNumberTransformer', () => {
     });
 
     suite('setBreakpointsResponse()', () => {
-        function getResponse(lines: number[]): SetBreakpointsResponseBody {
+        function getResponse(lines: number[]): ISetBreakpointsResponseBody {
             return {
                 breakpoints: lines.map(line => ({ verified: true, line: line }))
             };
@@ -72,7 +72,7 @@ suite('LineNumberTransformer', () => {
     });
 
     suite('stackTraceResponse()', () => {
-        function getResponse(lines: number[]): StackTraceResponseBody {
+        function getResponse(lines: number[]): IStackTraceResponseBody {
             return {
                 stackFrames: lines.map(line => ({ id: 0, name: '', line, column: 0 }))
             };

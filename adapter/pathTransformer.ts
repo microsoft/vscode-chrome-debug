@@ -74,7 +74,7 @@ export class PathTransformer implements IDebugTransformer {
         }
     }
 
-    public stackTraceResponse(response: StackTraceResponseBody): void {
+    public stackTraceResponse(response: IStackTraceResponseBody): void {
         response.stackFrames.forEach(frame => {
             // Try to resolve the url to a path in the workspace. If it's not in the workspace,
             // just use the script.url as-is.

@@ -283,7 +283,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return Promise.resolve<void>();
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<SetBreakpointsResponseBody> {
+    public setBreakpoints(args: ISetBreakpointsArgs): Promise<ISetBreakpointsResponseBody> {
         let targetScriptUrl: string;
         if (args.source.path) {
             targetScriptUrl = args.source.path;
@@ -412,7 +412,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             .then(() => { });
     }
 
-    public stackTrace(args: DebugProtocol.StackTraceArguments): StackTraceResponseBody {
+    public stackTrace(args: DebugProtocol.StackTraceArguments): IStackTraceResponseBody {
         // Only process at the requested number of frames, if 'levels' is specified
         let stack = this._currentStack;
         if (args.levels) {
@@ -455,7 +455,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return { stackFrames };
     }
 
-    public scopes(args: DebugProtocol.ScopesArguments): ScopesResponseBody {
+    public scopes(args: DebugProtocol.ScopesArguments): IScopesResponseBody {
         const scopes = this._currentStack[args.frameId].scopeChain.map((scope: WebKitProtocol.Debugger.Scope, i: number) => {
             const scopeHandle: IScopeVarHandle = { objectId: scope.object.objectId };
             if (i === 0) {
@@ -473,7 +473,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return { scopes };
     }
 
-    public variables(args: DebugProtocol.VariablesArguments): Promise<VariablesResponseBody> {
+    public variables(args: DebugProtocol.VariablesArguments): Promise<IVariablesResponseBody> {
         const handle = this._variableHandles.get(args.variablesReference);
         if (handle.objectId === WebKitDebugAdapter.EXCEPTION_VALUE_ID) {
             // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
@@ -511,13 +511,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
     }
 
-    public source(args: DebugProtocol.SourceArguments): Promise<SourceResponseBody> {
+    public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
         return this._webKitConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(webkitResponse => {
             return { content: webkitResponse.result.scriptSource };
         });
     }
 
-    public threads(): ThreadsResponseBody {
+    public threads(): IThreadsResponseBody {
         return {
             threads: [
                 {
@@ -528,7 +528,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         };
     }
 
-    public evaluate(args: DebugProtocol.EvaluateArguments): Promise<EvaluateResponseBody> {
+    public evaluate(args: DebugProtocol.EvaluateArguments): Promise<IEvaluateResponseBody> {
         let evalPromise: Promise<any>;
         if (this.paused) {
             const callFrameId = this._currentStack[args.frameId].callFrameId;
