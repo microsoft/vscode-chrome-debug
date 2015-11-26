@@ -425,14 +425,14 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 const line = callFrame.location.lineNumber;
                 const column = callFrame.location.columnNumber;
 
-                // When the script has a url and isn't a content script, send the name and path fields.
-                // Otherwise, send the name and sourceReference fields.
+                // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
+                // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
                 const source: DebugProtocol.Source =
                     script.url && !this.isExtensionScript(script) ?
                         {
                             name: path.basename(script.url),
                             path: script.url,
-                            sourceReference: 0
+                            sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
                         } :
                         {
                             // Name should be undefined, work around VS Code bug 20274

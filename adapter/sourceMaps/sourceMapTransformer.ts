@@ -22,6 +22,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _requestSeqToSetBreakpointsArgs: Map<number, DebugProtocol.SetBreakpointsArguments>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
+    private _webRoot: string;
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -33,6 +34,7 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
+            this._webRoot = utils.getWebRoot(args);
             this._sourceMaps = new SourceMaps(utils.getWebRoot(args));
             this._requestSeqToSetBreakpointsArgs = new Map<number, DebugProtocol.SetBreakpointsArguments>();
             this._allRuntimeScriptPaths = new Set<string>();
@@ -128,12 +130,17 @@ export class SourceMapTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
             if (!event.body.scriptUrl) {
-                return;
-            }
-
-            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-            if (!event.body.sourceMapURL) {
-                return;
+                if (event.body.sourceMapURL) {
+                    const remoteFullSourceMapURL = path.join(this._webRoot, event.body.sourceMapURL);
+                    this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
+                } else {
+                    return;
+                }
+            } else {
+                this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+                if (!event.body.sourceMapURL) {
+                    return;
+                }
             }
 
             this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);

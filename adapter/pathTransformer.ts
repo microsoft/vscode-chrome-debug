@@ -59,6 +59,7 @@ export class PathTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         const webkitUrl: string = event.body.scriptUrl;
         const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
+<<<<<<< Updated upstream
         this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
         this._webkitUrlToClientPath.set(webkitUrl, clientPath);
         event.body.scriptUrl = clientPath;
@@ -67,7 +68,26 @@ export class PathTransformer implements IDebugTransformer {
             const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
             this._pendingBreakpointsByPath.delete(clientPath);
             this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+=======
+        if (clientPath) {
+            utils.Logger.log(`Paths.scriptParsed: resolved ${webkitUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+
+            this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
+            this._webkitUrlToClientPath.set(webkitUrl, clientPath);
+
+            if (this._pendingBreakpointsByPath.has(clientPath)) {
+                utils.Logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${clientPath}`);
+                const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
+                this._pendingBreakpointsByPath.delete(clientPath);
+                this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+            }
+        } else {
+            utils.Logger.log(`Paths.scriptParsed: could not resolve ${webkitUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+>>>>>>> Stashed changes
         }
+
+        // Set this either way for SourceMapTransformer
+        event.body.scriptUrl = clientPath;
     }
 
     public stackTraceResponse(response: StackTraceResponseBody): void {
@@ -79,8 +99,11 @@ export class PathTransformer implements IDebugTransformer {
                     this._webkitUrlToClientPath.get(frame.source.path) :
                     utils.webkitUrlToClientPath(this._webRoot, frame.source.path);
 
+                // Incoming stackFrames have sourceReference and path set. If the path was resolved to a file in the workspace,
+                // clear the sourceReference since it's not needed. If it wasn't resolved, clear the path since it's inaccurate.
                 if (clientPath) {
                     frame.source.path = clientPath;
+                    frame.source.sourceReference = 0;
                 } else {
                     frame.source.path = undefined;
                 }
