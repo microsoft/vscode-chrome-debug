@@ -35,9 +35,10 @@ export class PathTransformer implements IDebugTransformer {
                 const url = utils.canonicalizeUrl(args.source.path);
                 if (this._clientPathToWebkitUrl.has(url)) {
                     args.source.path = this._clientPathToWebkitUrl.get(url);
+                    utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
                     resolve();
                 } else {
-                    utils.Logger.log(`No target url cached for client url: ${url}, waiting for target script to be loaded.`);
+                    utils.Logger.log(`Paths.setBP: No target url cached for client url: ${url}, waiting for target script to be loaded.`);
                     args.source.path = url;
                     this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
                 }
@@ -59,11 +60,14 @@ export class PathTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         const webkitUrl: string = event.body.scriptUrl;
         const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
+        utils.Logger.log(`Paths.scriptParsed: resolved ${webkitUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+
         this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
         this._webkitUrlToClientPath.set(webkitUrl, clientPath);
         event.body.scriptUrl = clientPath;
 
         if (this._pendingBreakpointsByPath.has(clientPath)) {
+            utils.Logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${clientPath}`);
             const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
             this._pendingBreakpointsByPath.delete(clientPath);
             this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
