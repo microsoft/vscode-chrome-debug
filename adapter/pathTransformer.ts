@@ -59,16 +59,7 @@ export class PathTransformer implements IDebugTransformer {
     public scriptParsed(event: DebugProtocol.Event): void {
         const webkitUrl: string = event.body.scriptUrl;
         const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
-<<<<<<< Updated upstream
-        this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
-        this._webkitUrlToClientPath.set(webkitUrl, clientPath);
-        event.body.scriptUrl = clientPath;
 
-        if (this._pendingBreakpointsByPath.has(clientPath)) {
-            const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
-            this._pendingBreakpointsByPath.delete(clientPath);
-            this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
-=======
         if (clientPath) {
             utils.Logger.log(`Paths.scriptParsed: resolved ${webkitUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
 
@@ -83,7 +74,6 @@ export class PathTransformer implements IDebugTransformer {
             }
         } else {
             utils.Logger.log(`Paths.scriptParsed: could not resolve ${webkitUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
->>>>>>> Stashed changes
         }
 
         // Set this either way for SourceMapTransformer
