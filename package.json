@@ -59,7 +59,7 @@
             "request": "launch",
             "url": "http://localhost/mypage.html",
             "sourceMaps": true,
-            "outDir": "out"
+            "webRoot": "wwwroot"
           },
           {
             "name": "Attach",
