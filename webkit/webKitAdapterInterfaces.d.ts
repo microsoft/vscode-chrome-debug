@@ -28,31 +28,31 @@ interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
  * The ResponseBody interfaces are copied from debugProtocol.d.ts which defines these inline in the Response interfaces.
  * They should always match those interfaces, see the original for comments.
  */
-interface SetBreakpointsResponseBody {
+interface ISetBreakpointsResponseBody {
     breakpoints: DebugProtocol.Breakpoint[];
 }
 
-interface SourceResponseBody {
+interface ISourceResponseBody {
     content: string;
 }
 
-interface ThreadsResponseBody {
+interface IThreadsResponseBody {
     threads: DebugProtocol.Thread[];
 }
 
-interface StackTraceResponseBody {
+interface IStackTraceResponseBody {
     stackFrames: DebugProtocol.StackFrame[];
 }
 
-interface ScopesResponseBody {
+interface IScopesResponseBody {
     scopes: DebugProtocol.Scope[];
 }
 
-interface VariablesResponseBody {
+interface IVariablesResponseBody {
     variables: DebugProtocol.Variable[];
 }
 
-interface EvaluateResponseBody {
+interface IEvaluateResponseBody {
     result: string;
     variablesReference: number;
 }
@@ -65,7 +65,7 @@ interface IDebugAdapter {
     launch(args: ILaunchRequestArgs): PromiseOrNot<void>;
     disconnect(): PromiseOrNot<void>;
     attach(args: IAttachRequestArgs): PromiseOrNot<void>;
-    setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): PromiseOrNot<SetBreakpointsResponseBody>;
+    setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): PromiseOrNot<ISetBreakpointsResponseBody>;
     setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): PromiseOrNot<void>;
 
     continue(): PromiseOrNot<void>;
@@ -74,12 +74,12 @@ interface IDebugAdapter {
     stepOut(): PromiseOrNot<void>;
     pause(): PromiseOrNot<void>;
 
-    stackTrace(args: DebugProtocol.StackTraceArguments): PromiseOrNot<StackTraceResponseBody>;
-    scopes(args: DebugProtocol.ScopesArguments): PromiseOrNot<ScopesResponseBody>;
-    variables(args: DebugProtocol.VariablesArguments): PromiseOrNot<VariablesResponseBody>;
-    source(args: DebugProtocol.SourceArguments): PromiseOrNot<SourceResponseBody>;
-    threads(): PromiseOrNot<ThreadsResponseBody>;
-    evaluate(args: DebugProtocol.EvaluateArguments): PromiseOrNot<EvaluateResponseBody>;
+    stackTrace(args: DebugProtocol.StackTraceArguments): PromiseOrNot<IStackTraceResponseBody>;
+    scopes(args: DebugProtocol.ScopesArguments): PromiseOrNot<IScopesResponseBody>;
+    variables(args: DebugProtocol.VariablesArguments): PromiseOrNot<IVariablesResponseBody>;
+    source(args: DebugProtocol.SourceArguments): PromiseOrNot<ISourceResponseBody>;
+    threads(): PromiseOrNot<IThreadsResponseBody>;
+    evaluate(args: DebugProtocol.EvaluateArguments): PromiseOrNot<IEvaluateResponseBody>;
 }
 
 interface IDebugTransformer {
@@ -95,13 +95,13 @@ interface IDebugTransformer {
     source?(args: DebugProtocol.SourceArguments, requestSeq?: number): PromiseOrNot<void>;
     evaluate?(args: DebugProtocol.EvaluateArguments, requestSeq?: number): PromiseOrNot<void>;
 
-    setBreakpointsResponse?(response: SetBreakpointsResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    stackTraceResponse?(response: StackTraceResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    scopesResponse?(response: ScopesResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    variablesResponse?(response: VariablesResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    sourceResponse?(response: SourceResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    threadsResponse?(response: ThreadsResponseBody, requestSeq?: number): PromiseOrNot<void>;
-    evaluateResponse?(response: EvaluateResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    setBreakpointsResponse?(response: ISetBreakpointsResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    stackTraceResponse?(response: IStackTraceResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    scopesResponse?(response: IScopesResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    variablesResponse?(response: IVariablesResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    sourceResponse?(response: ISourceResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    threadsResponse?(response: IThreadsResponseBody, requestSeq?: number): PromiseOrNot<void>;
+    evaluateResponse?(response: IEvaluateResponseBody, requestSeq?: number): PromiseOrNot<void>;
 
     scriptParsed?(event: DebugProtocol.Event);
 }

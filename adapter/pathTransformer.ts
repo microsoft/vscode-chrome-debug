@@ -35,9 +35,10 @@ export class PathTransformer implements IDebugTransformer {
                 const url = utils.canonicalizeUrl(args.source.path);
                 if (this._clientPathToWebkitUrl.has(url)) {
                     args.source.path = this._clientPathToWebkitUrl.get(url);
+                    utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
                     resolve();
                 } else {
-                    utils.Logger.log(`No target url cached for client url: ${url}, waiting for target script to be loaded.`);
+                    utils.Logger.log(`Paths.setBP: No target url cached for client url: ${url}, waiting for target script to be loaded.`);
                     args.source.path = url;
                     this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
                 }
@@ -80,7 +81,7 @@ export class PathTransformer implements IDebugTransformer {
         event.body.scriptUrl = clientPath;
     }
 
-    public stackTraceResponse(response: StackTraceResponseBody): void {
+    public stackTraceResponse(response: IStackTraceResponseBody): void {
         response.stackFrames.forEach(frame => {
             // Try to resolve the url to a path in the workspace. If it's not in the workspace,
             // just use the script.url as-is.

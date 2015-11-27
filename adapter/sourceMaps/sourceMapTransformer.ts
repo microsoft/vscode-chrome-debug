@@ -54,7 +54,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                 const argsPath = args.source.path;
                 const mappedPath = this._sourceMaps.MapPathFromSource(args.source.path);
                 if (mappedPath) {
-                    utils.Logger.log(`SourceMaps.setBreakpoints: Mapped ${args.source.path} to ${mappedPath}`);
+                    utils.Logger.log(`SourceMaps.setBP: Mapped ${args.source.path} to ${mappedPath}`);
                     args.source.path = mappedPath;
 
                     // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
@@ -70,10 +70,10 @@ export class SourceMapTransformer implements IDebugTransformer {
                     });
                 } else if (this._allRuntimeScriptPaths.has(argsPath)) {
                     // It's a generated file which is loaded
-                    utils.Logger.log(`SourceMaps.setBreakpoints: SourceMaps are enabled but ${argsPath} is a runtime script`);
+                    utils.Logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
                 } else {
                     // Source (or generated) file which is not loaded, need to wait
-                    utils.Logger.log(`SourceMaps.setBreakpoints: ${argsPath} can't be resolved to a loaded script.`);
+                    utils.Logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script.`);
                     this._pendingBreakpointsByPath.set(argsPath, { resolve, reject, args, requestSeq });
                     return;
                 }
@@ -89,7 +89,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     /**
      * Apply sourcemapping back to authored files from the response
      */
-    public setBreakpointsResponse(response: SetBreakpointsResponseBody, requestSeq: number): void {
+    public setBreakpointsResponse(response: ISetBreakpointsResponseBody, requestSeq: number): void {
         if (this._sourceMaps && this._requestSeqToSetBreakpointsArgs.has(requestSeq)) {
             const args = this._requestSeqToSetBreakpointsArgs.get(requestSeq);
             response.breakpoints.forEach(bp => {
@@ -113,7 +113,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     /**
      * Apply sourcemapping to the stacktrace response
      */
-    public stackTraceResponse(response: StackTraceResponseBody): void {
+    public stackTraceResponse(response: IStackTraceResponseBody): void {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);

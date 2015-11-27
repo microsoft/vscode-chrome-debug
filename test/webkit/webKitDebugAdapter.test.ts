@@ -108,7 +108,7 @@ suite('WebKitDebugAdapter', () => {
             });
         }
 
-        function makeExpectedResponse(lines: number[], cols?: number[]): SetBreakpointsResponseBody {
+        function makeExpectedResponse(lines: number[], cols?: number[]): ISetBreakpointsResponseBody {
             const breakpoints = lines.map((line, i) => ({
                 line,
                 column: cols ? cols[i] : 0,
