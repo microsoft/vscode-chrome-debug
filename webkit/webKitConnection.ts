@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 import * as WebSocket from 'ws';
-import * as http from 'http';
 import {EventEmitter} from 'events';
 import * as utils from './utilities';
 import {Logger} from './utilities';
@@ -129,7 +128,7 @@ export class WebKitConnection {
     }
 
     public _attach(port: number, url?: string): Promise<void> {
-        return getUrl(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
+        return utils.getUrl(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
             // Validate every step of processing the response
             try {
                 const responseArray = JSON.parse(jsonResponse);
@@ -163,6 +162,9 @@ export class WebKitConnection {
             }
 
             return utils.errP('Got response from target app, but no valid target pages found');
+        },
+        e => {
+            return utils.errP('Cannot connect to the target: ' + e.message);
         });
     }
 
@@ -237,21 +239,4 @@ export class WebKitConnection {
             params
         });
     }
-}
-
-/**
- * Helper function to GET the contents of a url
- */
-function getUrl(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        http.get(url, response => {
-            let jsonResponse = '';
-            response.on('data', chunk => jsonResponse += chunk);
-            response.on('end', () => {
-                resolve(jsonResponse);
-            });
-        }).on('error', e => {
-            reject('Cannot connect to the target: ' + e.message);
-        });
-    });
 }

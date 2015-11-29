@@ -117,11 +117,24 @@ export class SourceMapTransformer implements IDebugTransformer {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
-                if (mapped) {
+                if (mapped && utils.existsSync(mapped.path)) {
                     stackFrame.source.path = utils.canonicalizeUrl(mapped.path);
+                    stackFrame.source.sourceReference = 0;
                     stackFrame.source.name = path.basename(mapped.path);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
+                } else {
+                    // If the frame has not been mapped to a file that exists on disk, clear the path
+                    if (!utils.existsSync(stackFrame.source.path)) {
+                        stackFrame.source.path = undefined;
+                    }
+                }
+            });
+        } else {
+            response.stackFrames.forEach(stackFrame => {
+                // PathTransformer needs to leave the frame in an unfinished state because it doesn't know whether sourcemaps are enabled
+                if (stackFrame.source.path && stackFrame.source.sourceReference) {
+                    stackFrame.source.path = undefined;
                 }
             });
         }
@@ -129,36 +142,29 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
-            if (!event.body.scriptUrl) {
-                if (event.body.sourceMapURL) {
-                    const remoteFullSourceMapURL = path.join(this._webRoot, event.body.sourceMapURL);
-                    this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
-                } else {
-                    return;
-                }
-            } else {
+            if (!event.body.sourceMapURL) {
+                return;
+            }
+
+            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
                 this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-                if (!event.body.sourceMapURL) {
-                    return;
+
+                const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
+                if (sources) {
+                    utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources)}`);
+                    sources.forEach(sourcePath => {
+                        // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
+                        if (this._pendingBreakpointsByPath.has(sourcePath)) {
+                            utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${sourcePath}`);
+                            const pendingBreakpoint = this._pendingBreakpointsByPath.get(sourcePath);
+                            this._pendingBreakpointsByPath.delete(sourcePath);
+
+                            this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
+                                .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+                        }
+                    });
                 }
-            }
-
-            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL);
-            const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
-            if (sources) {
-                utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources)}`);
-                sources.forEach(sourcePath => {
-                    // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
-                    if (this._pendingBreakpointsByPath.has(sourcePath)) {
-                        utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${sourcePath}`);
-                        const pendingBreakpoint = this._pendingBreakpointsByPath.get(sourcePath);
-                        this._pendingBreakpointsByPath.delete(sourcePath);
-
-                        this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
-                            .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
-                    }
-                });
-            }
+            });
         }
     }
 }

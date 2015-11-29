@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+ /* tslint:disable */
+
 import * as Path from 'path';
 import * as URL from 'url';
 import * as FS from 'fs';
@@ -44,7 +46,7 @@ export interface ISourceMaps {
     /**
      * With a known sourceMapURL for a generated script, process create the SourceMap and cache for later
      */
-    ProcessNewSourceMap(path: string, sourceMapURL: string): void;
+    ProcessNewSourceMap(path: string, sourceMapURL: string): Promise<void>;
 }
 
 
@@ -85,7 +87,7 @@ export class SourceMaps implements ISourceMaps {
 	}
 
 	public MapToSource(pathToGenerated: string, line: number, column: number): MappingResult {
-		const map = this._findGeneratedToSourceMapping(pathToGenerated);
+		const map = this._generatedToSourceMaps[pathToGenerated];
 		if (map) {
 			line += 1;	// source map impl is 1 based
 			const mr = map.originalPositionFor(line, column);
@@ -98,12 +100,12 @@ export class SourceMaps implements ISourceMaps {
 	}
 
     public AllMappedSources(pathToGenerated: string): string[] {
-        const map = this._findGeneratedToSourceMapping(pathToGenerated);
+        const map = this._generatedToSourceMaps[pathToGenerated];
 		return map ? map.sources : null;
     }
 
-    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): void {
-        this._findGeneratedToSourceMapping(pathToGenerated, sourceMapURL);
+    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
+        return this._findGeneratedToSourceMapping(pathToGenerated, sourceMapURL).then(() => { });
     }
 
 	//---- private -----------------------------------------------------------------------
@@ -129,94 +131,104 @@ export class SourceMaps implements ISourceMaps {
 		return null;
 	}
 
-	private _findGeneratedToSourceMapping(pathToGenerated: string, map_path?: string): SourceMap {
+    /**
+     * pathToGenerated - an absolute local path or a URL.
+     * mapPath - a path relative to pathToGenerated.
+     */
+	private _findGeneratedToSourceMapping(pathToGenerated: string, mapPath: string): Promise<SourceMap> {
+		if (!pathToGenerated) {
+            return Promise.resolve(null);
+        }
 
-		if (pathToGenerated) {
+        if (pathToGenerated in this._generatedToSourceMaps) {
+            return Promise.resolve(this._generatedToSourceMaps[pathToGenerated]);
+        }
 
-			if (pathToGenerated in this._generatedToSourceMaps) {
-				return this._generatedToSourceMaps[pathToGenerated];
-			}
+        if (mapPath.indexOf("data:application/json;base64,") >= 0) {
+            Logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
 
-			let map: SourceMap = null;
-
-            if (!map_path) {
-                // try to find a source map URL in the generated source
-                map_path = this._findSourceMapInGeneratedSource(pathToGenerated);
+            // sourcemap is inlined
+            const pos = mapPath.indexOf(',');
+            const data = mapPath.substr(pos+1);
+            try {
+                const buffer = new Buffer(data, 'base64');
+                const json = buffer.toString();
+                if (json) {
+                    const map = new SourceMap(pathToGenerated, json, this._webRoot);
+                    this._generatedToSourceMaps[pathToGenerated] = map;
+                    return Promise.resolve(map);
+                }
+            }
+            catch (e) {
+                Logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
             }
 
-            if (map_path) {
-                if (map_path.indexOf("data:application/json;base64,") >= 0) {
-                    const pos = map_path.indexOf(',');
-                    if (pos > 0) {
-                        const data = map_path.substr(pos+1);
-                        try {
-                            const buffer = new Buffer(data, 'base64');
-                            const json = buffer.toString();
-                            if (json) {
-                                map = new SourceMap(pathToGenerated, json, this._webRoot);
-                                this._generatedToSourceMaps[pathToGenerated] = map;
-                                return map;
-                            }
-                        }
-                        catch (e) {
-                            Logger.log(`FindGeneratedToSourceMapping: exception while processing data url (${e})`);
-                        }
-                    }
-                } else {
-                    map_path = map_path;
+            return null;
+        }
+
+        // if path is relative make it absolute
+        if (!Path.isAbsolute(mapPath)) {
+            if (Path.isAbsolute(pathToGenerated)) {
+                // runtime script is on disk, so map should be too
+                mapPath = PathUtils.makePathAbsolute(pathToGenerated, mapPath);
+            } else {
+                // runtime script is not on disk, construct the full url for the source map
+                const scriptUrl = URL.parse(pathToGenerated);
+                mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${Path.dirname(scriptUrl.pathname)}/${mapPath}`;
+            }
+        }
+
+        return this._createSourceMap(mapPath, pathToGenerated).then(map => {
+            if (!map) {
+                const mapPathNextToSource = pathToGenerated + ".map";
+                if (mapPathNextToSource !== mapPath) {
+                    return this._createSourceMap(mapPathNextToSource, pathToGenerated);
                 }
             }
 
-			// if path is relative make it absolute
-            if (map_path && !Path.isAbsolute(map_path)) {
- 				map_path = PathUtils.makePathAbsolute(pathToGenerated, map_path);
+            return map;
+        }).then(map => {
+            if (map) {
+                this._generatedToSourceMaps[pathToGenerated] = map;
             }
 
-			if (map_path === null || !FS.existsSync(map_path)) {
-				// try to find map file next to the generated source
-				map_path = pathToGenerated + ".map";
-			}
-
-			if (FS.existsSync(map_path)) {
-				map = this._createSourceMap(map_path, pathToGenerated);
-				if (map) {
-					this._generatedToSourceMaps[pathToGenerated] = map;
-					return map;
-				}
-			}
-		}
-		return null;
+            return map || null;
+        });
 	}
 
-	private _createSourceMap(map_path: string, path: string): SourceMap {
-		try {
-			const contents = FS.readFileSync(Path.join(map_path)).toString();
-			return new SourceMap(path, contents, this._webRoot);
-		}
-		catch (e) {
-			console.error(`CreateSourceMap: {e}`);
-		}
-		return null;
-	}
+	private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
+        let contentsP: Promise<string>;
+        if (utils.isURL(mapPath)) {
+            contentsP = utils.getUrl(mapPath).catch(e => {
+                Logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
+                return null;
+            });
+        } else {
+            contentsP = new Promise((resolve, reject) => {
+                FS.readFile(mapPath, (err, data) => {
+                    if (err) {
+                        Logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
+                        resolve(null);
+                    } else {
+                        resolve(data);
+                    }
+                });
+            });
+        }
 
-	//  find "//# sourceMappingURL=<url>"
-	private _findSourceMapInGeneratedSource(pathToGenerated: string): string {
-
-		try {
-			// TODO@AW better read lines...
-			const contents = FS.readFileSync(pathToGenerated).toString();
-			const lines = contents.split('\n');
-			for (let line of lines) {
-				const matches = SourceMaps.SOURCE_MAPPING_MATCHER.exec(line);
-				if (matches && matches.length === 2) {
-					const uri = matches[1].trim();
-					return uri;
-				}
-			}
-		} catch (e) {
-			// ignore exception
-		}
-		return null;
+        return contentsP.then(contents => {
+            if (contents) {
+                try {
+                    // Throws for invalid contents JSON
+                    return new SourceMap(pathToGenerated, contents, this._webRoot);
+                } catch (e) {
+                    Logger.log(`SourceMaps.createSourceMap: exception while processing sourcemap: ${e.stack}`);
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        });
 	}
 }
 
@@ -233,6 +245,11 @@ class SourceMap {
     private _webRoot: string;           // if the sourceRoot starts with /, it's resolved from this absolute path
     private _sourcesAreURLs: boolean;   // if sources are specified with file:///
 
+    /**
+     * pathToGenerated - an absolute local path or a URL
+     * json - sourcemap contents
+     * webRoot - an absolute path
+     */
 	public constructor(generatedPath: string, json: string, webRoot: string) {
         Logger.log(`SourceMap: creating SM for ${generatedPath}`)
 		this._generatedFile = generatedPath;
@@ -241,7 +258,7 @@ class SourceMap {
 		const sm = JSON.parse(json);
 		let sr = <string> sm.sourceRoot;
 		if (sr) {
-            if (URL.parse(sr).protocol === 'file:') {
+            if (sr.startsWith('file:///')) {
                 // sourceRoot points to a local path like "file:///c:/project/src"
                 this._absSourceRoot = PathUtils.canonicalizeUrl(sr);
             } else if (Path.isAbsolute(sr)) {
@@ -249,13 +266,25 @@ class SourceMap {
                 this._absSourceRoot = Path.join(this._webRoot, sr);
             } else {
                 // like "src" or "../src", relative to the script
-                this._absSourceRoot = PathUtils.makePathAbsolute(generatedPath, sr);
+                if (Path.isAbsolute(generatedPath)) {
+                    this._absSourceRoot = PathUtils.makePathAbsolute(generatedPath, sr);
+                } else {
+                    // runtime script is not on disk, resolve the sourceRoot location on disk
+                    this._absSourceRoot =  Path.join(this._webRoot, URL.parse(generatedPath).pathname, sr);
+                }
             }
 
             Logger.log(`SourceMap: resolved sourceRoot ${sr} -> ${this._absSourceRoot}`);
 		} else {
-			this._absSourceRoot = Path.dirname(generatedPath);
-            Logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${this._absSourceRoot}`);
+            if (Path.isAbsolute(generatedPath)) {
+                this._absSourceRoot = Path.dirname(generatedPath);
+                Logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${this._absSourceRoot}`);
+            } else {
+                // runtime script is not on disk, resolve the sourceRoot location on disk
+                const scriptPathDirname = Path.dirname(URL.parse(generatedPath).pathname);
+                this._absSourceRoot =  Path.join(this._webRoot, scriptPathDirname);
+                Logger.log(`SourceMap: no sourceRoot specified, using webRoot + script path dirname: ${this._absSourceRoot}`);
+            }
 		}
 
         this._absSourceRoot = utils.stripTrailingSlash(this._absSourceRoot);
@@ -264,20 +293,25 @@ class SourceMap {
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
         sm.sourceRoot = 'file:///' + this._absSourceRoot;
+
+        // special-case webpack:/// prefixed sources which is kind of meaningless
+        sm.sources = sm.sources.map((sourcePath: string) => utils.lstrip(sourcePath, 'webpack:///'));
+
 		this._smc = new SourceMapConsumer(sm);
 
         // rewrite sources as absolute paths
-        this._sources = sm.sources.map(sourcePath => {
-            if (URL.parse(sourcePath).protocol === 'file:') {
+        this._sources = sm.sources.map((sourcePath: string) => {
+            if (sourcePath.startsWith('file:///')) {
                 // If one source is a URL, assume all are
                 this._sourcesAreURLs = true;
             }
 
+            sourcePath = utils.lstrip(sourcePath, 'webpack:///');
             sourcePath = PathUtils.canonicalizeUrl(sourcePath);
             if (Path.isAbsolute(sourcePath)) {
                 return utils.fixDriveLetterAndSlashes(sourcePath);
             } else {
-                return Path.resolve(this._absSourceRoot, sourcePath);
+                return Path.join(this._absSourceRoot, sourcePath);
             }
         });
 	}

@@ -157,7 +157,7 @@ suite('SourceMapTransformer', () => {
                     name: 'line ' + i,
                     line,
                     column: 0,
-                    source: { path, name: path }
+                    source: { path, name: path, sourceReference: 0 }
                 }))
             };
         }
@@ -218,6 +218,7 @@ class MockSourceMaps implements ISourceMaps {
         return [AUTHORED_PATH];
     }
 
-    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): void {
+    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
+        return Promise.resolve<void>();
     }
 }

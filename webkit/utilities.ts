@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as url from 'url';
+import * as http from 'http';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as nodeUrl from 'url';
@@ -199,17 +201,17 @@ export class Logger {
  * http://localhost/scripts/code.js => d:/app/scripts/code.js
  * file:///d:/scripts/code.js => d:/scripts/code.js
  */
-export function webkitUrlToClientPath(webRoot: string, url: string): string {
-    if (!url) {
+export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
+    if (!aUrl) {
         return '';
     }
 
-    url = decodeURI(url);
+    aUrl = decodeURI(aUrl);
 
     // If the url is an absolute path to a file that exists, return it without file:///.
     // A remote absolute url (cordova) will still need the logic below.
-    if (url.startsWith('file:///') && existsSync(url.replace(/^file:\/\/\//, ''))) {
-        return canonicalizeUrl(url);
+    if (aUrl.startsWith('file:///') && existsSync(aUrl.replace(/^file:\/\/\//, ''))) {
+        return canonicalizeUrl(aUrl);
     }
 
     // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
@@ -218,7 +220,7 @@ export function webkitUrlToClientPath(webRoot: string, url: string): string {
     }
 
     // Search the filesystem under the webRoot for the file that best matches the given url
-    let pathName = nodeUrl.parse(canonicalizeUrl(url)).pathname;
+    let pathName = nodeUrl.parse(canonicalizeUrl(aUrl)).pathname;
     if (!pathName || pathName === '/') {
         return '';
     }
@@ -248,18 +250,18 @@ export function webkitUrlToClientPath(webRoot: string, url: string): string {
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
-export function canonicalizeUrl(url: string): string {
-    url = url.replace('file:///', '');
-    url = stripTrailingSlash(url);
+export function canonicalizeUrl(aUrl: string): string {
+    aUrl = aUrl.replace('file:///', '');
+    aUrl = stripTrailingSlash(aUrl);
 
-    url = fixDriveLetterAndSlashes(url);
-    if (url[0] !== '/' && url.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+    aUrl = fixDriveLetterAndSlashes(aUrl);
+    if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
         // Ensure osx path starts with /, it can be removed when file:/// was stripped.
         // Don't add if the url still has a protocol
-        url = '/' + url;
+        aUrl = '/' + aUrl;
     }
 
-    return url;
+    return aUrl;
 }
 
 /**
@@ -369,4 +371,37 @@ export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): strin
     }
 
     return webRoot;
+}
+
+/**
+ * Helper function to GET the contents of a url
+ */
+export function getUrl(aUrl: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        http.get(aUrl, response => {
+            let jsonResponse = '';
+            response.on('data', chunk => jsonResponse += chunk);
+            response.on('end', () => {
+                resolve(jsonResponse);
+            });
+        }).on('error', e => {
+            reject(e);
+        });
+    });
+}
+
+/**
+ * Returns true if urlOrPath is like "http://localhost" and not like "c:/code/file.js" or "/code/file.js"
+ */
+export function isURL(urlOrPath: string): boolean {
+    return !path.isAbsolute(urlOrPath) && !!url.parse(urlOrPath).protocol;
+}
+
+/**
+ * Strip a string from the left side of a string
+ */
+export function lstrip(s: string, lStr: string): string {
+    return s.startsWith(lStr) ?
+        s.substr(lStr.length) :
+        s;
 }

@@ -31,19 +31,27 @@ export class PathTransformer implements IDebugTransformer {
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if (args.source.path) {
-                const url = utils.canonicalizeUrl(args.source.path);
-                if (this._clientPathToWebkitUrl.has(url)) {
-                    args.source.path = this._clientPathToWebkitUrl.get(url);
-                    utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
-                    resolve();
-                } else {
-                    utils.Logger.log(`Paths.setBP: No target url cached for client url: ${url}, waiting for target script to be loaded.`);
-                    args.source.path = url;
-                    this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
-                }
-            } else {
+            if (!args.source.path) {
                 resolve();
+                return;
+            }
+
+            if (utils.isURL(args.source.path)) {
+                // already a url, use as-is
+                utils.Logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
+                resolve();
+                return;
+            }
+
+            const url = utils.canonicalizeUrl(args.source.path);
+            if (this._clientPathToWebkitUrl.has(url)) {
+                args.source.path = this._clientPathToWebkitUrl.get(url);
+                utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
+                resolve();
+            } else {
+                utils.Logger.log(`Paths.setBP: No target url cached for client path: ${url}, waiting for target script to be loaded.`);
+                args.source.path = url;
+                this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
             }
         });
     }
@@ -61,24 +69,22 @@ export class PathTransformer implements IDebugTransformer {
         const webkitUrl: string = event.body.scriptUrl;
         const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
 
-        if (clientPath) {
+        if (!clientPath) {
+            utils.Logger.log(`Paths.scriptParsed: could not resolve ${webkitUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+        } else {
             utils.Logger.log(`Paths.scriptParsed: resolved ${webkitUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
-
             this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
             this._webkitUrlToClientPath.set(webkitUrl, clientPath);
 
-            if (this._pendingBreakpointsByPath.has(clientPath)) {
-                utils.Logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${clientPath}`);
-                const pendingBreakpoint = this._pendingBreakpointsByPath.get(clientPath);
-                this._pendingBreakpointsByPath.delete(clientPath);
-                this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
-            }
-        } else {
-            utils.Logger.log(`Paths.scriptParsed: could not resolve ${webkitUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+            event.body.scriptUrl = clientPath;
         }
 
-        // Set this either way for SourceMapTransformer
-        event.body.scriptUrl = clientPath;
+        if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
+            utils.Logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${event.body.scriptUrl}`);
+            const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
+            this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
+            this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+        }
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
@@ -95,8 +101,6 @@ export class PathTransformer implements IDebugTransformer {
                 if (clientPath) {
                     frame.source.path = clientPath;
                     frame.source.sourceReference = 0;
-                } else {
-                    frame.source.path = undefined;
                 }
             }
         });
