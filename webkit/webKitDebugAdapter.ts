@@ -274,7 +274,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
     public disconnect(): Promise<void> {
         if (this._chromeProc) {
-            this._chromeProc.kill();
+            this._chromeProc.kill('SIGINT');
             this._chromeProc = null;
         }
 
