@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 import * as utils from '../webkit/utilities';
-import * as path from 'path';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -27,7 +26,6 @@ export class PathTransformer implements IDebugTransformer {
     public attach(args: IAttachRequestArgs): void {
         this._webRoot = utils.getWebRoot(args);
     }
-
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
         return new Promise<void>((resolve, reject) => {

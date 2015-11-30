@@ -50,6 +50,7 @@ lintSources = lintSources.concat([
     'adapter/sourceMaps/sourceMapTransformer.ts',
     'adapter/adapterProxy.ts',
     'adapter/lineNumberTransformer.ts',
+    'adapter/pathTransformer.ts',
 ]);
 
 var tslint = require('gulp-tslint');
