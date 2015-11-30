@@ -123,11 +123,9 @@ export class SourceMapTransformer implements IDebugTransformer {
                     stackFrame.source.name = path.basename(mapped.path);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
-                } else {
+                } else if (!utils.existsSync(stackFrame.source.path)) {
                     // If the frame has not been mapped to a file that exists on disk, clear the path
-                    if (!utils.existsSync(stackFrame.source.path)) {
-                        stackFrame.source.path = undefined;
-                    }
+                    stackFrame.source.path = undefined;
                 }
             });
         } else {

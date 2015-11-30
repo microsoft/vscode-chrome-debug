@@ -4,7 +4,6 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
-import * as path from 'path';
 
 import * as testUtils from '../../testUtils';
 import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
@@ -154,33 +153,21 @@ suite('SourceMapTransformer', () => {
     });
 
     suite('stackTraceResponse()', () => {
-        function getResponseBody(aPath: string, lines: number[]): IStackTraceResponseBody {
-            return {
-                stackFrames: lines.map((line, i) => ({
-                    id: i,
-                    name: 'line ' + i,
-                    line,
-                    column: 0,
-                    source: { path: aPath, name: path.basename(aPath), sourceReference: 0 }
-                }))
-            };
-        }
-
         test('modifies the response stackFrames', () => {
             utilsMock.expects('existsSync')
                 .thrice()
                 .withExactArgs(AUTHORED_PATH).returns(true);
 
-            const response = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
-            const expected = getResponseBody(AUTHORED_PATH, AUTHORED_LINES);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+            const expected = testUtils.getStackTraceResponseBody(AUTHORED_PATH, AUTHORED_LINES);
 
             getTransformer().stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
         test('does nothing when there are no sourcemaps', () => {
-            const response = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
-            const expected = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
 
             getTransformer(false).stackTraceResponse(response);
             assert.deepEqual(response, expected);

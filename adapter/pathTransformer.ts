@@ -87,15 +87,15 @@ export class PathTransformer implements IDebugTransformer {
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
         response.stackFrames.forEach(frame => {
-            // Try to resolve the url to a path in the workspace. If it's not in the workspace,
-            // just use the script.url as-is.
             if (frame.source.path) {
+                // Try to resolve the url to a path in the workspace. If it's not in the workspace,
+                // just use the script.url as-is. It will be resolved or cleared by the SourceMapTransformer.
                 const clientPath = this._webkitUrlToClientPath.has(frame.source.path) ?
                     this._webkitUrlToClientPath.get(frame.source.path) :
                     utils.webkitUrlToClientPath(this._webRoot, frame.source.path);
 
                 // Incoming stackFrames have sourceReference and path set. If the path was resolved to a file in the workspace,
-                // clear the sourceReference since it's not needed. If it wasn't resolved, clear the path since it's inaccurate.
+                // clear the sourceReference since it's not needed.
                 if (clientPath) {
                     frame.source.path = clientPath;
                     frame.source.sourceReference = 0;

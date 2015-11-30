@@ -97,7 +97,7 @@ suite('PathTransformer', () => {
     });
 
     suite('scriptParsed', () => {
-        test('Modifies args.source.path of the script parsed event', () => {
+        test('modifies args.source.path of the script parsed event when the file can be mapped', () => {
             utilsMock.expects('webkitUrlToClientPath')
                 .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
 
@@ -105,6 +105,44 @@ suite('PathTransformer', () => {
             const expectedScriptParsedArgs = <any>{ body: { scriptUrl: CLIENT_PATH } };
             transformer.scriptParsed(scriptParsedArgs);
             assert.deepEqual(scriptParsedArgs, expectedScriptParsedArgs);
+        });
+
+        test(`doesn't modify args.source.path when the file can't be mapped`, () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns('');
+
+            const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
+            const expectedScriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
+            transformer.scriptParsed(scriptParsedArgs);
+            assert.deepEqual(scriptParsedArgs, expectedScriptParsedArgs);
+        });
+    });
+
+    suite('stackTraceResponse()', () => {
+        const RUNTIME_LINES = [2, 5, 8];
+
+        test('modifies the source path and clears sourceReference when the file can be mapped', () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .thrice()
+                .withExactArgs(undefined, TARGET_URL).returns(CLIENT_PATH);
+
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(CLIENT_PATH, RUNTIME_LINES);
+
+            transformer.stackTraceResponse(response);
+            assert.deepEqual(response, expectedResponse);
+        });
+
+        test(`doesn't modify the source path or clear the sourceReference when the file can't be mapped`, () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .thrice()
+                .withExactArgs(undefined, TARGET_URL).returns('');
+
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
+
+            transformer.stackTraceResponse(response);
+            assert.deepEqual(response, expectedResponse);
         });
     });
 });

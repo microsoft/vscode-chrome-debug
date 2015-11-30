@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as path from 'path';
 import * as sinon from 'sinon';
 import * as mockery from 'mockery';
 
@@ -99,4 +100,20 @@ export function registerEmptyMocks(moduleNames: string | string[]): void {
     (<string[]>moduleNames).forEach(name => {
         mockery.registerMock(name, {});
     });
+}
+
+export function getStackTraceResponseBody(aPath: string, lines: number[], sourceReferences: number[] = []): IStackTraceResponseBody {
+    return {
+        stackFrames: lines.map((line, i) => ({
+            id: i,
+            name: 'line ' + i,
+            line,
+            column: 0,
+            source: {
+                path: aPath,
+                name: path.basename(aPath),
+                sourceReference: sourceReferences[i] || 0
+            }
+        }))
+    };
 }
