@@ -91,6 +91,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             chromeArgs.push(...args.runtimeArgs);
         }
 
+        if (args.userDataDir) {
+            chromeArgs.push('--user-data-dir=' + args.userDataDir);
+        }
+
         let launchUrl: string;
         if (args.file) {
             launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
