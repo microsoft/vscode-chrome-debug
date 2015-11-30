@@ -424,4 +424,15 @@ suite('Utilities', () => {
             assertNotURL(null);
         });
     });
+
+    suite('lstrip', () => {
+        const Utilities = getUtilities();
+
+        test('does what it says', () => {
+            assert.equal(Utilities.lstrip('test', 'te'), 'st');
+            assert.equal(Utilities.lstrip('asdf', ''), 'asdf');
+            assert.equal(Utilities.lstrip('asdf', null), 'asdf');
+            assert.equal(Utilities.lstrip('asdf', 'asdf'), '');
+        });
+    });
 });
