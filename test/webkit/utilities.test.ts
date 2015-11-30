@@ -345,4 +345,54 @@ suite('Utilities', () => {
             assert.equal(Utilities.getWebRoot({ webRoot: '', cwd: 'c:\\project\\cwd' }), 'c:\\project\\cwd');
         });
     });
+
+    suite('getUrl', () => {
+        const URL = 'http://testsite.com/testfile';
+        const RESPONSE = 'response';
+
+        function registerMockHTTP(dataResponses: string[], error?: string): void {
+            mockery.registerMock('http', { get: (url, callback) => {
+                assert.equal(url, URL);
+
+                if (error) {
+                    return { on:
+                        (eventName, eventCallback) => {
+                            if (eventName === 'error') {
+                                eventCallback(error);
+                            }
+                        }};
+                } else {
+                    callback({ on:
+                        (eventName, eventCallback) => {
+                            if (eventName === 'data') {
+                                dataResponses.forEach(eventCallback);
+                            } else if (eventName === 'end') {
+                                setTimeout(eventCallback, 0);
+                            }
+                        }});
+
+                    return { on: () => { }};
+                }
+            }});
+        }
+
+        test('combines chunks', () => {
+            // Create a mock http.get that provides data in two chunks
+            registerMockHTTP(['res', 'ponse']);
+            return getUtilities().getUrl(URL).then(response => {
+                assert.equal(response, RESPONSE);
+            });
+        });
+
+        test('rejects the promise on an error', () => {
+            registerMockHTTP(undefined, 'fail');
+            return getUtilities().getUrl(URL).then(
+                response => {
+                    assert.fail('Should not be resolved');
+                },
+                e => {
+                    assert.equal(e, 'fail');
+                });
+        });
+    });
 });

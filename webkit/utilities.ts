@@ -378,10 +378,10 @@ export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): strin
 export function getUrl(aUrl: string): Promise<string> {
     return new Promise((resolve, reject) => {
         http.get(aUrl, response => {
-            let jsonResponse = '';
-            response.on('data', chunk => jsonResponse += chunk);
+            let responseData = '';
+            response.on('data', chunk => responseData += chunk);
             response.on('end', () => {
-                resolve(jsonResponse);
+                resolve(responseData);
             });
         }).on('error', e => {
             reject(e);
