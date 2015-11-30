@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 function locals() {
     var arr1 = [5, 2];
 
