@@ -2,11 +2,10 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as url from 'url';
 import * as http from 'http';
 import * as os from 'os';
 import * as fs from 'fs';
-import * as nodeUrl from 'url';
+import * as url from 'url';
 import * as path from 'path';
 
 const DEFAULT_CHROME_PATH = {
@@ -220,7 +219,7 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
     }
 
     // Search the filesystem under the webRoot for the file that best matches the given url
-    let pathName = nodeUrl.parse(canonicalizeUrl(aUrl)).pathname;
+    let pathName = url.parse(canonicalizeUrl(aUrl)).pathname;
     if (!pathName || pathName === '/') {
         return '';
     }

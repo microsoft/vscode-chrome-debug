@@ -55,13 +55,25 @@ export function getSinonMock(mockBase = {}): Sinon.SinonMock {
     return m;
 }
 
+/**
+ * Creates a sinon mock and registers it with mockery.
+ * @param requireName - The import path to register with mockery
+ * @param mockInstance - The object to use as a sinon mock base object
+ * @param name - If specified, mock is registered as { [name]: mockInstance }. e.g. if mocking a class.
+ * @param asConstructor - If true, the mock instance will be returned when the named mock is called as a constructor
+ */
 export function createRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
     const mock = getSinonMock(mockInstance);
-    const mockContainer = {};
-    if (asConstructor) {
-        mockContainer[name] = () => mockInstance;
+    let mockContainer: any;
+    if (name) {
+        mockContainer = {};
+        if (asConstructor) {
+            mockContainer[name] = () => mockInstance;
+        } else {
+            mockContainer[name] = mockInstance;
+        }
     } else {
-        mockContainer[name] = mockInstance;
+        mockContainer = mockInstance;
     }
 
     mockery.registerMock(requireName, mockContainer);
@@ -74,6 +86,17 @@ export function createRegisteredSinonMock(requireName: string, mockInstance = {}
  */
 export function getDefaultUtilitiesMock(): any {
     return {
-        Logger: { log: () => { } }
+        Logger: { log: () => { } },
+        canonicalizeUrl: url => url
     };
+}
+
+export function registerEmptyMocks(moduleNames: string | string[]): void {
+    if (typeof moduleNames === 'string') {
+        moduleNames = [<string>moduleNames];
+    }
+
+    (<string[]>moduleNames).forEach(name => {
+        mockery.registerMock(name, {});
+    });
 }

@@ -4,12 +4,14 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
+import * as path from 'path';
+
 import * as testUtils from '../../testUtils';
 import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
 
 const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/sourceMapTransformer';
-const AUTHORED_PATH = 'authored.ts';
-const RUNTIME_PATH = 'runtime.js';
+const AUTHORED_PATH = 'c:/project/authored.ts';
+const RUNTIME_PATH = 'c:/project/runtime.js';
 const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
 const RUNTIME_COLS = [3, 7, 11];
@@ -18,12 +20,16 @@ const RUNTIME_COLS = [3, 7, 11];
 import {SourceMapTransformer as _SourceMapTransformer} from '../../../adapter/sourceMaps/sourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
+    let utilsMock: Sinon.SinonMock;
+
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
-        // Set up mockery with SourceMaps mock
+        // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
-        mockery.registerAllowables(['os', 'fs', 'url', 'path', '../../webkit/utilities', MODULE_UNDER_TEST]);
+
+        utilsMock = testUtils.createRegisteredSinonMock('../../webkit/utilities', testUtils.getDefaultUtilitiesMock());
+        mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
     });
 
     teardown(() => {
@@ -36,6 +42,8 @@ suite('SourceMapTransformer', () => {
         if (!suppressDefaultMock) {
             mockery.registerMock('./sourceMaps', { SourceMaps: MockSourceMaps });
         }
+
+        utilsMock.expects('getWebRoot').returns(undefined);
 
         let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
         const transformer = new SourceMapTransformer();
@@ -80,20 +88,16 @@ suite('SourceMapTransformer', () => {
 
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
             mock.expects('MapPathFromSource')
-                .once()
-                .withArgs(AUTHORED_PATH).returns(null);
+                .withExactArgs(AUTHORED_PATH).returns(null);
             mock.expects('MapPathFromSource')
-                .once()
-                .withArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
+                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
             mock.expects('AllMappedSources')
-                .once()
-                .withArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
+                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
             mock.expects('ProcessNewSourceMap')
-                .once();
+                .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve());
             args.lines.forEach((line, i) => {
                 mock.expects('MapFromSource')
-                    .once()
-                    .withArgs(AUTHORED_PATH, line, 0)
+                    .withExactArgs(AUTHORED_PATH, line, 0)
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
 
@@ -149,20 +153,24 @@ suite('SourceMapTransformer', () => {
         });
     });
 
-    suite('stackTraceResponse', () => {
-        function getResponseBody(path: string, lines: number[]): IStackTraceResponseBody {
+    suite('stackTraceResponse()', () => {
+        function getResponseBody(aPath: string, lines: number[]): IStackTraceResponseBody {
             return {
                 stackFrames: lines.map((line, i) => ({
                     id: i,
                     name: 'line ' + i,
                     line,
                     column: 0,
-                    source: { path, name: path, sourceReference: 0 }
+                    source: { path: aPath, name: path.basename(aPath), sourceReference: 0 }
                 }))
             };
         }
 
         test('modifies the response stackFrames', () => {
+            utilsMock.expects('existsSync')
+                .thrice()
+                .withExactArgs(AUTHORED_PATH).returns(true);
+
             const response = getResponseBody(RUNTIME_PATH, RUNTIME_LINES);
             const expected = getResponseBody(AUTHORED_PATH, AUTHORED_LINES);
 

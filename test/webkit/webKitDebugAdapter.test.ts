@@ -33,12 +33,7 @@ suite('WebKitDebugAdapter', () => {
             'events']);
 
         mockery.registerMock('os', { platform: () => 'win32' });
-        mockery.registerMock('child_process', {});
-        mockery.registerMock('url', {});
-        mockery.registerMock('path', {});
-        mockery.registerMock('net', {});
-        mockery.registerMock('fs', {});
-
+        testUtils.registerEmptyMocks(['child_process', 'url', 'path', 'net', 'fs', 'http']);
         mockWebKitConnection = testUtils.createRegisteredSinonMock('./webKitConnection', new DefaultMockWebKitConnection(), 'WebKitConnection');
     });
 

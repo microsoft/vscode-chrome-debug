@@ -16,7 +16,7 @@ function createTransformer(): _PathTransformer {
 
 suite('PathTransformer', () => {
     const TARGET_URL = 'http://mysite.com/scripts/script1.js';
-    const CLIENT_URL = 'c:/projects/mysite/scripts/script1.js';
+    const CLIENT_PATH = 'c:/projects/mysite/scripts/script1.js';
 
 
     let utilsMock: Sinon.SinonMock;
@@ -28,13 +28,7 @@ suite('PathTransformer', () => {
         mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
 
         // Mock the utils functions
-        const mockedObj = testUtils.getDefaultUtilitiesMock();
-        utilsMock = testUtils.getSinonMock(mockedObj);
-        utilsMock.expects('webkitUrlToClientPath')
-            .once()
-            .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_URL);
-
-        mockery.registerMock('../webkit/utilities', mockedObj);
+        utilsMock = testUtils.createRegisteredSinonMock('../webkit/utilities', testUtils.getDefaultUtilitiesMock());
         transformer = createTransformer();
     });
 
@@ -50,13 +44,16 @@ suite('PathTransformer', () => {
 
         setup(() => {
             // This will be modified by the test, so restore it before each
-            SET_BP_ARGS = { source: { path: CLIENT_URL } };
+            SET_BP_ARGS = { source: { path: CLIENT_PATH } };
         });
 
         test('resolves correctly when it can map the client script to the target script', () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
             utilsMock.expects('canonicalizeUrl')
-                .once()
-                .withExactArgs(CLIENT_URL).returns(CLIENT_URL);
+                .returns(CLIENT_PATH);
+            utilsMock.expects('isURL')
+                .withExactArgs(CLIENT_PATH).returns(false);
 
             transformer.scriptParsed(<any>{ body: { scriptUrl: TARGET_URL } });
             return transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
@@ -66,9 +63,14 @@ suite('PathTransformer', () => {
         });
 
         test(`doesn't resolve until it can map the client script to the target script`, () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
             utilsMock.expects('canonicalizeUrl')
                 .twice()
-                .withExactArgs(CLIENT_URL).returns(CLIENT_URL);
+                .returns(CLIENT_PATH);
+            utilsMock.expects('isURL')
+                .twice()
+                .withArgs(CLIENT_PATH).returns(false);
 
             const setBreakpointsP = transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
                 // If this assert doesn't fail, we know that it resolved at the right time because otherwise it would have no
@@ -81,12 +83,26 @@ suite('PathTransformer', () => {
 
             return setBreakpointsP;
         });
+
+        test(`uses path as-is when it's a URL`, () => {
+            utilsMock.expects('isURL')
+                .withExactArgs(TARGET_URL).returns(true);
+
+            const args = <any>{ source: { path: TARGET_URL } };
+            return transformer.setBreakpoints(args).then(() => {
+                utilsMock.verify();
+                assert.deepEqual(args, EXPECTED_SET_BP_ARGS);
+            });
+        });
     });
 
     suite('scriptParsed', () => {
         test('Modifies args.source.path of the script parsed event', () => {
+            utilsMock.expects('webkitUrlToClientPath')
+                .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
+
             const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
-            const expectedScriptParsedArgs = <any>{ body: { scriptUrl: CLIENT_URL } };
+            const expectedScriptParsedArgs = <any>{ body: { scriptUrl: CLIENT_PATH } };
             transformer.scriptParsed(scriptParsedArgs);
             assert.deepEqual(scriptParsedArgs, expectedScriptParsedArgs);
         });

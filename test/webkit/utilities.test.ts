@@ -22,6 +22,7 @@ suite('Utilities', () => {
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerMock('fs', { statSync: () => { } });
+        mockery.registerMock('http', {});
         mockery.registerMock('os', { platform: () => 'win32' });
 
         path.sep = '\\';
