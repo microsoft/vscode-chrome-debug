@@ -375,7 +375,7 @@ export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): strin
 /**
  * Helper function to GET the contents of a url
  */
-export function getUrl(aUrl: string): Promise<string> {
+export function getURL(aUrl: string): Promise<string> {
     return new Promise((resolve, reject) => {
         http.get(aUrl, response => {
             let responseData = '';
@@ -393,7 +393,7 @@ export function getUrl(aUrl: string): Promise<string> {
  * Returns true if urlOrPath is like "http://localhost" and not like "c:/code/file.js" or "/code/file.js"
  */
 export function isURL(urlOrPath: string): boolean {
-    return !path.isAbsolute(urlOrPath) && !!url.parse(urlOrPath).protocol;
+    return urlOrPath && !path.isAbsolute(urlOrPath) && !!url.parse(urlOrPath).protocol;
 }
 
 /**

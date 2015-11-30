@@ -128,7 +128,7 @@ export class WebKitConnection {
     }
 
     public _attach(port: number, url?: string): Promise<void> {
-        return utils.getUrl(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
+        return utils.getURL(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
             // Validate every step of processing the response
             try {
                 const responseArray = JSON.parse(jsonResponse);

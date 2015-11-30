@@ -379,20 +379,49 @@ suite('Utilities', () => {
         test('combines chunks', () => {
             // Create a mock http.get that provides data in two chunks
             registerMockHTTP(['res', 'ponse']);
-            return getUtilities().getUrl(URL).then(response => {
+            return getUtilities().getURL(URL).then(response => {
                 assert.equal(response, RESPONSE);
             });
         });
 
         test('rejects the promise on an error', () => {
             registerMockHTTP(undefined, 'fail');
-            return getUtilities().getUrl(URL).then(
+            return getUtilities().getURL(URL).then(
                 response => {
                     assert.fail('Should not be resolved');
                 },
                 e => {
                     assert.equal(e, 'fail');
                 });
+        });
+    });
+
+    suite('isURL', () => {
+        const Utilities = getUtilities();
+
+        function assertIsURL(url: string): void {
+            assert(Utilities.isURL(url));
+        }
+
+        function assertNotURL(url: string): void {
+            assert(!Utilities.isURL(url));
+        }
+
+        test('returns true for URLs', () => {
+            assertIsURL('http://localhost');
+            assertIsURL('http://mysite.com');
+            assertIsURL('file:///c:/project/code.js');
+            assertIsURL('webpack:///webpack/webpackthing');
+            assertIsURL('https://a.b.c:123/asdf?fsda');
+        });
+
+        test('returns false for not-URLs', () => {
+            assertNotURL('a');
+            assertNotURL('/project/code.js');
+            assertNotURL('c:/project/code.js');
+            assertNotURL('abc123!@#');
+            assertNotURL('');
+            assertNotURL(null);
         });
     });
 });

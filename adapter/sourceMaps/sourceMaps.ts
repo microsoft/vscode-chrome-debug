@@ -199,7 +199,7 @@ export class SourceMaps implements ISourceMaps {
 	private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
         if (utils.isURL(mapPath)) {
-            contentsP = utils.getUrl(mapPath).catch(e => {
+            contentsP = utils.getURL(mapPath).catch(e => {
                 Logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
                 return null;
             });
