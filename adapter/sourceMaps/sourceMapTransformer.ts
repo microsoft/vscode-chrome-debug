@@ -118,13 +118,17 @@ export class SourceMapTransformer implements IDebugTransformer {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped && utils.existsSync(mapped.path)) {
+                    // Script was mapped to a valid path
                     stackFrame.source.path = utils.canonicalizeUrl(mapped.path);
                     stackFrame.source.sourceReference = 0;
                     stackFrame.source.name = path.basename(mapped.path);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
-                } else if (!utils.existsSync(stackFrame.source.path)) {
-                    // If the frame has not been mapped to a file that exists on disk, clear the path
+                } else if (utils.existsSync(stackFrame.source.path)) {
+                    // Script could not be mapped, but does exist on disk. Keep it and clear the sourceReference.
+                    stackFrame.source.sourceReference = 0;
+                } else {
+                    // Script could not be mapped and doesn't exist on disk. Clear the path, use sourceReference.
                     stackFrame.source.path = undefined;
                 }
             });

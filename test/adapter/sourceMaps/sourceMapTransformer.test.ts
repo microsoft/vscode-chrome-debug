@@ -158,18 +158,56 @@ suite('SourceMapTransformer', () => {
                 .thrice()
                 .withExactArgs(AUTHORED_PATH).returns(true);
 
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(AUTHORED_PATH, AUTHORED_LINES);
 
             getTransformer().stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
-        test('does nothing when there are no sourcemaps', () => {
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
-            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+        test('clears the path when there are no sourcemaps', () => {
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
 
             getTransformer(false).stackTraceResponse(response);
+            assert.deepEqual(response, expected);
+        });
+
+        test(`keeps the path when the file can't be sourcemapped if it's on disk`, () => {
+            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+
+            RUNTIME_LINES.forEach(line => {
+                mock.expects('MapToSource')
+                    .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
+            });
+            utilsMock.expects('existsSync')
+                .thrice()
+                .withExactArgs(RUNTIME_PATH).returns(true);
+
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+
+            getTransformer(true, true).stackTraceResponse(response);
+            assert.deepEqual(response, expected);
+        });
+
+        test(`clears the path when it can't be sourcemapped and doesn't exist on disk`, () => {
+            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+
+            RUNTIME_LINES.forEach(line => {
+                mock.expects('MapToSource')
+                    .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
+            });
+            utilsMock.expects('existsSync')
+                .thrice()
+                .withExactArgs(RUNTIME_PATH).returns(false);
+
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
+
+            getTransformer(true, true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
     });
