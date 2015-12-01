@@ -263,7 +263,14 @@ class SourceMap {
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
-        sm.sourceRoot = 'file:///' + this._absSourceRoot;
+        if (this._absSourceRoot.startsWith('/')) {
+            // OSX paths
+            sm.sourceRoot = 'file://' + this._absSourceRoot;
+        } else {
+            // Windows paths
+            sm.sourceRoot = 'file:///' + this._absSourceRoot;
+        }
+
 		this._smc = new SourceMapConsumer(sm);
 
         // rewrite sources as absolute paths
