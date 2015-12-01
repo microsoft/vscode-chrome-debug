@@ -78,10 +78,6 @@ You can also theoretically attach to other targets that support the same Chrome 
 * runtimeArgs: Optional arguments passed to the runtime executable
 * userDataDir: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
 
-
-### Note on source maps
-If you're using `"sourceMaps": true` and debugging a URL, if `sourceRoot` is set in your generated source map, it must be an absolute path. See [#47](https://github.com/Microsoft/vscode-chrome-debug/issues/47).
-
 ## Usage
 When your launch config is set up, you can debug your project! Pick a launch config from the dropdown on the Debug pane in Code. Press the play button or F5 to start.
 
