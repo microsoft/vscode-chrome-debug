@@ -63,9 +63,15 @@ suite('SourceMapTransformer', () => {
             };
         }
 
+        function createExpectedArgs(authoredPath: string, path: string, lines: number[], cols?: number[]): ISetBreakpointsArgs {
+            const args = createArgs(path, lines, cols);
+            args.authoredPath = authoredPath;
+            return args;
+        }
+
         test('modifies the source and lines', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
-            const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
+            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
             return getTransformer().setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
@@ -83,7 +89,7 @@ suite('SourceMapTransformer', () => {
 
         test(`if the source can't be mapped, waits until the runtime script is loaded`, () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
-            const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
+            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
             mock.expects('MapPathFromSource')
@@ -91,6 +97,7 @@ suite('SourceMapTransformer', () => {
             mock.expects('MapPathFromSource')
                 .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
             mock.expects('AllMappedSources')
+                .twice()
                 .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
             mock.expects('ProcessNewSourceMap')
                 .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve());
@@ -108,6 +115,44 @@ suite('SourceMapTransformer', () => {
 
             transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH, sourceMapURL: 'script.js.map' }));
             return setBreakpointsP;
+        });
+
+        test('if the source maps to a merged file, includes the breakpoints in other files that map to the same file', () => {
+            const AUTHORED_PATH2 = 'c:/project/authored2.ts';
+            const AUTHORED_LINES2 = [90, 105];
+            const RUNTIME_LINES2 = [78, 81];
+            const RUNTIME_COLS2 = [0, 1];
+
+            const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
+            const args2 = createArgs(AUTHORED_PATH2, AUTHORED_LINES2);
+            const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_LINES2.concat(RUNTIME_LINES), RUNTIME_COLS2.concat(RUNTIME_COLS));
+
+            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            mock.expects('MapPathFromSource')
+                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
+            mock.expects('MapPathFromSource')
+                .withExactArgs(AUTHORED_PATH2).returns(RUNTIME_PATH);
+            mock.expects('AllMappedSources')
+                .twice()
+                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH, AUTHORED_PATH2]);
+            args.lines.forEach((line, i) => {
+                mock.expects('MapFromSource')
+                    .withExactArgs(AUTHORED_PATH, line, 0)
+                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
+            });
+            args2.lines.forEach((line, i) => {
+                mock.expects('MapFromSource')
+                    .withExactArgs(AUTHORED_PATH2, line, 0)
+                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] });
+            });
+
+            const transformer = getTransformer(true, true);
+            return transformer.setBreakpoints(args, 0).then(() => {
+                return transformer.setBreakpoints(args2, 1);
+            }).then(() => {
+                assert.deepEqual(args2, expected);
+                mock.verify();
+            });
         });
 
         suite('setBreakpointsResponse()', () => {
