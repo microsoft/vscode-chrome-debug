@@ -337,7 +337,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return Promise.all(responsePs);
     }
 
-    private _webkitBreakpointResponsesToODPBreakpoints(url: string, responses: WebKitProtocol.Debugger.SetBreakpointByUrlResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
+    private _webkitBreakpointResponsesToODPBreakpoints(url: string, responses: WebKitProtocol.Debugger.SetBreakpointByUrlResponse[], requestLines: number[]): IBreakpoint[] {
         // Don't cache errored responses
         const committedBpIds = responses
             .filter(response => !response.error)
@@ -347,26 +347,24 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._committedBreakpointsByUrl.set(url, committedBpIds);
 
         // Map committed breakpoints to DebugProtocol response breakpoints
-        const bps = responses
+        return responses
             .map((response, i) => {
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
                 if (response.error || !response.result.locations.length) {
-                    return <DebugProtocol.Breakpoint>{
+                    return <IBreakpoint>{
                         verified: false,
                         line: requestLines[i],
                         column: 0
                     };
                 }
 
-                return <DebugProtocol.Breakpoint>{
+                return <IBreakpoint>{
                     verified: true,
                     line: response.result.locations[0].lineNumber,
                     column: response.result.locations[0].columnNumber
                 };
             });
-
-        return bps;
     }
 
     public setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments): Promise<void> {

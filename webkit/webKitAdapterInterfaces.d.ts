@@ -22,6 +22,11 @@ interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
 interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
     /** DebugProtocol does not send cols, maybe it will someday, but this is used internally when a location is sourcemapped */
     cols?: number[];
+    authoredPath?: string;
+}
+
+interface IBreakpoint extends DebugProtocol.Breakpoint {
+    column?: number;
 }
 
 /*
@@ -29,7 +34,7 @@ interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
  * They should always match those interfaces, see the original for comments.
  */
 interface ISetBreakpointsResponseBody {
-    breakpoints: DebugProtocol.Breakpoint[];
+    breakpoints: IBreakpoint[];
 }
 
 interface ISourceResponseBody {
