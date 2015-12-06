@@ -24,16 +24,7 @@ suite('Utilities', () => {
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
         mockery.registerMock('os', { platform: () => 'win32' });
-
-        path.sep = '\\';
-        path.join = (a, b) => {
-            if (!a.endsWith(path.sep)) {
-                a = a + path.sep;
-            }
-
-            return a + b;
-        };
-        mockery.registerMock('path', path);
+        mockery.registerMock('path', path.win32);
 
         mockery.registerAllowables([
             'url', MODULE_UNDER_TEST]);
@@ -433,6 +424,8 @@ suite('Utilities', () => {
             assert.equal(Utilities.lstrip('asdf', ''), 'asdf');
             assert.equal(Utilities.lstrip('asdf', null), 'asdf');
             assert.equal(Utilities.lstrip('asdf', 'asdf'), '');
+            assert.equal(Utilities.lstrip('asdf', '123'), 'asdf');
+            assert.equal(Utilities.lstrip('asdf', 'sdf'), 'asdf');
         });
     });
 });

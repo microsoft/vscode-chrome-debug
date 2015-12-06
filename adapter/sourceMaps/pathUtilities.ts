@@ -67,16 +67,17 @@ export function getAbsSourceRoot(sourceRoot: string, webRoot: string, generatedP
             // sourceRoot points to a local path like "file:///c:/project/src"
             absSourceRoot = canonicalizeUrl(sourceRoot);
         } else if (Path.isAbsolute(sourceRoot)) {
-            // like "/src", would be like http://localhost/src, resolve to a local path under webRoot
+            // sourceRoot is like "/src", would be like http://localhost/src, resolve to a local path under webRoot
             // note that C:/src (or /src as an absolute local path) is not a valid sourceroot
             absSourceRoot = Path.join(webRoot, sourceRoot);
         } else {
-            // like "src" or "../src", relative to the script
+            // sourceRoot is like "src" or "../src", relative to the script
             if (Path.isAbsolute(generatedPath)) {
                 absSourceRoot = makePathAbsolute(generatedPath, sourceRoot);
             } else {
-                // runtime script is not on disk, resolve the sourceRoot location on disk
-                absSourceRoot =  Path.join(webRoot, URL.parse(generatedPath).pathname, sourceRoot);
+                // generatedPath is a URL so runtime script is not on disk, resolve the sourceRoot location on disk
+                const genDirname = Path.dirname(URL.parse(generatedPath).pathname);
+                absSourceRoot =  Path.join(webRoot, genDirname, sourceRoot);
             }
         }
 
