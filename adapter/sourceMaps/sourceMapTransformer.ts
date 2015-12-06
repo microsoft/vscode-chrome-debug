@@ -122,20 +122,23 @@ export class SourceMapTransformer implements IDebugTransformer {
         if (this._sourceMaps && this._requestSeqToSetBreakpointsArgs.has(requestSeq)) {
             const args = this._requestSeqToSetBreakpointsArgs.get(requestSeq);
             if (args.authoredPath) {
-                // authoredPath is set, so the file was mapped to source.
-                // Remove breakpoints from files that map to the same file, and map back to source.
-                response.breakpoints = response.breakpoints.filter((_, i) => i < args.lines.length);
-                response.breakpoints.forEach(bp => {
-                    const mapped = this._sourceMaps.MapToSource(args.source.path, bp.line, bp.column);
-                    if (mapped) {
-                        utils.Logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
-                        bp.line = mapped.line;
-                    } else {
-                        utils.Logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
-                    }
+                const sourceBPLines = this._authoredPathsToMappedBPLines.get(args.authoredPath);
+                if (sourceBPLines) {
+                    // authoredPath is set, so the file was mapped to source.
+                    // Remove breakpoints from files that map to the same file, and map back to source.
+                    response.breakpoints = response.breakpoints.filter((_, i) => i < sourceBPLines.length);
+                    response.breakpoints.forEach(bp => {
+                        const mapped = this._sourceMaps.MapToSource(args.source.path, bp.line, bp.column);
+                        if (mapped) {
+                            utils.Logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
+                            bp.line = mapped.line;
+                        } else {
+                            utils.Logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
+                        }
 
-                    this._requestSeqToSetBreakpointsArgs.delete(requestSeq);
-                });
+                        this._requestSeqToSetBreakpointsArgs.delete(requestSeq);
+                    });
+                }
             }
         }
 

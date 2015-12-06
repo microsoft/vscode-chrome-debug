@@ -15,6 +15,11 @@ const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
 const RUNTIME_COLS = [3, 7, 11];
 
+const AUTHORED_PATH2 = 'c:/project/authored2.ts';
+const AUTHORED_LINES2 = [90, 105];
+const RUNTIME_LINES2 = [78, 81];
+const RUNTIME_COLS2 = [0, 1];
+
 // Not mocked, use for type only
 import {SourceMapTransformer as _SourceMapTransformer} from '../../../adapter/sourceMaps/sourceMapTransformer';
 
@@ -39,7 +44,7 @@ suite('SourceMapTransformer', () => {
 
     function getTransformer(sourceMaps = true, suppressDefaultMock = false): _SourceMapTransformer {
         if (!suppressDefaultMock) {
-            mockery.registerMock('./sourceMaps', { SourceMaps: MockSourceMaps });
+            mockery.registerMock('./sourceMaps', { SourceMaps: StubSourceMaps });
         }
 
         utilsMock.expects('getWebRoot').returns(undefined);
@@ -67,6 +72,29 @@ suite('SourceMapTransformer', () => {
             const args = createArgs(path, lines, cols);
             args.authoredPath = authoredPath;
             return args;
+        }
+
+        function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Sinon.SinonMock {
+            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            mock.expects('MapPathFromSource')
+                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
+            mock.expects('MapPathFromSource')
+                .withExactArgs(AUTHORED_PATH2).returns(RUNTIME_PATH);
+            mock.expects('AllMappedSources')
+                .twice()
+                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH, AUTHORED_PATH2]);
+            args.lines.forEach((line, i) => {
+                mock.expects('MapFromSource')
+                    .withExactArgs(AUTHORED_PATH, line, 0)
+                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
+            });
+            args2.lines.forEach((line, i) => {
+                mock.expects('MapFromSource')
+                    .withExactArgs(AUTHORED_PATH2, line, 0)
+                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] });
+            });
+
+            return mock;
         }
 
         test('modifies the source and lines', () => {
@@ -118,33 +146,10 @@ suite('SourceMapTransformer', () => {
         });
 
         test('if the source maps to a merged file, includes the breakpoints in other files that map to the same file', () => {
-            const AUTHORED_PATH2 = 'c:/project/authored2.ts';
-            const AUTHORED_LINES2 = [90, 105];
-            const RUNTIME_LINES2 = [78, 81];
-            const RUNTIME_COLS2 = [0, 1];
-
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
             const args2 = createArgs(AUTHORED_PATH2, AUTHORED_LINES2);
             const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_LINES2.concat(RUNTIME_LINES), RUNTIME_COLS2.concat(RUNTIME_COLS));
-
-            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
-            mock.expects('MapPathFromSource')
-                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
-            mock.expects('MapPathFromSource')
-                .withExactArgs(AUTHORED_PATH2).returns(RUNTIME_PATH);
-            mock.expects('AllMappedSources')
-                .twice()
-                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH, AUTHORED_PATH2]);
-            args.lines.forEach((line, i) => {
-                mock.expects('MapFromSource')
-                    .withExactArgs(AUTHORED_PATH, line, 0)
-                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
-            });
-            args2.lines.forEach((line, i) => {
-                mock.expects('MapFromSource')
-                    .withExactArgs(AUTHORED_PATH2, line, 0)
-                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] });
-            });
+            const mock = createMergedSourcesMock(args, args2);
 
             const transformer = getTransformer(true, true);
             return transformer.setBreakpoints(args, 0).then(() => {
@@ -159,9 +164,9 @@ suite('SourceMapTransformer', () => {
             function getResponseBody(lines: number[], column?: number): ISetBreakpointsResponseBody {
                 return {
                     breakpoints: lines.map(line => {
-                        const bp = { line, verified: true };
+                        const bp: IBreakpoint = { line, verified: true };
                         if (column !== undefined) {
-                            (<any>bp).column = column;
+                            bp.column = column;
                         }
 
                         return bp;
@@ -193,6 +198,29 @@ suite('SourceMapTransformer', () => {
                 }, 0);
                 transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
+            });
+
+            test(`if the source maps to a merged file, filters breakpoint results from other files`, () => {
+                const setBPArgs = createArgs(AUTHORED_PATH, AUTHORED_LINES);
+                const setBPArgs2 = createArgs(AUTHORED_PATH2, AUTHORED_LINES2);
+                const response = getResponseBody(RUNTIME_LINES2.concat(RUNTIME_LINES), /*column=*/0);
+                const expected = getResponseBody(AUTHORED_LINES2);
+
+                const mock = createMergedSourcesMock(setBPArgs, setBPArgs2);
+                RUNTIME_LINES2.forEach((line, i) => {
+                    mock.expects('MapToSource')
+                        .withExactArgs(RUNTIME_PATH, line, 0)
+                        .returns({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i] });
+                });
+
+                const transformer = getTransformer(true, true);
+                return transformer.setBreakpoints(setBPArgs, 0).then(() => {
+                    return transformer.setBreakpoints(setBPArgs2, 1);
+                }).then(() => {
+                    transformer.setBreakpointsResponse(response, 1);
+                    assert.deepEqual(response, expected);
+                    mock.verify();
+                });
             });
         });
     });
@@ -258,11 +286,10 @@ suite('SourceMapTransformer', () => {
     });
 });
 
-class MockSourceMaps implements ISourceMaps {
+class StubSourceMaps implements ISourceMaps {
     constructor(private generatedCodeDirectory: string) { }
 
     public MapPathFromSource(path: string): string {
-        assert.equal(path, AUTHORED_PATH);
         return RUNTIME_PATH;
     }
 
@@ -271,9 +298,6 @@ class MockSourceMaps implements ISourceMaps {
 	 * line and column are 0 based.
 	 */
     public MapFromSource(path: string, line: number, column: number): MappingResult {
-        assert.equal(path, AUTHORED_PATH);
-        assert.equal(column, 0);
-
         const index = AUTHORED_LINES.indexOf(line);
         const mappedLine = RUNTIME_LINES[index];
         const mappedCol = RUNTIME_COLS[index];
@@ -285,9 +309,6 @@ class MockSourceMaps implements ISourceMaps {
 	 * line and column are 0 based.
 	 */
     public MapToSource(path: string, line: number, column: number): MappingResult {
-        assert.equal(path, RUNTIME_PATH);
-        assert.equal(column, 0);
-
         const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
         return { path: AUTHORED_PATH, line: mappedLine, column: 0 };
     }
