@@ -23,6 +23,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
     private _webRoot: string;
+    private _authoredPathsToBreakpoints: Map<string, number[]>;
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -38,6 +39,7 @@ export class SourceMapTransformer implements IDebugTransformer {
             this._sourceMaps = new SourceMaps(this._webRoot);
             this._requestSeqToSetBreakpointsArgs = new Map<number, DebugProtocol.SetBreakpointsArguments>();
             this._allRuntimeScriptPaths = new Set<string>();
+            this._authoredPathsToBreakpoints = new Map<string, number[]>();
         }
     }
 

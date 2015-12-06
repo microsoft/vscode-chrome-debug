@@ -238,7 +238,7 @@ enum Bias {
 }
 
 class SourceMap {
-	private _generatedFile: string;		// the generated file for this sourcemap
+	private _generatedPath: string;		// the generated file for this sourcemap
 	private _sources: string[];			// the sources of generated file (relative to sourceRoot)
 	private _absSourceRoot: string;		// the common prefix for the source (can be a URL)
 	private _smc: SourceMapConsumer;	// the source map
@@ -252,43 +252,11 @@ class SourceMap {
      */
 	public constructor(generatedPath: string, json: string, webRoot: string) {
         Logger.log(`SourceMap: creating SM for ${generatedPath}`)
-		this._generatedFile = generatedPath;
+		this._generatedPath = generatedPath;
         this._webRoot = webRoot;
 
 		const sm = JSON.parse(json);
-		let sr = <string> sm.sourceRoot;
-		if (sr) {
-            if (sr.startsWith('file:///')) {
-                // sourceRoot points to a local path like "file:///c:/project/src"
-                this._absSourceRoot = PathUtils.canonicalizeUrl(sr);
-            } else if (Path.isAbsolute(sr)) {
-                // like "/src", would be like http://localhost/src, resolve to a local path under webRoot
-                this._absSourceRoot = Path.join(this._webRoot, sr);
-            } else {
-                // like "src" or "../src", relative to the script
-                if (Path.isAbsolute(generatedPath)) {
-                    this._absSourceRoot = PathUtils.makePathAbsolute(generatedPath, sr);
-                } else {
-                    // runtime script is not on disk, resolve the sourceRoot location on disk
-                    this._absSourceRoot =  Path.join(this._webRoot, URL.parse(generatedPath).pathname, sr);
-                }
-            }
-
-            Logger.log(`SourceMap: resolved sourceRoot ${sr} -> ${this._absSourceRoot}`);
-		} else {
-            if (Path.isAbsolute(generatedPath)) {
-                this._absSourceRoot = Path.dirname(generatedPath);
-                Logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${this._absSourceRoot}`);
-            } else {
-                // runtime script is not on disk, resolve the sourceRoot location on disk
-                const scriptPathDirname = Path.dirname(URL.parse(generatedPath).pathname);
-                this._absSourceRoot =  Path.join(this._webRoot, scriptPathDirname);
-                Logger.log(`SourceMap: no sourceRoot specified, using webRoot + script path dirname: ${this._absSourceRoot}`);
-            }
-		}
-
-        this._absSourceRoot = utils.stripTrailingSlash(this._absSourceRoot);
-        this._absSourceRoot = utils.fixDriveLetterAndSlashes(this._absSourceRoot);
+		this._absSourceRoot = PathUtils.getAbsSourceRoot(sm.sourceRoot, this._webRoot, this._generatedPath);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
@@ -327,7 +295,7 @@ class SourceMap {
 	 * the generated file of this source map.
 	 */
 	public generatedPath(): string {
-		return this._generatedFile;
+		return this._generatedPath;
 	}
 
 	/*
@@ -371,7 +339,6 @@ class SourceMap {
                 src = src.replace(/\\/g, '/');
             }
 		}
-
 
 		const needle = {
 			source: src,
