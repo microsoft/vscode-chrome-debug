@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+ /* tslint:disable */
+
 import * as Path from 'path';
 import * as URL from 'url';
 
