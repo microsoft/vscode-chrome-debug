@@ -1,15 +1,15 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.1.10",
+  "version": "0.1.12",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-webkit-debug"
+    "url": "https://github.com/Microsoft/vscode-chrome-debug"
   },
   "publisher": "msjsdiag",
-  "bugs": "https://github.com/microsoft/vscode-webkit-debug/issues",
+  "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
   "engines": {
     "vscode": "*"
   },
@@ -117,6 +117,11 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
                 "default": false
+              },
+              "userDataDir": {
+                "type": "string",
+                "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
+                "default": ""
               }
             }
           },

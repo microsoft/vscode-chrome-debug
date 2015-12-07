@@ -260,12 +260,18 @@ class SourceMap {
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
-        sm.sourceRoot = 'file:///' + this._absSourceRoot;
+        if (this._absSourceRoot.startsWith('/')) {
+            // OSX paths
+            sm.sourceRoot = 'file://' + this._absSourceRoot;
+        } else {
+            // Windows paths
+            sm.sourceRoot = 'file:///' + this._absSourceRoot;
+        }
 
         // special-case webpack:/// prefixed sources which is kind of meaningless
         sm.sources = sm.sources.map((sourcePath: string) => utils.lstrip(sourcePath, 'webpack:///'));
 
-		this._smc = new SourceMapConsumer(sm);
+        this._smc = new SourceMapConsumer(sm);
 
         // rewrite sources as absolute paths
         this._sources = sm.sources.map((sourcePath: string) => {

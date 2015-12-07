@@ -1,3 +1,5 @@
+/* tslint:disable */
+
 declare function scriptTagFn();
 
 function anotherFn() {
