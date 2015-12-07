@@ -381,7 +381,12 @@ export function getURL(aUrl: string): Promise<string> {
             let responseData = '';
             response.on('data', chunk => responseData += chunk);
             response.on('end', () => {
-                resolve(responseData);
+                // Sometimes the 'error' event is not fired. Double check here.
+                if (response.statusCode === 200) {
+                    resolve(responseData);
+                } else {
+                    reject(responseData);
+                }
             });
         }).on('error', e => {
             reject(e);
