@@ -268,8 +268,13 @@ class SourceMap {
             sm.sourceRoot = 'file:///' + this._absSourceRoot;
         }
 
-        // special-case webpack:/// prefixed sources which is kind of meaningless
-        sm.sources = sm.sources.map((sourcePath: string) => utils.lstrip(sourcePath, 'webpack:///'));
+        sm.sources = sm.sources.map((sourcePath: string) => {
+            // special-case webpack:/// prefixed sources which is kind of meaningless
+            sourcePath = utils.lstrip(sourcePath, 'webpack:///');
+
+            // Force correct format for sanity
+            return utils.fixDriveLetterAndSlashes(sourcePath);
+        });
 
         this._smc = new SourceMapConsumer(sm);
 
@@ -334,8 +339,7 @@ class SourceMap {
 	 */
 	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
         if (this._sourcesAreURLs) {
-            // Force drive letter to uppercase, which seems to be more common outside of VS Code
-            src = 'file:///' + utils.upperCaseDriveLetter(src);
+            src = 'file:///' + src;
         } else if (this._absSourceRoot) {
             // make input path relative to sourceRoot
 			src = Path.relative(this._absSourceRoot, src);

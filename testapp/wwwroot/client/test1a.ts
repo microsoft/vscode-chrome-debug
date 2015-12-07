@@ -1,5 +1,5 @@
 function locals() {
-    var arr1 = [5, 2];
+    var arr1 = [1, 2];
 
 
     arr1.forEach(x => {

@@ -254,8 +254,18 @@ suite('Utilities', () => {
     suite('fixDriveLetterAndSlashes', () => {
         const Utilities = getUtilities();
 
-        test('does what it says', () => {
+        test('works for c:/... cases', () => {
             assert.equal(Utilities.fixDriveLetterAndSlashes('C:/path/stuff'), 'c:\\path\\stuff');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('c:/path\\stuff'), 'c:\\path\\stuff');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('C:\\path'), 'c:\\path');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('C:\\'), 'c:\\');
+        });
+
+        test('works for file:/// cases', () => {
+            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:/path/stuff'), 'file:///c:\\path\\stuff');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///c:/path\\stuff'), 'file:///c:\\path\\stuff');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:\\path'), 'file:///c:\\path');
+            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:\\'), 'file:///c:\\');
         });
     });
 
@@ -353,8 +363,9 @@ suite('Utilities', () => {
                             }
                         }};
                 } else {
-                    callback({ on:
-                        (eventName, eventCallback) => {
+                    callback({
+                        statusCode: 200,
+                        on: (eventName, eventCallback) => {
                             if (eventName === 'data') {
                                 dataResponses.forEach(eventCallback);
                             } else if (eventName === 'end') {

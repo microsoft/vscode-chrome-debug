@@ -6,7 +6,7 @@
             "name": "test chrome",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost:8080/index.html",
+            "url": "http://localhost:8081/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
             "webRoot": "wwwroot"

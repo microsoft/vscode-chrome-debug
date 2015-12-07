@@ -267,21 +267,18 @@ export function canonicalizeUrl(aUrl: string): string {
  * Ensure lower case drive letter and \ on Windows
  */
 export function fixDriveLetterAndSlashes(aPath: string): string {
-    if (getPlatform() === Platform.Windows && aPath.match(/^[A-Za-z]:/)) {
-        // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
-        aPath = aPath[0].toLowerCase() + aPath.substr(1);
-        aPath = aPath.replace(/\//g, path.sep);
-    }
-
-    return aPath;
-}
-
-/**
- * If this is Windows and the path starts with a drive letter, ensure uppercase.
- */
-export function upperCaseDriveLetter(aPath: string): string {
-    if (getPlatform() === Platform.Windows && aPath.match(/^[a-z]:/)) {
-        aPath = aPath[0].toUpperCase() + aPath.substr(1);
+    if (getPlatform() === Platform.Windows) {
+        if (aPath.match(/file:\/\/\/[A-Za-z]:/)) {
+            const prefixLen = 'file:///'.length;
+            aPath =
+                'file:///' +
+                aPath[prefixLen].toLowerCase() +
+                aPath.substr(prefixLen + 1).replace(/\//g, path.sep);
+        } else if (aPath.match(/^[A-Za-z]:/)) {
+            // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
+            aPath = aPath[0].toLowerCase() + aPath.substr(1);
+            aPath = aPath.replace(/\//g, path.sep);
+        }
     }
 
     return aPath;
