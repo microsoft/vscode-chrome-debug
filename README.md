@@ -45,6 +45,9 @@ __Windows__
 __OS X__
 * In a terminal, execute `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
 
+__Linux__
+* In a terminal, launch `google-chrome --remote-debugging-port=9222`
+
 Launch Chrome and navigate to your page.
 
 An example `launch.json` config.
