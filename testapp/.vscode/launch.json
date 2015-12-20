@@ -1,12 +1,12 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
+    // "debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost:8081/index.html",
+            "url": "http://localhost:8080/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
             "webRoot": "wwwroot"
