@@ -107,7 +107,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
 
         Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-        this._chromeProc = spawn(chromePath, chromeArgs);
+        this._chromeProc = spawn(chromePath, chromeArgs, {
+            detached: true,
+            stdio: ['ignore']
+        });
+        (<any>this._chromeProc).unref();
         this._chromeProc.on('error', (err) => {
             Logger.log('chrome error: ' + err);
             this.terminateSession();
