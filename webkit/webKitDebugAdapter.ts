@@ -130,11 +130,11 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         return this._attach(args.port);
     }
 
-    private initDiagnosticLogging(name: string, args: IAttachRequestArgs|ILaunchRequestArgs): void {
+    private initDiagnosticLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
         if (args.diagnosticLogging) {
             Logger.enableDiagnosticLogging();
-            utils.Logger.log(`initialize(${JSON.stringify(this._initArgs)})`);
-            utils.Logger.log(`${name}(${JSON.stringify(args)})`);
+            utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
+            utils.Logger.log(`${name}(${JSON.stringify(args) })`);
         }
     }
 
@@ -484,7 +484,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (handle.objectId === WebKitDebugAdapter.EXCEPTION_VALUE_ID) {
             // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
             const excValuePropDescriptor: WebKitProtocol.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
-            return Promise.resolve({ variables: [ this.propertyDescriptorToVariable(excValuePropDescriptor)] });
+            return Promise.resolve({ variables: [this.propertyDescriptorToVariable(excValuePropDescriptor)] });
         } else if (handle != null) {
             return Promise.all([
                 // Need to make two requests to get all properties

@@ -297,8 +297,8 @@ export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject,
     let value = '';
     let variableHandleRef: string;
 
-    if (object) { // just paranoia?
-        if (object && object.type === 'object') {
+    if (object) {
+        if (object.type === 'object') {
             if (object.subtype === 'null') {
                 value = 'null';
             } else {
@@ -306,7 +306,7 @@ export function remoteObjectToValue(object: WebKitProtocol.Runtime.RemoteObject,
                 variableHandleRef = object.objectId;
                 value = object.description;
             }
-        } else if (object && object.type === 'undefined') {
+        } else if (object.type === 'undefined') {
             value = 'undefined';
         } else if (object.type === 'function') {
             const firstBraceIdx = object.description.indexOf('{');

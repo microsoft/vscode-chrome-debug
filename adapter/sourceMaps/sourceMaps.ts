@@ -199,12 +199,14 @@ export class SourceMaps implements ISourceMaps {
 	private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
         if (utils.isURL(mapPath)) {
+            Logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);
             contentsP = utils.getURL(mapPath).catch(e => {
                 Logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
                 return null;
             });
         } else {
             contentsP = new Promise((resolve, reject) => {
+                Logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPath}`);
                 FS.readFile(mapPath, (err, data) => {
                     if (err) {
                         Logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
