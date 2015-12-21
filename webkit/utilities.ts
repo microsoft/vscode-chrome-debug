@@ -406,3 +406,13 @@ export function lstrip(s: string, lStr: string): string {
         s.substr(lStr.length) :
         s;
 }
+
+/**
+ * Convert a local path to a file URL, like
+ * C:/code/app.js => file:///C:/code/app.js
+ * /code/app.js => file:///code/app.js
+ */
+export function pathToFileURL(path: string): string {
+    return (path.startsWith('/') ? 'file://' : 'file:///') +
+        path;
+}

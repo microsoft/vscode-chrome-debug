@@ -262,13 +262,7 @@ class SourceMap {
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
-        if (this._absSourceRoot.startsWith('/')) {
-            // OSX paths
-            sm.sourceRoot = 'file://' + this._absSourceRoot;
-        } else {
-            // Windows paths
-            sm.sourceRoot = 'file:///' + this._absSourceRoot;
-        }
+        sm.sourceRoot = utils.pathToFileURL(this._absSourceRoot);
 
         sm.sources = sm.sources.map((sourcePath: string) => {
             // special-case webpack:/// prefixed sources which is kind of meaningless
@@ -341,7 +335,7 @@ class SourceMap {
 	 */
 	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.GREATEST_LOWER_BOUND): SourceMap.Position {
         if (this._sourcesAreURLs) {
-            src = 'file:///' + src;
+            src = utils.pathToFileURL(src);
         } else if (this._absSourceRoot) {
             // make input path relative to sourceRoot
 			src = Path.relative(this._absSourceRoot, src);
