@@ -223,7 +223,7 @@ suite('WebKitDebugAdapter', () => {
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;
 
-                return { on: () => { } };
+                return { on: () => { }, unref: () => { } };
             }
 
             // actual path.resolve returns system-dependent slashes
