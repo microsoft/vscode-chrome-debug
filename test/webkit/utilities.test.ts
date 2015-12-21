@@ -208,9 +208,16 @@ suite('Utilities', () => {
             assert.equal(getUtilities().webkitUrlToClientPath('', TEST_WEBKIT_LOCAL_URL), TEST_CLIENT_PATH);
         });
 
-        test('uri encodings are fixed', () => {
+        test('uri encodings are fixed for file:/// paths', () => {
             const clientPath = 'c:\\project\\path with spaces\\script.js';
             assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, 'file:///' + encodeURI(clientPath)), clientPath);
+        });
+
+        test('uri encodings are fixed in URLs', () => {
+            const pathSegment = 'path with spaces\\script.js';
+            const url = 'http:\\' + encodeURIComponent(pathSegment);
+
+            assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, url), path.join(TEST_WEB_ROOT, pathSegment));
         });
     });
 
