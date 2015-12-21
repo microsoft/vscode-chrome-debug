@@ -439,4 +439,16 @@ suite('Utilities', () => {
             assert.equal(Utilities.lstrip('asdf', 'sdf'), 'asdf');
         });
     });
+
+    suite('pathToFileURL', () => {
+        const Utilities = getUtilities();
+
+        test('converts windows-style paths', () => {
+            assert.equal(Utilities.pathToFileURL('c:/code/app.js'), 'file:///c:/code/app.js');
+        });
+
+        test('converts unix-style paths', () => {
+            assert.equal(Utilities.pathToFileURL('/code/app.js'), 'file:///code/app.js');
+        });
+    });
 });
