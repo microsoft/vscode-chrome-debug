@@ -219,7 +219,7 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
     }
 
     // Search the filesystem under the webRoot for the file that best matches the given url
-    let pathName = url.parse(canonicalizeUrl(aUrl)).pathname;
+    let pathName = decodeURIComponent(url.parse(canonicalizeUrl(aUrl)).pathname);
     if (!pathName || pathName === '/') {
         return '';
     }

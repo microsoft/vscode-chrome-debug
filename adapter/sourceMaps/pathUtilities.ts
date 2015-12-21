@@ -51,7 +51,7 @@ export function makeRelative(target: string, path: string) {
 
 export function canonicalizeUrl(url: string): string {
     let u = URL.parse(url);
-    let p = u.pathname;
+    let p = decodeURIComponent(u.pathname);
 
     if (p.length >= 4 && p[0] === '/' && p[2] === ':' && p[3] === '/' && ((p[1] >= 'a' && p[1] <= 'z') || (p[1] >= 'A' && p[1] <= 'Z'))) {
         return p.substr(1);

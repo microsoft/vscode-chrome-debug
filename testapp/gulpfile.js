@@ -13,7 +13,7 @@ var concat = require('gulp-concat');
 var filter = require('gulp-filter');
 
 var sources = [
-    'wwwroot/client'
+    'wwwroot/client with space'
 ].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
 
 var projectConfig = {
@@ -28,7 +28,7 @@ gulp.task('build', function () {
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig))
             .pipe(test1filter)
-            .pipe(concat('client/test1.js'))
+            .pipe(concat('client with space/test1.js'))
             .pipe(test1filter.restore)
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/' }))
         .pipe(gulp.dest('./wwwroot/out'));
