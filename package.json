@@ -33,6 +33,9 @@
     "tslint": "^2.5.1",
     "typescript": "^1.6.2"
   },
+  "scripts": {
+      "test": "gulp test"
+  },
   "contributes": {
     "debuggers": [
       {
