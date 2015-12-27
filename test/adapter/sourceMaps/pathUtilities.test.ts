@@ -4,7 +4,6 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
-import * as path from 'path';
 
 import * as testUtils from '../../testUtils';
 
@@ -19,7 +18,7 @@ suite('PathUtilities', () => {
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
         mockery.registerAllowables([MODULE_UNDER_TEST, 'url', '../../webkit/utilities']);
-        mockery.registerMock('path', path.win32);
+        testUtils.win32Mocks();
     });
 
     teardown(() => {

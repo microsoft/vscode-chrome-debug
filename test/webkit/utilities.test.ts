@@ -23,10 +23,9 @@ suite('Utilities', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
+        testUtils.win32Mocks();
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
-        mockery.registerMock('os', { platform: () => 'win32' });
-        mockery.registerMock('path', _path.win32);
         path = require('path');
 
         mockery.registerAllowables([
@@ -52,8 +51,8 @@ suite('Utilities', () => {
 
         test('win', () => {
             // Overwrite the statSync mock to say the x86 path doesn't exist
-            const statSync = (path: string) => {
-                if (path.indexOf('(x86)') >= 0) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath.indexOf('(x86)') >= 0) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
 
@@ -93,8 +92,8 @@ suite('Utilities', () => {
 
     suite('existsSync()', () => {
         test('it returns false when statSync throws', () => {
-            const statSync = (path: string) => {
-                if (path.indexOf('notfound') >= 0) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath.indexOf('notfound') >= 0) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
 
@@ -186,15 +185,15 @@ suite('Utilities', () => {
         });
 
         test('it searches the disk for a path that exists, built from the url', () => {
-            const statSync = (path: string) => {
-                if (path !== TEST_CLIENT_PATH) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath !== TEST_CLIENT_PATH) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
             assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
         });
 
         test(`returns an empty string when it can't resolve a url`, () => {
-            const statSync = (path: string) => {
+            const statSync = (aPath: string) => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
