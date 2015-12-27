@@ -45,6 +45,10 @@ suite('WebKitDebugAdapter', () => {
     });
 
     suite('attach()', () => {
+        test('fail test', () => {
+            assert.fail('test travis');
+        });
+
         test('if successful, an initialized event is fired', () => {
             const wkda = instantiateWKDA();
             let initializedFired = false;
