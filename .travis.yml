@@ -8,5 +8,5 @@ before_script:
 
 script:
     - gulp build
-    - gulp test
+    - npm test
     - gulp tslint
