@@ -7,5 +7,5 @@ before_script:
   - npm install -g gulp
 
 script:
-    gulp build
-    gulp tslint
+    - gulp build
+    - gulp tslint
