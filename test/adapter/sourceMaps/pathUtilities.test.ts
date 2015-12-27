@@ -7,7 +7,7 @@ import * as mockery from 'mockery';
 
 import * as testUtils from '../../testUtils';
 
-import {getAbsSourceRoot} from '../../../adapter/sourceMaps/pathUtilities';
+import {getAbsSourceRoot as _getAbsSourceRoot} from '../../../adapter/sourceMaps/pathUtilities';
 
 const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/pathUtilities';
 
@@ -33,6 +33,11 @@ suite('PathUtilities', () => {
         const GEN_URL = 'http://localhost:8080/code/script.js';
         const ABS_SOURCEROOT = 'c:\\project\\src';
         const WEBROOT = 'c:/project/webroot';
+
+        let getAbsSourceRoot: typeof _getAbsSourceRoot;
+        setup(() => {
+            getAbsSourceRoot = require(MODULE_UNDER_TEST).getAbsSourceRoot;
+        });
 
         test('handles file:/// sourceRoot', () => {
             assert.equal(
