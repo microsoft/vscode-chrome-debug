@@ -17,7 +17,7 @@ suite('PathUtilities', () => {
 
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'url', '../../webkit/utilities']);
+        mockery.registerAllowables([MODULE_UNDER_TEST, 'url', 'http', 'fs', '../../webkit/utilities']);
         testUtils.win32Mocks();
     });
 
