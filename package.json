@@ -54,7 +54,7 @@
             "name": "Launch index.html",
             "type": "chrome",
             "request": "launch",
-            "file": "index.html"
+            "file": "${workspaceRoot}/index.html"
           },
           {
             "name": "Launch localhost with sourcemaps",
