@@ -557,7 +557,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
-                const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
+                const evalResult = evalResponse.result;
+                let errorMessage: string = 'Error';
+                if (evalResult.exceptionDetails) {
+                    errorMessage = evalResult.exceptionDetails.text;
+                } else if (evalResult.result && evalResult.result.description) {
+                    errorMessage = evalResult.result.description;
+                }
                 return utils.errP(errorMessage);
             }
 
