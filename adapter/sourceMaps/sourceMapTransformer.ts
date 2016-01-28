@@ -183,13 +183,22 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
+            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+
             if (!event.body.sourceMapURL) {
+                // If a file does not have a source map, check if we've seen any breakpoints
+                // for it anyway and make sure to enable them
+                let scriptUrl = event.body.scriptUrl;
+                if (this._pendingBreakpointsByPath.has(scriptUrl)) {
+                    let pendingBreakpoint = this._pendingBreakpointsByPath.get(scriptUrl);
+                    this._pendingBreakpointsByPath.delete(scriptUrl);
+                    this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
+                        .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
+                }
                 return;
             }
 
             this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
-                this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-
                 const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
                 if (sources) {
                     utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
