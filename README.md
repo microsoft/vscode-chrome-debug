@@ -1,4 +1,6 @@
 # Debugger for Chrome
+[![build status](https://travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-node-debug)
+
 A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome Debugging Protocol.
 
 ![Screenshot](images/screenshot.png)
@@ -44,6 +46,9 @@ __Windows__
 
 __OS X__
 * In a terminal, execute `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
+
+__Linux__
+* In a terminal, launch `google-chrome --remote-debugging-port=9222`
 
 Launch Chrome and navigate to your page.
 

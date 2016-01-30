@@ -1,3 +1,5 @@
+This project may use or incorporate third party material from the projects listed below. The original copyright notice and the license under which Microsoft received such third party material are set forth below. Microsoft reserves all other rights not expressly granted, whether by implication, estoppel or otherwise.
+
 websockets-ws
 
 (The MIT License)
