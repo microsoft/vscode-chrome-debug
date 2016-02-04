@@ -382,6 +382,7 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
+                    Logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });
