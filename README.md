@@ -1,5 +1,5 @@
 # Debugger for Chrome
-[![build status](https://travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-node-debug)
+[![build status](https://travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-chrome-debug)
 
 A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome Debugging Protocol.
 
