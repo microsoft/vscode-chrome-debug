@@ -75,7 +75,7 @@ An example `launch.json` config.
 ```
 
 ### Other targets
-You can also theoretically attach to other targets that support the same Chrome remote debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
+You can also theoretically attach to other targets that support the same Chrome Debugger protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
 
 ### Other optional launch config fields
 * diagnosticLogging: When true, the adapter logs its own diagnostic info to the console

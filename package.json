@@ -3,7 +3,7 @@
   "displayName": "Debugger for Chrome",
   "version": "0.2.2",
   "icon": "images/icon.png",
-  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
+  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-chrome-debug"
