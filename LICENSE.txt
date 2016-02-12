@@ -1,4 +1,4 @@
-WebKit Debug Adapter for Visual Studio Code
+VS Code - Debugger for Chrome
 
 Copyright (c) Microsoft Corporation
 
