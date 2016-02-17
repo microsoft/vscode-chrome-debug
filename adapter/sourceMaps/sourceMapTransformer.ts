@@ -25,7 +25,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _webRoot: string;
     private _authoredPathsToMappedBPLines: Map<string, number[]>;
     private _authoredPathsToMappedBPCols: Map<string, number[]>;
-    private _externalSourceMapPath : string;
+    private _externalSourceMapPath: string;
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -201,7 +201,7 @@ export class SourceMapTransformer implements IDebugTransformer {
             }
 
             // Prefers the external sourceMapUrl over the one defined in the body
-            let sourceMapUrl : string;
+            let sourceMapUrl: string;
             sourceMapUrl = this._externalSourceMapPath || event.body.sourceMapURL;
 
             this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, sourceMapUrl).then(() => {
