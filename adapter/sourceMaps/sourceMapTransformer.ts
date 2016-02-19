@@ -25,6 +25,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _webRoot: string;
     private _authoredPathsToMappedBPLines: Map<string, number[]>;
     private _authoredPathsToMappedBPCols: Map<string, number[]>;
+    private _externalSourceMapPath: string;
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -42,6 +43,7 @@ export class SourceMapTransformer implements IDebugTransformer {
             this._allRuntimeScriptPaths = new Set<string>();
             this._authoredPathsToMappedBPLines = new Map<string, number[]>();
             this._authoredPathsToMappedBPCols = new Map<string, number[]>();
+            this._externalSourceMapPath = args.externalSourceMapPath;
         }
     }
 
@@ -192,7 +194,11 @@ export class SourceMapTransformer implements IDebugTransformer {
                 return;
             }
 
-            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
+            // Prefers the external sourceMapUrl over the one defined in the body
+            let sourceMapUrl: string;
+            sourceMapUrl = this._externalSourceMapPath || event.body.sourceMapURL;
+
+            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, sourceMapUrl).then(() => {
                 const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
                 if (sources) {
                     utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);

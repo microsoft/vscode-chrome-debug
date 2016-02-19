@@ -125,6 +125,11 @@
                 "type": "string",
                 "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
                 "default": ""
+              },
+              "externalSourceMapPath" :{
+                "type": "string",
+                "description": "When set, vscode will use it for the sourcemaps file",
+                "default": ""
               }
             }
           },
@@ -157,6 +162,11 @@
                 "type": "string",
                 "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
                 "default": "."
+              },
+              "externalSourceMapPath" :{
+                "type": "string",
+                "description": "When set, vscode will use it for the sourcemaps file",
+                "default": ""
               }
             }
           }

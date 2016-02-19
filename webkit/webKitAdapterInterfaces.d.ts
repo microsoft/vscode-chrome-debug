@@ -10,6 +10,7 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     port?: number;
     diagnosticLogging?: boolean;
     userDataDir?: string;
+    externalSourceMapPath?: string;
 }
 
 interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
@@ -18,6 +19,7 @@ interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     port: number;
     sourceMaps?: boolean;
     diagnosticLogging?: boolean;
+    externalSourceMapPath?: string;
 }
 
 interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
