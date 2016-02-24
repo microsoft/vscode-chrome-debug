@@ -1,9 +1,9 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "icon": "images/icon.png",
-  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
+  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-chrome-debug"
@@ -33,6 +33,9 @@
     "tslint": "^2.5.1",
     "typescript": "^1.6.2"
   },
+  "scripts": {
+      "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"
+  },
   "contributes": {
     "debuggers": [
       {
@@ -51,7 +54,7 @@
             "name": "Launch index.html",
             "type": "chrome",
             "request": "launch",
-            "file": "index.html"
+            "file": "${workspaceRoot}/index.html"
           },
           {
             "name": "Launch localhost with sourcemaps",

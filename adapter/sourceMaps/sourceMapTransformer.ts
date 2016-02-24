@@ -183,29 +183,40 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
+            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+
             if (!event.body.sourceMapURL) {
+                // If a file does not have a source map, check if we've seen any breakpoints
+                // for it anyway and make sure to enable them
+                this.resolvePendingBreakpointsForScript(event.body.scriptUrl);
                 return;
             }
 
             this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
-                this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-
                 const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
                 if (sources) {
                     utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                     sources.forEach(sourcePath => {
-                        // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
-                        if (this._pendingBreakpointsByPath.has(sourcePath)) {
-                            utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${sourcePath}`);
-                            const pendingBreakpoint = this._pendingBreakpointsByPath.get(sourcePath);
-                            this._pendingBreakpointsByPath.delete(sourcePath);
-
-                            this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
-                                .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
-                        }
+                        this.resolvePendingBreakpointsForScript(sourcePath);
                     });
                 }
             });
+        }
+    }
+
+    /**
+     * Resolve any pending breakpoints for this script
+     */
+    private resolvePendingBreakpointsForScript(scriptUrl: string): void {
+        utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
+
+        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
+            let pendingBreakpoints = this._pendingBreakpointsByPath.get(scriptUrl);
+            this._pendingBreakpointsByPath.delete(scriptUrl);
+
+            // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
+            this.setBreakpoints(pendingBreakpoints.args, pendingBreakpoints.requestSeq)
+                .then(pendingBreakpoints.resolve, pendingBreakpoints.reject);
         }
     }
 }

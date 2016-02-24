@@ -12,6 +12,15 @@
             "webRoot": "wwwroot"
         },
         {
+            "name": "launch for file",
+            "type": "chrome",
+            "request": "launch",
+            "file": "wwwroot/index.html",
+            "sourceMaps": true,
+            "diagnosticLogging": true,
+            "webRoot": "wwwroot/out/client with space"
+        },
+        {
             "name": "attach to chrome",
             "type": "chrome",
             "port": 9222,

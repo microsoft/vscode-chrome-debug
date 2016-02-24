@@ -431,31 +431,43 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 const line = callFrame.location.lineNumber;
                 const column = callFrame.location.columnNumber;
 
-                // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
-                // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
-                const source: DebugProtocol.Source =
-                    script.url && !this.isExtensionScript(script) ?
-                        {
-                            name: path.basename(script.url),
-                            path: script.url,
-                            sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
-                        } :
-                        {
-                            // Name should be undefined, work around VS Code bug 20274
-                            name: 'eval: ' + script.scriptId,
-                            sourceReference: scriptIdToSourceReference(script.scriptId)
-                        };
+                try {
+                    // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
+                    // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
+                    const source: DebugProtocol.Source =
+                        script.url && !this.isExtensionScript(script) ?
+                            {
+                                name: path.basename(script.url),
+                                path: script.url,
+                                sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
+                            } :
+                            {
+                                // Name should be undefined, work around VS Code bug 20274
+                                name: 'eval: ' + script.scriptId,
+                                sourceReference: scriptIdToSourceReference(script.scriptId)
+                            };
 
-                // If the frame doesn't have a function name, it's either an anonymous function
-                // or eval script. If its source has a name, it's probably an anonymous function.
-                const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
-                return {
-                    id: i,
-                    name: frameName,
-                    source,
-                    line: line,
-                    column
-                };
+                    // If the frame doesn't have a function name, it's either an anonymous function
+                    // or eval script. If its source has a name, it's probably an anonymous function.
+                    const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
+                    return {
+                        id: i,
+                        name: frameName,
+                        source,
+                        line: line,
+                        column
+                    };
+                } catch (e) {
+                    // Some targets such as the iOS simulator behave badly and return nonsense callFrames.
+                    // In these cases, return a dummy stack frame
+                    return {
+                        id: i,
+                        name: 'Unknown',
+                        source: {name: 'eval:Unknown'},
+                        line,
+                        column
+                    };
+                }
             });
 
         return { stackFrames };
@@ -545,7 +557,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
-                const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
+                const evalResult = evalResponse.result;
+                let errorMessage: string = 'Error';
+                if (evalResult.exceptionDetails) {
+                    errorMessage = evalResult.exceptionDetails.text;
+                } else if (evalResult.result && evalResult.result.description) {
+                    errorMessage = evalResult.result.description;
+                }
                 return utils.errP(errorMessage);
             }
 

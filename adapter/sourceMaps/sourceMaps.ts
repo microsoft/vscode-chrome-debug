@@ -144,11 +144,11 @@ export class SourceMaps implements ISourceMaps {
             return Promise.resolve(this._generatedToSourceMaps[pathToGenerated]);
         }
 
-        if (mapPath.indexOf("data:application/json;base64,") >= 0) {
+        if (mapPath.indexOf("data:application/json") >= 0) {
             Logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
 
             // sourcemap is inlined
-            const pos = mapPath.indexOf(',');
+            const pos = mapPath.lastIndexOf(',');
             const data = mapPath.substr(pos+1);
             try {
                 const buffer = new Buffer(data, 'base64');

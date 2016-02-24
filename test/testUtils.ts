@@ -117,3 +117,8 @@ export function getStackTraceResponseBody(aPath: string, lines: number[], source
         }))
     };
 }
+
+export function win32Mocks(): void {
+    mockery.registerMock('os', { platform: () => 'win32' });
+    mockery.registerMock('path', path.win32);
+}

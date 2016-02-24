@@ -4,12 +4,14 @@
 
 import * as mockery from 'mockery';
 import * as assert from 'assert';
-import * as path from 'path';
+import * as _path from 'path';
 
 import * as testUtils from '../testUtils';
 
 /** Utilities without mocks - use for type only */
 import * as _Utilities from '../../webkit/utilities';
+
+let path: typeof _path;
 
 const MODULE_UNDER_TEST = '../../webkit/utilities';
 suite('Utilities', () => {
@@ -21,10 +23,10 @@ suite('Utilities', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
+        testUtils.win32Mocks();
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
-        mockery.registerMock('os', { platform: () => 'win32' });
-        mockery.registerMock('path', path.win32);
+        path = require('path');
 
         mockery.registerAllowables([
             'url', MODULE_UNDER_TEST]);
@@ -49,8 +51,8 @@ suite('Utilities', () => {
 
         test('win', () => {
             // Overwrite the statSync mock to say the x86 path doesn't exist
-            const statSync = (path: string) => {
-                if (path.indexOf('(x86)') >= 0) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath.indexOf('(x86)') >= 0) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
 
@@ -90,8 +92,8 @@ suite('Utilities', () => {
 
     suite('existsSync()', () => {
         test('it returns false when statSync throws', () => {
-            const statSync = (path: string) => {
-                if (path.indexOf('notfound') >= 0) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath.indexOf('notfound') >= 0) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
 
@@ -102,38 +104,34 @@ suite('Utilities', () => {
     });
 
     suite('reversedArr()', () => {
-        const Utilities = getUtilities();
-
         test('it does not modify the input array', () => {
             let arr = [2, 4, 6];
-            Utilities.reversedArr(arr);
+            getUtilities().reversedArr(arr);
             assert.deepEqual(arr, [2, 4, 6]);
 
             arr = [1];
-            Utilities.reversedArr(arr);
+            getUtilities().reversedArr(arr);
             assert.deepEqual(arr, [1]);
         });
 
         test('it reverses the array', () => {
-            assert.deepEqual(Utilities.reversedArr([1, 3, 5, 7]), [7, 5, 3, 1]);
+            assert.deepEqual(getUtilities().reversedArr([1, 3, 5, 7]), [7, 5, 3, 1]);
             assert.deepEqual(
-                Utilities.reversedArr([-1, 'hello', null, undefined, [1, 2]]),
+                getUtilities().reversedArr([-1, 'hello', null, undefined, [1, 2]]),
                 [[1, 2], undefined, null, 'hello', -1]);
         });
     });
 
     suite('promiseTimeout()', () => {
-        const Utilities = getUtilities();
-
         test('when given a promise it fails if the promise never resolves', () => {
-            return Utilities.promiseTimeout(new Promise(() => { }), 5).then(
+            return getUtilities().promiseTimeout(new Promise(() => { }), 5).then(
                 () => assert.fail('This promise should fail'),
                 e => { }
             );
         });
 
         test('when given a promise it succeeds if the promise resolves', () => {
-            return Utilities.promiseTimeout(Promise.resolve('test'), 5).then(
+            return getUtilities().promiseTimeout(Promise.resolve('test'), 5).then(
                 result => {
                     assert.equal(result, 'test');
                 },
@@ -142,7 +140,7 @@ suite('Utilities', () => {
         });
 
         test('when not given a promise it resolves', () => {
-            return Utilities.promiseTimeout(null, 5).then(
+            return getUtilities().promiseTimeout(null, 5).then(
                 null,
                 () => assert.fail('This promise should pass')
             );
@@ -150,10 +148,8 @@ suite('Utilities', () => {
     });
 
     suite('retryAsync()', () => {
-        const Utilities = getUtilities();
-
         test('when the function passes, it resolves with the value', () => {
-            return Utilities.retryAsync(() => Promise.resolve('pass'), /*timeoutMs=*/5).then(
+            return getUtilities().retryAsync(() => Promise.resolve('pass'), /*timeoutMs=*/5).then(
                 result => {
                     assert.equal(result, 'pass');
                 },
@@ -163,7 +159,7 @@ suite('Utilities', () => {
         });
 
         test('when the function fails, it rejects', () => {
-            return Utilities.retryAsync(() => Utilities.errP('fail'), /*timeoutMs=*/5)
+            return getUtilities().retryAsync(() => getUtilities().errP('fail'), /*timeoutMs=*/5)
                 .then(
                     () => assert.fail('This promise should fail'),
                     e => assert.equal(e.message, 'fail'));
@@ -189,15 +185,15 @@ suite('Utilities', () => {
         });
 
         test('it searches the disk for a path that exists, built from the url', () => {
-            const statSync = (path: string) => {
-                if (path !== TEST_CLIENT_PATH) throw new Error('Not found');
+            const statSync = (aPath: string) => {
+                if (aPath !== TEST_CLIENT_PATH) throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
             assert.equal(getUtilities().webkitUrlToClientPath(TEST_WEB_ROOT, TEST_WEBKIT_HTTP_URL), TEST_CLIENT_PATH);
         });
 
         test(`returns an empty string when it can't resolve a url`, () => {
-            const statSync = (path: string) => {
+            const statSync = (aPath: string) => {
                 throw new Error('Not found');
             };
             mockery.registerMock('fs', { statSync });
@@ -257,20 +253,18 @@ suite('Utilities', () => {
     });
 
     suite('fixDriveLetterAndSlashes', () => {
-        const Utilities = getUtilities();
-
         test('works for c:/... cases', () => {
-            assert.equal(Utilities.fixDriveLetterAndSlashes('C:/path/stuff'), 'c:\\path\\stuff');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('c:/path\\stuff'), 'c:\\path\\stuff');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('C:\\path'), 'c:\\path');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('C:\\'), 'c:\\');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('C:/path/stuff'), 'c:\\path\\stuff');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('c:/path\\stuff'), 'c:\\path\\stuff');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('C:\\path'), 'c:\\path');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('C:\\'), 'c:\\');
         });
 
         test('works for file:/// cases', () => {
-            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:/path/stuff'), 'file:///c:\\path\\stuff');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///c:/path\\stuff'), 'file:///c:\\path\\stuff');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:\\path'), 'file:///c:\\path');
-            assert.equal(Utilities.fixDriveLetterAndSlashes('file:///C:\\'), 'file:///c:\\');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('file:///C:/path/stuff'), 'file:///c:\\path\\stuff');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('file:///c:/path\\stuff'), 'file:///c:\\path\\stuff');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('file:///C:\\path'), 'file:///c:\\path');
+            assert.equal(getUtilities().fixDriveLetterAndSlashes('file:///C:\\'), 'file:///c:\\');
         });
     });
 
@@ -337,18 +331,16 @@ suite('Utilities', () => {
     });
 
     suite('getWebRoot()', () => {
-        const Utilities = getUtilities();
-
         test('takes absolute webRoot as is', () => {
-            assert.equal(Utilities.getWebRoot({ webRoot: 'c:\\project\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
+            assert.equal(getUtilities().getWebRoot({ webRoot: 'c:\\project\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
         });
 
         test('resolves relative webroot against cwd', () => {
-            assert.equal(Utilities.getWebRoot({ webRoot: '..\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
+            assert.equal(getUtilities().getWebRoot({ webRoot: '..\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
         });
 
         test('uses cwd when webRoot is missing', () => {
-            assert.equal(Utilities.getWebRoot({ webRoot: '', cwd: 'c:\\project\\cwd' }), 'c:\\project\\cwd');
+            assert.equal(getUtilities().getWebRoot({ webRoot: '', cwd: 'c:\\project\\cwd' }), 'c:\\project\\cwd');
         });
     });
 
@@ -404,14 +396,12 @@ suite('Utilities', () => {
     });
 
     suite('isURL', () => {
-        const Utilities = getUtilities();
-
         function assertIsURL(url: string): void {
-            assert(Utilities.isURL(url));
+            assert(getUtilities().isURL(url));
         }
 
         function assertNotURL(url: string): void {
-            assert(!Utilities.isURL(url));
+            assert(!getUtilities().isURL(url));
         }
 
         test('returns true for URLs', () => {
@@ -433,27 +423,23 @@ suite('Utilities', () => {
     });
 
     suite('lstrip', () => {
-        const Utilities = getUtilities();
-
         test('does what it says', () => {
-            assert.equal(Utilities.lstrip('test', 'te'), 'st');
-            assert.equal(Utilities.lstrip('asdf', ''), 'asdf');
-            assert.equal(Utilities.lstrip('asdf', null), 'asdf');
-            assert.equal(Utilities.lstrip('asdf', 'asdf'), '');
-            assert.equal(Utilities.lstrip('asdf', '123'), 'asdf');
-            assert.equal(Utilities.lstrip('asdf', 'sdf'), 'asdf');
+            assert.equal(getUtilities().lstrip('test', 'te'), 'st');
+            assert.equal(getUtilities().lstrip('asdf', ''), 'asdf');
+            assert.equal(getUtilities().lstrip('asdf', null), 'asdf');
+            assert.equal(getUtilities().lstrip('asdf', 'asdf'), '');
+            assert.equal(getUtilities().lstrip('asdf', '123'), 'asdf');
+            assert.equal(getUtilities().lstrip('asdf', 'sdf'), 'asdf');
         });
     });
 
     suite('pathToFileURL', () => {
-        const Utilities = getUtilities();
-
         test('converts windows-style paths', () => {
-            assert.equal(Utilities.pathToFileURL('c:/code/app.js'), 'file:///c:/code/app.js');
+            assert.equal(getUtilities().pathToFileURL('c:/code/app.js'), 'file:///c:/code/app.js');
         });
 
         test('converts unix-style paths', () => {
-            assert.equal(Utilities.pathToFileURL('/code/app.js'), 'file:///code/app.js');
+            assert.equal(getUtilities().pathToFileURL('/code/app.js'), 'file:///code/app.js');
         });
     });
 });
