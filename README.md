@@ -27,7 +27,7 @@ Two example `launch.json` configs. You must specify either `file` or `url` to la
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "webRoot": "./app/files",
+            "webRoot": "${workspaceRoot}/app/files",
             "sourceMaps": true
         }
     ]
