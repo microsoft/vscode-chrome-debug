@@ -78,7 +78,7 @@
               "file": {
                 "type": "string",
                 "description": "A local html file to open in the browser",
-                "default": "index.html"
+                "default": "${workspaceRoot}/index.html"
               },
               "url": {
                 "type": "string",
@@ -92,15 +92,15 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
-                "default": "."
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "default": "${workspaceRoot}"
               },
               "runtimeExecutable": {
                 "type": [
                   "string",
                   "null"
                 ],
-                "description": "Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
+                "description": "Workspace absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
                 "default": null
               },
               "runtimeArgs": {
@@ -155,8 +155,8 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
-                "default": "."
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "default": "${workspaceRoot}"
               }
             }
           }
