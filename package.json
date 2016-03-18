@@ -51,10 +51,11 @@
         "runtime": "node",
         "initialConfigurations": [
           {
-            "name": "Launch index.html",
+            "name": "Launch index.html with sourcemaps",
             "type": "chrome",
             "request": "launch",
-            "file": "${workspaceRoot}/index.html"
+            "file": "${workspaceRoot}/index.html",
+            "sourceMaps": true
           },
           {
             "name": "Launch localhost with sourcemaps",
@@ -65,10 +66,11 @@
             "webRoot": "${workspaceRoot}/wwwroot"
           },
           {
-            "name": "Attach",
+            "name": "Attach with sourcemaps",
             "type": "chrome",
             "request": "attach",
-            "port": 9222
+            "port": 9222,
+            "sourceMaps": true
           }
         ],
         "configurationAttributes": {
