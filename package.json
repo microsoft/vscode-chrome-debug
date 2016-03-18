@@ -62,7 +62,7 @@
             "request": "launch",
             "url": "http://localhost/mypage.html",
             "sourceMaps": true,
-            "webRoot": "wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot"
           },
           {
             "name": "Attach",
