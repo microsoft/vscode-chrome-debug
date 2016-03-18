@@ -17,19 +17,19 @@ Two example `launch.json` configs. You must specify either `file` or `url` to la
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch index.html",
-            "type": "chrome",
-            "request": "launch",
-            "file": "index.html"
-        },
-        {
             "name": "Launch localhost with sourcemaps",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
             "webRoot": "${workspaceRoot}/app/files",
             "sourceMaps": true
-        }
+        },
+        {
+            "name": "Launch index.html (without sourcemaps)",
+            "type": "chrome",
+            "request": "launch",
+            "file": "${workspaceRoot}/index.html"
+        },
     ]
 }
 ```
@@ -58,17 +58,18 @@ An example `launch.json` config.
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Attach",
+            "name": "Attach with sourcemaps",
             "type": "chrome",
             "request": "attach",
-            "port": 9222
+            "port": 9222,
+            "sourceMaps" true
         },
         {
             "name": "Attach to url with files served from ./out",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "webRoot": "out"
+            "webRoot": "${workspaceRoot}/out"
         }
     ]
 }
@@ -101,7 +102,7 @@ When your launch config is set up, you can debug your project! Pick a launch con
 ## Troubleshooting
 General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
-* If sourcemaps are enabled, ensure `sourceRoot` is an absolute path
+* If sourcemaps are enabled, try setting `sourceRoot` to be a file URL. `sourceRoot` is a property in the .map file which is usually specified in your project's build config.
 * Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere.
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
