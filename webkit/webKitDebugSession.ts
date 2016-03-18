@@ -68,7 +68,7 @@ export class WebKitDebugSession extends DebugSession {
             e => {
                 const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
-                    this.sendErrorResponse(response, 1014, '[webkit-debug-adapter] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
+                    this.sendErrorResponse(response, 1014, '[debugger-for-chrome] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
                     return;
                 }
 
@@ -79,7 +79,7 @@ export class WebKitDebugSession extends DebugSession {
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
-                    response.message = '[webkit-debug-adapter] ' + eStr;
+                    response.message = '[debugger-for-chrome] ' + eStr;
                     Logger.log('Error: ' + e ? e.stack : eStr);
                 }
 
