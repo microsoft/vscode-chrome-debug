@@ -53,8 +53,13 @@ class ResReqWebSocket extends EventEmitter {
                 resolve(ws);
             });
             ws.on('message', msgStr => {
-                Logger.log('From target: ' + msgStr);
-                this.onMessage(JSON.parse(msgStr));
+                const msgObj = JSON.parse(msgStr);
+                if (msgObj && !(msgObj.method === "Debugger.scriptParsed" && msgObj.params && msgObj.params.isContentScript) && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
+                    // Not really the right place to examine the content of the message, but don't log annoying extension script notifications.
+                    Logger.log('From target: ' + msgStr);
+                }
+
+                this.onMessage(msgObj);
             });
             ws.on('close', () => {
                 Logger.log('Websocket closed');

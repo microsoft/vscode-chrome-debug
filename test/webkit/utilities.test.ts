@@ -435,11 +435,15 @@ suite('Utilities', () => {
 
     suite('pathToFileURL', () => {
         test('converts windows-style paths', () => {
-            assert.equal(getUtilities().pathToFileURL('c:/code/app.js'), 'file:///c:/code/app.js');
+            assert.equal(getUtilities().pathToFileURL('c:\\code\\app.js'), 'file:///c:/code/app.js');
         });
 
         test('converts unix-style paths', () => {
             assert.equal(getUtilities().pathToFileURL('/code/app.js'), 'file:///code/app.js');
+        });
+
+        test('encodes as URI', () => {
+            assert.equal(getUtilities().pathToFileURL('c:\\path with spaces'), 'file:///c:/path%20with%20spaces');
         });
     });
 });

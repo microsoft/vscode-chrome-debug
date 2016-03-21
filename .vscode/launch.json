@@ -4,21 +4,21 @@
         {
             "name": "launch as server",
             "type": "node",
-            "program": "./out/webkit/webKitDebug.js",
+            "program": "${workspaceRoot}/out/webkit/webKitDebug.js",
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
-            "outDir": "out"
+            "outDir": "${workspaceRoot}/out"
         },
         {
             "name": "test",
             "type": "node",
-            "program": "./node_modules/gulp/bin/gulp.js",
+            "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
             "args": [ "test" ],
             "sourceMaps": true,
-            "outDir": "out"
+            "outDir": "${workspaceRoot}/out"
         }
     ]
 }

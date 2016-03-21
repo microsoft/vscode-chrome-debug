@@ -103,7 +103,7 @@ When your launch config is set up, you can debug your project! Pick a launch con
 General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
 * If sourcemaps are enabled, try setting `sourceRoot` to be a file URL. `sourceRoot` is a property in the .map file which is usually specified in your project's build config.
-* Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere.
+* Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary.
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.

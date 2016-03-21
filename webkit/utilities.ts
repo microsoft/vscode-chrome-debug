@@ -245,7 +245,7 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
- * c:\\scripts\\code.js => c:/scripts/code.js
+ * c:/scripts/code.js => c:\\scripts\\code.js
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
@@ -261,6 +261,14 @@ export function canonicalizeUrl(aUrl: string): string {
     }
 
     return aUrl;
+}
+
+/**
+ * Replace any backslashes with forward slashes
+ * blah\something => blah/something
+ */
+export function forceForwardSlashes(aUrl: string): string {
+    return aUrl.replace(/\\/g, '/');
 }
 
 /**
@@ -413,7 +421,9 @@ export function lstrip(s: string, lStr: string): string {
  * C:/code/app.js => file:///C:/code/app.js
  * /code/app.js => file:///code/app.js
  */
-export function pathToFileURL(path: string): string {
-    return (path.startsWith('/') ? 'file://' : 'file:///') +
-        path;
+export function pathToFileURL(absPath: string): string {
+    absPath = forceForwardSlashes(absPath);
+    absPath = (absPath.startsWith('/') ? 'file://' : 'file:///') +
+        absPath;
+    return encodeURI(absPath);
 }

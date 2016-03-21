@@ -320,6 +320,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         }
     }
 
+    public setFunctionBreakpoints(): Promise<any> {
+        return Promise.resolve();
+    }
+
     private _clearAllBreakpoints(url: string): Promise<void> {
         if (!this._committedBreakpointsByUrl.has(url)) {
             return Promise.resolve<void>();
