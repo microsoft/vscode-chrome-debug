@@ -54,7 +54,9 @@ class ResReqWebSocket extends EventEmitter {
             });
             ws.on('message', msgStr => {
                 const msgObj = JSON.parse(msgStr);
-                if (msgObj && !(msgObj.method === "Debugger.scriptParsed" && msgObj.params && msgObj.params.isContentScript) && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
+                if (msgObj
+                    && !(msgObj.method === 'Debugger.scriptParsed' && msgObj.params && msgObj.params.isContentScript)
+                    && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
                     // Not really the right place to examine the content of the message, but don't log annoying extension script notifications.
                     Logger.log('From target: ' + msgStr);
                 }
