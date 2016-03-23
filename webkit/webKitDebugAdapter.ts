@@ -135,6 +135,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             Logger.enableDiagnosticLogging();
             utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
             utils.Logger.log(`${name}(${JSON.stringify(args) })`);
+
+            if (!args.webRoot) {
+                utils.Logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
+            }
         }
     }
 

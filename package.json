@@ -55,7 +55,8 @@
             "type": "chrome",
             "request": "launch",
             "file": "${workspaceRoot}/index.html",
-            "sourceMaps": true
+            "sourceMaps": true,
+            "webRoot": "${workspaceRoot}"
           },
           {
             "name": "Launch localhost with sourcemaps",
@@ -70,7 +71,8 @@
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "sourceMaps": true
+            "sourceMaps": true,
+            "webRoot": "${workspaceRoot}"
           }
         ],
         "configurationAttributes": {
@@ -157,7 +159,7 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
                 "default": "${workspaceRoot}"
               }
             }
