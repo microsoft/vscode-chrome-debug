@@ -1,9 +1,9 @@
-# Debugger for Chrome
+# VS Code - Debugger for Chrome
 [![build status](https://travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master)](https://travis-ci.org/Microsoft/vscode-chrome-debug)
 
-A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the Chrome Debugging Protocol.
+A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the [Chrome Debugging Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
 
-![Screenshot](images/screenshot.png)
+![Demo](https://cdn.rawgit.com/Microsoft/vscode-chrome-debug/master/images/demo.gif)
 
 ## Starting
 The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
@@ -11,25 +11,25 @@ The extension operates in two modes - it can launch an instance of Chrome naviga
 To use this extension, you must first open the folder containing the project you want to work on.
 
 ### Launch
-Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). If `webRoot` isn't set, it defaults to the workspace.
+Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). It's used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/users/me/project/app.js"), so be careful that it's set correctly.
 ```
 {
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch index.html",
-            "type": "chrome",
-            "request": "launch",
-            "file": "index.html"
-        },
-        {
             "name": "Launch localhost with sourcemaps",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "webRoot": "./app/files",
+            "webRoot": "${workspaceRoot}/app/files",
             "sourceMaps": true
-        }
+        },
+        {
+            "name": "Launch index.html (without sourcemaps)",
+            "type": "chrome",
+            "request": "launch",
+            "file": "${workspaceRoot}/index.html"
+        },
     ]
 }
 ```
@@ -58,24 +58,25 @@ An example `launch.json` config.
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Attach",
+            "name": "Attach with sourcemaps",
             "type": "chrome",
             "request": "attach",
-            "port": 9222
+            "port": 9222,
+            "sourceMaps" true
         },
         {
             "name": "Attach to url with files served from ./out",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "webRoot": "out"
+            "webRoot": "${workspaceRoot}/out"
         }
     ]
 }
 ```
 
 ### Other targets
-You can also theoretically attach to other targets that support the same Chrome remote debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
+You can also theoretically attach to other targets that support the same Chrome Debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
 
 ### Other optional launch config fields
 * diagnosticLogging: When true, the adapter logs its own diagnostic info to the console
@@ -101,8 +102,9 @@ When your launch config is set up, you can debug your project! Pick a launch con
 ## Troubleshooting
 General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
-* If sourcemaps are enabled, ensure `sourceRoot` is an absolute path
-* Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere.
+* Look at your sourcemap config carefully. A sourcemap has a path to the source files, and this extension uses that path to find the original source files on disk. Check the `sourceRoot` and `sources` properties in your sourcemap and make sure that they can be combined with the `webRoot` property in your launch config to build the correct path to the original source files.
+* This extension ignores sources that are inlined in the sourcemap - you may have a setup that works in Chrome Dev Tools, but not this extension, because the paths are incorrect, but Chrome Dev Tools are reading the inlined source content.
+* Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary.
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
