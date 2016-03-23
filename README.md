@@ -11,7 +11,7 @@ The extension operates in two modes - it can launch an instance of Chrome naviga
 To use this extension, you must first open the folder containing the project you want to work on.
 
 ### Launch
-Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). If `webRoot` isn't set, it defaults to the workspace.
+Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). It's used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/users/me/project/app.js"), so be careful that it's set correctly.
 ```
 {
     "version": "0.1.0",
@@ -102,7 +102,8 @@ When your launch config is set up, you can debug your project! Pick a launch con
 ## Troubleshooting
 General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
-* If sourcemaps are enabled, try setting `sourceRoot` to be a file URL. `sourceRoot` is a property in the .map file which is usually specified in your project's build config.
+* Look at your sourcemap config carefully. A sourcemap has a path to the source files, and this extension uses that path to find the original source files on disk. Check the `sourceRoot` and `sources` properties in your sourcemap and make sure that they can be combined with the `webRoot` property in your launch config to build the correct path to the original source files.
+* This extension ignores sources that are inlined in the sourcemap - you may have a setup that works in Chrome Dev Tools, but not this extension, because the paths are incorrect, but Chrome Dev Tools are reading the inlined source content.
 * Close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary.
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
