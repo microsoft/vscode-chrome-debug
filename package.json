@@ -15,8 +15,7 @@
   },
   "categories": ["Debuggers"],
   "license": "SEE LICENSE IN LICENSE.txt",
-  "typings": "./lib/main",
-  "main": "./out/main.js",
+  "typings": "./lib/index",
   "dependencies": {
     "source-map": "^0.5.3",
     "ws": "0.8.0"

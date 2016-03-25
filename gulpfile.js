@@ -18,7 +18,7 @@ var sources = [
     'typings',
     'webkit',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
-sources.push('main.ts');
+sources.push('index.ts');
 
 var libs = [
     'common',
