@@ -127,7 +127,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         this.initDiagnosticLogging('attach', args);
 
-        return this._attach(args.port);
+        return this._attach(args.port, args.url);
     }
 
     private initDiagnosticLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {

@@ -145,7 +145,8 @@ export class WebKitConnection {
 
                     // If a url was specified (launch mode), try to filter to that url
                     if (url) {
-                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === utils.canonicalizeUrl(url));
+                        url = utils.canonicalizeUrl(url).toLowerCase();
+                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === url);
                         if (!urlPages.length) {
                             Logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, true);
                         } else {

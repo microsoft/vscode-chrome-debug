@@ -157,9 +157,14 @@
                 "description": "DEPRECATED - renamed to webRoot",
                 "default": "."
               },
+              "url": {
+                "type": "string",
+                "description": "Will search for a tab with this EXACT url and attach to it, if found",
+                "default": "http://mysite.com/index.html"
+              },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
                 "default": "${workspaceRoot}"
               }
             }

@@ -27,7 +27,8 @@
             "request": "attach",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot",
+            "url": "http://localhost:8080"
         }
     ]
 }
