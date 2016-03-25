@@ -79,6 +79,11 @@
           "launch": {
             "required": [ ],
             "properties": {
+              "port": {
+                "type": "number",
+                "description": "Port to use for Chrome remote debugging.",
+                "default": 9222
+              },
               "file": {
                 "type": "string",
                 "description": "A local html file to open in the browser",
