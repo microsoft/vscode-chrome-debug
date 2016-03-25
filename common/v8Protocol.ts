@@ -212,7 +212,6 @@ export class V8Protocol extends ee.EventEmitter {
 
 			default:
 				throw new Error('Unknown state');
-				break;
 		}
 	}
 
