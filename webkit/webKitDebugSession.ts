@@ -17,7 +17,7 @@ import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
 export class WebKitDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 
-    public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
+    public constructor(targetLinesStartAt1: boolean, isServer: boolean = false, adapter: IDebugAdapter = new WebKitDebugAdapter()) {
         super(targetLinesStartAt1, isServer);
 
         Logger.init(isServer, msg => this.sendEvent(new OutputEvent(`  ›${msg}\n`)));
@@ -31,7 +31,7 @@ export class WebKitDebugSession extends DebugSession {
                 new SourceMapTransformer(),
                 new PathTransformer()
             ],
-            new WebKitDebugAdapter(),
+            adapter,
             event => this.sendEvent(event));
     }
 

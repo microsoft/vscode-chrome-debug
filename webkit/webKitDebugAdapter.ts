@@ -24,6 +24,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
 
     private _initArgs: DebugProtocol.InitializeRequestArguments;
+    private _isLoggingInitialized: boolean;
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
@@ -73,7 +74,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        this.initDiagnosticLogging('launch', args);
+        this.initializeLogging('launch', args);
 
         // Check exists?
         const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -125,16 +126,40 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return utils.errP('The "port" field is required in the attach config.');
         }
 
-        this.initDiagnosticLogging('attach', args);
+        this.initializeLogging('attach', args);
 
         return this._attach(args.port);
     }
 
-    private initDiagnosticLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
-        if (args.diagnosticLogging) {
+    public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
+        if (args.diagnosticLogging && !this._isLoggingInitialized) {
             Logger.enableDiagnosticLogging();
             utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
             utils.Logger.log(`${name}(${JSON.stringify(args) })`);
+
+            this._isLoggingInitialized = true;
+        }
+    }
+
+    /**
+     * Chrome is closing, or error'd somehow, stop the debug session
+     */
+    public terminateSession(): void {
+        if (this._clientAttached) {
+            this.fireEvent(new TerminatedEvent());
+        }
+
+        this.clearEverything();
+    }
+
+    public clearEverything(): void {
+        this.clearClientContext();
+        this.clearTargetContext();
+        this._chromeProc = null;
+
+        if (this._webKitConnection) {
+            this._webKitConnection.close();
+            this._webKitConnection = null;
         }
     }
 
@@ -170,28 +195,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private fireEvent(event: DebugProtocol.Event): void {
         if (this._eventHandler) {
             this._eventHandler(event);
-        }
-    }
-
-    /**
-     * Chrome is closing, or error'd somehow, stop the debug session
-     */
-    private terminateSession(): void {
-        if (this._clientAttached) {
-            this.fireEvent(new TerminatedEvent());
-        }
-
-        this.clearEverything();
-    }
-
-    private clearEverything(): void {
-        this.clearClientContext();
-        this.clearTargetContext();
-        this._chromeProc = null;
-
-        if (this._webKitConnection) {
-            this._webKitConnection.close();
-            this._webKitConnection = null;
         }
     }
 

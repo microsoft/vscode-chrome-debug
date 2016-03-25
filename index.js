@@ -9,3 +9,5 @@ var webKitDebugAdapter_1 = require('./out/webkit/webKitDebugAdapter');
 exports.WebKitDebugAdapter = webKitDebugAdapter_1.WebKitDebugAdapter;
 var webKitConnection_1 = require('./out/webkit/webKitConnection');
 exports.WebKitConnection = webKitConnection_1.WebKitConnection;
+var Utilities = require('./out/webkit/utilities');
+exports.Utilities = Utilities;
