@@ -1,6 +1,6 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
+    // "debugServer": "4712",
     "configurations": [
         {
             "name": "test chrome",
@@ -18,7 +18,7 @@
             "file": "${workspaceRoot}/wwwroot/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot/out/client with space"
+            "webRoot": "${workspaceRoot}/wwwroot"
         },
         {
             "name": "attach to chrome",
