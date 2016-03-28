@@ -235,7 +235,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
             }
         } else {
-            reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
+            reason = (notification.hitBreakpoints && notification.hitBreakpoints.length) ? 'breakpoint' : 'step';
         }
 
         this.fireEvent(new StoppedEvent(reason, /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
