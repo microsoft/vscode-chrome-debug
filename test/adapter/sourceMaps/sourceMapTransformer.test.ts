@@ -47,8 +47,6 @@ suite('SourceMapTransformer', () => {
             mockery.registerMock('./sourceMaps', { SourceMaps: StubSourceMaps });
         }
 
-        utilsMock.expects('getWebRoot').returns(undefined);
-
         let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
         const transformer = new SourceMapTransformer();
         transformer.launch(<ILaunchRequestArgs><any>{

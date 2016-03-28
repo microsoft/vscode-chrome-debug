@@ -246,7 +246,7 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
- * c:\\scripts\\code.js => c:/scripts/code.js
+ * c:/scripts/code.js => c:\\scripts\\code.js
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
@@ -262,6 +262,14 @@ export function canonicalizeUrl(aUrl: string): string {
     }
 
     return aUrl;
+}
+
+/**
+ * Replace any backslashes with forward slashes
+ * blah\something => blah/something
+ */
+export function forceForwardSlashes(aUrl: string): string {
+    return aUrl.replace(/\\/g, '/');
 }
 
 /**
@@ -352,25 +360,6 @@ export function errP(msg: any): Promise<any> {
 }
 
 /**
- * Calculates the webRoot from a launch/attach request. The webRoot is the directory that the
- * files are served from by a web server, (or the directory that they would be served from, and which
- * sourceRoot may be relative to).
- */
-export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): string {
-    let webRoot: string;
-    if (args.webRoot) {
-        webRoot = args.webRoot;
-        if (!path.isAbsolute(webRoot) && args.cwd) {
-            webRoot = path.resolve(args.cwd, webRoot);
-        }
-    } else {
-        webRoot = args.cwd;
-    }
-
-    return webRoot;
-}
-
-/**
  * Helper function to GET the contents of a url
  */
 export function getURL(aUrl: string): Promise<string> {
@@ -414,7 +403,9 @@ export function lstrip(s: string, lStr: string): string {
  * C:/code/app.js => file:///C:/code/app.js
  * /code/app.js => file:///code/app.js
  */
-export function pathToFileURL(path: string): string {
-    return (path.startsWith('/') ? 'file://' : 'file:///') +
-        path;
+export function pathToFileURL(absPath: string): string {
+    absPath = forceForwardSlashes(absPath);
+    absPath = (absPath.startsWith('/') ? 'file://' : 'file:///') +
+        absPath;
+    return encodeURI(absPath);
 }

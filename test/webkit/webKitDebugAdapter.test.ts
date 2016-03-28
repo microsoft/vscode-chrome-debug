@@ -218,7 +218,7 @@ suite('WebKitDebugAdapter', () => {
                 // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('file:///c:/a.js') >= 0);
+                assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
                 assert(args.indexOf('abc') >= 0);
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;
@@ -235,7 +235,7 @@ suite('WebKitDebugAdapter', () => {
                 platform: () => 'win32'
             });
             const wkda = instantiateWKDA();
-            return wkda.launch({ file: 'a.js', runtimeArgs: ['abc', 'def'], cwd: 'c:/' }).then(() => {
+            return wkda.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] }).then(() => {
                 assert(spawnCalled);
             });
         });
@@ -289,7 +289,7 @@ suite('WebKitDebugAdapter', () => {
 });
 
 function attach(wkda: _WebKitDebugAdapter): Promise<void> {
-    return wkda.attach({ port: 9222, cwd: 'c:/' });
+    return wkda.attach({ port: 9222 });
 }
 
 class DefaultMockWebKitConnection {

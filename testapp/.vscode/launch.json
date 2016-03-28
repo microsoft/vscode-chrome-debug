@@ -9,16 +9,16 @@
             "url": "http://localhost:8080/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot"
         },
         {
             "name": "launch for file",
             "type": "chrome",
             "request": "launch",
-            "file": "wwwroot/index.html",
+            "file": "${workspaceRoot}/wwwroot/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "wwwroot/out/client with space"
+            "webRoot": "${workspaceRoot}/wwwroot"
         },
         {
             "name": "attach to chrome",
@@ -27,7 +27,8 @@
             "request": "attach",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "./wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot",
+            "url": "http://localhost:8080"
         }
     ]
 }

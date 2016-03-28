@@ -98,7 +98,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         let launchUrl: string;
         if (args.file) {
-            launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
+            launchUrl = utils.pathToFileURL(args.file);
         } else if (args.url) {
             launchUrl = args.url;
         }
@@ -128,7 +128,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         this.initializeLogging('attach', args);
 
-        return this._attach(args.port);
+        return this._attach(args.port, args.url);
     }
 
     public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
@@ -136,6 +136,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             Logger.enableDiagnosticLogging();
             utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
             utils.Logger.log(`${name}(${JSON.stringify(args) })`);
+
+            if (!args.webRoot) {
+                utils.Logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
+            }
 
             this._isLoggingInitialized = true;
         }
@@ -321,6 +325,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else {
             return utils.errP(`Can't find script for breakpoint request`);
         }
+    }
+
+    public setFunctionBreakpoints(): Promise<any> {
+        return Promise.resolve();
     }
 
     private _clearAllBreakpoints(url: string): Promise<void> {
