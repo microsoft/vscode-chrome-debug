@@ -330,20 +330,6 @@ suite('Utilities', () => {
         });
     });
 
-    suite('getWebRoot()', () => {
-        test('takes absolute webRoot as is', () => {
-            assert.equal(getUtilities().getWebRoot({ webRoot: 'c:\\project\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
-        });
-
-        test('resolves relative webroot against cwd', () => {
-            assert.equal(getUtilities().getWebRoot({ webRoot: '..\\webRoot', cwd: 'c:\\project\\cwd' }), 'c:\\project\\webRoot');
-        });
-
-        test('uses cwd when webRoot is missing', () => {
-            assert.equal(getUtilities().getWebRoot({ webRoot: '', cwd: 'c:\\project\\cwd' }), 'c:\\project\\cwd');
-        });
-    });
-
     suite('getUrl', () => {
         const URL = 'http://testsite.com/testfile';
         const RESPONSE = 'response';
@@ -442,8 +428,8 @@ suite('Utilities', () => {
             assert.equal(getUtilities().pathToFileURL('/code/app.js'), 'file:///code/app.js');
         });
 
-        test('encodes as URI', () => {
-            assert.equal(getUtilities().pathToFileURL('c:\\path with spaces'), 'file:///c:/path%20with%20spaces');
+        test('encodes as URI and forces forwards slash', () => {
+            assert.equal(getUtilities().pathToFileURL('c:\\path with spaces\\blah.js'), 'file:///c:/path%20with%20spaces/blah.js');
         });
     });
 });

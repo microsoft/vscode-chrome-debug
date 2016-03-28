@@ -359,25 +359,6 @@ export function errP(msg: any): Promise<any> {
 }
 
 /**
- * Calculates the webRoot from a launch/attach request. The webRoot is the directory that the
- * files are served from by a web server, (or the directory that they would be served from, and which
- * sourceRoot may be relative to).
- */
-export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): string {
-    let webRoot: string;
-    if (args.webRoot) {
-        webRoot = args.webRoot;
-        if (!path.isAbsolute(webRoot)) {
-            webRoot = path.resolve(args.cwd, webRoot);
-        }
-    } else {
-        webRoot = args.cwd;
-    }
-
-    return webRoot;
-}
-
-/**
  * Helper function to GET the contents of a url
  */
 export function getURL(aUrl: string): Promise<string> {

@@ -37,7 +37,7 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
-            this._webRoot = utils.getWebRoot(args);
+            this._webRoot = args.webRoot;
             this._sourceMaps = new SourceMaps(this._webRoot);
             this._requestSeqToSetBreakpointsArgs = new Map<number, ISetBreakpointsArgs>();
             this._allRuntimeScriptPaths = new Set<string>();

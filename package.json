@@ -94,11 +94,6 @@
                 "description": "A url to open in the browser",
                 "default": "http://mysite.com/index.html"
               },
-              "cwd": {
-                "type": "string",
-                "description": "DEPRECATED - renamed to webRoot",
-                "default": "."
-              },
               "webRoot": {
                 "type": "string",
                 "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
@@ -156,11 +151,6 @@
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
                 "default": false
-              },
-              "cwd": {
-                "type": "string",
-                "description": "DEPRECATED - renamed to webRoot",
-                "default": "."
               },
               "url": {
                 "type": "string",
