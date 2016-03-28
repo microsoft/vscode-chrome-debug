@@ -140,6 +140,7 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * communicate with the adapter, which can cause communication issues.
  */
 export class Logger {
+    public static AdapterVersion: string;
     private static _logger: Logger;
     private _isServer: boolean;
     private _diagnosticLogCallback: (msg: string) => void;
@@ -172,7 +173,7 @@ export class Logger {
     public static logVersionInfo(): void {
         Logger.log(`OS: ${os.platform() } ${os.arch() }`);
         Logger.log('Node version: ' + process.version);
-        Logger.log('Adapter version: ' + require('../../package.json').version);
+        Logger.log('Adapter version: ' + Logger.AdapterVersion);
     }
 
     constructor(isServer: boolean) {

@@ -15,6 +15,7 @@
   },
   "categories": ["Debuggers"],
   "license": "SEE LICENSE IN LICENSE.txt",
+  "typings": "./lib/index",
   "dependencies": {
     "source-map": "^0.5.3",
     "ws": "0.8.0"
@@ -26,6 +27,7 @@
     "gulp-tslint": "^3.3.1",
     "gulp-typescript": "^2.8.0",
     "gulp-util": "^3.0.5",
+    "merge2": "^1.0.1",
     "mocha": "^2.3.3",
     "mockery": "^1.4.0",
     "sinon": "^1.17.2",

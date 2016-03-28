@@ -9,6 +9,7 @@ var log = require('gulp-util').log;
 var typescript = require('typescript');
 var sourcemaps = require('gulp-sourcemaps');
 var mocha = require('gulp-mocha');
+var merge = require('merge2');
 
 var sources = [
     'adapter',
@@ -17,21 +18,38 @@ var sources = [
     'typings',
     'webkit',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
+sources.push('index.ts');
+
+var libs = [
+    'common',
+    'typings',
+    'webkit',
+].map(function(tsFolder) { return tsFolder + '/**/*.d.ts'; });
 
 var projectConfig = {
     noImplicitAny: false,
     target: 'ES5',
     module: 'commonjs',
-    declarationFiles: true,
+    declaration: true,
     typescript: typescript
 };
 
 gulp.task('build', function () {
-    return gulp.src(sources, { base: '.' })
+    var tsResult = gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
-        .pipe(ts(projectConfig))
+        .pipe(ts(projectConfig));
+
+	return merge([
+		tsResult.dts
+        .pipe(gulp.dest('lib'))
+        ,
+		tsResult.js
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
-        .pipe(gulp.dest('out'));
+        .pipe(gulp.dest('out'))
+        ,
+        gulp.src(libs)
+        .pipe(gulp.dest('lib'))
+	]);
 });
 
 gulp.task('watch', ['build'], function(cb) {
