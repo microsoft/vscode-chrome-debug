@@ -17,9 +17,14 @@ import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
 export class WebKitDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 
-    public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
+    public constructor(
+        targetLinesStartAt1: boolean,
+        isServer: boolean = false,
+        adapter: IDebugAdapter = new WebKitDebugAdapter(),
+        version: string = require('../../package.json').version) {
         super(targetLinesStartAt1, isServer);
 
+        Logger.AdapterVersion = version;
         Logger.init(isServer, msg => this.sendEvent(new OutputEvent(`  ›${msg}\n`)));
         process.addListener('unhandledRejection', reason => {
             Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
@@ -31,7 +36,7 @@ export class WebKitDebugSession extends DebugSession {
                 new SourceMapTransformer(),
                 new PathTransformer()
             ],
-            new WebKitDebugAdapter(),
+            adapter,
             event => this.sendEvent(event));
     }
 
@@ -68,7 +73,7 @@ export class WebKitDebugSession extends DebugSession {
             e => {
                 const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
-                    this.sendErrorResponse(response, 1014, '[webkit-debug-adapter] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
+                    this.sendErrorResponse(response, 1014, '[debugger-for-chrome] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
                     return;
                 }
 
@@ -79,7 +84,7 @@ export class WebKitDebugSession extends DebugSession {
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
-                    response.message = '[webkit-debug-adapter] ' + eStr;
+                    response.message = '[debugger-for-chrome] ' + eStr;
                     Logger.log('Error: ' + e ? e.stack : eStr);
                 }
 

@@ -6,6 +6,7 @@ import * as path from 'path';
 
 import {ISourceMaps, SourceMaps} from './sourceMaps';
 import * as utils from '../../webkit/utilities';
+import {Logger} from '../../webkit/utilities';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -36,7 +37,7 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
-            this._webRoot = utils.getWebRoot(args);
+            this._webRoot = args.webRoot;
             this._sourceMaps = new SourceMaps(this._webRoot);
             this._requestSeqToSetBreakpointsArgs = new Map<number, ISetBreakpointsArgs>();
             this._allRuntimeScriptPaths = new Set<string>();
@@ -58,7 +59,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                 const argsPath = args.source.path;
                 const mappedPath = this._sourceMaps.MapPathFromSource(argsPath);
                 if (mappedPath) {
-                    utils.Logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
+                    Logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
                     args.authoredPath = argsPath;
                     args.source.path = mappedPath;
 
@@ -67,11 +68,11 @@ export class SourceMapTransformer implements IDebugTransformer {
                     const mappedLines = args.lines.map((line, i) => {
                         const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
                         if (mapped) {
-                            utils.Logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line}:0 to ${mappedPath}:${mapped.line}:${mapped.column}`);
+                            Logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line}:0 to ${mappedPath}:${mapped.line}:${mapped.column}`);
                             mappedCols[i] = mapped.column;
                             return mapped.line;
                         } else {
-                            utils.Logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line}, column 0`);
+                            Logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line}, column 0`);
                             mappedCols[i] = 0;
                             return line;
                         }
@@ -99,10 +100,10 @@ export class SourceMapTransformer implements IDebugTransformer {
                     });
                 } else if (this._allRuntimeScriptPaths.has(argsPath)) {
                     // It's a generated file which is loaded
-                    utils.Logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
+                    Logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
                 } else {
                     // Source (or generated) file which is not loaded, need to wait
-                    utils.Logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script.`);
+                    Logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script.`);
                     this._pendingBreakpointsByPath.set(argsPath, { resolve, reject, args, requestSeq });
                     return;
                 }
@@ -130,10 +131,10 @@ export class SourceMapTransformer implements IDebugTransformer {
                     response.breakpoints.forEach(bp => {
                         const mapped = this._sourceMaps.MapToSource(args.source.path, bp.line, bp.column);
                         if (mapped) {
-                            utils.Logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
+                            Logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
                             bp.line = mapped.line;
                         } else {
-                            utils.Logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
+                            Logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
                         }
 
                         this._requestSeqToSetBreakpointsArgs.delete(requestSeq);
@@ -183,29 +184,40 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     public scriptParsed(event: DebugProtocol.Event): void {
         if (this._sourceMaps) {
+            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+
             if (!event.body.sourceMapURL) {
+                // If a file does not have a source map, check if we've seen any breakpoints
+                // for it anyway and make sure to enable them
+                this.resolvePendingBreakpointsForScript(event.body.scriptUrl);
                 return;
             }
 
             this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
-                this._allRuntimeScriptPaths.add(event.body.scriptUrl);
-
                 const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
                 if (sources) {
-                    utils.Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
+                    Logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                     sources.forEach(sourcePath => {
-                        // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
-                        if (this._pendingBreakpointsByPath.has(sourcePath)) {
-                            utils.Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${sourcePath}`);
-                            const pendingBreakpoint = this._pendingBreakpointsByPath.get(sourcePath);
-                            this._pendingBreakpointsByPath.delete(sourcePath);
-
-                            this.setBreakpoints(pendingBreakpoint.args, pendingBreakpoint.requestSeq)
-                                .then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
-                        }
+                        this.resolvePendingBreakpointsForScript(sourcePath);
                     });
                 }
             });
+        }
+    }
+
+    /**
+     * Resolve any pending breakpoints for this script
+     */
+    private resolvePendingBreakpointsForScript(scriptUrl: string): void {
+        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
+            Logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
+
+            let pendingBreakpoints = this._pendingBreakpointsByPath.get(scriptUrl);
+            this._pendingBreakpointsByPath.delete(scriptUrl);
+
+            // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
+            this.setBreakpoints(pendingBreakpoints.args, pendingBreakpoints.requestSeq)
+                .then(pendingBreakpoints.resolve, pendingBreakpoints.reject);
         }
     }
 }

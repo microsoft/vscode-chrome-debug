@@ -140,6 +140,7 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * communicate with the adapter, which can cause communication issues.
  */
 export class Logger {
+    public static AdapterVersion: string;
     private static _logger: Logger;
     private _isServer: boolean;
     private _diagnosticLogCallback: (msg: string) => void;
@@ -172,7 +173,7 @@ export class Logger {
     public static logVersionInfo(): void {
         Logger.log(`OS: ${os.platform() } ${os.arch() }`);
         Logger.log('Node version: ' + process.version);
-        Logger.log('Adapter version: ' + require('../../package.json').version);
+        Logger.log('Adapter version: ' + Logger.AdapterVersion);
     }
 
     constructor(isServer: boolean) {
@@ -245,22 +246,32 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js
- * c:\\scripts\\code.js => c:/scripts/code.js
+ * c:/scripts/code.js => c:\\scripts\\code.js
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(aUrl: string): string {
-    aUrl = aUrl.replace('file:///', '');
-    aUrl = stripTrailingSlash(aUrl);
-
-    aUrl = fixDriveLetterAndSlashes(aUrl);
-    if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
-        // Ensure osx path starts with /, it can be removed when file:/// was stripped.
-        // Don't add if the url still has a protocol
-        aUrl = '/' + aUrl;
+    if (aUrl.startsWith('file:///')) {
+        aUrl = aUrl.replace('file:///', '');
+        if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+            // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+            // Don't add if the url still has a protocol
+            aUrl = '/' + aUrl;
+        }
     }
 
+    aUrl = stripTrailingSlash(aUrl);
+    aUrl = fixDriveLetterAndSlashes(aUrl);
+
     return aUrl;
+}
+
+/**
+ * Replace any backslashes with forward slashes
+ * blah\something => blah/something
+ */
+export function forceForwardSlashes(aUrl: string): string {
+    return aUrl.replace(/\\/g, '/');
 }
 
 /**
@@ -351,25 +362,6 @@ export function errP(msg: any): Promise<any> {
 }
 
 /**
- * Calculates the webRoot from a launch/attach request. The webRoot is the directory that the
- * files are served from by a web server, (or the directory that they would be served from, and which
- * sourceRoot may be relative to).
- */
-export function getWebRoot(args: ILaunchRequestArgs | IAttachRequestArgs): string {
-    let webRoot: string;
-    if (args.webRoot) {
-        webRoot = args.webRoot;
-        if (!path.isAbsolute(webRoot)) {
-            webRoot = path.resolve(args.cwd, webRoot);
-        }
-    } else {
-        webRoot = args.cwd;
-    }
-
-    return webRoot;
-}
-
-/**
  * Helper function to GET the contents of a url
  */
 export function getURL(aUrl: string): Promise<string> {
@@ -382,6 +374,7 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
+                    Logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });
@@ -412,7 +405,9 @@ export function lstrip(s: string, lStr: string): string {
  * C:/code/app.js => file:///C:/code/app.js
  * /code/app.js => file:///code/app.js
  */
-export function pathToFileURL(path: string): string {
-    return (path.startsWith('/') ? 'file://' : 'file:///') +
-        path;
+export function pathToFileURL(absPath: string): string {
+    absPath = forceForwardSlashes(absPath);
+    absPath = (absPath.startsWith('/') ? 'file://' : 'file:///') +
+        absPath;
+    return encodeURI(absPath);
 }

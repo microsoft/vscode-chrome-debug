@@ -24,6 +24,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
 
     private _initArgs: DebugProtocol.InitializeRequestArguments;
+    private _isLoggingInitialized: boolean;
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
@@ -73,7 +74,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        this.initDiagnosticLogging('launch', args);
+        this.initializeLogging('launch', args);
 
         // Check exists?
         const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -97,7 +98,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         let launchUrl: string;
         if (args.file) {
-            launchUrl = 'file:///' + path.resolve(args.cwd, args.file);
+            launchUrl = utils.pathToFileURL(args.file);
         } else if (args.url) {
             launchUrl = args.url;
         }
@@ -125,16 +126,44 @@ export class WebKitDebugAdapter implements IDebugAdapter {
             return utils.errP('The "port" field is required in the attach config.');
         }
 
-        this.initDiagnosticLogging('attach', args);
+        this.initializeLogging('attach', args);
 
-        return this._attach(args.port);
+        return this._attach(args.port, args.url);
     }
 
-    private initDiagnosticLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
-        if (args.diagnosticLogging) {
+    public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
+        if (args.diagnosticLogging && !this._isLoggingInitialized) {
             Logger.enableDiagnosticLogging();
             utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
             utils.Logger.log(`${name}(${JSON.stringify(args) })`);
+
+            if (!args.webRoot) {
+                utils.Logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
+            }
+
+            this._isLoggingInitialized = true;
+        }
+    }
+
+    /**
+     * Chrome is closing, or error'd somehow, stop the debug session
+     */
+    public terminateSession(): void {
+        if (this._clientAttached) {
+            this.fireEvent(new TerminatedEvent());
+        }
+
+        this.clearEverything();
+    }
+
+    public clearEverything(): void {
+        this.clearClientContext();
+        this.clearTargetContext();
+        this._chromeProc = null;
+
+        if (this._webKitConnection) {
+            this._webKitConnection.close();
+            this._webKitConnection = null;
         }
     }
 
@@ -170,28 +199,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
     private fireEvent(event: DebugProtocol.Event): void {
         if (this._eventHandler) {
             this._eventHandler(event);
-        }
-    }
-
-    /**
-     * Chrome is closing, or error'd somehow, stop the debug session
-     */
-    private terminateSession(): void {
-        if (this._clientAttached) {
-            this.fireEvent(new TerminatedEvent());
-        }
-
-        this.clearEverything();
-    }
-
-    private clearEverything(): void {
-        this.clearClientContext();
-        this.clearTargetContext();
-        this._chromeProc = null;
-
-        if (this._webKitConnection) {
-            this._webKitConnection.close();
-            this._webKitConnection = null;
         }
     }
 
@@ -232,7 +239,7 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
             }
         } else {
-            reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
+            reason = (notification.hitBreakpoints && notification.hitBreakpoints.length) ? 'breakpoint' : 'step';
         }
 
         this.fireEvent(new StoppedEvent(reason, /*threadId=*/WebKitDebugAdapter.THREAD_ID, exceptionText));
@@ -318,6 +325,10 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         } else {
             return utils.errP(`Can't find script for breakpoint request`);
         }
+    }
+
+    public setFunctionBreakpoints(): Promise<any> {
+        return Promise.resolve();
     }
 
     private _clearAllBreakpoints(url: string): Promise<void> {
@@ -431,31 +442,43 @@ export class WebKitDebugAdapter implements IDebugAdapter {
                 const line = callFrame.location.lineNumber;
                 const column = callFrame.location.columnNumber;
 
-                // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
-                // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
-                const source: DebugProtocol.Source =
-                    script.url && !this.isExtensionScript(script) ?
-                        {
-                            name: path.basename(script.url),
-                            path: script.url,
-                            sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
-                        } :
-                        {
-                            // Name should be undefined, work around VS Code bug 20274
-                            name: 'eval: ' + script.scriptId,
-                            sourceReference: scriptIdToSourceReference(script.scriptId)
-                        };
+                try {
+                    // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
+                    // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
+                    const source: DebugProtocol.Source =
+                        script.url && !this.isExtensionScript(script) ?
+                            {
+                                name: path.basename(script.url),
+                                path: script.url,
+                                sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
+                            } :
+                            {
+                                // Name should be undefined, work around VS Code bug 20274
+                                name: 'eval: ' + script.scriptId,
+                                sourceReference: scriptIdToSourceReference(script.scriptId)
+                            };
 
-                // If the frame doesn't have a function name, it's either an anonymous function
-                // or eval script. If its source has a name, it's probably an anonymous function.
-                const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
-                return {
-                    id: i,
-                    name: frameName,
-                    source,
-                    line: line,
-                    column
-                };
+                    // If the frame doesn't have a function name, it's either an anonymous function
+                    // or eval script. If its source has a name, it's probably an anonymous function.
+                    const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
+                    return {
+                        id: i,
+                        name: frameName,
+                        source,
+                        line: line,
+                        column
+                    };
+                } catch (e) {
+                    // Some targets such as the iOS simulator behave badly and return nonsense callFrames.
+                    // In these cases, return a dummy stack frame
+                    return {
+                        id: i,
+                        name: 'Unknown',
+                        source: {name: 'eval:Unknown'},
+                        line,
+                        column
+                    };
+                }
             });
 
         return { stackFrames };
@@ -545,7 +568,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
 
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
-                const errorMessage = evalResponse.result.exceptionDetails ? evalResponse.result.exceptionDetails.text : 'Error';
+                const evalResult = evalResponse.result;
+                let errorMessage: string = 'Error';
+                if (evalResult.exceptionDetails) {
+                    errorMessage = evalResult.exceptionDetails.text;
+                } else if (evalResult.result && evalResult.result.description) {
+                    errorMessage = evalResult.result.description;
+                }
                 return utils.errP(errorMessage);
             }
 

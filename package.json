@@ -1,9 +1,9 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.2.0",
+  "version": "0.2.5",
   "icon": "images/icon.png",
-  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome debug protocol.",
+  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-chrome-debug"
@@ -15,6 +15,7 @@
   },
   "categories": ["Debuggers"],
   "license": "SEE LICENSE IN LICENSE.txt",
+  "typings": "./lib/index",
   "dependencies": {
     "source-map": "^0.5.3",
     "ws": "0.8.0"
@@ -26,12 +27,16 @@
     "gulp-tslint": "^3.3.1",
     "gulp-typescript": "^2.8.0",
     "gulp-util": "^3.0.5",
+    "merge2": "^1.0.1",
     "mocha": "^2.3.3",
     "mockery": "^1.4.0",
     "sinon": "^1.17.2",
     "tsd": "^0.6.3",
     "tslint": "^2.5.1",
     "typescript": "^1.6.2"
+  },
+  "scripts": {
+      "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"
   },
   "contributes": {
     "debuggers": [
@@ -48,10 +53,12 @@
         "runtime": "node",
         "initialConfigurations": [
           {
-            "name": "Launch index.html",
+            "name": "Launch index.html with sourcemaps",
             "type": "chrome",
             "request": "launch",
-            "file": "index.html"
+            "file": "${workspaceRoot}/index.html",
+            "sourceMaps": true,
+            "webRoot": "${workspaceRoot}"
           },
           {
             "name": "Launch localhost with sourcemaps",
@@ -59,45 +66,47 @@
             "request": "launch",
             "url": "http://localhost/mypage.html",
             "sourceMaps": true,
-            "webRoot": "wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot"
           },
           {
-            "name": "Attach",
+            "name": "Attach with sourcemaps",
             "type": "chrome",
             "request": "attach",
-            "port": 9222
+            "port": 9222,
+            "sourceMaps": true,
+            "webRoot": "${workspaceRoot}"
           }
         ],
         "configurationAttributes": {
           "launch": {
             "required": [ ],
             "properties": {
+              "port": {
+                "type": "number",
+                "description": "Port to use for Chrome remote debugging.",
+                "default": 9222
+              },
               "file": {
                 "type": "string",
                 "description": "A local html file to open in the browser",
-                "default": "index.html"
+                "default": "${workspaceRoot}/index.html"
               },
               "url": {
                 "type": "string",
                 "description": "A url to open in the browser",
                 "default": "http://mysite.com/index.html"
               },
-              "cwd": {
-                "type": "string",
-                "description": "DEPRECATED - renamed to webRoot",
-                "default": "."
-              },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
-                "default": "."
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "default": "${workspaceRoot}"
               },
               "runtimeExecutable": {
                 "type": [
                   "string",
                   "null"
                 ],
-                "description": "Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
+                "description": "Workspace absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
                 "default": null
               },
               "runtimeArgs": {
@@ -145,15 +154,15 @@
                 "description": "When true, the adapter logs its own diagnostic info to the console",
                 "default": false
               },
-              "cwd": {
+              "url": {
                 "type": "string",
-                "description": "DEPRECATED - renamed to webRoot",
-                "default": "."
+                "description": "Will search for a tab with this EXACT url and attach to it, if found",
+                "default": "http://mysite.com/index.html"
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace relative or absolute path to the webserver root.",
-                "default": "."
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
+                "default": "${workspaceRoot}"
               }
             }
           }

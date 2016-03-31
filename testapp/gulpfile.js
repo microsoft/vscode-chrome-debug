@@ -14,7 +14,7 @@ var filter = require('gulp-filter');
 
 var sources = [
     'wwwroot/client with space'
-].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
+].map(function (tsFolder) { return tsFolder + '\\**\\*.ts'; });
 
 var projectConfig = {
     target: 'ES6',
@@ -34,7 +34,7 @@ gulp.task('build', function () {
         .pipe(gulp.dest('./wwwroot/out'));
 });
 
-gulp.task('serve', ['build'], function (done) {
+function serve(done) {
     browserSync({
         online: false,
         open: false,
@@ -43,7 +43,10 @@ gulp.task('serve', ['build'], function (done) {
             baseDir: ['./wwwroot']
         }
     }, done);
-});
+}
+
+gulp.task('serve', serve);
+gulp.task('buildAndServe', ['build'], serve);
 
 gulp.task('bs-reload', ['build'], function() {
     browserSync.reload();

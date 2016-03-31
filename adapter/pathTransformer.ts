@@ -20,11 +20,11 @@ export class PathTransformer implements IDebugTransformer {
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
-        this._webRoot = utils.getWebRoot(args);
+        this._webRoot = args.webRoot;
     }
 
     public attach(args: IAttachRequestArgs): void {
-        this._webRoot = utils.getWebRoot(args);
+        this._webRoot = args.webRoot;
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
