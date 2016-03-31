@@ -251,15 +251,17 @@ export function webkitUrlToClientPath(webRoot: string, aUrl: string): string {
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(aUrl: string): string {
-    aUrl = aUrl.replace('file:///', '');
-    aUrl = stripTrailingSlash(aUrl);
-
-    aUrl = fixDriveLetterAndSlashes(aUrl);
-    if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
-        // Ensure osx path starts with /, it can be removed when file:/// was stripped.
-        // Don't add if the url still has a protocol
-        aUrl = '/' + aUrl;
+    if (aUrl.startsWith('file:///')) {
+        aUrl = aUrl.replace('file:///', '');
+        if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+            // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+            // Don't add if the url still has a protocol
+            aUrl = '/' + aUrl;
+        }
     }
+
+    aUrl = stripTrailingSlash(aUrl);
+    aUrl = fixDriveLetterAndSlashes(aUrl);
 
     return aUrl;
 }
