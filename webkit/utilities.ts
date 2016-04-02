@@ -134,6 +134,13 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
     return tryUntilTimeout();
 }
 
+export enum LogLevel {
+    Log,
+    Error
+}
+
+export type ILogCallback = (msg: string, level: LogLevel) => void;
+
 /**
  * Holds a singleton to manage access to console.log.
  * Logging is only allowed when running in server mode, because otherwise it goes through the same channel that Code uses to
@@ -142,14 +149,14 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
 export class Logger {
     private static _logger: Logger;
     private _isServer: boolean;
-    private _diagnosticLogCallback: (msg: string) => void;
+    private _diagnosticLogCallback: ILogCallback;
     private _diagnosticLoggingEnabled: boolean;
 
-    public static log(msg: string, forceDiagnosticLogging = false): void {
-        if (this._logger) this._logger._log(msg, forceDiagnosticLogging);
+    public static log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = false): void {
+        if (this._logger) this._logger._log(msg, level, forceDiagnosticLogging);
     }
 
-    public static init(isServer: boolean, logCallback: (msg: string) => void): void {
+    public static init(isServer: boolean, logCallback: ILogCallback): void {
         if (!this._logger) {
             this._logger = new Logger(isServer);
             this._logger._diagnosticLogCallback = logCallback;
@@ -179,17 +186,17 @@ export class Logger {
         this._isServer = isServer;
     }
 
-    private _log(msg: string, forceDiagnosticLogging: boolean): void {
+    private _log(msg: string, level: LogLevel, forceDiagnosticLogging: boolean): void {
         if (this._isServer || this._diagnosticLoggingEnabled || forceDiagnosticLogging) {
-            this._sendLog(msg);
+            this._sendLog(msg, level);
         }
     }
 
-    private _sendLog(msg: string): void {
+    private _sendLog(msg: string, level: LogLevel): void {
         if (this._isServer) {
-            console.log(msg);
+            (level === LogLevel.Log ? console.log : console.error)(msg);
         } else if (this._diagnosticLogCallback) {
-            this._diagnosticLogCallback(msg);
+            this._diagnosticLogCallback(msg, level);
         }
     }
 }

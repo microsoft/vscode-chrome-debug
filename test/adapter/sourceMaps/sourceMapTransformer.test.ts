@@ -2,9 +2,13 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
 import * as assert from 'assert';
 import * as mockery from 'mockery';
 
+import {ISetBreakpointsResponseBody, IStackTraceResponseBody,
+    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../webkit/webKitAdapterInterfaces';
 import * as testUtils from '../../testUtils';
 import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
 

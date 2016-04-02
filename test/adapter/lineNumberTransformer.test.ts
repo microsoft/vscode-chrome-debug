@@ -4,6 +4,9 @@
 
 import * as assert from 'assert';
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+import {ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../webkit/webKitAdapterInterfaces';
 import { LineNumberTransformer } from '../../adapter/lineNumberTransformer';
 import * as testUtils from '../testUtils';
 

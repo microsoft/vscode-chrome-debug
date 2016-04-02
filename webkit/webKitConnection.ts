@@ -5,7 +5,7 @@
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
 import * as utils from './utilities';
-import {Logger} from './utilities';
+import {Logger, LogLevel} from './utilities';
 
 interface IMessageWithId {
     id: number;
@@ -93,6 +93,17 @@ class ResReqWebSocket extends EventEmitter {
         });
     }
 
+    /**
+     * Wrap EventEmitter.emit in try/catch and log, for errors thrown in subscribers
+     */
+    public emit(event: string, ...args: any[]): boolean {
+        try {
+            return super.emit.apply(this, arguments);
+        } catch (e) {
+            Logger.log('Error while handling target event: ' + e.stack, LogLevel.Error);
+        }
+    }
+
     private onMessage(message: any): void {
         if (message.id) {
             if (this._pendingRequests.has(message.id)) {
@@ -148,7 +159,7 @@ export class WebKitConnection {
                         url = utils.canonicalizeUrl(url).toLowerCase();
                         const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === url);
                         if (!urlPages.length) {
-                            Logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, true);
+                            Logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, LogLevel.Error, true);
                         } else {
                             pages = urlPages;
                         }
@@ -156,7 +167,7 @@ export class WebKitConnection {
 
                     if (pages.length) {
                         if (pages.length > 1) {
-                            Logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), true);
+                            Logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), LogLevel.Error, true);
                         }
 
                         const wsUrl = pages[0].webSocketDebuggerUrl;

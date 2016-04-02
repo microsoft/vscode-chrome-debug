@@ -4,6 +4,10 @@
 
 import * as path from 'path';
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+import {IDebugTransformer, ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
+    ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../webkit/webKitAdapterInterfaces';
 import {ISourceMaps, SourceMaps} from './sourceMaps';
 import * as utils from '../../webkit/utilities';
 import {Logger} from '../../webkit/utilities';

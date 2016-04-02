@@ -2,6 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../webkit/webKitAdapterInterfaces';
 import * as utils from '../webkit/utilities';
 
 interface IPendingBreakpoint {

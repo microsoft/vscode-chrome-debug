@@ -2,11 +2,11 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {Response} from '../common/v8Protocol';
-import {OutputEvent} from '../common/debugSession';
-import {DebugSession, ErrorDestination} from '../common/debugSession';
+import {DebugProtocol} from 'vscode-debugprotocol';
+import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
 import {WebKitDebugAdapter} from './webKitDebugAdapter';
+import * as utils from './utilities';
 import {Logger} from './utilities';
 
 import {AdapterProxy} from '../adapter/adapterProxy';
@@ -20,7 +20,7 @@ export class WebKitDebugSession extends DebugSession {
     public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
         super(targetLinesStartAt1, isServer);
 
-        Logger.init(isServer, msg => this.sendEvent(new OutputEvent(`  ›${msg}\n`)));
+        Logger.init(isServer, (msg, level) => this.onLog(msg, level));
         process.addListener('unhandledRejection', reason => {
             Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
         });
@@ -41,7 +41,7 @@ export class WebKitDebugSession extends DebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
         if (event.event !== 'output') {
             // Don't create an infinite loop...
-            Logger.log(`To client: ${JSON.stringify(event) }`);
+            Logger.log(`To client: ${JSON.stringify(event)}`);
         }
 
         super.sendEvent(event);
@@ -51,8 +51,13 @@ export class WebKitDebugSession extends DebugSession {
      * Overload sendResponse to log
      */
     public sendResponse(response: DebugProtocol.Response): void {
-        Logger.log(`To client: ${JSON.stringify(response) }`);
+        Logger.log(`To client: ${JSON.stringify(response)}`);
         super.sendResponse(response);
+    }
+
+    private onLog(msg: string, level: utils.LogLevel): void {
+        const outputCategory = level === utils.LogLevel.Log ? undefined : 'stderr';
+        this.sendEvent(new OutputEvent(`  ›${msg}\n`, outputCategory));
     }
 
     /**
@@ -103,4 +108,36 @@ export class WebKitDebugSession extends DebugSession {
             this.sendErrorResponse(response, 1104, 'Exception while processing request (exception: {_exception})', { _exception: e.message }, ErrorDestination.Telemetry);
         }
     }
+}
+
+/**
+ * Classes copied from vscode-debugadapter - consider exporting these instead
+ */
+
+class Message implements DebugProtocol.ProtocolMessage {
+	seq: number;
+	type: string;
+
+	public constructor(type: string) {
+		this.seq = 0;
+		this.type = type;
+	}
+}
+
+class Response extends Message implements DebugProtocol.Response {
+	request_seq: number;
+	success: boolean;
+	command: string;
+
+	public constructor(request: DebugProtocol.Request, message?: string) {
+		super('response');
+		this.request_seq = request.seq;
+		this.command = request.command;
+		if (message) {
+			this.success = false;
+			(<any>this).message = message;
+		} else {
+			this.success = true;
+		}
+	}
 }

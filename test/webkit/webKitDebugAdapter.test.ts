@@ -2,6 +2,10 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+import {IStackTraceResponseBody, ISetBreakpointsResponseBody} from '../../webkit/webKitAdapterInterfaces';
+
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
 import * as assert from 'assert';

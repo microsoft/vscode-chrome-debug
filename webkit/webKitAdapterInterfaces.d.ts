@@ -1,4 +1,6 @@
-interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     webRoot?: string;
     runtimeArgs?: string[];
     runtimeExecutable?: string;
@@ -11,7 +13,7 @@ interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     userDataDir?: string;
 }
 
-interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
+export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     url?: string;
     webRoot?: string;
     port: number;
@@ -19,13 +21,13 @@ interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
     diagnosticLogging?: boolean;
 }
 
-interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
+export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
     /** DebugProtocol does not send cols, maybe it will someday, but this is used internally when a location is sourcemapped */
     cols?: number[];
     authoredPath?: string;
 }
 
-interface IBreakpoint extends DebugProtocol.Breakpoint {
+export interface IBreakpoint extends DebugProtocol.Breakpoint {
     column?: number;
 }
 
@@ -33,37 +35,37 @@ interface IBreakpoint extends DebugProtocol.Breakpoint {
  * The ResponseBody interfaces are copied from debugProtocol.d.ts which defines these inline in the Response interfaces.
  * They should always match those interfaces, see the original for comments.
  */
-interface ISetBreakpointsResponseBody {
+export interface ISetBreakpointsResponseBody {
     breakpoints: IBreakpoint[];
 }
 
-interface ISourceResponseBody {
+export interface ISourceResponseBody {
     content: string;
 }
 
-interface IThreadsResponseBody {
+export interface IThreadsResponseBody {
     threads: DebugProtocol.Thread[];
 }
 
-interface IStackTraceResponseBody {
+export interface IStackTraceResponseBody {
     stackFrames: DebugProtocol.StackFrame[];
 }
 
-interface IScopesResponseBody {
+export interface IScopesResponseBody {
     scopes: DebugProtocol.Scope[];
 }
 
-interface IVariablesResponseBody {
+export interface IVariablesResponseBody {
     variables: DebugProtocol.Variable[];
 }
 
-interface IEvaluateResponseBody {
+export interface IEvaluateResponseBody {
     result: string;
     variablesReference: number;
 }
 
 declare type PromiseOrNot<T> = T | Promise<T>;
-interface IDebugAdapter {
+export interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
 
     initialize(args: DebugProtocol.InitializeRequestArguments): PromiseOrNot<void>;
@@ -87,7 +89,7 @@ interface IDebugAdapter {
     evaluate(args: DebugProtocol.EvaluateArguments): PromiseOrNot<IEvaluateResponseBody>;
 }
 
-interface IDebugTransformer {
+export interface IDebugTransformer {
     initialize?(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<void>;
     launch?(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     attach?(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;

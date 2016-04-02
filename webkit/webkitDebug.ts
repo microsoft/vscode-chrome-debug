@@ -3,6 +3,6 @@
  *--------------------------------------------------------*/
 
 import {WebKitDebugSession} from './webKitDebugSession';
-import {DebugSession} from '../common/debugSession';
+import {DebugSession} from 'vscode-debugadapter';
 
 DebugSession.run(WebKitDebugSession);

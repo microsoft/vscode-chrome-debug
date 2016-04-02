@@ -2,9 +2,12 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {Event} from '../common/v8Protocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent} from '../common/debugSession';
-import {Handles} from '../common/handles';
+import {DebugProtocol} from 'vscode-debugprotocol';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
+
+import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
+    IAttachRequestArgs, IBreakpoint, IScopesResponseBody, IVariablesResponseBody,
+    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from './webKitAdapterInterfaces';
 import {WebKitConnection} from './webKitConnection';
 import * as utils from './utilities';
 import {Logger} from './utilities';
@@ -55,12 +58,13 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._scriptsById = new Map<WebKitProtocol.Debugger.ScriptId, WebKitProtocol.Debugger.Script>();
         this._committedBreakpointsByUrl = new Map<string, WebKitProtocol.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
-        this.fireEvent(new Event('clearTargetContext'));
+
+        this.fireEventWithName('clearTargetContext');
     }
 
     private clearClientContext(): void {
         this._clientAttached = false;
-        this.fireEvent(new Event('clearClientContext'));
+        this.fireEventWithName('clearClientContext');
     }
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
@@ -175,6 +179,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (this._eventHandler) {
             this._eventHandler(event);
         }
+    }
+
+    private fireEventWithName(name: string): void {
+        const event = new InitializedEvent();
+        event.type = name;
+        this.fireEvent(event);
     }
 
     /**

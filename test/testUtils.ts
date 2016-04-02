@@ -2,6 +2,10 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
+import {IStackTraceResponseBody} from '../webkit/webKitAdapterInterfaces';
+
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as mockery from 'mockery';
