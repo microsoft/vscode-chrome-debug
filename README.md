@@ -108,5 +108,5 @@ General things to try if you're having issues:
 * Ensure nothing else is using port 9222, or specify a different port in your launch config
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
-* If you were previously using the `cwd` property in your launch config with the `file` property, you need to specify an absolute path for `file` instead, e.g. `"${workspaceRoot}/index.html"`.
+* If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
 * File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-webkit-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug.
