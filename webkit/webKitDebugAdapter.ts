@@ -59,12 +59,12 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         this._committedBreakpointsByUrl = new Map<string, WebKitProtocol.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
 
-        this.fireEventWithName('clearTargetContext');
+        this.fireEvent(new Event('clearTargetContext'));
     }
 
     private clearClientContext(): void {
         this._clientAttached = false;
-        this.fireEventWithName('clearClientContext');
+        this.fireEvent(new Event('clearClientContext'));
     }
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
@@ -179,12 +179,6 @@ export class WebKitDebugAdapter implements IDebugAdapter {
         if (this._eventHandler) {
             this._eventHandler(event);
         }
-    }
-
-    private fireEventWithName(name: string): void {
-        const event = new InitializedEvent();
-        event.type = name;
-        this.fireEvent(event);
     }
 
     /**
