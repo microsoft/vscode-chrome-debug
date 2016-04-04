@@ -7,12 +7,12 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import * as assert from 'assert';
 import * as mockery from 'mockery';
 
-import {ISetBreakpointsResponseBody, IStackTraceResponseBody,
-    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../webkit/webKitAdapterInterfaces';
+import {ISetBreakpointsResponseBody,
+    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
 import * as testUtils from '../../testUtils';
-import { ISourceMaps, MappingResult } from '../../../adapter/sourceMaps/sourceMaps';
+import { ISourceMaps, MappingResult } from '../../../src/transformers/sourceMaps/sourceMaps';
 
-const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/sourceMapTransformer';
+const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
 const AUTHORED_PATH = 'c:/project/authored.ts';
 const RUNTIME_PATH = 'c:/project/runtime.js';
 const AUTHORED_LINES = [1, 2, 3];
@@ -25,7 +25,7 @@ const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];
 
 // Not mocked, use for type only
-import {SourceMapTransformer as _SourceMapTransformer} from '../../../adapter/sourceMaps/sourceMapTransformer';
+import {SourceMapTransformer as _SourceMapTransformer} from '../../../src/transformers/sourceMaps/sourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
     let utilsMock: Sinon.SinonMock;
@@ -36,7 +36,7 @@ suite('SourceMapTransformer', () => {
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
 
-        utilsMock = testUtils.createRegisteredSinonMock('../../webkit/utilities', testUtils.getDefaultUtilitiesMock());
+        utilsMock = testUtils.createRegisteredSinonMock('../../utils', testUtils.getDefaultUtilitiesMock());
         mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
     });
 
@@ -112,7 +112,7 @@ suite('SourceMapTransformer', () => {
             const args = createArgs(RUNTIME_PATH, RUNTIME_LINES);
             const expected = createArgs(RUNTIME_PATH, RUNTIME_LINES);
 
-            return getTransformer(false).setBreakpoints(args, 0).then(() => {
+            return getTransformer(/*sourceMaps=*/false).setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
             });
         });

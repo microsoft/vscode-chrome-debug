@@ -4,18 +4,35 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IDebugAdapter, IDebugTransformer} from '../webkit/webKitAdapterInterfaces';
-import * as utils from '../webkit/utilities';
+import {IDebugAdapter, IDebugTransformer} from './chrome/debugAdapterInterfaces';
+import * as utils from './utils';
 
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
+/**
+ * Keeps a set of IDebugTransformers and an IDebugAdapter. Has one public method - dispatchRequest, which passes a request through each
+ * IDebugTransformer, then to the IDebugAdapter.
+ */
 export class AdapterProxy {
     private static INTERNAL_EVENTS = ['scriptParsed', 'clearClientContext', 'clearTargetContext'];
 
-    public constructor(private _requestTransformers: IDebugTransformer[], private _debugAdapter: IDebugAdapter, private _eventHandler: EventHandler) {
+    private _requestTransformers: IDebugTransformer[];
+    private _debugAdapter: IDebugAdapter;
+    private _eventHandler: EventHandler;
+
+    public constructor(requestTransformers: IDebugTransformer[], debugAdapter: IDebugAdapter, eventHandler: EventHandler) {
+        this._requestTransformers = requestTransformers;
+        this._debugAdapter = debugAdapter;
+        this._eventHandler = eventHandler;
+
         this._debugAdapter.registerEventHandler(event => this.onAdapterEvent(event));
     }
 
+    /**
+     * Passes the request through all IDebugTransformers, then the IDebugAdapter. The request from the IDebugAdapter is passed through all the
+     * IDebugTransformers in reverse.
+     * Returns a Promise that resolves to the transformed response body.
+     */
     public dispatchRequest(request: DebugProtocol.Request): Promise<any> {
         if (!(request.command in this._debugAdapter)) {
             return utils.errP('unknowncommand');

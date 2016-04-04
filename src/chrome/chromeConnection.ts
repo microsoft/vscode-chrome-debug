@@ -4,8 +4,8 @@
 
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
-import * as utils from './utilities';
-import {Logger, LogLevel} from './utilities';
+import * as utils from '../utils';
+import {Logger, LogLevel} from '../utils';
 
 interface IMessageWithId {
     id: number;
@@ -120,9 +120,9 @@ class ResReqWebSocket extends EventEmitter {
 }
 
 /**
- * Connects to a target supporting the webkit protocol and sends and receives messages
+ * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
  */
-export class WebKitConnection {
+export class ChromeConnection {
     private _nextId = 1;
     private _socket: ResReqWebSocket;
 
@@ -191,67 +191,67 @@ export class WebKitConnection {
         this._socket.close();
     }
 
-    public debugger_setBreakpoint(location: WebKitProtocol.Debugger.Location, condition?: string): Promise<WebKitProtocol.Debugger.SetBreakpointResponse> {
-        return this.sendMessage('Debugger.setBreakpoint', <WebKitProtocol.Debugger.SetBreakpointParams>{ location, condition });
+    public debugger_setBreakpoint(location: Chrome.Debugger.Location, condition?: string): Promise<Chrome.Debugger.SetBreakpointResponse> {
+        return this.sendMessage('Debugger.setBreakpoint', <Chrome.Debugger.SetBreakpointParams>{ location, condition });
     }
 
-    public debugger_setBreakpointByUrl(url: string, lineNumber: number, columnNumber: number): Promise<WebKitProtocol.Debugger.SetBreakpointByUrlResponse> {
-        return this.sendMessage('Debugger.setBreakpointByUrl', <WebKitProtocol.Debugger.SetBreakpointByUrlParams>{ url, lineNumber, columnNumber });
+    public debugger_setBreakpointByUrl(url: string, lineNumber: number, columnNumber: number): Promise<Chrome.Debugger.SetBreakpointByUrlResponse> {
+        return this.sendMessage('Debugger.setBreakpointByUrl', <Chrome.Debugger.SetBreakpointByUrlParams>{ url, lineNumber, columnNumber });
     }
 
-    public debugger_removeBreakpoint(breakpointId: string): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.removeBreakpoint', <WebKitProtocol.Debugger.RemoveBreakpointParams>{ breakpointId });
+    public debugger_removeBreakpoint(breakpointId: string): Promise<Chrome.Response> {
+        return this.sendMessage('Debugger.removeBreakpoint', <Chrome.Debugger.RemoveBreakpointParams>{ breakpointId });
     }
 
-    public debugger_stepOver(): Promise<WebKitProtocol.Response> {
+    public debugger_stepOver(): Promise<Chrome.Response> {
         return this.sendMessage('Debugger.stepOver');
     }
 
-    public debugger_stepIn(): Promise<WebKitProtocol.Response> {
+    public debugger_stepIn(): Promise<Chrome.Response> {
         return this.sendMessage('Debugger.stepInto');
     }
 
-    public debugger_stepOut(): Promise<WebKitProtocol.Response> {
+    public debugger_stepOut(): Promise<Chrome.Response> {
         return this.sendMessage('Debugger.stepOut');
     }
 
-    public debugger_resume(): Promise<WebKitProtocol.Response> {
+    public debugger_resume(): Promise<Chrome.Response> {
         return this.sendMessage('Debugger.resume');
     }
 
-    public debugger_pause(): Promise<WebKitProtocol.Response> {
+    public debugger_pause(): Promise<Chrome.Response> {
         return this.sendMessage('Debugger.pause');
     }
 
-    public debugger_evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<WebKitProtocol.Debugger.EvaluateOnCallFrameResponse> {
-        return this.sendMessage('Debugger.evaluateOnCallFrame', <WebKitProtocol.Debugger.EvaluateOnCallFrameParams>{ callFrameId, expression, objectGroup, returnByValue });
+    public debugger_evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<Chrome.Debugger.EvaluateOnCallFrameResponse> {
+        return this.sendMessage('Debugger.evaluateOnCallFrame', <Chrome.Debugger.EvaluateOnCallFrameParams>{ callFrameId, expression, objectGroup, returnByValue });
     }
 
-    public debugger_setPauseOnExceptions(state: string): Promise<WebKitProtocol.Response> {
-        return this.sendMessage('Debugger.setPauseOnExceptions', <WebKitProtocol.Debugger.SetPauseOnExceptionsParams>{ state });
+    public debugger_setPauseOnExceptions(state: string): Promise<Chrome.Response> {
+        return this.sendMessage('Debugger.setPauseOnExceptions', <Chrome.Debugger.SetPauseOnExceptionsParams>{ state });
     }
 
-    public debugger_getScriptSource(scriptId: WebKitProtocol.Debugger.ScriptId): Promise<WebKitProtocol.Debugger.GetScriptSourceResponse> {
-        return this.sendMessage('Debugger.getScriptSource', <WebKitProtocol.Debugger.GetScriptSourceParams>{ scriptId });
+    public debugger_getScriptSource(scriptId: Chrome.Debugger.ScriptId): Promise<Chrome.Debugger.GetScriptSourceResponse> {
+        return this.sendMessage('Debugger.getScriptSource', <Chrome.Debugger.GetScriptSourceParams>{ scriptId });
     }
 
-    public runtime_getProperties(objectId: string, ownProperties: boolean, accessorPropertiesOnly: boolean): Promise<WebKitProtocol.Runtime.GetPropertiesResponse> {
-        return this.sendMessage('Runtime.getProperties', <WebKitProtocol.Runtime.GetPropertiesParams>{ objectId, ownProperties, accessorPropertiesOnly });
+    public runtime_getProperties(objectId: string, ownProperties: boolean, accessorPropertiesOnly: boolean): Promise<Chrome.Runtime.GetPropertiesResponse> {
+        return this.sendMessage('Runtime.getProperties', <Chrome.Runtime.GetPropertiesParams>{ objectId, ownProperties, accessorPropertiesOnly });
     }
 
-    public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId?: number, returnByValue = false): Promise<WebKitProtocol.Runtime.EvaluateResponse> {
-        return this.sendMessage('Runtime.evaluate', <WebKitProtocol.Runtime.EvaluateParams>{ expression, objectGroup, contextId, returnByValue });
+    public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId?: number, returnByValue = false): Promise<Chrome.Runtime.EvaluateResponse> {
+        return this.sendMessage('Runtime.evaluate', <Chrome.Runtime.EvaluateParams>{ expression, objectGroup, contextId, returnByValue });
     }
 
-    public page_setOverlayMessage(message: string): Promise<WebKitProtocol.Response> {
+    public page_setOverlayMessage(message: string): Promise<Chrome.Response> {
         return this.sendMessage('Page.setOverlayMessage', { message });
     }
 
-    public page_clearOverlayMessage(): Promise<WebKitProtocol.Response> {
+    public page_clearOverlayMessage(): Promise<Chrome.Response> {
         return this.sendMessage('Page.setOverlayMessage');
     }
 
-    private sendMessage(method: any, params?: any): Promise<WebKitProtocol.Response> {
+    private sendMessage(method: any, params?: any): Promise<Chrome.Response> {
         return this._socket.sendMessage({
             id: this._nextId++,
             method,

@@ -2,12 +2,13 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
- /* tslint:disable */
+/* tslint:disable */
+// TODO - This file was originally copied from vscode-node-debug and needs to be cleaned up to meet our guidelines.
 
 import * as Path from 'path';
 import * as URL from 'url';
 
-import * as utils from '../../webkit/utilities';
+import * as utils from '../../utils';
 
 export function getPathRoot(p: string) {
     if (p) {

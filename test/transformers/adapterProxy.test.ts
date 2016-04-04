@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
-import {AdapterProxy} from '../../adapter/adapterProxy';
+import {AdapterProxy} from '../../src/adapterProxy';
 
 suite('AdapterProxy', () => {
     setup(() => {

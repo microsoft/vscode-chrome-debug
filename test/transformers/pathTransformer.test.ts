@@ -7,9 +7,9 @@ import * as mockery from 'mockery';
 
 import * as testUtils from '../testUtils';
 
-import {PathTransformer as _PathTransformer} from '../../adapter/pathTransformer';
+import {PathTransformer as _PathTransformer} from '../../src/transformers/pathTransformer';
 
-const MODULE_UNDER_TEST = '../../adapter/pathTransformer';
+const MODULE_UNDER_TEST = '../../src/transformers/pathTransformer';
 function createTransformer(): _PathTransformer {
     return new (require(MODULE_UNDER_TEST).PathTransformer)();
 }
@@ -20,6 +20,7 @@ suite('PathTransformer', () => {
 
 
     let utilsMock: Sinon.SinonMock;
+    let chromeUtilsMock: Sinon.SinonMock;
     let transformer: _PathTransformer;
 
     setup(() => {
@@ -28,7 +29,8 @@ suite('PathTransformer', () => {
         mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
 
         // Mock the utils functions
-        utilsMock = testUtils.createRegisteredSinonMock('../webkit/utilities', testUtils.getDefaultUtilitiesMock());
+        utilsMock = testUtils.createRegisteredSinonMock('../utils', testUtils.getDefaultUtilitiesMock());
+        chromeUtilsMock = testUtils.createRegisteredSinonMock('../chrome/chromeUtils', testUtils.getDefaultUtilitiesMock());
         transformer = createTransformer();
     });
 
@@ -48,7 +50,7 @@ suite('PathTransformer', () => {
         });
 
         test('resolves correctly when it can map the client script to the target script', () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
             utilsMock.expects('canonicalizeUrl')
                 .returns(CLIENT_PATH);
@@ -63,7 +65,7 @@ suite('PathTransformer', () => {
         });
 
         test(`doesn't resolve until it can map the client script to the target script`, () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
             utilsMock.expects('canonicalizeUrl')
                 .twice()
@@ -98,7 +100,7 @@ suite('PathTransformer', () => {
 
     suite('scriptParsed', () => {
         test('modifies args.source.path of the script parsed event when the file can be mapped', () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns(CLIENT_PATH);
 
             const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
@@ -108,7 +110,7 @@ suite('PathTransformer', () => {
         });
 
         test(`doesn't modify args.source.path when the file can't be mapped`, () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .withExactArgs(/*webRoot=*/undefined, TARGET_URL).returns('');
 
             const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
@@ -122,7 +124,7 @@ suite('PathTransformer', () => {
         const RUNTIME_LINES = [2, 5, 8];
 
         test('modifies the source path and clears sourceReference when the file can be mapped', () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .thrice()
                 .withExactArgs(undefined, TARGET_URL).returns(CLIENT_PATH);
 
@@ -134,7 +136,7 @@ suite('PathTransformer', () => {
         });
 
         test(`doesn't modify the source path or clear the sourceReference when the file can't be mapped`, () => {
-            utilsMock.expects('webkitUrlToClientPath')
+            chromeUtilsMock.expects('targetUrlToClientPath')
                 .thrice()
                 .withExactArgs(undefined, TARGET_URL).returns('');
 

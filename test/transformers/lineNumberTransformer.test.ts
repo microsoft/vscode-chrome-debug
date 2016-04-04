@@ -6,8 +6,8 @@ import * as assert from 'assert';
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../webkit/webKitAdapterInterfaces';
-import { LineNumberTransformer } from '../../adapter/lineNumberTransformer';
+import {ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../src/chrome/debugAdapterInterfaces';
+import { LineNumberTransformer } from '../../src/transformers/lineNumberTransformer';
 import * as testUtils from '../testUtils';
 
 function createTransformer(clientLinesStartAt1: boolean, targetLinesStartAt1: boolean): LineNumberTransformer {

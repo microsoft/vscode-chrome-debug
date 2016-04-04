@@ -4,8 +4,9 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../webkit/webKitAdapterInterfaces';
-import * as utils from '../webkit/utilities';
+import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../chrome/debugAdapterInterfaces';
+import * as utils from '../utils';
+import * as ChromeUtils from '../chrome/chromeUtils';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -18,8 +19,8 @@ interface IPendingBreakpoint {
  */
 export class PathTransformer implements IDebugTransformer {
     private _webRoot: string;
-    private _clientPathToWebkitUrl = new Map<string, string>();
-    private _webkitUrlToClientPath = new Map<string, string>();
+    private _clientPathToTargetUrl = new Map<string, string>();
+    private _targetUrlToClientPath = new Map<string, string>();
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): void {
@@ -45,8 +46,8 @@ export class PathTransformer implements IDebugTransformer {
             }
 
             const url = utils.canonicalizeUrl(args.source.path);
-            if (this._clientPathToWebkitUrl.has(url)) {
-                args.source.path = this._clientPathToWebkitUrl.get(url);
+            if (this._clientPathToTargetUrl.has(url)) {
+                args.source.path = this._clientPathToTargetUrl.get(url);
                 utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
                 resolve();
             } else {
@@ -62,20 +63,20 @@ export class PathTransformer implements IDebugTransformer {
     }
 
     public clearTargetContext(): void {
-        this._clientPathToWebkitUrl = new Map<string, string>();
-        this._webkitUrlToClientPath = new Map<string, string>();
+        this._clientPathToTargetUrl = new Map<string, string>();
+        this._targetUrlToClientPath = new Map<string, string>();
     }
 
     public scriptParsed(event: DebugProtocol.Event): void {
-        const webkitUrl: string = event.body.scriptUrl;
-        const clientPath = utils.webkitUrlToClientPath(this._webRoot, webkitUrl);
+        const targetUrl: string = event.body.scriptUrl;
+        const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
 
         if (!clientPath) {
-            utils.Logger.log(`Paths.scriptParsed: could not resolve ${webkitUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+            utils.Logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
         } else {
-            utils.Logger.log(`Paths.scriptParsed: resolved ${webkitUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
-            this._clientPathToWebkitUrl.set(clientPath, webkitUrl);
-            this._webkitUrlToClientPath.set(webkitUrl, clientPath);
+            utils.Logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+            this._clientPathToTargetUrl.set(clientPath, targetUrl);
+            this._targetUrlToClientPath.set(targetUrl, clientPath);
 
             event.body.scriptUrl = clientPath;
         }
@@ -93,9 +94,9 @@ export class PathTransformer implements IDebugTransformer {
             if (frame.source.path) {
                 // Try to resolve the url to a path in the workspace. If it's not in the workspace,
                 // just use the script.url as-is. It will be resolved or cleared by the SourceMapTransformer.
-                const clientPath = this._webkitUrlToClientPath.has(frame.source.path) ?
-                    this._webkitUrlToClientPath.get(frame.source.path) :
-                    utils.webkitUrlToClientPath(this._webRoot, frame.source.path);
+                const clientPath = this._targetUrlToClientPath.has(frame.source.path) ?
+                    this._targetUrlToClientPath.get(frame.source.path) :
+                    ChromeUtils.targetUrlToClientPath(this._webRoot, frame.source.path);
 
                 // Incoming stackFrames have sourceReference and path set. If the path was resolved to a file in the workspace,
                 // clear the sourceReference since it's not needed.

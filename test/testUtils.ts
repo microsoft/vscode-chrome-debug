@@ -4,7 +4,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IStackTraceResponseBody} from '../webkit/webKitAdapterInterfaces';
+import {IStackTraceResponseBody} from '../src/chrome/debugAdapterInterfaces';
 
 import * as path from 'path';
 import * as sinon from 'sinon';

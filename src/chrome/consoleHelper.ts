@@ -3,9 +3,9 @@
  *--------------------------------------------------------*/
 
 import * as url from 'url';
-import * as Utilities from './utilities';
+import * as ChromeUtils from './chromeUtils';
 
-export function formatConsoleMessage(m: WebKitProtocol.Console.Message): { text: string, isError: boolean } {
+export function formatConsoleMessage(m: Chrome.Console.Message): { text: string, isError: boolean } {
     let outputText: string;
     if (m.type === 'log') {
         outputText = resolveParams(m);
@@ -37,7 +37,7 @@ export function formatConsoleMessage(m: WebKitProtocol.Console.Message): { text:
     return { text: outputText, isError: m.level === 'error' };
 }
 
-function resolveParams(m: WebKitProtocol.Console.Message): string {
+function resolveParams(m: Chrome.Console.Message): string {
     if (!m.parameters || !m.parameters.length) {
         return m.text;
     }
@@ -79,8 +79,8 @@ function resolveParams(m: WebKitProtocol.Console.Message): string {
     return text;
 }
 
-function remoteObjectToString(obj: WebKitProtocol.Runtime.RemoteObject): string {
-    const result = Utilities.remoteObjectToValue(obj, /*stringify=*/false);
+function remoteObjectToString(obj: Chrome.Runtime.RemoteObject): string {
+    const result = ChromeUtils.remoteObjectToValue(obj, /*stringify=*/false);
     if (result.variableHandleRef) {
         // The DebugProtocol console API doesn't support returning a variable reference, so do our best to
         // build a useful string out of this object.
@@ -111,7 +111,7 @@ function remoteObjectToString(obj: WebKitProtocol.Runtime.RemoteObject): string 
     }
 }
 
-function arrayRemoteObjToString(obj: WebKitProtocol.Runtime.RemoteObject): string {
+function arrayRemoteObjToString(obj: Chrome.Runtime.RemoteObject): string {
     if (obj.preview && obj.preview.properties) {
         let props: string = obj.preview.properties
             .map(prop => prop.value)
@@ -127,7 +127,7 @@ function arrayRemoteObjToString(obj: WebKitProtocol.Runtime.RemoteObject): strin
     }
 }
 
-function stackTraceToString(stackTrace: WebKitProtocol.Console.StackTrace): string {
+function stackTraceToString(stackTrace: Chrome.Console.StackTrace): string {
     return stackTrace
         .map(frame => {
             const fnName = frame.functionName || (frame.url ? '(anonymous)' : '(eval)');

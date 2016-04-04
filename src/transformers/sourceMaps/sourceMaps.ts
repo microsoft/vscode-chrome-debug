@@ -9,8 +9,8 @@ import * as URL from 'url';
 import * as FS from 'fs';
 import {SourceMapConsumer} from 'source-map';
 import * as PathUtils from './pathUtilities';
-import * as utils from '../../webkit/utilities';
-import {Logger} from '../../webkit/utilities';
+import * as utils from '../../utils';
+import {Logger} from '../../utils';
 
 
 export interface MappingResult {

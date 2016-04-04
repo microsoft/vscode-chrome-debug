@@ -5,16 +5,16 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
-import {WebKitDebugAdapter} from './webKitDebugAdapter';
-import * as utils from './utilities';
-import {Logger} from './utilities';
+import {ChromeDebugAdapter} from './chromeDebugAdapter';
+import * as utils from '../utils';
+import {Logger} from '../utils';
 
-import {AdapterProxy} from '../adapter/adapterProxy';
-import {LineNumberTransformer} from '../adapter/lineNumberTransformer';
-import {PathTransformer} from '../adapter/pathTransformer';
-import {SourceMapTransformer} from '../adapter/sourceMaps/sourceMapTransformer';
+import {AdapterProxy} from '../adapterProxy';
+import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
+import {PathTransformer} from '../transformers/pathTransformer';
+import {SourceMapTransformer} from '../transformers/sourceMaps/sourceMapTransformer';
 
-export class WebKitDebugSession extends DebugSession {
+export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 
     public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
@@ -31,7 +31,7 @@ export class WebKitDebugSession extends DebugSession {
                 new SourceMapTransformer(),
                 new PathTransformer()
             ],
-            new WebKitDebugAdapter(),
+            new ChromeDebugAdapter(),
             event => this.sendEvent(event));
     }
 
@@ -115,29 +115,29 @@ export class WebKitDebugSession extends DebugSession {
  */
 
 class Message implements DebugProtocol.ProtocolMessage {
-	seq: number;
-	type: string;
+    public seq: number;
+    public type: string;
 
-	public constructor(type: string) {
-		this.seq = 0;
-		this.type = type;
-	}
+    public constructor(type: string) {
+        this.seq = 0;
+        this.type = type;
+    }
 }
 
 class Response extends Message implements DebugProtocol.Response {
-	request_seq: number;
-	success: boolean;
-	command: string;
+    public request_seq: number;
+    public success: boolean;
+    public command: string;
 
-	public constructor(request: DebugProtocol.Request, message?: string) {
-		super('response');
-		this.request_seq = request.seq;
-		this.command = request.command;
-		if (message) {
-			this.success = false;
-			(<any>this).message = message;
-		} else {
-			this.success = true;
-		}
-	}
+    public constructor(request: DebugProtocol.Request, message?: string) {
+        super('response');
+        this.request_seq = request.seq;
+        this.command = request.command;
+        if (message) {
+            this.success = false;
+            (<any>this).message = message;
+        } else {
+            this.success = true;
+        }
+    }
 }

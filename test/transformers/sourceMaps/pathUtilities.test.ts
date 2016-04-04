@@ -7,9 +7,10 @@ import * as mockery from 'mockery';
 
 import * as testUtils from '../../testUtils';
 
-import {getAbsSourceRoot as _getAbsSourceRoot} from '../../../adapter/sourceMaps/pathUtilities';
+// Don't use - imported without mocks for type
+import {getAbsSourceRoot as _getAbsSourceRoot} from '../../../src/transformers/sourceMaps/pathUtilities';
 
-const MODULE_UNDER_TEST = '../../../adapter/sourceMaps/pathUtilities';
+const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/pathUtilities';
 
 suite('PathUtilities', () => {
     setup(() => {
@@ -17,7 +18,7 @@ suite('PathUtilities', () => {
 
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'url', 'http', 'fs', '../../webkit/utilities']);
+        mockery.registerAllowables([MODULE_UNDER_TEST, 'url', 'http', 'fs', '../../utils']);
         testUtils.win32Mocks();
     });
 

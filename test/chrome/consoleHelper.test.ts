@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
-import * as ConsoleHelper from '../../webkit/consoleHelper';
+import * as ConsoleHelper from '../../src/chrome/consoleHelper';
 
 suite('ConsoleHelper', () => {
     setup(() => {
@@ -16,7 +16,7 @@ suite('ConsoleHelper', () => {
         testUtils.removeUnhandledRejectionListener();
     });
 
-    function doAssert(message: WebKitProtocol.Console.Message, expectedText: string, expectedIsError = false): void {
+    function doAssert(message: Chrome.Console.Message, expectedText: string, expectedIsError = false): void {
         assert.deepEqual(ConsoleHelper.formatConsoleMessage(message), { text: expectedText, isError: expectedIsError });
     }
 
@@ -61,7 +61,7 @@ suite('ConsoleHelper', () => {
 });
 
 /**
- * Build the webkit notifications objects for various console APIs.
+ * Build the Chrome notifications objects for various console APIs.
  */
 namespace Console {
     /**
@@ -70,7 +70,7 @@ namespace Console {
      * @param params - The list of parameters passed to the log function
      * @param overrideProps - An object of props that the message should have. The rest are filled in with defaults.
      */
-    function makeMockMessage(type: string, params: any[], overrideProps?: any): WebKitProtocol.Console.Message {
+    function makeMockMessage(type: string, params: any[], overrideProps?: any): Chrome.Console.Message {
         const message = {
             source: 'console-api',
             level: 'log',
@@ -102,16 +102,16 @@ namespace Console {
         return message;
     }
 
-    export function makeLog(...params: any[]): WebKitProtocol.Console.Message {
+    export function makeLog(...params: any[]): Chrome.Console.Message {
         return makeMockMessage('log', params);
     }
 
-    export function makeAssert(...params: any[]): WebKitProtocol.Console.Message {
+    export function makeAssert(...params: any[]): Chrome.Console.Message {
         const fakeStackTrace = [{ url: '/script/a.js', lineNumber: 4, functionName: 'myFn' }];
         return makeMockMessage('assert', params, { level: 'error', stackTrace: fakeStackTrace });
     }
 
-    export function makeNetworkLog(text: string, url: string): WebKitProtocol.Console.Message {
+    export function makeNetworkLog(text: string, url: string): Chrome.Console.Message {
         return makeMockMessage('log', [text], { source: 'network', url, level: 'error' });
     }
 }

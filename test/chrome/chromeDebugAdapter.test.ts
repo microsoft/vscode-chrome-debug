@@ -4,45 +4,48 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IStackTraceResponseBody, ISetBreakpointsResponseBody} from '../../webkit/webKitAdapterInterfaces';
+import {ISetBreakpointsResponseBody} from '../../src/chrome/debugAdapterInterfaces';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
 import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
-import * as utils from '../../webkit/utilities';
+import * as utils from '../../src/utils';
 
 /** Not mocked - use for type only */
-import {WebKitDebugAdapter as _WebKitDebugAdapter} from '../../webkit/webKitDebugAdapter';
+import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../../src/chrome/chromeDebugAdapter';
 
-const MODULE_UNDER_TEST = '../../webkit/webKitDebugAdapter';
-suite('WebKitDebugAdapter', () => {
-    let mockWebKitConnection: Sinon.SinonMock;
+const MODULE_UNDER_TEST = '../../src/chrome/chromeDebugAdapter';
+suite('ChromeDebugAdapter', () => {
+    let mockChromeConnection: Sinon.SinonMock;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
         mockery.registerAllowables([
             MODULE_UNDER_TEST,
-            './utilities']);
-
-        // Allow the common/ stuff - almost none of it is actually used but I can't get rid of the requires entirely
-        mockery.registerAllowables([
-            '../common/debugSession',
-            '../common/handles',
-            '../common/v8Protocol',
-            './v8Protocol',
+            '../utils',
+            './chromeUtils',
             './consoleHelper',
             'events']);
 
+        // Allow vscode-debugadapter and dependencies - not complicated stuff
+        mockery.registerAllowables([
+            'vscode-debugadapter',
+            './debugSession',
+            './protocol',
+            './messages',
+            './handles'
+        ]);
+
         mockery.registerMock('os', { platform: () => 'win32' });
         testUtils.registerEmptyMocks(['child_process', 'url', 'path', 'net', 'fs', 'http']);
-        mockWebKitConnection = testUtils.createRegisteredSinonMock('./webKitConnection', new DefaultMockWebKitConnection(), 'WebKitConnection');
+        mockChromeConnection = testUtils.createRegisteredSinonMock('./chromeConnection', new DefaultMockChromeConnection(), 'ChromeConnection');
     });
 
     teardown(() => {
-        DefaultMockWebKitConnection.EE.removeAllListeners();
+        DefaultMockChromeConnection.EE.removeAllListeners();
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
@@ -68,7 +71,7 @@ suite('WebKitDebugAdapter', () => {
         });
 
         test('if unsuccessful, the promise is rejected and an initialized event is not fired', done => {
-            mockWebKitConnection.expects('attach').returns(utils.errP('Testing attach failed'));
+            mockChromeConnection.expects('attach').returns(utils.errP('Testing attach failed'));
 
             const wkda = instantiateWKDA();
             wkda.registerEventHandler((event: DebugProtocol.Event) => {
@@ -91,19 +94,19 @@ suite('WebKitDebugAdapter', () => {
                     columnNumber = cols[i];
                 }
 
-                mockWebKitConnection.expects('debugger_setBreakpointByUrl')
+                mockChromeConnection.expects('debugger_setBreakpointByUrl')
                     .once()
                     .withArgs(FILE_NAME, lineNumber, columnNumber)
-                    .returns(<WebKitProtocol.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } });
+                    .returns(<Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } });
             });
         }
 
         function expectRemoveBreakpoint(indicies: number[]): void {
             indicies.forEach(i => {
-                mockWebKitConnection.expects('debugger_removeBreakpoint')
+                mockChromeConnection.expects('debugger_removeBreakpoint')
                     .once()
                     .withArgs(BP_ID + i)
-                    .returns(<WebKitProtocol.Response>{ id: 0 });
+                    .returns(<Chrome.Response>{ id: 0 });
             });
         }
 
@@ -128,7 +131,7 @@ suite('WebKitDebugAdapter', () => {
             return attach(wkda).then(() => {
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
-                mockWebKitConnection.verify();
+                mockChromeConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
@@ -142,7 +145,7 @@ suite('WebKitDebugAdapter', () => {
             return attach(wkda).then(() => {
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
-                mockWebKitConnection.verify();
+                mockChromeConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
@@ -163,7 +166,7 @@ suite('WebKitDebugAdapter', () => {
                 expectSetBreakpoint(lines, cols);
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
-                mockWebKitConnection.verify();
+                mockChromeConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
@@ -184,7 +187,7 @@ suite('WebKitDebugAdapter', () => {
                 expectSetBreakpoint(lines, cols);
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
-                mockWebKitConnection.verify();
+                mockChromeConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
@@ -199,17 +202,17 @@ suite('WebKitDebugAdapter', () => {
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
                 expectRemoveBreakpoint([2, 3]);
-                DefaultMockWebKitConnection.EE.emit('Debugger.globalObjectCleared');
-                DefaultMockWebKitConnection.EE.emit('Debugger.scriptParsed', <WebKitProtocol.Debugger.Script>{ scriptId: 'afterRefreshScriptId', url: FILE_NAME });
-                DefaultMockWebKitConnection.EE.emit('Debugger.breakpointResolved', <WebKitProtocol.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
-                DefaultMockWebKitConnection.EE.emit('Debugger.breakpointResolved', <WebKitProtocol.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
+                DefaultMockChromeConnection.EE.emit('Debugger.globalObjectCleared');
+                DefaultMockChromeConnection.EE.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId: 'afterRefreshScriptId', url: FILE_NAME });
+                DefaultMockChromeConnection.EE.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
+                DefaultMockChromeConnection.EE.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
 
                 lines.push(321);
                 cols.push(123);
                 expectSetBreakpoint(lines, cols, 'afterRefreshScriptId');
                 return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
             }).then(response => {
-                mockWebKitConnection.verify();
+                mockChromeConnection.verify();
                 assert.deepEqual(response, makeExpectedResponse(lines, cols));
             });
         });
@@ -259,7 +262,7 @@ suite('WebKitDebugAdapter', () => {
                 }
             });
 
-            DefaultMockWebKitConnection.EE.emit('Console.onMessageAdded', {
+            DefaultMockChromeConnection.EE.emit('Console.onMessageAdded', {
                 message: {
                     source: 'console-api',
                     level: 'log',
@@ -292,15 +295,15 @@ suite('WebKitDebugAdapter', () => {
     suite('target close/error/detach', () => { });
 });
 
-function attach(wkda: _WebKitDebugAdapter): Promise<void> {
+function attach(wkda: _ChromeDebugAdapter): Promise<void> {
     return wkda.attach({ port: 9222 });
 }
 
-class DefaultMockWebKitConnection {
+class DefaultMockChromeConnection {
     public static EE = new EventEmitter();
 
     public on(eventName: string, handler: (msg: any) => void): void {
-        DefaultMockWebKitConnection.EE.on(eventName, handler);
+        DefaultMockChromeConnection.EE.on(eventName, handler);
     }
 
     public attach(port: number): Promise<void> {
@@ -308,7 +311,7 @@ class DefaultMockWebKitConnection {
     }
 }
 
-function instantiateWKDA(): _WebKitDebugAdapter {
-    const WebKitDebugAdapter: typeof _WebKitDebugAdapter = require(MODULE_UNDER_TEST).WebKitDebugAdapter;
-    return new WebKitDebugAdapter();
+function instantiateWKDA(): _ChromeDebugAdapter {
+    const ChromeDebugAdapter: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
+    return new ChromeDebugAdapter();
 }

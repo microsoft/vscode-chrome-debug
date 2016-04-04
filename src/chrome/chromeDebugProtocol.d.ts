@@ -1,4 +1,8 @@
-declare namespace WebKitProtocol {
+/**
+ * Chrome Debugging Protocol - documented at
+ * https://developer.chrome.com/devtools/docs/protocol/1.1/index
+ */
+declare namespace Chrome {
     interface Notification {
         method: string;
         params: any;

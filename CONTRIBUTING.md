@@ -8,7 +8,7 @@ To avoid a conflict, delete the installed extension at `~/.vscode/extensions/msj
 
 ### OS X/Linux
 * `git clone` this repository
-* Run `ln -s <path to repo> ~/.vscode/extensions/vsc-webkit`
+* Run `ln -s <path to repo> ~/.vscode/extensions/vscode-chrome-debug`
 * You could clone it to the extensions directory if you want, but working with hidden folders in OS X can be a pain.
 
 ### Then...
@@ -26,8 +26,6 @@ There is a set of mocha tests which can be run with `gulp test` or with the `tes
 
 See the project under testapp/ for a bunch of test scenarios crammed onto one page.
 
-## Code
-Some files were copied from [the Node adapter](https://github.com/Microsoft/vscode-node-debug) and I'll periodically check for fixes to port over.
-* Files under common/
-* adapter/sourceMaps/sourceMaps.ts
-* adapter/sourceMaps/pathUtilities.ts
+## Naming
+Client: VS Code
+Target: The debuggee, which implements the Chrome Debug Protocol
