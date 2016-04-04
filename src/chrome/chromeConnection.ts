@@ -5,7 +5,7 @@
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
 import * as utils from '../utils';
-import {Logger, LogLevel} from '../utils';
+import * as logger from '../logger';
 
 interface IMessageWithId {
     id: number;
@@ -46,7 +46,7 @@ class ResReqWebSocket extends EventEmitter {
                 ws.removeListener('error', reject);
 
                 ws.on('error', e => {
-                    Logger.log('Websocket error: ' + e.toString());
+                    logger.log('Websocket error: ' + e.toString());
                     this.emit('error', e);
                 });
 
@@ -58,13 +58,13 @@ class ResReqWebSocket extends EventEmitter {
                     && !(msgObj.method === 'Debugger.scriptParsed' && msgObj.params && msgObj.params.isContentScript)
                     && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
                     // Not really the right place to examine the content of the message, but don't log annoying extension script notifications.
-                    Logger.log('From target: ' + msgStr);
+                    logger.log('From target: ' + msgStr);
                 }
 
                 this.onMessage(msgObj);
             });
             ws.on('close', () => {
-                Logger.log('Websocket closed');
+                logger.log('Websocket closed');
                 this.emit('close');
             });
         });
@@ -87,7 +87,7 @@ class ResReqWebSocket extends EventEmitter {
             this._pendingRequests.set(message.id, resolve);
             this._wsAttached.then(ws => {
                 const msgStr = JSON.stringify(message);
-                Logger.log('To target: ' + msgStr);
+                logger.log('To target: ' + msgStr);
                 ws.send(msgStr);
             });
         });
@@ -100,7 +100,7 @@ class ResReqWebSocket extends EventEmitter {
         try {
             return super.emit.apply(this, arguments);
         } catch (e) {
-            Logger.log('Error while handling target event: ' + e.stack, LogLevel.Error);
+            logger.log('Error while handling target event: ' + e.stack, logger.LogLevel.Error);
         }
     }
 
@@ -138,7 +138,7 @@ export class ChromeConnection {
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
     public attach(port: number, url?: string): Promise<void> {
-        Logger.log('Attempting to attach on port ' + port);
+        logger.log('Attempting to attach on port ' + port);
         return utils.retryAsync(() => this._attach(port, url), 6000)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
@@ -160,7 +160,7 @@ export class ChromeConnection {
                         url = utils.canonicalizeUrl(url).toLowerCase();
                         const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === url);
                         if (!urlPages.length) {
-                            Logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, LogLevel.Error, true);
+                            logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, logger.LogLevel.Error, true);
                         } else {
                             pages = urlPages;
                         }
@@ -168,7 +168,7 @@ export class ChromeConnection {
 
                     if (pages.length) {
                         if (pages.length > 1) {
-                            Logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), LogLevel.Error, true);
+                            logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), logger.LogLevel.Error, true);
                         }
 
                         const wsUrl = pages[0].webSocketDebuggerUrl;

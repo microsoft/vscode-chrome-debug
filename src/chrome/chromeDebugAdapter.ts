@@ -11,7 +11,7 @@ import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsR
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import * as utils from '../utils';
-import {Logger} from '../utils';
+import * as logger from '../logger';
 import {formatConsoleMessage} from './consoleHelper';
 
 import {spawn, ChildProcess} from 'child_process';
@@ -112,14 +112,14 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             chromeArgs.push(launchUrl);
         }
 
-        Logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+        logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
         this._chromeProc = spawn(chromePath, chromeArgs, {
             detached: true,
             stdio: ['ignore']
         });
         (<any>this._chromeProc).unref();
         this._chromeProc.on('error', (err) => {
-            Logger.log('chrome error: ' + err);
+            logger.log('chrome error: ' + err);
             this.terminateSession();
         });
 
@@ -138,12 +138,12 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     private initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
         if (args.diagnosticLogging && !this._isLoggingInitialized) {
-            Logger.enableDiagnosticLogging();
-            utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
-            utils.Logger.log(`${name}(${JSON.stringify(args) })`);
+            logger.enableDiagnosticLogging();
+            logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
+            logger.log(`${name}(${JSON.stringify(args) })`);
 
             if (!args.webRoot) {
-                utils.Logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
+                logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
             }
 
             this._isLoggingInitialized = true;

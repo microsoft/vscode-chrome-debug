@@ -29,3 +29,4 @@ See the project under testapp/ for a bunch of test scenarios crammed onto one pa
 ## Naming
 Client: VS Code
 Target: The debuggee, which implements the Chrome Debug Protocol
+Server-mode: In the normal use-case, the extension does not run in server-mode. For debugging, you can run it as a debug server - see the 'Debugging' section above.

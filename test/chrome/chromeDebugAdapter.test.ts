@@ -26,6 +26,8 @@ suite('ChromeDebugAdapter', () => {
         mockery.registerAllowables([
             MODULE_UNDER_TEST,
             '../utils',
+            './logger',
+            '../logger',
             './chromeUtils',
             './consoleHelper',
             'events']);

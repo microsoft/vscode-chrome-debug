@@ -29,7 +29,7 @@ suite('Utils', () => {
         path = require('path');
 
         mockery.registerAllowables([
-            'url', MODULE_UNDER_TEST]);
+            MODULE_UNDER_TEST, 'url', './logger']);
     });
 
     teardown(() => {

@@ -8,8 +8,7 @@ import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 import { IDebugAdapter } from './debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 
-import * as utils from '../utils';
-import {Logger} from '../utils';
+import * as logger from '../logger';
 
 import {AdapterProxy} from '../adapterProxy';
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
@@ -23,14 +22,12 @@ export class ChromeDebugSession extends DebugSession {
     public constructor(
         targetLinesStartAt1: boolean,
         isServer: boolean = false,
-        adapter: IDebugAdapter = new ChromeDebugAdapter(),
-        version: string = require('../../../package.json').version) {
+        adapter: IDebugAdapter = new ChromeDebugAdapter()) {
         super(targetLinesStartAt1, isServer);
 
-        Logger.AdapterVersion = version;
-        Logger.init(isServer, (msg, level) => this.onLog(msg, level));
+        logger.init(isServer, (msg, level) => this.onLog(msg, level));
         process.addListener('unhandledRejection', reason => {
-            Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
+            logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
         });
 
         this._adapterProxy = new AdapterProxy(
@@ -49,7 +46,7 @@ export class ChromeDebugSession extends DebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
         if (event.event !== 'output') {
             // Don't create an infinite loop...
-            Logger.log(`To client: ${JSON.stringify(event)}`);
+            logger.log(`To client: ${JSON.stringify(event)}`);
         }
 
         super.sendEvent(event);
@@ -59,12 +56,12 @@ export class ChromeDebugSession extends DebugSession {
      * Overload sendResponse to log
      */
     public sendResponse(response: DebugProtocol.Response): void {
-        Logger.log(`To client: ${JSON.stringify(response)}`);
+        logger.log(`To client: ${JSON.stringify(response)}`);
         super.sendResponse(response);
     }
 
-    private onLog(msg: string, level: utils.LogLevel): void {
-        const outputCategory = level === utils.LogLevel.Log ? undefined : 'stderr';
+    private onLog(msg: string, level: logger.LogLevel): void {
+        const outputCategory = level === logger.LogLevel.Log ? undefined : 'stderr';
         this.sendEvent(new OutputEvent(`  ›${msg}\n`, outputCategory));
     }
 
@@ -93,7 +90,7 @@ export class ChromeDebugSession extends DebugSession {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
                     response.message = '[debugger-for-chrome] ' + eStr;
-                    Logger.log('Error: ' + e ? e.stack : eStr);
+                    logger.log('Error: ' + e ? e.stack : eStr);
                 }
 
                 response.success = false;
@@ -107,7 +104,7 @@ export class ChromeDebugSession extends DebugSession {
     protected dispatchRequest(request: DebugProtocol.Request): void {
         const response = new Response(request);
         try {
-            Logger.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
+            logger.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
             this.sendResponseAsync(
                 request,
                 response,

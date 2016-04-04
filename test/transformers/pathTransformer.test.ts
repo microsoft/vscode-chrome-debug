@@ -26,7 +26,7 @@ suite('PathTransformer', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
+        mockery.registerAllowables([MODULE_UNDER_TEST, 'path', 'os', 'fs', '../logger']);
 
         // Mock the utils functions
         utilsMock = testUtils.createRegisteredSinonMock('../utils', testUtils.getDefaultUtilitiesMock());

@@ -6,6 +6,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {IDebugAdapter, IDebugTransformer} from './chrome/debugAdapterInterfaces';
 import * as utils from './utils';
+import * as logger from './logger';
 
 export type EventHandler = (event: DebugProtocol.Event) => void;
 
@@ -96,7 +97,7 @@ export class AdapterProxy {
                 this._eventHandler(event);
             }
         } catch (e) {
-            utils.Logger.log('Error handling adapter event: ' + (e ? e.stack : ''));
+            logger.log('Error handling adapter event: ' + (e ? e.stack : ''));
         }
     }
 }

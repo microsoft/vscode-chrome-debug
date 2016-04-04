@@ -10,6 +10,7 @@ gulpfile.js
 tsconfig.json
 tsd.json
 tslint.json
+vscode-chrome-debug.log
 
 out/test/**
 

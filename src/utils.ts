@@ -8,6 +8,8 @@ import * as fs from 'fs';
 import * as url from 'url';
 import * as path from 'path';
 
+import * as logger from './logger';
+
 const DEFAULT_CHROME_PATH = {
     OSX: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     WIN: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -134,74 +136,6 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
     return tryUntilTimeout();
 }
 
-export enum LogLevel {
-    Log,
-    Error
-}
-
-export type ILogCallback = (msg: string, level: LogLevel) => void;
-
-/**
- * Holds a singleton to manage access to console.log.
- * Logging is only allowed when running in server mode, because otherwise it goes through the same channel that Code uses to
- * communicate with the adapter, which can cause communication issues.
- */
-export class Logger {
-    public static AdapterVersion: string;
-    private static _logger: Logger;
-    private _isServer: boolean;
-    private _diagnosticLogCallback: ILogCallback;
-    private _diagnosticLoggingEnabled: boolean;
-
-    public static log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = false): void {
-        if (this._logger) this._logger._log(msg, level, forceDiagnosticLogging);
-    }
-
-    public static init(isServer: boolean, logCallback: ILogCallback): void {
-        if (!this._logger) {
-            this._logger = new Logger(isServer);
-            this._logger._diagnosticLogCallback = logCallback;
-
-            if (isServer) {
-                Logger.logVersionInfo();
-            }
-        }
-    }
-
-    public static enableDiagnosticLogging(): void {
-        if (this._logger) {
-            this._logger._diagnosticLoggingEnabled = true;
-            if (!this._logger._isServer) {
-                Logger.logVersionInfo();
-            }
-        }
-    }
-
-    public static logVersionInfo(): void {
-        Logger.log(`OS: ${os.platform() } ${os.arch() }`);
-        Logger.log('Node version: ' + process.version);
-        Logger.log('Adapter version: ' + Logger.AdapterVersion);
-    }
-
-    constructor(isServer: boolean) {
-        this._isServer = isServer;
-    }
-
-    private _log(msg: string, level: LogLevel, forceDiagnosticLogging: boolean): void {
-        if (this._isServer || this._diagnosticLoggingEnabled || forceDiagnosticLogging) {
-            this._sendLog(msg, level);
-        }
-    }
-
-    private _sendLog(msg: string, level: LogLevel): void {
-        if (this._isServer) {
-            (level === LogLevel.Log ? console.log : console.error)(msg);
-        } else if (this._diagnosticLogCallback) {
-            this._diagnosticLogCallback(msg, level);
-        }
-    }
-}
-
 /**
  * Modify a url either from the client or the target to a common format for comparing.
  * The client can handle urls in this format too.
@@ -297,7 +231,7 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
-                    Logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
+                    logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });

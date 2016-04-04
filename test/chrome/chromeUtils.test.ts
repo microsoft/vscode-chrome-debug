@@ -31,7 +31,8 @@ suite('ChromeUtils', () => {
         mockery.registerAllowables([
             MODULE_UNDER_TEST,
             'url',
-            '../utils']);
+            '../utils',
+            './logger']);
     });
 
     teardown(() => {

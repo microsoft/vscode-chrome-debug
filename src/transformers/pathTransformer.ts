@@ -6,6 +6,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../chrome/debugAdapterInterfaces';
 import * as utils from '../utils';
+import * as logger from '../logger';
 import * as ChromeUtils from '../chrome/chromeUtils';
 
 interface IPendingBreakpoint {
@@ -40,7 +41,7 @@ export class PathTransformer implements IDebugTransformer {
 
             if (utils.isURL(args.source.path)) {
                 // already a url, use as-is
-                utils.Logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
+                logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
                 resolve();
                 return;
             }
@@ -48,10 +49,10 @@ export class PathTransformer implements IDebugTransformer {
             const url = utils.canonicalizeUrl(args.source.path);
             if (this._clientPathToTargetUrl.has(url)) {
                 args.source.path = this._clientPathToTargetUrl.get(url);
-                utils.Logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
+                logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
                 resolve();
             } else {
-                utils.Logger.log(`Paths.setBP: No target url cached for client path: ${url}, waiting for target script to be loaded.`);
+                logger.log(`Paths.setBP: No target url cached for client path: ${url}, waiting for target script to be loaded.`);
                 args.source.path = url;
                 this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
             }
@@ -72,9 +73,9 @@ export class PathTransformer implements IDebugTransformer {
         const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
 
         if (!clientPath) {
-            utils.Logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+            logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
         } else {
-            utils.Logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+            logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
             this._clientPathToTargetUrl.set(clientPath, targetUrl);
             this._targetUrlToClientPath.set(targetUrl, clientPath);
 
@@ -82,7 +83,7 @@ export class PathTransformer implements IDebugTransformer {
         }
 
         if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
-            utils.Logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${event.body.scriptUrl}`);
+            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${event.body.scriptUrl}`);
             const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
             this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
             this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);

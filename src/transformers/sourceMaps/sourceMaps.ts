@@ -10,8 +10,7 @@ import * as FS from 'fs';
 import {SourceMapConsumer} from 'source-map';
 import * as PathUtils from './pathUtilities';
 import * as utils from '../../utils';
-import {Logger} from '../../utils';
-
+import * as logger from '../../logger';
 
 export interface MappingResult {
 	path: string;
@@ -145,7 +144,7 @@ export class SourceMaps implements ISourceMaps {
         }
 
         if (mapPath.indexOf("data:application/json") >= 0) {
-            Logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
+            logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
 
             // sourcemap is inlined
             const pos = mapPath.lastIndexOf(',');
@@ -160,7 +159,7 @@ export class SourceMaps implements ISourceMaps {
                 }
             }
             catch (e) {
-                Logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
+                logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
             }
 
             return null;
@@ -199,17 +198,17 @@ export class SourceMaps implements ISourceMaps {
 	private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
         if (utils.isURL(mapPath)) {
-            Logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);
+            logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);
             contentsP = utils.getURL(mapPath).catch(e => {
-                Logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
+                logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
                 return null;
             });
         } else {
             contentsP = new Promise((resolve, reject) => {
-                Logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPath}`);
+                logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPath}`);
                 FS.readFile(mapPath, (err, data) => {
                     if (err) {
-                        Logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
+                        logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
                         resolve(null);
                     } else {
                         resolve(data);
@@ -224,7 +223,7 @@ export class SourceMaps implements ISourceMaps {
                     // Throws for invalid contents JSON
                     return new SourceMap(pathToGenerated, contents, this._webRoot);
                 } catch (e) {
-                    Logger.log(`SourceMaps.createSourceMap: exception while processing sourcemap: ${e.stack}`);
+                    logger.log(`SourceMaps.createSourceMap: exception while processing sourcemap: ${e.stack}`);
                     return null;
                 }
             } else {
@@ -250,7 +249,7 @@ class SourceMap {
      * webRoot - an absolute path
      */
 	public constructor(generatedPath: string, json: string, webRoot: string) {
-        Logger.log(`SourceMap: creating SM for ${generatedPath}`)
+        logger.log(`SourceMap: creating SM for ${generatedPath}`)
 		this._generatedPath = generatedPath;
 
 		const sm = JSON.parse(json);

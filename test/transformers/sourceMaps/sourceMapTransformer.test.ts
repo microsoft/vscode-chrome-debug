@@ -37,7 +37,7 @@ suite('SourceMapTransformer', () => {
         mockery.enable({ warnOnReplace: false, useCleanCache: true });
 
         utilsMock = testUtils.createRegisteredSinonMock('../../utils', testUtils.getDefaultUtilitiesMock());
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'path']);
+        mockery.registerAllowables([MODULE_UNDER_TEST, 'path', '../../logger', 'os', 'fs']);
     });
 
     teardown(() => {
