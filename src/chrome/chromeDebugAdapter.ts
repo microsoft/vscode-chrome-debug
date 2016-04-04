@@ -28,6 +28,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
 
     private _initArgs: DebugProtocol.InitializeRequestArguments;
+    private _isLoggingInitialized: boolean;
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
@@ -78,7 +79,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        this.initDiagnosticLogging('launch', args);
+        this.initializeLogging('launch', args);
 
         // Check exists?
         const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -130,13 +131,13 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             return utils.errP('The "port" field is required in the attach config.');
         }
 
-        this.initDiagnosticLogging('attach', args);
+        this.initializeLogging('attach', args);
 
         return this._attach(args.port, args.url);
     }
 
-    private initDiagnosticLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
-        if (args.diagnosticLogging) {
+    private initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
+        if (args.diagnosticLogging && !this._isLoggingInitialized) {
             Logger.enableDiagnosticLogging();
             utils.Logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
             utils.Logger.log(`${name}(${JSON.stringify(args) })`);
@@ -144,6 +145,30 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             if (!args.webRoot) {
                 utils.Logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
             }
+
+            this._isLoggingInitialized = true;
+        }
+    }
+
+    /**
+     * Chrome is closing, or error'd somehow, stop the debug session
+     */
+    private terminateSession(): void {
+        if (this._clientAttached) {
+            this.fireEvent(new TerminatedEvent());
+        }
+
+        this.clearEverything();
+    }
+
+    private clearEverything(): void {
+        this.clearClientContext();
+        this.clearTargetContext();
+        this._chromeProc = null;
+
+        if (this._chromeConnection) {
+            this._chromeConnection.close();
+            this._chromeConnection = null;
         }
     }
 
@@ -179,28 +204,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private fireEvent(event: DebugProtocol.Event): void {
         if (this._eventHandler) {
             this._eventHandler(event);
-        }
-    }
-
-    /**
-     * Chrome is closing, or error'd somehow, stop the debug session
-     */
-    private terminateSession(): void {
-        if (this._clientAttached) {
-            this.fireEvent(new TerminatedEvent());
-        }
-
-        this.clearEverything();
-    }
-
-    private clearEverything(): void {
-        this.clearClientContext();
-        this.clearTargetContext();
-        this._chromeProc = null;
-
-        if (this._chromeConnection) {
-            this._chromeConnection.close();
-            this._chromeConnection = null;
         }
     }
 
@@ -241,7 +244,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
             }
         } else {
-            reason = notification.hitBreakpoints.length ? 'breakpoint' : 'step';
+            reason = (notification.hitBreakpoints && notification.hitBreakpoints.length) ? 'breakpoint' : 'step';
         }
 
         this.fireEvent(new StoppedEvent(reason, /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));

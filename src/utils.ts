@@ -147,6 +147,7 @@ export type ILogCallback = (msg: string, level: LogLevel) => void;
  * communicate with the adapter, which can cause communication issues.
  */
 export class Logger {
+    public static AdapterVersion: string;
     private static _logger: Logger;
     private _isServer: boolean;
     private _diagnosticLogCallback: ILogCallback;
@@ -179,7 +180,7 @@ export class Logger {
     public static logVersionInfo(): void {
         Logger.log(`OS: ${os.platform() } ${os.arch() }`);
         Logger.log('Node version: ' + process.version);
-        Logger.log('Adapter version: ' + require('../../package.json').version);
+        Logger.log('Adapter version: ' + Logger.AdapterVersion);
     }
 
     constructor(isServer: boolean) {
@@ -211,15 +212,17 @@ export class Logger {
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(aUrl: string): string {
-    aUrl = aUrl.replace('file:///', '');
-    aUrl = stripTrailingSlash(aUrl);
-
-    aUrl = fixDriveLetterAndSlashes(aUrl);
-    if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
-        // Ensure osx path starts with /, it can be removed when file:/// was stripped.
-        // Don't add if the url still has a protocol
-        aUrl = '/' + aUrl;
+    if (aUrl.startsWith('file:///')) {
+        aUrl = aUrl.replace('file:///', '');
+        if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+            // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+            // Don't add if the url still has a protocol
+            aUrl = '/' + aUrl;
+        }
     }
+
+    aUrl = stripTrailingSlash(aUrl);
+    aUrl = fixDriveLetterAndSlashes(aUrl);
 
     return aUrl;
 }

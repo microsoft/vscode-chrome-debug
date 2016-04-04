@@ -10,12 +10,20 @@ const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const mocha = require('gulp-mocha');
 const tslint = require('gulp-tslint');
+const merge = require('merge2');
 
 const sources = [
     'src',
     'test',
     'typings',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
+sources.push('index.ts');
+
+var libs = [
+    'common',
+    'typings',
+    'webkit',
+].map(function(tsFolder) { return tsFolder + '/**/*.d.ts'; });
 
 const lintSources = [
     'test',
@@ -26,16 +34,26 @@ const projectConfig = {
     noImplicitAny: false,
     target: 'ES5',
     module: 'commonjs',
-    declarationFiles: true,
+    declaration: true,
     typescript: typescript
 };
 
 gulp.task('build', function () {
-    return gulp.src(sources, { base: '.' })
+    var tsResult = gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
-        .pipe(ts(projectConfig))
+        .pipe(ts(projectConfig));
+
+	return merge([
+		tsResult.dts
+        .pipe(gulp.dest('lib'))
+        ,
+		tsResult.js
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
-        .pipe(gulp.dest('out'));
+        .pipe(gulp.dest('out'))
+        ,
+        gulp.src(libs)
+        .pipe(gulp.dest('lib'))
+	]);
 });
 
 gulp.task('watch', ['build'], function(cb) {

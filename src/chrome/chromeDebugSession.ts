@@ -5,7 +5,9 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
+import { IDebugAdapter } from './debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
+
 import * as utils from '../utils';
 import {Logger} from '../utils';
 
@@ -14,12 +16,18 @@ import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMaps/sourceMapTransformer';
 
+
 export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 
-    public constructor(targetLinesStartAt1: boolean, isServer: boolean = false) {
+    public constructor(
+        targetLinesStartAt1: boolean,
+        isServer: boolean = false,
+        adapter: IDebugAdapter = new ChromeDebugAdapter(),
+        version: string = require('../../../package.json').version) {
         super(targetLinesStartAt1, isServer);
 
+        Logger.AdapterVersion = version;
         Logger.init(isServer, (msg, level) => this.onLog(msg, level));
         process.addListener('unhandledRejection', reason => {
             Logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
@@ -31,7 +39,7 @@ export class ChromeDebugSession extends DebugSession {
                 new SourceMapTransformer(),
                 new PathTransformer()
             ],
-            new ChromeDebugAdapter(),
+            adapter,
             event => this.sendEvent(event));
     }
 

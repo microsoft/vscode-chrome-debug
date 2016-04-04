@@ -152,7 +152,8 @@ export class ChromeConnection {
                 const responseArray = JSON.parse(jsonResponse);
                 if (Array.isArray(responseArray)) {
                     // Filter out extension targets and other things
-                    let pages = responseArray.filter(target => target && target.type === 'page');
+                    // Non-chrome scenarios don't always specify a type, so filter to include ones without a type at all
+                    let pages = responseArray.filter(target => target && (!target.type || target.type === 'page'));
 
                     // If a url was specified (launch mode), try to filter to that url
                     if (url) {

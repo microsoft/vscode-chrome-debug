@@ -62,7 +62,7 @@ An example `launch.json` config.
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "sourceMaps" true
+            "sourceMaps": true
         },
         {
             "name": "Attach to url with files served from ./out",
