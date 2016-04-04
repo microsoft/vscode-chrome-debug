@@ -3,11 +3,11 @@
  *--------------------------------------------------------*/
 
 "use strict";
-var webKitDebugSession_1 = require('./out/webkit/webKitDebugSession');
-exports.WebKitDebugSession = webKitDebugSession_1.WebKitDebugSession;
-var webKitDebugAdapter_1 = require('./out/webkit/webKitDebugAdapter');
-exports.WebKitDebugAdapter = webKitDebugAdapter_1.WebKitDebugAdapter;
-var webKitConnection_1 = require('./out/webkit/webKitConnection');
-exports.WebKitConnection = webKitConnection_1.WebKitConnection;
-var Utilities = require('./out/webkit/utilities');
-exports.Utilities = Utilities;
+var chromeDebugSession_1 = require('./out/src/chrome/chromeDebugSession');
+exports.ChromeDebugSession = chromeDebugSession_1.ChromeDebugSession;
+var chromeDebugAdapter_1 = require('./out/src/chrome/chromeDebugAdapter');
+exports.ChromeDebugAdapter = chromeDebugAdapter_1.ChromeDebugAdapter;
+var chromeConnection_1 = require('./out/src/chrome/chromeConnection');
+exports.ChromeConnection = chromeConnection_1.ChromeConnection;
+var Utils = require('./out/src/utils');
+exports.Utils = Utils;

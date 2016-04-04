@@ -20,9 +20,8 @@ const sources = [
 sources.push('index.ts');
 
 var libs = [
-    'common',
     'typings',
-    'webkit',
+    'src',
 ].map(function(tsFolder) { return tsFolder + '/**/*.d.ts'; });
 
 const lintSources = [
