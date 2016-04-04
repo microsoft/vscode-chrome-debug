@@ -79,7 +79,7 @@ An example `launch.json` config.
 You can also theoretically attach to other targets that support the same Chrome Debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
 
 ### Other optional launch config fields
-* diagnosticLogging: When true, the adapter logs its own diagnostic info to the console
+* diagnosticLogging: When true, the adapter logs its own diagnostic info to the console, _and_ to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub.
 * runtimeExecutable: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * runtimeArgs: Optional arguments passed to the runtime executable
 * userDataDir: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
@@ -109,4 +109,4 @@ General things to try if you're having issues:
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
-* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug.
+* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`.

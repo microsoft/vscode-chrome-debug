@@ -69,7 +69,7 @@ class Logger {
         this._diagnosticLoggingEnabled = enabled;
 
         // Create a log file under the extension's root. Overwritten on each run.
-        const logPath = path.resolve(__dirname, '../../vscode-chrome-debug.log');
+        const logPath = path.resolve(__dirname, '../../vscode-chrome-debug.txt');
         this._logFileStream = fs.createWriteStream(logPath);
         this._logFileStream.on('error', e => {
             this._sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
