@@ -51,11 +51,11 @@ function logVersionInfo(): void {
  * Manages logging, whether to console.log, file, or VS Code console.
  */
 class Logger {
-    /** True when logging is enabled outside of server mode */
-    public diagnosticLoggingEnabled: boolean;
-
     /** True when running in 'server' mode - i.e. running the project on its own, and the test app having 'debugServer' set. */
     public isServer: boolean;
+
+    /** True when logging is enabled outside of server mode */
+    private _diagnosticLoggingEnabled: boolean;
 
     /** When not in server mode, the log msg is sent to this callback. */
     private _diagnosticLogCallback: ILogCallback;
@@ -63,9 +63,10 @@ class Logger {
     /** Write steam for log file */
     private _logFileStream: fs.WriteStream;
 
-    constructor(isServer: boolean, logCallback: ILogCallback) {
-        this.isServer = isServer;
-        this._diagnosticLogCallback = logCallback;
+    public get diagnosticLoggingEnabled(): boolean { return this._diagnosticLoggingEnabled; }
+
+    public set diagnosticLoggingEnabled(enabled: boolean) {
+        this._diagnosticLoggingEnabled = enabled;
 
         // Create a log file under the extension's root. Overwritten on each run.
         const logPath = path.resolve(__dirname, '../../vscode-chrome-debug.log');
@@ -73,6 +74,11 @@ class Logger {
         this._logFileStream.on('error', e => {
             this._sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
         });
+    }
+
+    constructor(isServer: boolean, logCallback: ILogCallback) {
+        this.isServer = isServer;
+        this._diagnosticLogCallback = logCallback;
     }
 
     /**
@@ -89,8 +95,9 @@ class Logger {
             msg = `[${LogLevel[level]}] ${msg}`;
         }
 
-        // Always write to file by default?
-        this._logFileStream.write(msg + '\n');
+        if (this._logFileStream) {
+            this._logFileStream.write(msg + '\n');
+        }
     }
 
     private _sendLog(msg: string, level: LogLevel): void {
