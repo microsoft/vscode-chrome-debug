@@ -68,9 +68,9 @@
             "name": "Launch localhost with sourcemaps",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost/mypage.html",
+            "url": "http://localhost:8080",
             "sourceMaps": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "webRoot": "${workspaceRoot}"
           },
           {
             "name": "Attach with sourcemaps",
@@ -129,7 +129,7 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
-                "default": false
+                "default": true
               },
               "userDataDir": {
                 "type": "string",
@@ -156,7 +156,7 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console",
-                "default": false
+                "default": true
               },
               "url": {
                 "type": "string",
