@@ -1,0 +1,14 @@
+{
+	"version": "0.2.0",
+    "debugServer": "4711",
+	"configurations": [
+		{
+			"name": "Launch localhost",
+			"type": "firefox",
+			"request": "launch",
+			"url": "http://localhost:3000/",
+			"webRoot": "${workspaceRoot}",
+            "sourceMaps": true
+        }
+	]
+}
