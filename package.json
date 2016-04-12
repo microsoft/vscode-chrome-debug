@@ -20,8 +20,8 @@
   "typings": "./lib/index",
   "dependencies": {
     "source-map": "^0.5.3",
-    "vscode-debugadapter": "file:../../../code/vscode-debugadapter-node/adapter",
-    "vscode-debugprotocol": "file:../../../code/vscode-debugadapter-node/protocol",
+    "vscode-debugadapter": "^1.8.0-pre.4",
+    "vscode-debugprotocol": "^1.8.0-pre.3",
     "ws": "0.8.0"
   },
   "devDependencies": {
