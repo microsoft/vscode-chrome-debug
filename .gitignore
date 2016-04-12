@@ -3,4 +3,4 @@ node_modules/
 out/
 lib/
 *.vsix
-vscode-chrome-debug.log
+vscode-chrome-debug.txt
