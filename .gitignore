@@ -4,3 +4,4 @@ out/
 lib/
 *.vsix
 vscode-chrome-debug.txt
+typings/

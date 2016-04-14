@@ -17,12 +17,8 @@
     "Debuggers"
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
-  "typings": "./lib/index",
   "dependencies": {
-    "source-map": "^0.5.3",
-    "vscode-debugadapter": "^1.8.0-pre.4",
-    "vscode-debugprotocol": "^1.8.0-pre.3",
-    "ws": "0.8.0"
+    "vscode-chrome-debug-core": "0.0.2"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
@@ -31,13 +27,9 @@
     "gulp-tslint": "^3.3.1",
     "gulp-typescript": "^2.12.1",
     "gulp-util": "^3.0.5",
-    "merge2": "^1.0.1",
-    "mocha": "^2.4.5",
-    "mockery": "^1.4.1",
-    "sinon": "^1.17.3",
-    "tsd": "^0.6.3",
     "tslint": "^2.5.1",
-    "typescript": "^1.8.9"
+    "typescript": "^1.8.9",
+    "typings": "^0.7.12"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"
@@ -53,7 +45,7 @@
             "typescriptreact"
           ]
         },
-        "program": "./out/src/chrome/chromeDebug.js",
+        "program": "./out/src/chromeDebug.js",
         "runtime": "node",
         "initialConfigurations": [
           {

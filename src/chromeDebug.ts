@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugSession} from './chromeDebugSession';
+import {ChromeDebugSession} from 'vscode-chrome-debug-core';
 import {DebugSession} from 'vscode-debugadapter';
 
-DebugSession.run(ChromeDebugSession);
+DebugSession.run(<typeof DebugSession><any>ChromeDebugSession);

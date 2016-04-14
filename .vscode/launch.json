@@ -4,7 +4,7 @@
         {
             "name": "launch as server",
             "type": "node",
-            "program": "${workspaceRoot}/out/src/chrome/chromeDebug.js",
+            "program": "${workspaceRoot}/out/src/chromeDebug.js",
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
