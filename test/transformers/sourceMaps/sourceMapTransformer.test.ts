@@ -130,7 +130,7 @@ suite('SourceMapTransformer', () => {
                 .twice()
                 .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
             mock.expects('ProcessNewSourceMap')
-                .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve());
+                .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve<void>());
             args.lines.forEach((line, i) => {
                 mock.expects('MapFromSource')
                     .withExactArgs(AUTHORED_PATH, line, 0)

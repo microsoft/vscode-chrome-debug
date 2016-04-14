@@ -13,6 +13,7 @@ import * as ChromeUtils from './chromeUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import {formatConsoleMessage} from './consoleHelper';
+import * as Chrome from './chromeDebugProtocol';
 
 import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
@@ -333,7 +334,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public setFunctionBreakpoints(): Promise<any> {
-        return Promise.resolve();
+        return Promise.resolve<void>();
     }
 
     private _clearAllBreakpoints(url: string): Promise<void> {
@@ -358,7 +359,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             .map((lineNumber, i) => this._chromeConnection.debugger_setBreakpointByUrl(url, lineNumber, cols ? cols[i] : 0));
 
         // Join all setBreakpoint requests to a single promise
-        return Promise.all(responsePs);
+        return Promise.all<Chrome.Debugger.SetBreakpointByUrlResponse>(responsePs);
     }
 
     private _chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointByUrlResponse[], requestLines: number[]): IBreakpoint[] {
@@ -541,7 +542,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 return { variables };
             });
         } else {
-            return Promise.resolve();
+            return Promise.resolve<IVariablesResponseBody>(undefined);
         }
     }
 

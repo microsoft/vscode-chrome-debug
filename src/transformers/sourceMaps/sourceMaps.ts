@@ -7,7 +7,7 @@
 import * as Path from 'path';
 import * as URL from 'url';
 import * as FS from 'fs';
-import {SourceMapConsumer} from 'source-map';
+import * as MozSourceMap from 'source-map';
 import * as PathUtils from './pathUtilities';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
@@ -241,7 +241,7 @@ enum Bias {
 class SourceMap {
 	private _generatedPath: string;		// the generated file for this sourcemap
 	private _sources: string[];			// list of authored files (absolute paths)
-	private _smc: SourceMapConsumer;	// the source map
+	private _smc: MozSourceMap.SourceMapConsumer;	// the source map
 
     /**
      * pathToGenerated - an absolute local path or a URL
@@ -283,7 +283,7 @@ class SourceMap {
             return utils.pathToFileURL(sourceAbsPath);
         });
 
-        this._smc = new SourceMapConsumer(sm);
+        this._smc = new MozSourceMap.SourceMapConsumer(sm);
 	}
 
     /*
@@ -310,7 +310,7 @@ class SourceMap {
 	/*
 	 * finds the nearest source location for the given location in the generated file.
 	 */
-	public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): SourceMap.MappedPosition {
+	public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
 		const mp = this._smc.originalPositionFor(<any>{
 			line: line,
 			column: column,
@@ -327,7 +327,7 @@ class SourceMap {
 	/*
 	 * finds the nearest location in the generated file for the given source location.
 	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): SourceMap.Position {
+	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
         src = utils.pathToFileURL(src);
 
 		const needle = {

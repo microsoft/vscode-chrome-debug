@@ -4,7 +4,9 @@
 
 import * as url from 'url';
 import * as path from 'path';
+
 import * as Utils from '../utils';
+import * as Chrome from './chromeDebugProtocol';
 
 /**
  * Maps a url from target to an absolute local path.

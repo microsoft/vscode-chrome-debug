@@ -6,6 +6,7 @@ import * as assert from 'assert';
 
 import * as testUtils from '../testUtils';
 import * as ConsoleHelper from '../../src/chrome/consoleHelper';
+import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 
 suite('ConsoleHelper', () => {
     setup(() => {

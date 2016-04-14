@@ -4,8 +4,10 @@
 
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
+
 import * as utils from '../utils';
 import * as logger from '../logger';
+import * as Chrome from './chromeDebugProtocol';
 
 interface IMessageWithId {
     id: number;

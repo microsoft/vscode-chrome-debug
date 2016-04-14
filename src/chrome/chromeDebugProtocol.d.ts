@@ -2,248 +2,246 @@
  * Chrome Debugging Protocol - documented at
  * https://developer.chrome.com/devtools/docs/protocol/1.1/index
  */
-declare namespace Chrome {
-    interface Notification {
-        method: string;
-        params: any;
+export interface Notification {
+    method: string;
+    params: any;
+}
+
+export interface Request {
+    id: number;
+    method: string;
+    params?: any;
+}
+
+export interface Response {
+    id: number;
+    error?: any;
+    result?: any;
+}
+
+export module Debugger {
+    export type ScriptId = string;
+    export type BreakpointId = string;
+
+    export interface Script {
+        scriptId: ScriptId;
+        url: string;
+
+        startLine?: number;
+        startColumn?: number;
+        endLine?: number;
+        endColumn?: number;
+        isInternalScript?: boolean;
+        sourceMapURL?: string;
+        isContentScript?: boolean;
     }
 
-    interface Request {
-        id: number;
-        method: string;
-        params?: any;
+    export interface CallFrame {
+        callFrameId: string;
+        functionName: string;
+        location: Location;
+        scopeChain: Scope[];
+        this: any;
     }
 
-    interface Response {
-        id: number;
-        error?: any;
-        result?: any;
+    export interface Scope {
+        object: Runtime.RemoteObject;
+        type: string;
     }
 
-    namespace Debugger {
-        type ScriptId = string;
-        type BreakpointId = string;
+    export interface PausedParams {
+        callFrames: CallFrame[];
+        // 'exception' or 'other'
+        reason: string;
+        data: Runtime.RemoteObject;
+        hitBreakpoints: BreakpointId[];
+    }
 
-        interface Script {
-            scriptId: ScriptId;
-            url: string;
+    export interface BreakpointResolvedParams {
+        breakpointId: BreakpointId;
+        location: Location;
+    }
 
-            startLine?: number;
-            startColumn?: number;
-            endLine?: number;
-            endColumn?: number;
-            isInternalScript?: boolean;
-            sourceMapURL?: string;
-            isContentScript?: boolean;
-        }
+    export interface Location {
+        scriptId: ScriptId;
+        lineNumber: number;
+        columnNumber?: number;
+    }
 
-        interface CallFrame {
-            callFrameId: string;
-            functionName: string;
-            location: Location;
-            scopeChain: Scope[];
-            this: any;
-        }
+    export interface SetBreakpointParams {
+        location: Location;
+        condition?: string;
+    }
 
-        interface Scope {
-            object: Runtime.RemoteObject;
-            type: string;
-        }
-
-        interface PausedParams {
-            callFrames: CallFrame[];
-            // 'exception' or 'other'
-            reason: string;
-            data: Runtime.RemoteObject;
-            hitBreakpoints: BreakpointId[];
-        }
-
-        interface BreakpointResolvedParams {
+    export interface SetBreakpointResponse extends Response {
+        result: {
             breakpointId: BreakpointId;
-            location: Location;
-        }
+            actualLocation: Location;
+        };
+    }
 
-        interface Location {
-            scriptId: ScriptId;
-            lineNumber: number;
-            columnNumber?: number;
-        }
+    export interface SetBreakpointByUrlParams {
+        url?: string;
+        urlRegex?: string;
+        lineNumber: number;
+        columnNumber: number;
+        condition?: string;
+    }
 
-        interface SetBreakpointParams {
-            location: Location;
-            condition?: string;
-        }
-
-        interface SetBreakpointResponse extends Response {
-            result: {
-                breakpointId: BreakpointId;
-                actualLocation: Location;
-            };
-        }
-
-        interface SetBreakpointByUrlParams {
-            url?: string;
-            urlRegex?: string;
-            lineNumber: number;
-            columnNumber: number;
-            condition?: string;
-        }
-
-        interface SetBreakpointByUrlResponse extends Response {
-            result: {
-                breakpointId: BreakpointId;
-                locations: Location[];
-            };
-        }
-
-        interface RemoveBreakpointParams {
+    export interface SetBreakpointByUrlResponse extends Response {
+        result: {
             breakpointId: BreakpointId;
-        }
-
-        interface EvaluateOnCallFrameParams {
-            callFrameId: string;
-            expression: string;
-            objectGroup: string;
-            returnByValue: boolean;
-        }
-
-        interface ExceptionStackFrame extends Location {
-            functionName: string;
-            scriptId: ScriptId;
-            url: string;
-        }
-
-        interface EvaluateOnCallFrameResponse extends Response {
-            result: {
-                result: Runtime.RemoteObject;
-                wasThrown: boolean;
-                exceptionDetails?: {
-                    text: string;
-                    url: string;
-                    line: number;
-                    column: number;
-                    stackTrace: ExceptionStackFrame[];
-                };
-            };
-        }
-
-        interface SetPauseOnExceptionsParams {
-            state: string;
-        }
-
-        interface GetScriptSourceParams {
-            scriptId: ScriptId;
-        }
-
-        interface GetScriptSourceResponse extends Response {
-            result: {
-                scriptSource: string;
-            };
-        }
+            locations: Location[];
+        };
     }
 
-    namespace Runtime {
-        interface GetPropertiesParams {
-            objectId: string;
-            ownProperties: boolean;
-            accessorPropertiesOnly: boolean;
-        }
+    export interface RemoveBreakpointParams {
+        breakpointId: BreakpointId;
+    }
 
-        interface GetPropertiesResponse extends Response {
-            result: {
-                result: PropertyDescriptor[];
+    export interface EvaluateOnCallFrameParams {
+        callFrameId: string;
+        expression: string;
+        objectGroup: string;
+        returnByValue: boolean;
+    }
+
+    export interface ExceptionStackFrame extends Location {
+        functionName: string;
+        scriptId: ScriptId;
+        url: string;
+    }
+
+    export interface EvaluateOnCallFrameResponse extends Response {
+        result: {
+            result: Runtime.RemoteObject;
+            wasThrown: boolean;
+            exceptionDetails?: {
+                text: string;
+                url: string;
+                line: number;
+                column: number;
+                stackTrace: ExceptionStackFrame[];
             };
-        }
+        };
+    }
 
-        interface PropertyDescriptor {
-            configurable: boolean;
-            enumerable: boolean;
-            get?: RemoteObject;
-            name: string;
-            set?: RemoteObject;
-            value?: RemoteObject;
-            wasThrown?: boolean;
-            writeable?: boolean;
-        }
+    export interface SetPauseOnExceptionsParams {
+        state: string;
+    }
 
-        interface RemoteObject {
-            className?: string;
-            description?: string;
-            objectId?: string;
-            subtype?: string;
+    export interface GetScriptSourceParams {
+        scriptId: ScriptId;
+    }
+
+    export interface GetScriptSourceResponse extends Response {
+        result: {
+            scriptSource: string;
+        };
+    }
+}
+
+export module Runtime {
+    export interface GetPropertiesParams {
+        objectId: string;
+        ownProperties: boolean;
+        accessorPropertiesOnly: boolean;
+    }
+
+    export interface GetPropertiesResponse extends Response {
+        result: {
+            result: PropertyDescriptor[];
+        };
+    }
+
+    export interface PropertyDescriptor {
+        configurable: boolean;
+        enumerable: boolean;
+        get?: RemoteObject;
+        name: string;
+        set?: RemoteObject;
+        value?: RemoteObject;
+        wasThrown?: boolean;
+        writeable?: boolean;
+    }
+
+    export interface RemoteObject {
+        className?: string;
+        description?: string;
+        objectId?: string;
+        subtype?: string;
+        type: string;
+        value?: any;
+        preview?: {
             type: string;
-            value?: any;
-            preview?: {
-                type: string;
-                description: string;
-                lossless: boolean;
-                overflow: boolean;
-                properties: PropertyPreview[];
-            };
-        }
-
-        interface PropertyPreview {
-            name: string;
-            type: string;
-            subtype?: string;
-            value: string;
-        }
-
-        interface EvaluateParams {
-            expression: string;
-            objectGroup: string;
-            contextId: number;
-            returnByValue: boolean;
-        }
-
-        interface EvaluateResponse extends Response {
-            result: {
-                result: Runtime.RemoteObject;
-                wasThrown: boolean;
-            };
-        }
+            description: string;
+            lossless: boolean;
+            overflow: boolean;
+            properties: PropertyPreview[];
+        };
     }
 
-    namespace Page {
-        interface SetOverlayMessageRequest extends Request {
-            message: string;
-        }
+    export interface PropertyPreview {
+        name: string;
+        type: string;
+        subtype?: string;
+        value: string;
     }
 
-    namespace Console {
-        interface CallFrame {
-            lineNumber: number;
-            columnNumber: number;
-            functionName: string;
-            scriptId: Debugger.ScriptId;
-            url: string;
-        }
+    export interface EvaluateParams {
+        expression: string;
+        objectGroup: string;
+        contextId: number;
+        returnByValue: boolean;
+    }
 
-        type StackTrace = CallFrame[];
+    export interface EvaluateResponse extends Response {
+        result: {
+            result: Runtime.RemoteObject;
+            wasThrown: boolean;
+        };
+    }
+}
 
-        interface MessageAddedParams {
-            message: Message;
-        }
+export module Page {
+    export interface SetOverlayMessageRequest extends Request {
+        message: string;
+    }
+}
 
-        interface Message {
-            line?: number;
-            column?: number;
+export module Console {
+    export interface CallFrame {
+        lineNumber: number;
+        columnNumber: number;
+        functionName: string;
+        scriptId: Debugger.ScriptId;
+        url: string;
+    }
 
-            // 'debug', 'error', 'log', 'warning'
-            level: string;
+    type StackTrace = CallFrame[];
 
-            // 'assert', 'clear', 'dir', 'dirxml', 'endGroup', 'log', 'profile', 'profileEnd',
-            // 'startGroup', 'startGroupCollapsed', 'table', 'timing', 'trace'
-            type?: string;
+    export interface MessageAddedParams {
+        message: Message;
+    }
 
-            parameters?: Runtime.RemoteObject[];
-            repeatCount?: string;
-            stackTrace?: StackTrace;
-            text: string;
-            url?: string;
-            source?: string;
-            timestamp?: number;
-            executionContextId?: number;
-        }
+    export interface Message {
+        line?: number;
+        column?: number;
+
+        // 'debug', 'error', 'log', 'warning'
+        level: string;
+
+        // 'assert', 'clear', 'dir', 'dirxml', 'endGroup', 'log', 'profile', 'profileEnd',
+        // 'startGroup', 'startGroupCollapsed', 'table', 'timing', 'trace'
+        type?: string;
+
+        parameters?: Runtime.RemoteObject[];
+        repeatCount?: string;
+        stackTrace?: StackTrace;
+        text: string;
+        url?: string;
+        source?: string;
+        timestamp?: number;
+        executionContextId?: number;
     }
 }

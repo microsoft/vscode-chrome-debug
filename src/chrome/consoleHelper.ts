@@ -4,6 +4,7 @@
 
 import * as url from 'url';
 import * as ChromeUtils from './chromeUtils';
+import * as Chrome from './chromeDebugProtocol';
 
 export function formatConsoleMessage(m: Chrome.Console.Message): { text: string, isError: boolean } {
     let outputText: string;

@@ -11,22 +11,23 @@ const sourcemaps = require('gulp-sourcemaps');
 const mocha = require('gulp-mocha');
 const tslint = require('gulp-tslint');
 const merge = require('merge2');
+const debug = require('gulp-debug');
 
 const sources = [
     'src',
     'test',
-    'typings',
+    'typings/main',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 sources.push('index.ts');
 
 var libs = [
-    'typings',
     'src',
-].map(function(tsFolder) { return tsFolder + '/**/*.d.ts'; });
+    'typings'
+].map(function(libFolder) { return libFolder + '/**/*.d.ts'; });
 
 const lintSources = [
-    'test',
-    'src'
+    'src',
+    'test'
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
 const projectConfig = {
@@ -50,7 +51,7 @@ gulp.task('build', function () {
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
         .pipe(gulp.dest('out'))
         ,
-        gulp.src(libs)
+        gulp.src(libs, { base: '.' })
         .pipe(gulp.dest('lib'))
 	]);
 });

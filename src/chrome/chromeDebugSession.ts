@@ -15,9 +15,12 @@ import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMaps/sourceMapTransformer';
 
-
 export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
+
+    static run(debugSession: typeof DebugSession): void {
+        // ?
+    }
 
     public constructor(
         targetLinesStartAt1: boolean,
