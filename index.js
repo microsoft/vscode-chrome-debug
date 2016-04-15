@@ -11,6 +11,6 @@ var chromeConnection_1 = require('./out/src/chrome/chromeConnection');
 exports.ChromeConnection = chromeConnection_1.ChromeConnection;
 var Utils = require('./out/src/utils');
 exports.Utils = Utils;
-var Logger = require('./src/logger');
+var Logger = require('./out/src/logger');
 exports.Logger = Logger;
 
