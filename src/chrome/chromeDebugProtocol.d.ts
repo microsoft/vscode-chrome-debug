@@ -19,7 +19,7 @@ export interface Response {
     result?: any;
 }
 
-export module Debugger {
+export namespace Debugger {
     export type ScriptId = string;
     export type BreakpointId = string;
 
@@ -141,7 +141,7 @@ export module Debugger {
     }
 }
 
-export module Runtime {
+export namespace Runtime {
     export interface GetPropertiesParams {
         objectId: string;
         ownProperties: boolean;
@@ -203,13 +203,13 @@ export module Runtime {
     }
 }
 
-export module Page {
+export namespace Page {
     export interface SetOverlayMessageRequest extends Request {
         message: string;
     }
 }
 
-export module Console {
+export namespace Console {
     export interface CallFrame {
         lineNumber: number;
         columnNumber: number;
