@@ -18,10 +18,6 @@ import {SourceMapTransformer} from '../transformers/sourceMaps/sourceMapTransfor
 export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
 
-    static run(debugSession: typeof DebugSession): void {
-        // ?
-    }
-
     public constructor(
         targetLinesStartAt1: boolean,
         isServer: boolean = false,

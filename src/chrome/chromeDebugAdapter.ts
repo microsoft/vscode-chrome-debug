@@ -137,7 +137,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return this._attach(args.port, args.url);
     }
 
-    private initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
+    public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
         if (args.diagnosticLogging && !this._isLoggingInitialized) {
             logger.enableDiagnosticLogging();
             logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
@@ -154,7 +154,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     /**
      * Chrome is closing, or error'd somehow, stop the debug session
      */
-    private terminateSession(): void {
+    public terminateSession(): void {
         if (this._clientAttached) {
             this.fireEvent(new TerminatedEvent());
         }
@@ -162,7 +162,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this.clearEverything();
     }
 
-    private clearEverything(): void {
+    public clearEverything(): void {
         this.clearClientContext();
         this.clearTargetContext();
         this._chromeProc = null;
