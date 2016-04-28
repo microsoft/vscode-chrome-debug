@@ -8,7 +8,6 @@ const ts = require('gulp-typescript');
 const log = require('gulp-util').log;
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
-const mocha = require('gulp-mocha');
 const tslint = require('gulp-tslint');
 
 const sources = [
