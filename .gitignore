@@ -3,3 +3,4 @@ node_modules/
 out/
 lib/
 typings/
+vscode-chrome-debug.txt
