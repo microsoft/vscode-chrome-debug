@@ -12,7 +12,7 @@ To use this extension, you must first open the folder containing the project you
 
 ### Launch
 Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). It's used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/users/me/project/app.js"), so be careful that it's set correctly.
-```
+```json
 {
     "version": "0.1.0",
     "configurations": [
@@ -53,7 +53,7 @@ __Linux__
 Launch Chrome and navigate to your page.
 
 An example `launch.json` config.
-```
+```json
 {
     "version": "0.1.0",
     "configurations": [
