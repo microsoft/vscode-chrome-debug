@@ -5,3 +5,4 @@ lib/
 *.vsix
 vscode-chrome-debug.txt
 typings/
+.browse.VC.db
