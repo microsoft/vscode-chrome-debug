@@ -18,7 +18,7 @@ export function removeUnhandledRejectionListener(): void {
     process.removeListener('unhandledRejection', unhandledRejectionListener);
 }
 
-function unhandledRejectionListener(reason, p) {
+function unhandledRejectionListener(reason: any, p: Promise<any>) {
     console.log('*');
     console.log('**');
     console.log('***');
@@ -44,7 +44,7 @@ export class MockEvent implements DebugProtocol.Event {
  * Calls sinon.mock and patches its 'expects' method to not expect that the mock base object
  * already has an implementation of the expected method.
  */
-export function getSinonMock(mockBase = {}): Sinon.SinonMock {
+export function getSinonMock(mockBase: any = {}): Sinon.SinonMock {
     const m = sinon.mock(mockBase);
 
     // Add a default implementation of every expected method so sinon doesn't complain if it doesn't exist.
@@ -67,7 +67,7 @@ export function getSinonMock(mockBase = {}): Sinon.SinonMock {
  * @param name - If specified, mock is registered as { [name]: mockInstance }. e.g. if mocking a class.
  * @param asConstructor - If true, the mock instance will be returned when the named mock is called as a constructor
  */
-export function createRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
+export function createRegisteredSinonMock(requireName: string, mockInstance: any = {}, name?: string, asConstructor = true): Sinon.SinonMock {
     const mock = getSinonMock(mockInstance);
     let mockContainer: any;
     if (name) {

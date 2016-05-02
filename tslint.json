@@ -1,4 +1,7 @@
 {
+  "rulesDirectory": [
+    "node_modules/tslint-microsoft-contrib",
+    "node_modules/tslint-eslint-rules/dist/rules"],
   "rules": {
     "align": [
       true,
@@ -24,7 +27,7 @@
       false,
       140
     ],
-    "member-access": true,
+    "member-access": false,
     "member-ordering": [
       true,
       "variables-before-functions"
@@ -33,23 +36,17 @@
     "no-arg": true,
     "no-bitwise": true,
     "no-conditional-assignment": true,
-    "no-console": [
-      true,
-      "debug",
-      "info",
-      "time",
-      "timeEnd",
-      "trace"
-    ],
+    "no-consecutive-blank-lines": true,
+    "no-console": false,
     "no-construct": true,
     "no-debugger": true,
     "no-duplicate-key": true,
     "no-duplicate-variable": true,
     "no-empty": false,
     "no-eval": true,
-    "no-inferrable-types": false,
+    "no-inferrable-types": true,
     "no-internal-module": true,
-    "no-keyword-named-variables": true,
+    "no-invalid-this": true,
     "no-require-imports": false,
     "no-shadowed-variable": true,
     "no-string-literal": true,
@@ -61,7 +58,7 @@
     "no-use-before-declare": true,
     "no-var-keyword": true,
     "no-var-requires": true,
-    "object-literal-sort-keys": true,
+    "object-literal-sort-keys": false,
     "one-line": [
       true,
       "check-open-brace",
@@ -76,13 +73,7 @@
     "radix": true,
     "semicolon": true,
     "switch-default": true,
-    "trailing-comma": [
-      true,
-      {
-        "multiline": "always",
-        "singleline": "never"
-      }
-    ],
+    "trailing-comma": false,
     "triple-equals": [
       true,
       "allow-null-check"
@@ -97,15 +88,84 @@
         "variable-declaration": "nospace"
       }
     ],
-    "variable-name": false,
+    "variable-name": [
+      true,
+      "allow-leading-underscore",
+      "ban-keywords"
+    ],
     "whitespace": [
       true,
       "check-branch",
       "check-decl",
       "check-operator",
+      "check-module",
       "check-separator",
       "check-type"
-    ]
+      // "check-typecast"
+    ],
+
+
+    // tslint-microsoft-contrib
+    "chai-vague-errors": true,
+    "export-name": false,
+    "use-isnan": true,
+    "jquery-deferred-must-complete": true,
+    "missing-jsdoc": false,
+    "missing-optional-annotation": true,
+    "mocha-avoid-only": true,
+    "no-backbone-get-set-outside-model": true,
+    "no-banned-terms": true,
+    "no-constant-condition": true,
+    "no-control-regex": true,
+    "no-cookies": true,
+    "no-delete-expression": true,
+    "no-document-domain": true,
+    "no-disable-auto-sanitization": true,
+    "no-duplicate-case": true,
+    "no-duplicate-parameter-names": true,
+    "no-empty-interfaces": true,
+    "no-exec-script": true,
+    "no-function-constructor-with-string-args": true,
+    "no-function-expression": true,
+    "no-http-string": false,
+    "no-increment-decrement": false,
+    "no-invalid-regexp": true,
+    "no-for-in": false,
+    "no-missing-visibility-modifiers": true,
+    "no-multiline-string": false,
+    "no-multiple-var-decl": true,
+    "no-unnecessary-bind": true,
+    "no-unnecessary-semicolons": true,
+    "no-octal-literal": true,
+    "no-regex-spaces": true,
+    "no-reserved-keywords": false,
+    "no-sparse-arrays": true,
+    "no-string-based-set-immediate": false,
+    "no-string-based-set-interval": false,
+    "no-string-based-set-timeout": false,
+    "no-unused-imports": true,
+    "no-with-statement": true,
+    "prefer-array-literal": true,
+    "promise-must-complete": false,
+    "react-no-dangerous-html": true,
+    "use-named-parameter": true,
+    "valid-typeof": true,
+    "max-func-body-length": [false, 100, {
+      "ignore-parameters-to-function-regex": "describe"
+    }],
+    "no-constructor-vars": false,
+    "typedef": [true,
+      "callSignature",
+      "indexSignature",
+      // "parameter",
+      "propertySignature",
+      "variableDeclarator",
+      "memberVariableDeclarator"],
+    "use-strict": false,
+
+
+    // tslint-eslint-rules
+    "no-irregular-whitespace": true
   }
 }
 

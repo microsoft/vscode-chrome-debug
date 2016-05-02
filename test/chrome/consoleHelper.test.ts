@@ -93,7 +93,7 @@ namespace Console {
         };
 
         if (overrideProps) {
-            for (var propName in overrideProps) {
+            for (let propName in overrideProps) {
                 if (overrideProps.hasOwnProperty(propName)) {
                     message[propName] = overrideProps[propName];
                 }

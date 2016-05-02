@@ -90,7 +90,7 @@ suite('ChromeDebugAdapter', () => {
     suite('setBreakpoints()', () => {
         const BP_ID = 'bpId';
         const FILE_NAME = 'file:///a.js';
-        function expectSetBreakpoint(lines: number[], cols?: number[], scriptId: string = 'SCRIPT_ID'): void {
+        function expectSetBreakpoint(lines: number[], cols?: number[], scriptId = 'SCRIPT_ID'): void {
             lines.forEach((lineNumber, i) => {
                 let columnNumber;
                 if (cols) {
