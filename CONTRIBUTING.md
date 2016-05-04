@@ -16,6 +16,7 @@ To avoid a conflict, delete the installed extension at `~/.vscode/extensions/msj
 * Run `npm install -g gulp` and `npm install`
     * You may see an error if `bufferutil` or `utf-8-validate` fail to build. These native modules required by `ws` are optional and the adapter should work fine without them.
 * Run `gulp build`
+    * This error is expected until someone patches the es6-promise dts in typings - `typings\main\ambient\es6-promise\index.d.ts(76,2): error TS2309: An export assignment cannot be used in a module with other exported elements.`
 
 
 ## Debugging
