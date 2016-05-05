@@ -2,15 +2,15 @@
 
 This guide optimizes for readability and maintainability over performance. It includes style conventions and some TypeScript best practices.
 
-General
+Tslint
 -------
 
-Use [TSLint](https://www.npmjs.com/package/tslint) in your build process to enforce the style. Write ES6 with strict mode and compile to your target using e.g. [babel](https://github.com/babel/babel).
+Run `gulp tslint` before committing to check your code against the rules that are enabled for this repo. But not everything can be checked with tslint, so read this guide, too.
 
 Types
 -----
 
-Enable noImplicitAny option the compiler. Use types instead of the any type. Use type inference freely. Add type information when the inference is not clear. Specify function's return type if it's not clear from the implemetation.
+Whenever possible, use types instead of the any type. Use type inference freely. Add type information when the inference is not clear. Specify function's return type if it's not clear from the implemetation.
 
 ```TypeScript
 // myDocument type is not obvious to the reader
@@ -22,11 +22,9 @@ getFromDatabase.done((myDocument: DocumentType) => {
 const streetAddress = "221B Baker Street";
 ```
 
-Convert types with global objects instead of shorthands (``String(foo)`` over ``'' + foo``). Add types to a module instead of polluting the global namespace with every interface.
+Use `number[]` over `Array<number>`.
 
-Use ``number[]`` over ``Array<number>``.
-
-Use ``let`` over ``var`` to have better scoping. Use ``const`` for variables which are not re-assigned.
+Use `const` whenever possible, and avoid needlessly reusing or reassigning variables. Use `let` when needed.
 
 Formatting
 ----------
@@ -45,7 +43,7 @@ Separate operators and variables with spaces unless it's an unary operator. Add 
 let area = length * width;
 ```
 
-Don't combine multiple var, let or const statements together. Use ``"`` for strings, ``'`` for strings within strings.
+Don't combine multiple var, let or const statements together. Use `'` for strings, `" or \`` for strings within strings.
 
 ```TypeScript
 import foo from "foo";
@@ -56,64 +54,72 @@ Declare a variable before referencing it (e.g. declare variables in the correct 
 
 Don't use leading or trailing commas.
 
-Add a space after the colon ``:`` character, but not before it.
+Add a space after the colon `:` character, but not before it.
 
 ```TypeScript
 let myVariable: string;
 ```
 
-Lines should be at most 140 characters long.
+Very long lines should be broken up into multiple lines.
 
 Naming
 ------
 
-Use [domain-driven](http://en.wikipedia.org/wiki/Domain-driven_design) naming. Abbrevations should almost never be used, but also avoid overtly long names. Use [camelCase](http://en.wikipedia.org/wiki/CamelCase) for variables and properties. Use PascalCase for classes, types and constructor functions. Don't start interfaces with the letter I.
+Abbreviations should almost never be used, but also avoid overtly long names. Common abbreviations like URL are ok. Use [camelCase](http://en.wikipedia.org/wiki/CamelCase) for variables and properties. Use PascalCase for classes, types and constructor functions. Interfaces should start with the letter I.
 
-Single letter names should only be used when the domain calls for it, e.g. mathematics. Names may include special characters (e.g. ε) if the domain calls for it.
+Single letter names should only be used when the domain calls for it, e.g. for-loop counters or mathematics. Names may include special characters (e.g. ε) if the domain calls for it.
 
 Comments
 --------
 
 Strike a balance between commenting too much and attempting to write "self-documenting" code. Most comments should explain why instead of what, but sometimes it's necessary to explain what with comments.
 
-Leave a space before the comment text and start with a capital letter unless the first word is a variable. Add comment to a line before the code.
+Leave a space before the comment text. Add comment to a line before the code.
 
 ```TypeScript
 // Formula proven by Archimedes
 const area = π * r * r;
 ```
 
-Use [JSDoc](http://usejsdoc.org/) for documenting all named functions.
+When documenting a function, use [JSDoc](http://usejsdoc.org/).
 
 ```TypeScript
+// Good
+
 /**
  * Returns a promise of the latest revision of the document with the specified id.
- * @param {string} id of the document
- * @returns {Q.Promise<DocumentType>}
+ * @param id of the document
  */
-const getLatestDocument = (id: string) => {
+private getLatestDocument(id: string): Promise<IDocument> {
     // ... implementation here
-};
+}
+
+// Bad
+
+// Returns a promise of the latest revision of the document with the specified id.
+private getLatestDocument(id: string): Promise<IDocument> {
+    // ... implementation here
+}
 ```
 
-Use ``// FIXME: `` and ``// TODO: `` tags and set your build server to track them.
+When passing a primitive literal to a function, annotate it inline with the parameter name, if it's not obvious from context.
 
 ```TypeScript
-// FIXME: Handle error case
-// TODO: Implement caching
+addItem(item, /*forceRefresh=*/true);
 ```
 
 Control structures
 ------------------
 
-Use functional style .forEach, .map, .filter etc. over for/while loops whenever possible. When a for/while loop is required for performance reasons leave a comment stating so.
+Use functional style .forEach, .map, .filter etc. over for/while loops whenever possible.
 
 ```TypeScript
-// Authorization is required since commands include all commands.
-commands.filter(authorizedCommand).forEach(executeCommand);
+commands
+    .filter(isAuthorizedCommand)
+    .forEach(executeCommand);
 ```
 
-Use forEach and Object.prototype.keys over ``for..in``.
+When iterating over the keys of an object, use forEach and Object.keys over `for..in`.
 
 Place else in the same line as the ending curly brace, always use curly braces and add whitespace after the if keyword.
 
@@ -128,7 +134,7 @@ if (isAuthorized) {
 Functions
 ---------
 
-Use the fat arrow notation ``=>`` over the function keyword. Leave out the ()-braces if there is only one function parameter with an inferred type. Don't use curly braces if the function is simple and immediately returns a value. Add a space before and after ``=>``.
+Use the fat arrow notation `=>` over the function keyword. Leave out the ()-braces if there is only one function parameter with an inferred type. Don't use curly braces if the function is simple and immediately returns a value. Add a space before and after `=>`.
 
 ```TypeScript
 const squaredValues = values.map(value => value * value);
@@ -138,12 +144,28 @@ const printValues = (values: number[]) => {
 };
 ```
 
-Use ``that`` when referring to another ``this``. Note that this is often not necessary when the fat-arrow syntax is not used.
+Use `that` when referring to another `this`. Note that this is often not necessary when the fat-arrow syntax is not used.
 
 Comparison
 ----------
 
-Always use the strict equality comparision ``===`` and ``!==`` over ``==`` and ``!=``. Use implicit boolean type coercion only for checking truthiness.
+Always use the strict equality comparision `===` and `!==` over `==` and `!=`, unless comparing to null, to avoid checking both null and undefined.
+
+```TypeScript
+// Bad
+if (newValue == oldValue) {
+}
+
+// Good
+if (newValue === oldValue) {
+}
+
+// Good
+if (newValue == null) {
+}
+```
+
+Use implicit boolean type coercion only for checking truthiness.
 
 Further reading, inspiration and sources
 ----------------------------------------
