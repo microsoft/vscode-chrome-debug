@@ -6,5 +6,6 @@ A library for building VS Code debug adapters for targets that support the [Chro
 ## Use
 ```
 npm install --save vscode-chrome-debug-core
-npm install --save-dev typings`
-typings install --ambient --save es6-collections es6-promise node```
+npm install --save-dev typings
+typings install --ambient --save es6-collections es6-promise node
+```
