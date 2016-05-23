@@ -118,7 +118,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             detached: true,
             stdio: ['ignore']
         });
-        (<any>this._chromeProc).unref();
+        this._chromeProc.unref();
         this._chromeProc.on('error', (err) => {
             logger.log('chrome error: ' + err);
             this.terminateSession();
