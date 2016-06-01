@@ -227,7 +227,7 @@ suite('Utils', () => {
 
                 if (error) {
                     return { on:
-                        (eventName, eventCallback) => {
+                        (eventName: string, eventCallback: Function) => {
                             if (eventName === 'error') {
                                 eventCallback(error);
                             }

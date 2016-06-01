@@ -20,7 +20,7 @@ export class ChromeDebugSession extends DebugSession {
 
     public constructor(
         targetLinesStartAt1: boolean,
-        isServer: boolean = false,
+        isServer = false,
         adapter: IDebugAdapter = new ChromeDebugAdapter()) {
         super(targetLinesStartAt1, isServer);
 

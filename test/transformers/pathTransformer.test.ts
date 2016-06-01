@@ -18,7 +18,6 @@ suite('PathTransformer', () => {
     const TARGET_URL = 'http://mysite.com/scripts/script1.js';
     const CLIENT_PATH = 'c:/projects/mysite/scripts/script1.js';
 
-
     let utilsMock: Sinon.SinonMock;
     let chromeUtilsMock: Sinon.SinonMock;
     let transformer: _PathTransformer;

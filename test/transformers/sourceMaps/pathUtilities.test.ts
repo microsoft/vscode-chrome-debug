@@ -28,7 +28,6 @@ suite('PathUtilities', () => {
         mockery.disable();
     });
 
-
     suite('getAbsSourceRoot()', () => {
         const GEN_PATH = 'c:\\project\\webroot\\code\\script.js';
         const GEN_URL = 'http://localhost:8080/code/script.js';

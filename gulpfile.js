@@ -16,7 +16,7 @@ const debug = require('gulp-debug');
 const sources = [
     'src',
     'test',
-    'typings/main',
+    'typings',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 sources.push('index.ts');
 
@@ -34,8 +34,9 @@ const projectConfig = {
     noImplicitAny: false,
     target: 'ES5',
     module: 'commonjs',
+    moduleResolution: "node",
     declaration: true,
-    typescript: typescript
+    typescript
 };
 
 gulp.task('build', function () {

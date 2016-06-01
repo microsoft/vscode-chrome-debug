@@ -1,15 +1,15 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "moduleResolution": "node",
         "noImplicitAny": false,
-        "removeComments": false,
         "target": "ES5",
         "sourceMap": true,
         "outDir": "out"
     },
     "exclude": [
         "node_modules",
-        "typings/browser",
+        "typings/globals",
         "lib"
     ]
 }

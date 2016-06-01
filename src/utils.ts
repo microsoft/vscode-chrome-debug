@@ -99,7 +99,7 @@ export function reversedArr(arr: any[]): any[] {
     }, []);
 }
 
-export function promiseTimeout(p?: Promise<any>, timeoutMs: number = 1000, timeoutMsg?: string): Promise<any> {
+export function promiseTimeout(p?: Promise<any>, timeoutMs = 1000, timeoutMsg?: string): Promise<any> {
     if (timeoutMsg === undefined) {
         timeoutMsg = `Promise timed out after ${timeoutMs}ms`;
     }

@@ -45,7 +45,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _chromeConnection: ChromeConnection;
     private _eventHandler: (event: DebugProtocol.Event) => void;
 
-
     public constructor() {
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -575,7 +574,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return evalPromise.then(evalResponse => {
             if (evalResponse.result.wasThrown) {
                 const evalResult = evalResponse.result;
-                let errorMessage: string = 'Error';
+                let errorMessage = 'Error';
                 if (evalResult.exceptionDetails) {
                     errorMessage = evalResult.exceptionDetails.text;
                 } else if (evalResult.result && evalResult.result.description) {
