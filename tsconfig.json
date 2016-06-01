@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "module": "commonjs",
+        "moduleResolution": "node",
         "noImplicitAny": false,
         "target": "ES5",
         "sourceMap": true,
@@ -8,7 +9,7 @@
     },
     "exclude": [
         "node_modules",
-        "typings/browser",
+        "typings/globals",
         "lib"
     ]
 }
