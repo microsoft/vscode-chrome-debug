@@ -4,7 +4,9 @@
     "files.exclude": {
         ".git": true,
         "bin": true,
-        "node_modules": false
+        "node_modules": false,
+        "ThirdPartyNotices.txt": true,
+        "vscode-chrome-debug.txt": true
     },
     "search.exclude": {
         ".git": true,
