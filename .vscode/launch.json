@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Test",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
+            "args": [ "test" ],
+            "cwd": "${workspaceRoot}",
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/out"
+        }
+    ]
+}
