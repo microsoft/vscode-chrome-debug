@@ -5,6 +5,9 @@ A VS Code extension to debug your JavaScript code in the Chrome browser, or othe
 
 ![Demo](https://cdn.rawgit.com/Microsoft/vscode-chrome-debug/master/images/demo.gif)
 
+## Examples
+See our wiki page for some configured example apps: [Examples](https://github.com/Microsoft/vscode-chrome-debug/wiki/Examples)
+
 ## Starting
 The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
