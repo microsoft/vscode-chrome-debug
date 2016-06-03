@@ -4,6 +4,8 @@
         {
             "name": "launch as server",
             "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/out/src/chromeDebug.js",
 			"runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
@@ -14,6 +16,8 @@
         {
             "name": "test",
             "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "stopOnEntry": false,
             "args": [ "test" ],
