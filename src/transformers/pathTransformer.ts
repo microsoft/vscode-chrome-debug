@@ -46,14 +46,14 @@ export class PathTransformer implements IDebugTransformer {
                 return;
             }
 
-            const url = utils.canonicalizeUrl(args.source.path);
-            if (this._clientPathToTargetUrl.has(url)) {
-                args.source.path = this._clientPathToTargetUrl.get(url);
-                logger.log(`Paths.setBP: Resolved ${url} to ${args.source.path}`);
+            const path = utils.canonicalizeUrl(args.source.path);
+            if (this._clientPathToTargetUrl.has(path)) {
+                args.source.path = this._clientPathToTargetUrl.get(path);
+                logger.log(`Paths.setBP: Resolved ${path} to ${args.source.path}`);
                 resolve();
             } else {
-                logger.log(`Paths.setBP: No target url cached for client path: ${url}, waiting for target script to be loaded.`);
-                args.source.path = url;
+                logger.log(`Paths.setBP: No target url cached for client path: ${path}, waiting for target script to be loaded.`);
+                args.source.path = path;
                 this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
             }
         });

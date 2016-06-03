@@ -5,8 +5,8 @@
 import * as url from 'url';
 import * as path from 'path';
 
-import * as Utils from '../utils';
-import * as Chrome from './chromeDebugProtocol';
+import * as utils from '../utils';
+import * as chrome from './chromeDebugProtocol';
 
 /**
  * Maps a url from target to an absolute local path.
@@ -23,8 +23,8 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 
     // If the url is an absolute path to a file that exists, return it without file:///.
     // A remote absolute url (cordova) will still need the logic below.
-    if (aUrl.startsWith('file:///') && Utils.existsSync(aUrl.replace(/^file:\/\/\//, ''))) {
-        return Utils.canonicalizeUrl(aUrl);
+    if (aUrl.startsWith('file:///') && utils.existsSync(aUrl.replace(/^file:\/\/\//, ''))) {
+        return utils.canonicalizeUrl(aUrl);
     }
 
     // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
@@ -33,7 +33,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
     }
 
     // Search the filesystem under the webRoot for the file that best matches the given url
-    let pathName = decodeURIComponent(url.parse(Utils.canonicalizeUrl(aUrl)).pathname);
+    let pathName = decodeURIComponent(url.parse(utils.canonicalizeUrl(aUrl)).pathname);
     if (!pathName || pathName === '/') {
         return '';
     }
@@ -44,8 +44,8 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
     const pathParts = pathName.split(path.sep);
     while (pathParts.length > 0) {
         const clientPath = path.join(webRoot, pathParts.join(path.sep));
-        if (Utils.existsSync(clientPath)) {
-            return Utils.canonicalizeUrl(clientPath);
+        if (utils.existsSync(clientPath)) {
+            return utils.canonicalizeUrl(clientPath);
         }
 
         pathParts.shift();
@@ -57,7 +57,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 /**
  * Convert a RemoteObject to a value+variableHandleRef for the client.
  */
-export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
+export function remoteObjectToValue(object: chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
     let value = '';
     let variableHandleRef: string;
 

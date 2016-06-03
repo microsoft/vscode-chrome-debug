@@ -23,7 +23,7 @@ suite('ChromeUtils', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false });
-        testUtils.win32Mocks();
+        testUtils.registerWin32Mocks();
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
         path = require('path');
