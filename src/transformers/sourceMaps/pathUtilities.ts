@@ -70,7 +70,7 @@ export function getAbsSourceRoot(sourceRoot: string, webRoot: string, generatedP
         if (sourceRoot.startsWith('file:///')) {
             // sourceRoot points to a local path like "file:///c:/project/src"
             absSourceRoot = canonicalizeUrl(sourceRoot);
-        } else if (Path.isAbsolute(sourceRoot)) {
+        } else if (sourceRoot.startsWith('/')) {
             // sourceRoot is like "/src", would be like http://localhost/src, resolve to a local path under webRoot
             // note that C:/src (or /src as an absolute local path) is not a valid sourceroot
             absSourceRoot = Path.join(webRoot, sourceRoot);
@@ -86,16 +86,14 @@ export function getAbsSourceRoot(sourceRoot: string, webRoot: string, generatedP
         }
 
         logger.log(`SourceMap: resolved sourceRoot ${sourceRoot} -> ${absSourceRoot}`);
+    } else if (Path.isAbsolute(generatedPath)) {
+        absSourceRoot = Path.dirname(generatedPath);
+        logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${absSourceRoot}`);
     } else {
-        if (Path.isAbsolute(generatedPath)) {
-            absSourceRoot = Path.dirname(generatedPath);
-            logger.log(`SourceMap: no sourceRoot specified, using script dirname: ${absSourceRoot}`);
-        } else {
-            // runtime script is not on disk, resolve the sourceRoot location on disk
-            const scriptPathDirname = Path.dirname(URL.parse(generatedPath).pathname);
-            absSourceRoot =  Path.join(webRoot, scriptPathDirname);
-            logger.log(`SourceMap: no sourceRoot specified, using webRoot + script path dirname: ${absSourceRoot}`);
-        }
+        // runtime script is not on disk, resolve the sourceRoot location on disk
+        const scriptPathDirname = Path.dirname(URL.parse(generatedPath).pathname);
+        absSourceRoot =  Path.join(webRoot, scriptPathDirname);
+        logger.log(`SourceMap: no sourceRoot specified, using webRoot + script path dirname: ${absSourceRoot}`);
     }
 
     absSourceRoot = utils.stripTrailingSlash(absSourceRoot);
