@@ -143,7 +143,7 @@ suite('SourceMapTransformer', () => {
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
 
-            const transformer = getTransformer(true, true);
+            const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
             const setBreakpointsP = transformer.setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
                 mock.verify();
@@ -159,7 +159,7 @@ suite('SourceMapTransformer', () => {
             const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_LINES2.concat(RUNTIME_LINES), RUNTIME_COLS2.concat(RUNTIME_COLS));
             const mock = createMergedSourcesMock(args, args2);
 
-            const transformer = getTransformer(true, true);
+            const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
             return transformer.setBreakpoints(args, 0).then(() => {
                 return transformer.setBreakpoints(args2, 1);
             }).then(() => {
@@ -199,7 +199,7 @@ suite('SourceMapTransformer', () => {
                 const response = getResponseBody(RUNTIME_LINES, /*column=*/0);
                 const expected = getResponseBody(RUNTIME_LINES);
 
-                const transformer = getTransformer(false);
+                const transformer = getTransformer(/*sourceMaps=*/false);
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: RUNTIME_PATH },
                     lines: RUNTIME_LINES
@@ -221,7 +221,7 @@ suite('SourceMapTransformer', () => {
                         .returns({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i] });
                 });
 
-                const transformer = getTransformer(true, true);
+                const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
                 return transformer.setBreakpoints(setBPArgs, 0).then(() => {
                     return transformer.setBreakpoints(setBPArgs2, 1);
                 }).then(() => {

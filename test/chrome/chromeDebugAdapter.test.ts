@@ -52,10 +52,10 @@ suite('ChromeDebugAdapter', () => {
     });
 
     teardown(() => {
-        mockChromeConnection.verifyAll();
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
+        mockChromeConnection.verifyAll();
     });
 
     suite('attach()', () => {

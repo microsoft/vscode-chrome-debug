@@ -40,11 +40,11 @@ suite('PathTransformer', () => {
     });
 
     teardown(() => {
-        chromeUtilsMock.verifyAll();
-
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
+
+        chromeUtilsMock.verifyAll();
     });
 
     suite('setBreakpoints()', () => {

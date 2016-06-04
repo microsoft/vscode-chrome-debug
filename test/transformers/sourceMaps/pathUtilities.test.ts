@@ -16,7 +16,6 @@ suite('PathUtilities', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
-        // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true, warnOnUnregistered: false });
         testUtils.registerWin32Mocks();
     });

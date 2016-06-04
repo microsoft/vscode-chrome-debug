@@ -21,18 +21,14 @@ suite('ChromeUtils', () => {
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
-
-        mockery.enable({ useCleanCache: true, warnOnReplace: false });
+        mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
         testUtils.registerWin32Mocks();
-        mockery.registerMock('fs', { statSync: () => { } });
-        mockery.registerMock('http', {});
-        path = require('path');
 
-        mockery.registerAllowables([
-            MODULE_UNDER_TEST,
-            'url',
-            '../utils',
-            './logger']);
+        mockery.registerMock('fs', { statSync: () => { } });
+        testUtils.registerEmptyMocks('http');
+
+        // Get path with win32 mocks
+        path = require('path');
     });
 
     teardown(() => {
