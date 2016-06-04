@@ -10,7 +10,7 @@ import * as mockery from 'mockery';
 import {ISetBreakpointsResponseBody,
     ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
 import * as testUtils from '../../testUtils';
-import { ISourceMaps, MappingResult } from '../../../src/transformers/sourceMaps/sourceMaps';
+import { MappingResult } from '../../../src/transformers/sourceMaps/sourceMaps';
 
 const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
 const AUTHORED_PATH = 'c:/project/authored.ts';
@@ -78,20 +78,20 @@ suite('SourceMapTransformer', () => {
 
         function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Sinon.SinonMock {
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
-            mock.expects('MapPathFromSource')
+            mock.expects('mapPathFromSource')
                 .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
-            mock.expects('MapPathFromSource')
+            mock.expects('mapPathFromSource')
                 .withExactArgs(AUTHORED_PATH2).returns(RUNTIME_PATH);
-            mock.expects('AllMappedSources')
+            mock.expects('allMappedSources')
                 .twice()
                 .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH, AUTHORED_PATH2]);
             args.lines.forEach((line, i) => {
-                mock.expects('MapFromSource')
+                mock.expects('mapFromSource')
                     .withExactArgs(AUTHORED_PATH, line, 0)
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
             args2.lines.forEach((line, i) => {
-                mock.expects('MapFromSource')
+                mock.expects('mapFromSource')
                     .withExactArgs(AUTHORED_PATH2, line, 0)
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] });
             });
@@ -122,17 +122,17 @@ suite('SourceMapTransformer', () => {
             const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
 
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
-            mock.expects('MapPathFromSource')
+            mock.expects('mapPathFromSource')
                 .withExactArgs(AUTHORED_PATH).returns(null);
-            mock.expects('MapPathFromSource')
+            mock.expects('mapPathFromSource')
                 .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
-            mock.expects('AllMappedSources')
+            mock.expects('allMappedSources')
                 .twice()
                 .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
-            mock.expects('ProcessNewSourceMap')
+            mock.expects('processNewSourceMap')
                 .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve<void>());
             args.lines.forEach((line, i) => {
-                mock.expects('MapFromSource')
+                mock.expects('mapFromSource')
                     .withExactArgs(AUTHORED_PATH, line, 0)
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
@@ -210,7 +210,7 @@ suite('SourceMapTransformer', () => {
 
                 const mock = createMergedSourcesMock(setBPArgs, setBPArgs2);
                 RUNTIME_LINES2.forEach((line, i) => {
-                    mock.expects('MapToSource')
+                    mock.expects('mapToSource')
                         .withExactArgs(RUNTIME_PATH, line, 0)
                         .returns({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i] });
                 });
@@ -253,7 +253,7 @@ suite('SourceMapTransformer', () => {
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
 
             RUNTIME_LINES.forEach(line => {
-                mock.expects('MapToSource')
+                mock.expects('mapToSource')
                     .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
             });
             utilsMock.expects('existsSync')
@@ -271,7 +271,7 @@ suite('SourceMapTransformer', () => {
             const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
 
             RUNTIME_LINES.forEach(line => {
-                mock.expects('MapToSource')
+                mock.expects('mapToSource')
                     .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
             });
             utilsMock.expects('existsSync')
@@ -288,10 +288,10 @@ suite('SourceMapTransformer', () => {
     });
 });
 
-class StubSourceMaps implements ISourceMaps {
+class StubSourceMaps {
     constructor(private generatedCodeDirectory: string) { }
 
-    public MapPathFromSource(path: string): string {
+    public mapPathFromSource(path: string): string {
         return RUNTIME_PATH;
     }
 
@@ -299,7 +299,7 @@ class StubSourceMaps implements ISourceMaps {
 	 * Map location in source language to location in generated code.
 	 * line and column are 0 based.
 	 */
-    public MapFromSource(path: string, line: number, column: number): MappingResult {
+    public mapFromSource(path: string, line: number, column: number): MappingResult {
         const index = AUTHORED_LINES.indexOf(line);
         const mappedLine = RUNTIME_LINES[index];
         const mappedCol = RUNTIME_COLS[index];
@@ -310,16 +310,16 @@ class StubSourceMaps implements ISourceMaps {
 	 * Map location in generated code to location in source language.
 	 * line and column are 0 based.
 	 */
-    public MapToSource(path: string, line: number, column: number): MappingResult {
+    public mapToSource(path: string, line: number, column: number): MappingResult {
         const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
         return { path: AUTHORED_PATH, line: mappedLine, column: 0 };
     }
 
-    public AllMappedSources(pathToGenerated: string): string[] {
+    public allMappedSources(pathToGenerated: string): string[] {
         return [AUTHORED_PATH];
     }
 
-    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
+    public processNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
         return Promise.resolve<void>();
     }
 }

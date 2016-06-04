@@ -2,8 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
- /* tslint:disable */
-
 import * as Path from 'path';
 import * as URL from 'url';
 import * as FS from 'fs';
@@ -13,129 +11,91 @@ import * as utils from '../../utils';
 import * as logger from '../../logger';
 
 export interface MappingResult {
-	path: string;
-	line: number;
-	column: number;
+    path: string;
+    line: number;
+    column: number;
 }
 
-export interface ISourceMaps {
-	/*
-	 * Map source language path to generated path.
-	 * Returns null if not found.
-	 */
-	MapPathFromSource(path: string): string;
+export class SourceMaps {
+    public static TRACE = false;
 
-	/*
-	 * Map location in source language to location in generated code.
-	 * line and column are 0 based.
-	 */
-	MapFromSource(path: string, line: number, column: number): MappingResult;
+    private _generatedToSourceMaps: { [id: string]: SourceMap; } = {}; // generated -> source file
+    private _sourceToGeneratedMaps: { [id: string]: SourceMap; } = {}; // source file -> generated
 
-	/*
-	 * Map location in generated code to location in source language.
-	 * line and column are 0 based.
-	 */
-	MapToSource(path: string, line: number, column: number): MappingResult;
-
-    /*
-     * Get all the sources that map to this generated file
-     */
-    AllMappedSources(path: string): string[];
-
-    /**
-     * With a known sourceMapURL for a generated script, process create the SourceMap and cache for later
-     */
-    ProcessNewSourceMap(path: string, sourceMapURL: string): Promise<void>;
-}
-
-
-export class SourceMaps implements ISourceMaps {
-
-	public static TRACE = false;
-
-	private static SOURCE_MAPPING_MATCHER = new RegExp("//[#@] ?sourceMappingURL=(.+)$");
-
-	private _generatedToSourceMaps:  { [id: string] : SourceMap; } = {};		// generated -> source file
-	private _sourceToGeneratedMaps:  { [id: string] : SourceMap; } = {};		// source file -> generated
-
-    /* Path to resolve / paths against */
+    // Path to resolve / paths against
     private _webRoot: string;
 
-	public constructor(webRoot: string) {
+    public constructor(webRoot: string) {
         this._webRoot = webRoot;
-	}
-
-	public MapPathFromSource(pathToSource: string): string {
-		var map = this._findSourceToGeneratedMapping(pathToSource);
-		if (map)
-			return map.generatedPath();
-		return null;;
-	}
-
-	public MapFromSource(pathToSource: string, line: number, column: number): MappingResult {
-		const map = this._findSourceToGeneratedMapping(pathToSource);
-		if (map) {
-			line += 1;	// source map impl is 1 based
-			const mr = map.generatedPositionFor(pathToSource, line, column);
-			if (typeof mr.line === 'number') {
-				if (SourceMaps.TRACE) console.error(`${Path.basename(pathToSource)} ${line}:${column} -> ${mr.line}:${mr.column}`);
-				return { path: map.generatedPath(), line: mr.line-1, column: mr.column};
-			}
-		}
-		return null;
-	}
-
-	public MapToSource(pathToGenerated: string, line: number, column: number): MappingResult {
-		const map = this._generatedToSourceMaps[pathToGenerated];
-		if (map) {
-			line += 1;	// source map impl is 1 based
-			const mr = map.originalPositionFor(line, column);
-			if (mr.source) {
-				if (SourceMaps.TRACE) console.error(`${Path.basename(pathToGenerated)} ${line}:${column} -> ${mr.line}:${mr.column}`);
-				return { path: mr.source, line: mr.line-1, column: mr.column};
-			}
-		}
-		return null;
-	}
-
-    public AllMappedSources(pathToGenerated: string): string[] {
-        const map = this._generatedToSourceMaps[pathToGenerated];
-		return map ? map.sources : null;
     }
 
-    public ProcessNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
+    public mapPathFromSource(pathToSource: string): string {
+        const map = this.findSourceToGeneratedMapping(pathToSource);
+        return map ? map.generatedPath() : null;
+    }
+
+    public mapFromSource(pathToSource: string, line: number, column: number): MappingResult {
+        const map = this.findSourceToGeneratedMapping(pathToSource);
+        if (map) {
+            line += 1; // source map impl is 1 based
+            const mr = map.generatedPositionFor(pathToSource, line, column);
+            if (typeof mr.line === 'number') {
+                if (SourceMaps.TRACE) logger.log(`${Path.basename(pathToSource)} ${line}:${column} -> ${mr.line}:${mr.column}`);
+                return { path: map.generatedPath(), line: mr.line - 1, column: mr.column};
+            }
+        }
+
+        return null;
+    }
+
+    public mapToSource(pathToGenerated: string, line: number, column: number): MappingResult {
+        const map = this._generatedToSourceMaps[pathToGenerated];
+        if (map) {
+            line += 1;    // source map impl is 1 based
+            const mr = map.originalPositionFor(line, column);
+            if (mr.source) {
+                if (SourceMaps.TRACE) logger.log(`${Path.basename(pathToGenerated)} ${line}:${column} -> ${mr.line}:${mr.column}`);
+                return { path: mr.source, line: mr.line - 1, column: mr.column};
+            }
+        }
+
+        return null;
+    }
+
+    public allMappedSources(pathToGenerated: string): string[] {
+        const map = this._generatedToSourceMaps[pathToGenerated];
+        return map ? map.sources : null;
+    }
+
+    public processNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
         return this._findGeneratedToSourceMapping(pathToGenerated, sourceMapURL).then(() => { });
     }
 
-	//---- private -----------------------------------------------------------------------
+    private findSourceToGeneratedMapping(pathToSource: string): SourceMap {
+        if (pathToSource) {
+            if (pathToSource in this._sourceToGeneratedMaps) {
+                return this._sourceToGeneratedMaps[pathToSource];
+            }
 
-	private _findSourceToGeneratedMapping(pathToSource: string): SourceMap {
+            for (let key in this._generatedToSourceMaps) {
+                const m = this._generatedToSourceMaps[key];
+                if (m.doesOriginateFrom(pathToSource)) {
+                    this._sourceToGeneratedMaps[pathToSource] = m;
+                    return m;
+                }
+            }
+        }
 
-		if (pathToSource) {
-
-			if (pathToSource in this._sourceToGeneratedMaps) {
-				return this._sourceToGeneratedMaps[pathToSource];
-			}
-
-			for (let key in this._generatedToSourceMaps) {
-				const m = this._generatedToSourceMaps[key];
-				if (m.doesOriginateFrom(pathToSource)) {
-					this._sourceToGeneratedMaps[pathToSource] = m;
-					return m;
-				}
-			}
-
-            // not found in existing maps
-		}
-		return null;
-	}
+        // not found in existing maps
+        return null;
+    }
 
     /**
      * pathToGenerated - an absolute local path or a URL.
      * mapPath - a path relative to pathToGenerated.
      */
-	private _findGeneratedToSourceMapping(pathToGenerated: string, mapPath: string): Promise<SourceMap> {
-		if (!pathToGenerated) {
+    private _findGeneratedToSourceMapping(pathToGenerated: string, mapPath: string): Promise<SourceMap> {
+        if (!pathToGenerated) {
             return Promise.resolve(null);
         }
 
@@ -143,12 +103,12 @@ export class SourceMaps implements ISourceMaps {
             return Promise.resolve(this._generatedToSourceMaps[pathToGenerated]);
         }
 
-        if (mapPath.indexOf("data:application/json") >= 0) {
+        if (mapPath.indexOf('data:application/json') >= 0) {
             logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
 
             // sourcemap is inlined
             const pos = mapPath.lastIndexOf(',');
-            const data = mapPath.substr(pos+1);
+            const data = mapPath.substr(pos + 1);
             try {
                 const buffer = new Buffer(data, 'base64');
                 const json = buffer.toString();
@@ -157,8 +117,7 @@ export class SourceMaps implements ISourceMaps {
                     this._generatedToSourceMaps[pathToGenerated] = map;
                     return Promise.resolve(map);
                 }
-            }
-            catch (e) {
+            } catch (e) {
                 logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
             }
 
@@ -179,7 +138,7 @@ export class SourceMaps implements ISourceMaps {
 
         return this._createSourceMap(mapPath, pathToGenerated).then(map => {
             if (!map) {
-                const mapPathNextToSource = pathToGenerated + ".map";
+                const mapPathNextToSource = pathToGenerated + '.map';
                 if (mapPathNextToSource !== mapPath) {
                     return this._createSourceMap(mapPathNextToSource, pathToGenerated);
                 }
@@ -193,9 +152,9 @@ export class SourceMaps implements ISourceMaps {
 
             return map || null;
         });
-	}
+    }
 
-	private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
+    private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
         if (utils.isURL(mapPath)) {
             logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);
@@ -230,30 +189,30 @@ export class SourceMaps implements ISourceMaps {
                 return null;
             }
         });
-	}
+    }
 }
 
 enum Bias {
-	GREATEST_LOWER_BOUND = 1,
-	LEAST_UPPER_BOUND = 2
+    GREATEST_LOWER_BOUND = 1,
+    LEAST_UPPER_BOUND = 2
 }
 
 class SourceMap {
-	private _generatedPath: string;		// the generated file for this sourcemap
-	private _sources: string[];			// list of authored files (absolute paths)
-	private _smc: MozSourceMap.SourceMapConsumer;	// the source map
+    private _generatedPath: string;        // the generated file for this sourcemap
+    private _sources: string[];            // list of authored files (absolute paths)
+    private _smc: MozSourceMap.SourceMapConsumer;    // the source map
 
     /**
      * pathToGenerated - an absolute local path or a URL
      * json - sourcemap contents
      * webRoot - an absolute path
      */
-	public constructor(generatedPath: string, json: string, webRoot: string) {
-        logger.log(`SourceMap: creating SM for ${generatedPath}`)
-		this._generatedPath = generatedPath;
+    public constructor(generatedPath: string, json: string, webRoot: string) {
+        logger.log(`SourceMap: creating SM for ${generatedPath}`);
+        this._generatedPath = generatedPath;
 
-		const sm = JSON.parse(json);
-		const absSourceRoot = PathUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
+        const sm = JSON.parse(json);
+        const absSourceRoot = PathUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
@@ -284,7 +243,7 @@ class SourceMap {
         });
 
         this._smc = new MozSourceMap.SourceMapConsumer(sm);
-	}
+    }
 
     /*
      * Return all mapped sources as absolute paths
@@ -293,49 +252,50 @@ class SourceMap {
         return this._sources;
     }
 
-	/*
-	 * the generated file of this source map.
-	 */
-	public generatedPath(): string {
-		return this._generatedPath;
-	}
+    /*
+     * the generated file of this source map.
+     */
+    public generatedPath(): string {
+        return this._generatedPath;
+    }
 
-	/*
-	 * returns true if this source map originates from the given source.
-	 */
-	public doesOriginateFrom(absPath: string): boolean {
-		return this.sources.some(path => path === absPath);
-	}
+    /*
+     * returns true if this source map originates from the given source.
+     */
+    public doesOriginateFrom(absPath: string): boolean {
+        return this.sources.some(path => path === absPath);
+    }
 
-	/*
-	 * finds the nearest source location for the given location in the generated file.
-	 */
-	public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-		const mp = this._smc.originalPositionFor(<any>{
-			line: line,
-			column: column,
-			bias: bias
-		});
+    /*
+     * finds the nearest source location for the given location in the generated file.
+     */
+    public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
+        const mp = this._smc.originalPositionFor(<any>{
+            line: line,
+            column: column,
+            bias: bias
+        });
 
-		if (mp.source) {
-			mp.source = PathUtils.canonicalizeUrl(mp.source);
-		}
+        if (mp.source) {
+            mp.source = PathUtils.canonicalizeUrl(mp.source);
+        }
 
-		return mp;
-	}
+        return mp;
+    }
 
-	/*
-	 * finds the nearest location in the generated file for the given source location.
-	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
+    /*
+     * finds the nearest location in the generated file for the given source location.
+     */
+    public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
         src = utils.pathToFileURL(src);
 
-		const needle = {
-			source: src,
-			line: line,
-			column: column,
-			bias: bias
-		};
-		return this._smc.generatedPositionFor(needle);
-	}
+        const needle = {
+            source: src,
+            line: line,
+            column: column,
+            bias: bias
+        };
+
+        return this._smc.generatedPositionFor(needle);
+    }
 }

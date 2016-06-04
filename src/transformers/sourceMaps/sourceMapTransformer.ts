@@ -8,7 +8,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {IDebugTransformer, ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
     ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../chrome/debugAdapterInterfaces';
-import {ISourceMaps, SourceMaps} from './sourceMaps';
+import {SourceMaps} from './sourceMaps';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
 
@@ -23,7 +23,7 @@ interface IPendingBreakpoint {
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
  */
 export class SourceMapTransformer implements IDebugTransformer {
-    private _sourceMaps: ISourceMaps;
+    private _sourceMaps: SourceMaps;
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
@@ -61,7 +61,7 @@ export class SourceMapTransformer implements IDebugTransformer {
         return new Promise<void>((resolve, reject) => {
             if (this._sourceMaps && args.source.path) {
                 const argsPath = args.source.path;
-                const mappedPath = this._sourceMaps.MapPathFromSource(argsPath);
+                const mappedPath = this._sourceMaps.mapPathFromSource(argsPath);
                 if (mappedPath) {
                     logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
                     args.authoredPath = argsPath;
@@ -70,7 +70,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
                     const mappedCols = [];
                     const mappedLines = args.lines.map((line, i) => {
-                        const mapped = this._sourceMaps.MapFromSource(argsPath, line, /*column=*/0);
+                        const mapped = this._sourceMaps.mapFromSource(argsPath, line, /*column=*/0);
                         if (mapped) {
                             logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line}:0 to ${mappedPath}:${mapped.line}:${mapped.column}`);
                             mappedCols[i] = mapped.column;
@@ -88,7 +88,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // Include BPs from other files that map to the same file. Ensure the current file's breakpoints go first
                     args.lines = mappedLines;
                     args.cols = mappedCols;
-                    this._sourceMaps.AllMappedSources(mappedPath).forEach(sourcePath => {
+                    this._sourceMaps.allMappedSources(mappedPath).forEach(sourcePath => {
                         if (sourcePath === argsPath) {
                             return;
                         }
@@ -133,7 +133,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // Remove breakpoints from files that map to the same file, and map back to source.
                     response.breakpoints = response.breakpoints.filter((_, i) => i < sourceBPLines.length);
                     response.breakpoints.forEach(bp => {
-                        const mapped = this._sourceMaps.MapToSource(args.source.path, bp.line, bp.column);
+                        const mapped = this._sourceMaps.mapToSource(args.source.path, bp.line, bp.column);
                         if (mapped) {
                             logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
                             bp.line = mapped.line;
@@ -160,7 +160,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     public stackTraceResponse(response: IStackTraceResponseBody): void {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
-                const mapped = this._sourceMaps.MapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
+                const mapped = this._sourceMaps.mapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped && utils.existsSync(mapped.path)) {
                     // Script was mapped to a valid path
                     stackFrame.source.path = utils.canonicalizeUrl(mapped.path);
@@ -197,8 +197,8 @@ export class SourceMapTransformer implements IDebugTransformer {
                 return;
             }
 
-            this._sourceMaps.ProcessNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
-                const sources = this._sourceMaps.AllMappedSources(event.body.scriptUrl);
+            this._sourceMaps.processNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
+                const sources = this._sourceMaps.allMappedSources(event.body.scriptUrl);
                 if (sources) {
                     logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                     sources.forEach(sourcePath => {
