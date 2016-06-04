@@ -6,10 +6,12 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ISetBreakpointsResponseBody} from '../../src/chrome/debugAdapterInterfaces';
 import * as Chrome from '../../src/chrome/chromeDebugProtocol';
+import {ChromeConnection} from '../../src/chrome/chromeConnection';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
 import * as assert from 'assert';
+import {Mock, MockBehavior, It} from 'typemoq';
 
 import * as testUtils from '../testUtils';
 import * as utils from '../../src/utils';
@@ -19,36 +21,38 @@ import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../../src/chrome/chrome
 
 const MODULE_UNDER_TEST = '../../src/chrome/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    let mockChromeConnection: Sinon.SinonMock;
+    const ATTACH_ARGS = { port: 9222 };
+
+    let mockChromeConnection: Mock<ChromeConnection>;
+    let mockEventEmitter: EventEmitter;
+
+    let chromeDebugAdapter: _ChromeDebugAdapter;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
-        mockery.enable({ useCleanCache: true, warnOnReplace: false });
-        mockery.registerAllowables([
-            MODULE_UNDER_TEST,
-            '../utils',
-            './logger',
-            '../logger',
-            './chromeUtils',
-            './consoleHelper',
-            'events']);
+        mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
+        testUtils.registerWin32Mocks();
+        testUtils.registerEmptyMocks('child_process', 'url', 'path', 'net', 'fs', 'http');
 
-        // Allow vscode-debugadapter and dependencies - not complicated stuff
-        mockery.registerAllowables([
-            'vscode-debugadapter',
-            './debugSession',
-            './protocol',
-            './messages',
-            './handles'
-        ]);
+        // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
+        mockEventEmitter = new EventEmitter();
+        mockChromeConnection = Mock.ofType(ChromeConnection, MockBehavior.Strict);
+        mockChromeConnection
+            .setup(x => x.on(It.isAnyString(), It.isAny()))
+            .callback((eventName: string, handler: (msg: any) => void) => mockEventEmitter.on(eventName, handler));
+        mockChromeConnection
+            .setup(x => x.attach(It.isAnyNumber(), It.isValue(undefined)))
+            .returns(() => Promise.resolve<void>());
+        mockChromeConnection
+            .setup(x => x.isAttached)
+            .returns(() => false);
 
-        mockery.registerMock('os', { platform: () => 'win32' });
-        testUtils.registerEmptyMocks(['child_process', 'url', 'path', 'net', 'fs', 'http']);
-        mockChromeConnection = testUtils.createRegisteredSinonMock('./chromeConnection', new DefaultMockChromeConnection(), 'ChromeConnection');
+        // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
+        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)(mockChromeConnection.object);
     });
 
     teardown(() => {
-        DefaultMockChromeConnection.EE.removeAllListeners();
+        mockChromeConnection.verifyAll();
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
@@ -56,9 +60,9 @@ suite('ChromeDebugAdapter', () => {
 
     suite('attach()', () => {
         test('if successful, an initialized event is fired', () => {
-            const wkda = instantiateWKDA();
             let initializedFired = false;
-            wkda.registerEventHandler((event: DebugProtocol.Event) => {
+
+            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
                 if (event.event === 'initialized') {
                     initializedFired = true;
                 } else {
@@ -66,50 +70,47 @@ suite('ChromeDebugAdapter', () => {
                 }
             });
 
-            return attach(wkda).then(() => {
-                if (!initializedFired) {
-                    assert.fail('Attach completed without firing the initialized event');
-                }
+            return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
+                assert(initializedFired, 'Attach completed without firing the initialized event');
             });
         });
 
-        test('if unsuccessful, the promise is rejected and an initialized event is not fired', done => {
-            mockChromeConnection.expects('attach').returns(utils.errP('Testing attach failed'));
+        test('if unsuccessful, the promise is rejected and an initialized event is not fired', () => {
+            mockChromeConnection
+                .setup(x => x.attach(It.isAnyNumber()))
+                .returns(() => utils.errP('Testing attach failed'));
 
-            const wkda = instantiateWKDA();
-            wkda.registerEventHandler((event: DebugProtocol.Event) => {
+            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
                 assert.fail('Not expecting any event in this scenario');
             });
 
-            return attach(wkda).then(
+            return chromeDebugAdapter.attach(ATTACH_ARGS).then(
                 () => assert.fail('Expecting promise to be rejected'),
-                e => done());
+                e => { /* Expecting promise to be rejected */ });
         });
     });
 
     suite('setBreakpoints()', () => {
         const BP_ID = 'bpId';
         const FILE_NAME = 'file:///a.js';
-        function expectSetBreakpoint(lines: number[], cols?: number[], scriptId = 'SCRIPT_ID'): void {
+        function expectSetBreakpoint(lines: number[], cols: number[], scriptId = 'SCRIPT_ID'): void {
             lines.forEach((lineNumber, i) => {
-                let columnNumber;
-                if (cols) {
-                    columnNumber = cols[i];
-                }
+                const columnNumber = cols[i];
 
-                mockChromeConnection.expects('debugger_setBreakpointByUrl')
-                    .once()
-                    .withArgs(FILE_NAME, lineNumber, columnNumber)
-                    .returns(<Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } });
+                // non-verifiable at the moment - see https://github.com/florinn/typemoq/issues/10
+                mockChromeConnection
+                    .setup(x => x.debugger_setBreakpointByUrl(It.isValue(FILE_NAME), It.isValue(lineNumber), It.isValue(columnNumber)))
+                    .returns(() => Promise.resolve(
+                        <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } }));
             });
         }
 
         function expectRemoveBreakpoint(indicies: number[]): void {
             indicies.forEach(i => {
-                mockChromeConnection.expects('debugger_removeBreakpoint')
-                    .once()
-                    .withArgs(BP_ID + i)
-                    .returns(<Chrome.Response>{ id: 0 });
+                // non-verifiable at the moment - see https://github.com/florinn/typemoq/issues/10
+                mockChromeConnection
+                    .setup(x => x.debugger_removeBreakpoint(It.isValue(BP_ID + i)))
+                    .returns(() => Promise.resolve(<Chrome.Response>{ id: 0 }));
             });
         }
 
@@ -120,9 +121,7 @@ suite('ChromeDebugAdapter', () => {
                 verified: true
             }));
 
-            return {
-                breakpoints
-            };
+            return { breakpoints };
         }
 
         test('When setting one breakpoint, returns the correct result', () => {
@@ -130,13 +129,9 @@ suite('ChromeDebugAdapter', () => {
             const cols = [6];
             expectSetBreakpoint(lines, cols);
 
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockChromeConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
         test('When setting multiple breakpoints, returns the correct result', () => {
@@ -144,13 +139,9 @@ suite('ChromeDebugAdapter', () => {
             const cols = [33, 16, 1];
             expectSetBreakpoint(lines, cols);
 
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockChromeConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
         test('The adapter clears all previous breakpoints in a script before setting the new ones', () => {
@@ -158,20 +149,18 @@ suite('ChromeDebugAdapter', () => {
             const cols = [33, 16];
             expectSetBreakpoint(lines, cols);
 
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                lines.push(321);
-                cols.push(123);
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => {
+                    lines.push(321);
+                    cols.push(123);
 
-                expectRemoveBreakpoint([0, 1]);
-                expectSetBreakpoint(lines, cols);
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockChromeConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
+                    expectRemoveBreakpoint([0, 1]);
+                    expectSetBreakpoint(lines, cols);
+
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                })
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
         test('The adapter handles removing a breakpoint', () => {
@@ -179,20 +168,17 @@ suite('ChromeDebugAdapter', () => {
             const cols = [33, 16];
             expectSetBreakpoint(lines, cols);
 
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                lines.shift();
-                cols.shift();
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => {
+                    lines.shift();
+                    cols.shift();
 
-                expectRemoveBreakpoint([0, 1]);
-                expectSetBreakpoint(lines, cols);
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockChromeConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
+                    expectRemoveBreakpoint([0, 1]);
+                    expectSetBreakpoint(lines, cols);
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                })
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
         test('After a page refresh, clears the newly resolved breakpoints before adding new ones', () => {
@@ -200,24 +186,21 @@ suite('ChromeDebugAdapter', () => {
             const cols = [33, 16];
             expectSetBreakpoint(lines, cols);
 
-            const wkda = instantiateWKDA();
-            return attach(wkda).then(() => {
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                expectRemoveBreakpoint([2, 3]);
-                DefaultMockChromeConnection.EE.emit('Debugger.globalObjectCleared');
-                DefaultMockChromeConnection.EE.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId: 'afterRefreshScriptId', url: FILE_NAME });
-                DefaultMockChromeConnection.EE.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
-                DefaultMockChromeConnection.EE.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => {
+                    expectRemoveBreakpoint([2, 3]);
+                    mockEventEmitter.emit('Debugger.globalObjectCleared');
+                    mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId: 'afterRefreshScriptId', url: FILE_NAME });
+                    mockEventEmitter.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
+                    mockEventEmitter.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
 
-                lines.push(321);
-                cols.push(123);
-                expectSetBreakpoint(lines, cols, 'afterRefreshScriptId');
-                return wkda.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
-            }).then(response => {
-                mockChromeConnection.verify();
-                assert.deepEqual(response, makeExpectedResponse(lines, cols));
-            });
+                    lines.push(321);
+                    cols.push(123);
+                    expectSetBreakpoint(lines, cols, 'afterRefreshScriptId');
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                })
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
     });
 
@@ -236,27 +219,26 @@ suite('ChromeDebugAdapter', () => {
                 return { on: () => { }, unref: () => { } };
             }
 
-            // actual path.resolve returns system-dependent slashes
-            mockery.registerMock('path', { resolve: (a, b) => a + b });
-            mockery.registerMock('child_process', { spawn });
-            mockery.registerMock('fs', { statSync: () => true });
-            mockery.registerMock('os', {
-                tmpdir: () => 'c:/tmp',
-                platform: () => 'win32'
-            });
-            const wkda = instantiateWKDA();
-            return wkda.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] }).then(() => {
-                assert(spawnCalled);
-            });
+            // Mock spawn for chrome process, and 'fs' for finding chrome.exe.
+            // These are mocked as empty above - note that it's too late for mockery here.
+            require('child_process').spawn = spawn;
+            require('fs').statSync = () => true;
+
+            mockChromeConnection
+                .setup(x => x.attach(It.isAnyNumber(), It.isAnyString()))
+                .returns(() => Promise.resolve<void>())
+                .verifiable();
+
+            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
+                .then(() => assert(spawnCalled));
         });
     });
 
     suite('Console.onMessageAdded', () => {
         test('Fires an output event when a console message is added', () => {
             const testLog = 'Hello, world!';
-            const wkda = instantiateWKDA();
             let outputEventFired = false;
-            wkda.registerEventHandler((event: DebugProtocol.Event) => {
+            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
                 if (event.event === 'output') {
                     outputEventFired = true;
                     assert.equal(event.body.text, testLog);
@@ -265,7 +247,7 @@ suite('ChromeDebugAdapter', () => {
                 }
             });
 
-            DefaultMockChromeConnection.EE.emit('Console.onMessageAdded', {
+            mockEventEmitter.emit('Console.onMessageAdded', {
                 message: {
                     source: 'console-api',
                     level: 'log',
@@ -297,24 +279,3 @@ suite('ChromeDebugAdapter', () => {
     suite('Debugger.pause', () => { });
     suite('target close/error/detach', () => { });
 });
-
-function attach(wkda: _ChromeDebugAdapter): Promise<void> {
-    return wkda.attach({ port: 9222 });
-}
-
-class DefaultMockChromeConnection {
-    public static EE = new EventEmitter();
-
-    public on(eventName: string, handler: (msg: any) => void): void {
-        DefaultMockChromeConnection.EE.on(eventName, handler);
-    }
-
-    public attach(port: number): Promise<void> {
-        return Promise.resolve<void>();
-    }
-}
-
-function instantiateWKDA(): _ChromeDebugAdapter {
-    const ChromeDebugAdapter: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
-    return new ChromeDebugAdapter();
-}

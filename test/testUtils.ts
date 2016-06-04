@@ -86,11 +86,7 @@ export function createRegisteredSinonMock(requireName: string, mockInstance: any
     return mock;
 }
 
-export function registerEmptyMocks(moduleNames: string | string[]): void {
-    if (typeof moduleNames === 'string') {
-        moduleNames = [<string>moduleNames];
-    }
-
+export function registerEmptyMocks(...moduleNames: string[]): void {
     (<string[]>moduleNames).forEach(name => {
         mockery.registerMock(name, {});
     });
