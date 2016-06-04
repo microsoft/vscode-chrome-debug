@@ -23,10 +23,12 @@ class ResReqWebSocket extends EventEmitter {
     private _pendingRequests = new Map<number, any>();
     private _wsAttached: Promise<WebSocket>;
 
+    public get isOpen(): boolean { return !!this._wsAttached; }
+
     /**
      * Attach to the given websocket url
      */
-    public attach(wsUrl: string): Promise<void> {
+    public open(wsUrl: string): Promise<void> {
         this._wsAttached = new Promise((resolve, reject) => {
             let ws: WebSocket;
             try {
@@ -77,6 +79,7 @@ class ResReqWebSocket extends EventEmitter {
     public close(): void {
         if (this._wsAttached) {
             this._wsAttached.then(ws => ws.close());
+            this._wsAttached = null;
         }
     }
 
@@ -125,12 +128,15 @@ class ResReqWebSocket extends EventEmitter {
  * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
  */
 export class ChromeConnection {
-    private _nextId = 1;
+    private _nextId: number;
     private _socket: ResReqWebSocket;
 
     constructor() {
-        this._socket = new ResReqWebSocket();
+        // this._socket should exist before attaching so consumers can call on() before attach, which fires events
+        this.reset();
     }
+
+    public get isAttached(): boolean { return this._socket.isOpen; }
 
     public on(eventName: string, handler: (msg: any) => void): void {
         this._socket.on(eventName, handler);
@@ -175,7 +181,7 @@ export class ChromeConnection {
 
                         const wsUrl = pages[0].webSocketDebuggerUrl;
                         if (wsUrl) {
-                            return this._socket.attach(wsUrl);
+                            return this._socket.open(wsUrl);
                         }
                     }
                 }
@@ -192,6 +198,12 @@ export class ChromeConnection {
 
     public close(): void {
         this._socket.close();
+        this.reset();
+    }
+
+    private reset(): void {
+        this._nextId = 0;
+        this._socket = new ResReqWebSocket();
     }
 
     public debugger_setBreakpoint(location: Chrome.Debugger.Location, condition?: string): Promise<Chrome.Debugger.SetBreakpointResponse> {

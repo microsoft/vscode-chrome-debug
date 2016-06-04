@@ -45,7 +45,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _chromeConnection: ChromeConnection;
     private _eventHandler: (event: DebugProtocol.Event) => void;
 
-    public constructor() {
+    public constructor(chromeConnection: ChromeConnection) {
+        this._chromeConnection = chromeConnection;
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
@@ -166,17 +167,15 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this.clearTargetContext();
         this._chromeProc = null;
 
-        if (this._chromeConnection) {
+        if (this._chromeConnection.isAttached) {
             this._chromeConnection.close();
-            this._chromeConnection = null;
         }
     }
 
     private _attach(port: number, url?: string): Promise<void> {
-        // ODP client is attaching - if not attached to the chrome target, create a connection and attach
+        // Client is attaching - if not attached to the chrome target, create a connection and attach
         this._clientAttached = true;
-        if (!this._chromeConnection) {
-            this._chromeConnection = new ChromeConnection();
+        if (!this._chromeConnection.isAttached) {
             this._chromeConnection.on('Debugger.paused', params => this.onDebuggerPaused(params));
             this._chromeConnection.on('Debugger.resumed', () => this.onDebuggerResumed());
             this._chromeConnection.on('Debugger.scriptParsed', params => this.onScriptParsed(params));
@@ -189,8 +188,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession());
             this._chromeConnection.on('error', () => this.terminateSession());
 
-            return this._chromeConnection.attach(port, url)
-                .then(
+            return this._chromeConnection.attach(port, url).then(
                 () => this.fireEvent(new InitializedEvent()),
                 e => {
                     this.clearEverything();

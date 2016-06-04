@@ -34,7 +34,7 @@ const projectConfig = {
     noImplicitAny: false,
     target: 'ES5',
     module: 'commonjs',
-    moduleResolution: "node",
+    moduleResolution: 'node',
     declaration: true,
     typescript
 };

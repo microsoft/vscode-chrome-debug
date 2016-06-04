@@ -7,6 +7,7 @@ import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
 import { IDebugAdapter } from './debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
+import {ChromeConnection} from './chromeConnection';
 
 import * as logger from '../logger';
 
@@ -21,7 +22,7 @@ export class ChromeDebugSession extends DebugSession {
     public constructor(
         targetLinesStartAt1: boolean,
         isServer = false,
-        adapter: IDebugAdapter = new ChromeDebugAdapter()) {
+        adapter: IDebugAdapter = new ChromeDebugAdapter(new ChromeConnection())) {
         super(targetLinesStartAt1, isServer);
 
         logger.init(isServer, (msg, level) => this.onLog(msg, level));

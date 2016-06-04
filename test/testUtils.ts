@@ -86,21 +86,7 @@ export function createRegisteredSinonMock(requireName: string, mockInstance: any
     return mock;
 }
 
-/**
- * Return a base Utilities mock that has Logger.log stubbed out
- */
-export function getDefaultUtilitiesMock(): any {
-    return {
-        Logger: { log: () => { } },
-        canonicalizeUrl: url => url
-    };
-}
-
-export function registerEmptyMocks(moduleNames: string | string[]): void {
-    if (typeof moduleNames === 'string') {
-        moduleNames = [<string>moduleNames];
-    }
-
+export function registerEmptyMocks(...moduleNames: string[]): void {
     (<string[]>moduleNames).forEach(name => {
         mockery.registerMock(name, {});
     });
@@ -122,7 +108,11 @@ export function getStackTraceResponseBody(aPath: string, lines: number[], source
     };
 }
 
-export function win32Mocks(): void {
+/**
+ * Some tests use this to override 'os' and 'path' with the windows versions for consistency when running on different
+ * platforms. For other tests, it either doesn't matter, or they have platform-specific test code.
+ */
+export function registerWin32Mocks(): void {
     mockery.registerMock('os', { platform: () => 'win32' });
     mockery.registerMock('path', path.win32);
 }

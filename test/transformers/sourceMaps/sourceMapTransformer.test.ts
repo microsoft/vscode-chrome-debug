@@ -6,20 +6,23 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
+import {Mock, It} from 'typemoq';
 
 import {ISetBreakpointsResponseBody,
     ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
 import * as testUtils from '../../testUtils';
 import { MappingResult } from '../../../src/transformers/sourceMaps/sourceMaps';
+import * as utils from '../../../src/utils';
 
 const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
-const AUTHORED_PATH = 'c:/project/authored.ts';
-const RUNTIME_PATH = 'c:/project/runtime.js';
+
+const AUTHORED_PATH = 'c:\\project\\authored.ts';
+const RUNTIME_PATH = 'c:\\project\\runtime.js';
 const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
 const RUNTIME_COLS = [3, 7, 11];
 
-const AUTHORED_PATH2 = 'c:/project/authored2.ts';
+const AUTHORED_PATH2 = 'c:\\project\\authored2.ts';
 const AUTHORED_LINES2 = [90, 105];
 const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];
@@ -28,16 +31,19 @@ const RUNTIME_COLS2 = [0, 1];
 import {SourceMapTransformer as _SourceMapTransformer} from '../../../src/transformers/sourceMaps/sourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
-    let utilsMock: Sinon.SinonMock;
+    let utilsMock: Mock<typeof utils>;
 
     setup(() => {
+        testUtils.registerWin32Mocks();
         testUtils.setupUnhandledRejectionListener();
 
-        // Set up mockery
-        mockery.enable({ warnOnReplace: false, useCleanCache: true });
+        // Mock the utils module
+        utilsMock = Mock.ofInstance(utils);
+        utilsMock.callBase = true;
+        mockery.registerMock('../../utils', utilsMock.object);
 
-        utilsMock = testUtils.createRegisteredSinonMock('../../utils', testUtils.getDefaultUtilitiesMock());
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'path', '../../logger', 'os', 'fs']);
+        // Set up mockery
+        mockery.enable({ warnOnReplace: false, useCleanCache: true, warnOnUnregistered: false });
     });
 
     teardown(() => {
@@ -137,7 +143,7 @@ suite('SourceMapTransformer', () => {
                     .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
             });
 
-            const transformer = getTransformer(true, true);
+            const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
             const setBreakpointsP = transformer.setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
                 mock.verify();
@@ -153,7 +159,7 @@ suite('SourceMapTransformer', () => {
             const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_LINES2.concat(RUNTIME_LINES), RUNTIME_COLS2.concat(RUNTIME_COLS));
             const mock = createMergedSourcesMock(args, args2);
 
-            const transformer = getTransformer(true, true);
+            const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
             return transformer.setBreakpoints(args, 0).then(() => {
                 return transformer.setBreakpoints(args2, 1);
             }).then(() => {
@@ -193,7 +199,7 @@ suite('SourceMapTransformer', () => {
                 const response = getResponseBody(RUNTIME_LINES, /*column=*/0);
                 const expected = getResponseBody(RUNTIME_LINES);
 
-                const transformer = getTransformer(false);
+                const transformer = getTransformer(/*sourceMaps=*/false);
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: RUNTIME_PATH },
                     lines: RUNTIME_LINES
@@ -215,7 +221,7 @@ suite('SourceMapTransformer', () => {
                         .returns({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i] });
                 });
 
-                const transformer = getTransformer(true, true);
+                const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
                 return transformer.setBreakpoints(setBPArgs, 0).then(() => {
                     return transformer.setBreakpoints(setBPArgs2, 1);
                 }).then(() => {
@@ -229,9 +235,9 @@ suite('SourceMapTransformer', () => {
 
     suite('stackTraceResponse()', () => {
         test('modifies the response stackFrames', () => {
-            utilsMock.expects('existsSync')
-                .thrice()
-                .withExactArgs(AUTHORED_PATH).returns(true);
+            utilsMock
+                .setup(x => x.existsSync(It.isValue(AUTHORED_PATH)))
+                .returns(() => true);
 
             const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(AUTHORED_PATH, AUTHORED_LINES);
@@ -245,7 +251,7 @@ suite('SourceMapTransformer', () => {
             const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
 
-            getTransformer(false).stackTraceResponse(response);
+            getTransformer(/*sourceMaps=*/false).stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
@@ -256,14 +262,14 @@ suite('SourceMapTransformer', () => {
                 mock.expects('mapToSource')
                     .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
             });
-            utilsMock.expects('existsSync')
-                .thrice()
-                .withExactArgs(RUNTIME_PATH).returns(true);
+            utilsMock
+                .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
+                .returns(() => true);
 
             const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
 
-            getTransformer(true, true).stackTraceResponse(response);
+            getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
@@ -274,15 +280,15 @@ suite('SourceMapTransformer', () => {
                 mock.expects('mapToSource')
                     .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
             });
-            utilsMock.expects('existsSync')
-                .thrice()
-                .withExactArgs(RUNTIME_PATH).returns(false);
+            utilsMock
+                .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
+                .returns(() => false);
 
             const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
 
-            getTransformer(true, true).stackTraceResponse(response);
+            getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
     });

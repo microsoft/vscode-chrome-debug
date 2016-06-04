@@ -16,10 +16,8 @@ suite('PathUtilities', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
-        // Set up mockery
-        mockery.enable({ warnOnReplace: false, useCleanCache: true });
-        mockery.registerAllowables([MODULE_UNDER_TEST, 'url', 'http', 'fs', '../../utils', './logger', '../../logger']);
-        testUtils.win32Mocks();
+        mockery.enable({ warnOnReplace: false, useCleanCache: true, warnOnUnregistered: false });
+        testUtils.registerWin32Mocks();
     });
 
     teardown(() => {
