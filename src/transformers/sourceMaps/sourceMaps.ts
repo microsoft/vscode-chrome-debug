@@ -2,13 +2,14 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as Path from 'path';
-import * as URL from 'url';
-import * as FS from 'fs';
-import * as MozSourceMap from 'source-map';
-import * as PathUtils from './pathUtilities';
+import * as path from 'path';
+import * as url from 'url';
+import * as fs from 'fs';
+
+import * as pathUtils from './pathUtilities';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
+import {SourceMap} from './sourceMap';
 
 export interface MappingResult {
     path: string;
@@ -40,7 +41,7 @@ export class SourceMaps {
             line += 1; // source map impl is 1 based
             const mr = map.generatedPositionFor(pathToSource, line, column);
             if (typeof mr.line === 'number') {
-                if (SourceMaps.TRACE) logger.log(`${Path.basename(pathToSource)} ${line}:${column} -> ${mr.line}:${mr.column}`);
+                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToSource)} ${line}:${column} -> ${mr.line}:${mr.column}`);
                 return { path: map.generatedPath(), line: mr.line - 1, column: mr.column};
             }
         }
@@ -54,7 +55,7 @@ export class SourceMaps {
             line += 1;    // source map impl is 1 based
             const mr = map.originalPositionFor(line, column);
             if (mr.source) {
-                if (SourceMaps.TRACE) logger.log(`${Path.basename(pathToGenerated)} ${line}:${column} -> ${mr.line}:${mr.column}`);
+                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToGenerated)} ${line}:${column} -> ${mr.line}:${mr.column}`);
                 return { path: mr.source, line: mr.line - 1, column: mr.column};
             }
         }
@@ -125,14 +126,14 @@ export class SourceMaps {
         }
 
         // if path is relative make it absolute
-        if (!Path.isAbsolute(mapPath)) {
-            if (Path.isAbsolute(pathToGenerated)) {
+        if (!path.isAbsolute(mapPath)) {
+            if (path.isAbsolute(pathToGenerated)) {
                 // runtime script is on disk, so map should be too
-                mapPath = PathUtils.makePathAbsolute(pathToGenerated, mapPath);
+                mapPath = pathUtils.makePathAbsolute(pathToGenerated, mapPath);
             } else {
                 // runtime script is not on disk, construct the full url for the source map
-                const scriptUrl = URL.parse(pathToGenerated);
-                mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${Path.dirname(scriptUrl.pathname)}/${mapPath}`;
+                const scriptUrl = url.parse(pathToGenerated);
+                mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${path.dirname(scriptUrl.pathname)}/${mapPath}`;
             }
         }
 
@@ -165,7 +166,7 @@ export class SourceMaps {
         } else {
             contentsP = new Promise((resolve, reject) => {
                 logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPath}`);
-                FS.readFile(mapPath, (err, data) => {
+                fs.readFile(mapPath, (err, data) => {
                     if (err) {
                         logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
                         resolve(null);
@@ -189,113 +190,5 @@ export class SourceMaps {
                 return null;
             }
         });
-    }
-}
-
-enum Bias {
-    GREATEST_LOWER_BOUND = 1,
-    LEAST_UPPER_BOUND = 2
-}
-
-class SourceMap {
-    private _generatedPath: string;        // the generated file for this sourcemap
-    private _sources: string[];            // list of authored files (absolute paths)
-    private _smc: MozSourceMap.SourceMapConsumer;    // the source map
-
-    /**
-     * pathToGenerated - an absolute local path or a URL
-     * json - sourcemap contents
-     * webRoot - an absolute path
-     */
-    public constructor(generatedPath: string, json: string, webRoot: string) {
-        logger.log(`SourceMap: creating SM for ${generatedPath}`);
-        this._generatedPath = generatedPath;
-
-        const sm = JSON.parse(json);
-        const absSourceRoot = PathUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
-
-        // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
-        // so the work above only has to be done once
-        sm.sourceRoot = null; // probably get rid of this._sourceRoot?
-
-        // sm.sources are relative paths or file:/// urls - (or other URLs?) read the spec...
-        // resolve them to file:/// urls, using absSourceRoot.
-        // note - the source-map library doesn't like backslashes, but some tools output them.
-        // Which is wrong? Consider filing issues on source-map or tools that output backslashes?
-        // In either case, support whatever works
-        this._sources = sm.sources.map((sourcePath: string) => {
-            // Special-case webpack:/// prefixed sources which is kind of meaningless
-            sourcePath = utils.lstrip(sourcePath, 'webpack:///');
-            sourcePath = utils.canonicalizeUrl(sourcePath);
-
-            // If not already an absolute path, make it an absolute path with this._absSourceRoot. Also resolves '..' parts.
-            if (!Path.isAbsolute(sourcePath)) {
-                sourcePath = Path.resolve(absSourceRoot, sourcePath);
-            }
-
-            return sourcePath;
-        });
-
-        // Rewrite sm.sources to same as this._sources but forward slashes and file url
-        sm.sources = this._sources.map(sourceAbsPath => {
-            // Convert to file: url. After this, it's a file URL for an absolute path to a file on disk with forward slashes.
-            return utils.pathToFileURL(sourceAbsPath);
-        });
-
-        this._smc = new MozSourceMap.SourceMapConsumer(sm);
-    }
-
-    /*
-     * Return all mapped sources as absolute paths
-     */
-    public get sources(): string[] {
-        return this._sources;
-    }
-
-    /*
-     * the generated file of this source map.
-     */
-    public generatedPath(): string {
-        return this._generatedPath;
-    }
-
-    /*
-     * returns true if this source map originates from the given source.
-     */
-    public doesOriginateFrom(absPath: string): boolean {
-        return this.sources.some(path => path === absPath);
-    }
-
-    /*
-     * finds the nearest source location for the given location in the generated file.
-     */
-    public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-        const mp = this._smc.originalPositionFor(<any>{
-            line: line,
-            column: column,
-            bias: bias
-        });
-
-        if (mp.source) {
-            mp.source = PathUtils.canonicalizeUrl(mp.source);
-        }
-
-        return mp;
-    }
-
-    /*
-     * finds the nearest location in the generated file for the given source location.
-     */
-    public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
-        src = utils.pathToFileURL(src);
-
-        const needle = {
-            source: src,
-            line: line,
-            column: column,
-            bias: bias
-        };
-
-        return this._smc.generatedPositionFor(needle);
     }
 }
