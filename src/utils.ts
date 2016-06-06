@@ -137,7 +137,7 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
 }
 
 /**
- * Modify a url either from the client or the target to a common format for comparing.
+ * Modify a url/path either from the client or the target to a common format for comparing.
  * The client can handle urls in this format too.
  * file:///D:\\scripts\\code.js => d:/scripts/code.js
  * file:///Users/me/project/code.js => /Users/me/project/code.js

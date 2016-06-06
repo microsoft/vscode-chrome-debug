@@ -9,15 +9,18 @@ import * as pathUtils from './pathUtilities';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
 
+/**
+ * Part of source-map, but not exposed in the .d.ts. It should be.
+ */
 export enum Bias {
     GREATEST_LOWER_BOUND = 1,
     LEAST_UPPER_BOUND = 2
 }
 
 export class SourceMap {
-    private _generatedPath: string;        // the generated file for this sourcemap
-    private _sources: string[];            // list of authored files (absolute paths)
-    private _smc: MozSourceMap.SourceMapConsumer;    // the source map
+    private _generatedPath: string; // the generated file for this sourcemap (absolute path)
+    private _sources: string[]; // list of authored files (absolute paths)
+    private _smc: MozSourceMap.SourceMapConsumer; // the source map
 
     /**
      * pathToGenerated - an absolute local path or a URL
@@ -33,14 +36,15 @@ export class SourceMap {
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
-        sm.sourceRoot = null; // probably get rid of this._sourceRoot?
+        sm.sourceRoot = null;
 
         // sm.sources are relative paths or file:/// urls - (or other URLs?) read the spec...
-        // resolve them to file:/// urls, using absSourceRoot.
+        // resolve them to file:/// urls, using absSourceRoot, to be simpler and unambiguous, since
+        // it needs to look them up later in exactly the same format.
         // note - the source-map library doesn't like backslashes, but some tools output them.
         // Which is wrong? Consider filing issues on source-map or tools that output backslashes?
         // In either case, support whatever works
-        this._sources = sm.sources.map((sourcePath: string) => {
+        this._sources = sm.sources.map(sourcePath => {
             // Special-case webpack:/// prefixed sources which is kind of meaningless
             sourcePath = utils.lstrip(sourcePath, 'webpack:///');
             sourcePath = utils.canonicalizeUrl(sourcePath);
@@ -70,27 +74,28 @@ export class SourceMap {
     }
 
     /*
-     * the generated file of this source map.
+     * The generated file of this source map.
      */
     public generatedPath(): string {
         return this._generatedPath;
     }
 
     /*
-     * returns true if this source map originates from the given source.
+     * Returns true if this source map originates from the given source.
      */
     public doesOriginateFrom(absPath: string): boolean {
         return this.sources.some(path => path === absPath);
     }
 
     /*
-     * finds the nearest source location for the given location in the generated file.
+     * Finds the nearest source location for the given location in the generated file.
      */
-    public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
+    public originalPositionFor(line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
+        // source-map dts is missing .bias
         const mp = this._smc.originalPositionFor(<any>{
-            line: line,
-            column: column,
-            bias: bias
+            line,
+            column,
+            bias
         });
 
         if (mp.source) {
@@ -101,18 +106,14 @@ export class SourceMap {
     }
 
     /*
-     * finds the nearest location in the generated file for the given source location.
+     * Finds the nearest location in the generated file for the given source location.
      */
-    public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
-        src = utils.pathToFileURL(src);
-
-        const needle = {
-            source: src,
-            line: line,
-            column: column,
-            bias: bias
-        };
-
-        return this._smc.generatedPositionFor(needle);
+    public generatedPositionFor(source: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
+        return this._smc.generatedPositionFor(<any>{
+            source: utils.pathToFileURL(source),
+            line,
+            column,
+            bias
+        });
     }
 }
