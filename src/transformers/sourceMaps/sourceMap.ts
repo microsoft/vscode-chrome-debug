@@ -91,11 +91,11 @@ export class SourceMap {
      * Finds the nearest source location for the given location in the generated file.
      */
     public originalPositionFor(line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-		let position = this._smc.originalPositionFor(<any>{
-			line,
-			column,
-			bias: Bias.LEAST_UPPER_BOUND
-		});
+        let position = this._smc.originalPositionFor(<any>{
+            line,
+            column,
+            bias: Bias.LEAST_UPPER_BOUND
+        });
 
         if (!position.source) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
@@ -106,14 +106,14 @@ export class SourceMap {
             });
         }
 
-		if (position.source) {
+        if (position.source) {
             // file:/// -> path with native slashes.
             // Probably can combine these?
-			position.source = pathUtils.canonicalizeUrl(position.source);
+            position.source = pathUtils.canonicalizeUrl(position.source);
             position.source = utils.canonicalizeUrl(position.source);
-		}
+        }
 
-		return position;
+        return position;
     }
 
     /*
@@ -122,12 +122,12 @@ export class SourceMap {
     public generatedPositionFor(source: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
         source = utils.pathToFileURL(source);
 
-		let position = this._smc.generatedPositionFor(<any>{
-			source,
-			line,
-			column,
-			bias: Bias.LEAST_UPPER_BOUND
-		});
+        let position = this._smc.generatedPositionFor(<any>{
+            source,
+            line,
+            column,
+            bias: Bias.LEAST_UPPER_BOUND
+        });
 
         if (typeof position.line !== 'number') {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.

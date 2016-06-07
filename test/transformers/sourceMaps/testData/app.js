@@ -12,7 +12,7 @@ var A = (function () {
         return x;
     };
     A.prototype.method2 = function () {
-        return "blah";
+        return 'blah';
     };
     return A;
 }());

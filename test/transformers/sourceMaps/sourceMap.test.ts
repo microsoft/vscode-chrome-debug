@@ -92,7 +92,7 @@ suite('SourceMap', () => {
                 column,
                 name: null,
                 source
-            }
+            };
         }
 
         test('return statement', () => {
@@ -185,7 +185,7 @@ suite('SourceMap', () => {
                 line,
                 column,
                 lastColumn: null
-            }
+            };
         }
 
         test('return statement', () => {

@@ -15,6 +15,6 @@ class A {
     }
 
     public method2(): string {
-        return "blah";
+        return 'blah';
     }
 }
