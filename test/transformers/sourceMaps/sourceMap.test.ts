@@ -15,15 +15,19 @@ import {SourceMap} from '../../../src/transformers/sourceMaps/sourceMap';
  * Unit tests for SourceMap + source-map (the mozilla lib). source-map is included in the test and not mocked
  */
 suite('SourceMap', () => {
-    const GENERATED_PATH = 'c:\\project\\src\\app.js';
-    const WEBROOT = 'c:\\project';
-    const SOURCEROOT = 'c:\\project\\src';
+    const GENERATED_PATH = path.resolve('/project/src/app.js');
+    const WEBROOT = path.resolve('/project');
+    const SOURCEROOT = '/src';
 
     const SOURCES = [
         'source1.ts',
         'source2.ts'
     ];
-    const ABSOLUTE_SOURCES = SOURCES.map(source => path.resolve(SOURCEROOT, source));
+    const ABSOLUTE_SOURCES = SOURCES.map(source => {
+        // Join the path segments, then resolve to force proper slashes
+        return path.resolve(
+            path.join(WEBROOT, SOURCEROOT, source));
+    });
 
     // Load out.js.map, which should be copied to this folder under 'out' by the build process
     const SOURCEMAP_MAPPINGS_JSON = fs.readFileSync(
@@ -31,7 +35,6 @@ suite('SourceMap', () => {
     ).toString();
 
     setup(() => {
-        testUtils.registerWin32Mocks();
         testUtils.setupUnhandledRejectionListener();
     });
 

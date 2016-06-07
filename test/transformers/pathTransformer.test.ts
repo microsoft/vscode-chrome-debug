@@ -4,10 +4,10 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
+import * as path from 'path';
 
 import * as testUtils from '../testUtils';
 import {PathTransformer as _PathTransformer} from '../../src/transformers/pathTransformer';
-import * as utils from '../../src/utils';
 import * as chromeUtils from '../../src/chrome/chromeUtils';
 
 // As of 0.1.0, the included .d.ts is not in the right format to use the import syntax here
@@ -23,7 +23,7 @@ function createTransformer(): _PathTransformer {
 
 suite('PathTransformer', () => {
     const TARGET_URL = 'http://mysite.com/scripts/script1.js';
-    const CLIENT_PATH = utils.canonicalizeUrl('c:/projects/mysite/scripts/script1.js');
+    const CLIENT_PATH = path.resolve('/projects/mysite/scripts/script1.js');
 
     let chromeUtilsMock: Mock<typeof chromeUtils>;
     let transformer: _PathTransformer;
@@ -36,7 +36,6 @@ suite('PathTransformer', () => {
         mockery.registerMock('../chrome/chromeUtils', chromeUtilsMock.object);
 
         transformer = createTransformer();
-        testUtils.registerWin32Mocks();
     });
 
     teardown(() => {
