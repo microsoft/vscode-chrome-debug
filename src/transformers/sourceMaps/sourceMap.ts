@@ -89,6 +89,7 @@ export class SourceMap {
 
     /*
      * Finds the nearest source location for the given location in the generated file.
+     * Will return null instead of a mapping on the next line (different from generatedPositionFor).
      */
     public originalPositionFor(line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
         let position = this._smc.originalPositionFor(<any>{
@@ -111,13 +112,16 @@ export class SourceMap {
             // Probably can combine these?
             position.source = pathUtils.canonicalizeUrl(position.source);
             position.source = utils.canonicalizeUrl(position.source);
-        }
 
-        return position;
+            return position;
+        } else {
+            return null;
+        }
     }
 
     /*
      * Finds the nearest location in the generated file for the given source location.
+     * Will return a mapping on the next line, if there is no subsequent mapping on the expected line.
      */
     public generatedPositionFor(source: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
         source = utils.pathToFileURL(source);
@@ -129,7 +133,7 @@ export class SourceMap {
             bias: Bias.LEAST_UPPER_BOUND
         });
 
-        if (typeof position.line !== 'number') {
+        if (position.line === null) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
             position = this._smc.generatedPositionFor(<any>{
                 source,
@@ -139,6 +143,6 @@ export class SourceMap {
             });
         }
 
-        return position;
+        return position.line === null ? null : position;
     }
 }

@@ -38,11 +38,16 @@ export class SourceMaps {
     public mapFromSource(pathToSource: string, line: number, column: number): MappingResult {
         const map = this.findSourceToGeneratedMapping(pathToSource);
         if (map) {
-            line += 1; // source map impl is 1 based
-            const mr = map.generatedPositionFor(pathToSource, line, column);
-            if (typeof mr.line === 'number') {
-                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToSource)} ${line}:${column} -> ${mr.line}:${mr.column}`);
-                return { path: map.generatedPath(), line: mr.line - 1, column: mr.column};
+            // source map impl is 1 based
+            line += 1;
+            const position = map.generatedPositionFor(pathToSource, line, column);
+            if (position) {
+                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToSource)} ${line}:${column} -> ${position.line}:${position.column}`);
+                return {
+                    path: map.generatedPath(),
+                    line: position.line - 1,
+                    column: position.column
+                };
             }
         }
 
@@ -52,11 +57,16 @@ export class SourceMaps {
     public mapToSource(pathToGenerated: string, line: number, column: number): MappingResult {
         const map = this._generatedToSourceMaps[pathToGenerated];
         if (map) {
-            line += 1;    // source map impl is 1 based
-            const mr = map.originalPositionFor(line, column);
-            if (mr.source) {
-                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToGenerated)} ${line}:${column} -> ${mr.line}:${mr.column}`);
-                return { path: mr.source, line: mr.line - 1, column: mr.column};
+            // source map impl is 1 based
+            line += 1;
+            const position = map.originalPositionFor(line, column);
+            if (position) {
+                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToGenerated)} ${line}:${column} -> ${position.line}:${position.column}`);
+                return {
+                    path: position.source,
+                    line: position.line - 1,
+                    column: position.column
+                };
             }
         }
 

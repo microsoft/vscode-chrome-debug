@@ -15,8 +15,8 @@ import {SourceMap} from '../../../src/transformers/sourceMaps/sourceMap';
  * Unit tests for SourceMap + source-map (the mozilla lib). source-map is included in the test and not mocked
  */
 suite('SourceMap', () => {
-    const GENERATED_PATH = path.resolve('/project/src/app.js');
-    const WEBROOT = path.resolve('/project');
+    const GENERATED_PATH = testUtils.pathResolve('/project/src/app.js');
+    const WEBROOT = testUtils.pathResolve('/project');
     const SOURCEROOT = '/src';
 
     const SOURCES = [
@@ -25,7 +25,7 @@ suite('SourceMap', () => {
     ];
     const ABSOLUTE_SOURCES = SOURCES.map(source => {
         // Join the path segments, then resolve to force proper slashes
-        return path.resolve(
+        return testUtils.pathResolve(
             path.join(WEBROOT, SOURCEROOT, source));
     });
 
@@ -173,6 +173,12 @@ suite('SourceMap', () => {
                 sm.originalPositionFor(/*line=*/23, /*column=*/5),
                 getExpectedResult(/*line=*/6, /*column=*/4, ABSOLUTE_SOURCES[1]));
         });
+
+        test('return null when there is no matching mapping', () => {
+            assert.deepEqual(
+                sm.originalPositionFor(/*line=*/1000, /*column=*/0),
+                null);
+        });
     });
 
     suite('generatedPositionFor', () => {
@@ -266,6 +272,14 @@ suite('SourceMap', () => {
             assert.deepEqual(
                 sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/6, /*column=*/5),
                 getExpectedResult(/*line=*/23, /*column=*/4));
+        });
+
+        // Discrepency with originalPositionFor bc that's the way the source-map lib works.
+        // Not sure whether there's a good reason for that.
+        test('returns the last mapping when there is no matching mapping', () => {
+            assert.deepEqual(
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/1000, /*column=*/0),
+                getExpectedResult(/*line=*/18, /*column=*/1));
         });
     });
 });

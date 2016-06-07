@@ -5,7 +5,6 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import * as assert from 'assert';
-import * as path from 'path';
 import * as mockery from 'mockery';
 import {Mock, It} from 'typemoq';
 
@@ -17,13 +16,13 @@ import * as utils from '../../../src/utils';
 
 const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
 
-const AUTHORED_PATH = path.resolve('/project/authored.ts');
-const RUNTIME_PATH = path.resolve('/project/runtime.js');
+const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
+const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
 const AUTHORED_LINES = [1, 2, 3];
 const RUNTIME_LINES = [2, 5, 8];
 const RUNTIME_COLS = [3, 7, 11];
 
-const AUTHORED_PATH2 = path.resolve('/project/authored2.ts');
+const AUTHORED_PATH2 = testUtils.pathResolve('/project/authored2.ts');
 const AUTHORED_LINES2 = [90, 105];
 const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];

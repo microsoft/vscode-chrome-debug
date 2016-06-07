@@ -4,7 +4,6 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
-import * as path from 'path';
 
 import * as testUtils from '../testUtils';
 import {PathTransformer as _PathTransformer} from '../../src/transformers/pathTransformer';
@@ -23,7 +22,7 @@ function createTransformer(): _PathTransformer {
 
 suite('PathTransformer', () => {
     const TARGET_URL = 'http://mysite.com/scripts/script1.js';
-    const CLIENT_PATH = path.resolve('/projects/mysite/scripts/script1.js');
+    const CLIENT_PATH = testUtils.pathResolve('/projects/mysite/scripts/script1.js');
 
     let chromeUtilsMock: Mock<typeof chromeUtils>;
     let transformer: _PathTransformer;
