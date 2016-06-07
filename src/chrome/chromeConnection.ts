@@ -105,7 +105,7 @@ class ResReqWebSocket extends EventEmitter {
         try {
             return super.emit.apply(this, arguments);
         } catch (e) {
-            logger.log('Error while handling target event: ' + e.stack, logger.LogLevel.Error);
+            logger.error('Error while handling target event: ' + e.stack);
         }
     }
 
@@ -178,7 +178,7 @@ export class ChromeConnection {
                         url = utils.canonicalizeUrl(url).toLowerCase();
                         const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === url);
                         if (!urlPages.length) {
-                            logger.log(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`, logger.LogLevel.Error, true);
+                            logger.error(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`);
                         } else {
                             pages = urlPages;
                         }
@@ -186,7 +186,7 @@ export class ChromeConnection {
 
                     if (pages.length) {
                         if (pages.length > 1) {
-                            logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)), logger.LogLevel.Error, true);
+                            logger.error('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)));
                         }
 
                         const wsUrl = pages[0].webSocketDebuggerUrl;
