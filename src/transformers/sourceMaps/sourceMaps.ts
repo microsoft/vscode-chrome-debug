@@ -310,32 +310,52 @@ class SourceMap {
 	/*
 	 * finds the nearest source location for the given location in the generated file.
 	 */
-	public originalPositionFor(line: number, column: number, bias: Bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-		const mp = this._smc.originalPositionFor(<any>{
-			line: line,
-			column: column,
-			bias: bias
+	public originalPositionFor(line: number, column: number): MozSourceMap.MappedPosition {
+		let position = this._smc.originalPositionFor(<any>{
+			line,
+			column,
+			bias: Bias.LEAST_UPPER_BOUND
 		});
 
-		if (mp.source) {
-			mp.source = PathUtils.canonicalizeUrl(mp.source);
+        if (!position.source) {
+            // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
+            position = this._smc.originalPositionFor(<any>{
+                line,
+                column,
+                bias: Bias.GREATEST_LOWER_BOUND
+            });
+        }
+
+		if (position.source) {
+			position.source = PathUtils.canonicalizeUrl(position.source);
 		}
 
-		return mp;
+		return position;
 	}
 
 	/*
 	 * finds the nearest location in the generated file for the given source location.
 	 */
-	public generatedPositionFor(src: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
-        src = utils.pathToFileURL(src);
+	public generatedPositionFor(source: string, line: number, column: number): MozSourceMap.Position {
+        source = utils.pathToFileURL(source);
 
-		const needle = {
-			source: src,
-			line: line,
-			column: column,
-			bias: bias
-		};
-		return this._smc.generatedPositionFor(needle);
+		let position = this._smc.generatedPositionFor(<any>{
+			source,
+			line,
+			column,
+			bias: Bias.LEAST_UPPER_BOUND
+		});
+
+        if (typeof position.line !== 'number') {
+            // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
+            position = this._smc.generatedPositionFor(<any>{
+                source,
+                line,
+                column,
+                bias: Bias.GREATEST_LOWER_BOUND
+            });
+        }
+
+        return position;
 	}
 }
