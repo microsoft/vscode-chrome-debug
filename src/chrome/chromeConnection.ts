@@ -110,16 +110,26 @@ class ResReqWebSocket extends EventEmitter {
     }
 
     private onMessage(message: any): void {
-        if (message.id) {
+        if (typeof message.id === 'number') {
             if (this._pendingRequests.has(message.id)) {
                 // Resolve the pending request with this response
                 this._pendingRequests.get(message.id)(message);
                 this._pendingRequests.delete(message.id);
             } else {
-                console.error(`Got a response with id ${message.id} for which there is no pending request, weird.`);
+                logger.error(`Got a response with id ${message.id} for which there is no pending request.`);
             }
         } else if (message.method) {
             this.emit(message.method, message.params);
+        } else {
+            // Message is malformed - safely stringify and log it
+            let messageStr: string;
+            try {
+                messageStr = JSON.stringify(message);
+            } catch (e) {
+                messageStr = '' + message;
+            }
+
+            logger.error(`Got a response with no id nor method property: ${messageStr}`);
         }
     }
 }
@@ -202,7 +212,7 @@ export class ChromeConnection {
     }
 
     private reset(): void {
-        this._nextId = 0;
+        this._nextId = 1;
         this._socket = new ResReqWebSocket();
     }
 

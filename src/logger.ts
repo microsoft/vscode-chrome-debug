@@ -19,6 +19,10 @@ export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = 
     if (_logger) _logger.log(msg, level, forceDiagnosticLogging);
 }
 
+export function error(msg: string, forceDiagnosticLogging = true): void {
+    log(msg, LogLevel.Error, forceDiagnosticLogging);
+}
+
 export function init(isServer: boolean, logCallback: ILogCallback): void {
     if (!_logger) {
         _logger = new Logger(isServer, logCallback);
