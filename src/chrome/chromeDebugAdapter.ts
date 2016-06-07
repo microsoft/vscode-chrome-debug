@@ -74,9 +74,25 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this._eventHandler = eventHandler;
     }
 
-    public initialize(args: DebugProtocol.InitializeRequestArguments): void {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
         // Cache to log if diagnostic logging is enabled later
         this._initArgs = args;
+
+        // This debug adapter supports two exception breakpoint filters
+        return {
+            exceptionBreakpointFilters: [
+                {
+                    label: 'All Exceptions',
+                    filter: 'all',
+                    default: false
+                },
+                {
+                    label: 'Uncaught Exceptions',
+                    filter: 'uncaught',
+                    default: true
+                }
+            ]
+        };
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
@@ -118,7 +134,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             detached: true,
             stdio: ['ignore']
         });
-        (<any>this._chromeProc).unref();
+        this._chromeProc.unref();
         this._chromeProc.on('error', (err) => {
             logger.log('chrome error: ' + err);
             this.terminateSession();

@@ -1,7 +1,7 @@
 {
   "name": "vscode-chrome-debug-core",
   "displayName": "vscode-chrome-debug-core",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "A library for building VS Code debug adapters for targets that support the Chrome Remote Debug Protocol",
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "typings": "^1.0.4"
   },
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"
+    "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/",
+    "postinstall": "typings install"
   }
 }

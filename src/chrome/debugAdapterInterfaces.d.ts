@@ -76,7 +76,7 @@ declare type PromiseOrNot<T> = T | Promise<T>;
 export interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
 
-    initialize(args: DebugProtocol.InitializeRequestArguments): PromiseOrNot<void>;
+    initialize(args: DebugProtocol.InitializeRequestArguments): PromiseOrNot<DebugProtocol.Capabilites>;
     launch(args: ILaunchRequestArgs): PromiseOrNot<void>;
     disconnect(): PromiseOrNot<void>;
     attach(args: IAttachRequestArgs): PromiseOrNot<void>;

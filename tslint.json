@@ -3,6 +3,10 @@
     "node_modules/tslint-microsoft-contrib",
     "node_modules/tslint-eslint-rules/dist/rules"],
   "rules": {
+    "indent": [
+      true,
+      "spaces"
+    ],
     "align": [
       true,
       "parameters",
@@ -16,10 +20,6 @@
     ],
     "curly": false,
     "forin": false,
-    "indent": [
-      true,
-      "spaces"
-    ],
     "jsdoc-format": true,
     "label-position": true,
     "label-undefined": true,

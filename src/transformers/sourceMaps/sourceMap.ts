@@ -91,29 +91,51 @@ export class SourceMap {
      * Finds the nearest source location for the given location in the generated file.
      */
     public originalPositionFor(line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-        // source-map dts is missing .bias
-        const mp = this._smc.originalPositionFor(<any>{
-            line,
-            column,
-            bias
-        });
+		let position = this._smc.originalPositionFor(<any>{
+			line,
+			column,
+			bias: Bias.LEAST_UPPER_BOUND
+		});
 
-        if (mp.source) {
-            mp.source = pathUtils.canonicalizeUrl(mp.source);
+        if (!position.source) {
+            // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
+            position = this._smc.originalPositionFor(<any>{
+                line,
+                column,
+                bias: Bias.GREATEST_LOWER_BOUND
+            });
         }
 
-        return mp;
+		if (position.source) {
+			position.source = pathUtils.canonicalizeUrl(position.source);
+		}
+
+		return position;
     }
 
     /*
      * Finds the nearest location in the generated file for the given source location.
      */
     public generatedPositionFor(source: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
-        return this._smc.generatedPositionFor(<any>{
-            source: utils.pathToFileURL(source),
-            line,
-            column,
-            bias
-        });
+        source = utils.pathToFileURL(source);
+
+		let position = this._smc.generatedPositionFor(<any>{
+			source,
+			line,
+			column,
+			bias: Bias.LEAST_UPPER_BOUND
+		});
+
+        if (typeof position.line !== 'number') {
+            // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
+            position = this._smc.generatedPositionFor(<any>{
+                source,
+                line,
+                column,
+                bias: Bias.GREATEST_LOWER_BOUND
+            });
+        }
+
+        return position;
     }
 }
