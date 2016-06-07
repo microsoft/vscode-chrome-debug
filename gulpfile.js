@@ -17,18 +17,23 @@ const sources = [
     'src',
     'test',
     'typings',
-].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
+].map(tsFolder => tsFolder + '/**/*.ts');
 sources.push('index.ts');
 
-var libs = [
+// tsBuildSources needs to explicitly exclude testData because it's built and copied separately.
+const testDataDir = 'test/**/testData/';
+const tsBuildSources = sources.slice();
+tsBuildSources.push('!' + testDataDir + '**');
+
+const libs = [
     'src',
     'typings'
-].map(function(libFolder) { return libFolder + '/**/*.d.ts'; });
+].map(libFolder => libFolder + '/**/*.d.ts');
 
 const lintSources = [
     'src',
     'test'
-].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
+].map(tsFolder => tsFolder + '/**/*.ts');
 
 const projectConfig = {
     noImplicitAny: false,
@@ -39,32 +44,32 @@ const projectConfig = {
     typescript
 };
 
-gulp.task('build', function () {
-    var tsResult = gulp.src(sources, { base: '.' })
+gulp.task('build', () => {
+    const tsResult = gulp.src(tsBuildSources, { base: '.' })
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig));
 
 	return merge([
 		tsResult.dts
-        .pipe(gulp.dest('lib'))
-        ,
+            .pipe(gulp.dest('lib')),
 		tsResult.js
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
-        .pipe(gulp.dest('out'))
-        ,
+            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
+            .pipe(gulp.dest('out')),
         gulp.src(libs, { base: '.' })
-        .pipe(gulp.dest('lib'))
+            .pipe(gulp.dest('lib')),
+        gulp.src(testDataDir + 'app*', { base: '.' })
+            .pipe(gulp.dest('out'))
 	]);
 });
 
-gulp.task('watch', ['build'], function(cb) {
+gulp.task('watch', ['build'], () => {
     log('Watching build sources...');
     return gulp.watch(sources, ['build']);
 });
 
 gulp.task('default', ['build']);
 
-gulp.task('tslint', function(){
+gulp.task('tslint', () => {
       return gulp.src(lintSources, { base: '.' })
         .pipe(tslint())
         .pipe(tslint.report('verbose'));
@@ -73,7 +78,7 @@ gulp.task('tslint', function(){
 function test() {
     return gulp.src('out/test/**/*.test.js', { read: false })
         .pipe(mocha({ ui: 'tdd' }))
-        .on('error', function(e) {
+        .on('error', e => {
             log(e ? e.toString() : 'error in test task!');
             this.emit('end');
         });
@@ -82,6 +87,6 @@ function test() {
 gulp.task('build-test', ['build'], test);
 gulp.task('test', test);
 
-gulp.task('watch-build-test', ['build', 'build-test'], function() {
+gulp.task('watch-build-test', ['build', 'build-test'], () => {
     return gulp.watch(sources, ['build', 'build-test']);
 });

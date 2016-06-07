@@ -107,7 +107,10 @@ export class SourceMap {
         }
 
 		if (position.source) {
+            // file:/// -> path with native slashes.
+            // Probably can combine these?
 			position.source = pathUtils.canonicalizeUrl(position.source);
+            position.source = utils.canonicalizeUrl(position.source);
 		}
 
 		return position;

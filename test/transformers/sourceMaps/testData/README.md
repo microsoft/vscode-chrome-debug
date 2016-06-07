@@ -1,0 +1,1 @@
+This directory has a simple project for generating unit test data. `out.js.map` is loaded by some unit tests. Regenerate it with `tsc`, but if you change anything, you may have to fix the expected numbers in the tests.
