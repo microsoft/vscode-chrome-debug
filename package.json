@@ -41,7 +41,8 @@
         "enableBreakpointsFor": {
           "languageIds": [
             "javascript",
-            "typescriptreact"
+            "typescriptreact",
+            "javascriptreact"
           ]
         },
         "program": "./out/src/chromeDebug.js",
