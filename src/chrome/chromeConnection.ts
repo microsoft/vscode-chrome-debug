@@ -176,7 +176,7 @@ export class ChromeConnection {
                     // If a url was specified (launch mode), try to filter to that url
                     if (url) {
                         url = utils.canonicalizeUrl(url).toLowerCase();
-                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url) === url);
+                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url).toLowerCase() === url);
                         if (!urlPages.length) {
                             logger.error(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`);
                         } else {
