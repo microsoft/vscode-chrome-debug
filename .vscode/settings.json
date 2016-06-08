@@ -12,6 +12,7 @@
         ".git": true,
         "node_modules": true,
         "bin": true,
-        "out": true
+        "out": true,
+        "lib": true
     }
 }
