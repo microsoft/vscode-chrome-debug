@@ -14,7 +14,7 @@ var filter = require('gulp-filter');
 
 var sources = [
     'wwwroot/client with space'
-].map(function (tsFolder) { return tsFolder + '\\**\\*.ts'; });
+].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
 
 var projectConfig = {
     target: 'ES6',
