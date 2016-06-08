@@ -15,5 +15,10 @@ vscode-chrome-debug.txt
 out/test/**
 
 node_modules/.bin/**
+node_modules/bufferutil/**
+node_modules/utf-8-validate/**
 node_modules/vscode-chrome-debug-core/node_modules/ws/node_modules/bufferutil/**
 node_modules/vscode-chrome-debug-core/node_modules/ws/node_modules/utf-8-validate/**
+
+node_modules/vscode-chrome-debug-core/out/test/**
+node_modules/vscode-chrome-debug-core/typings/**
