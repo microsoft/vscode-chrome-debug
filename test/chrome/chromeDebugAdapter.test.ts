@@ -97,20 +97,20 @@ suite('ChromeDebugAdapter', () => {
             lines.forEach((lineNumber, i) => {
                 const columnNumber = cols[i];
 
-                // non-verifiable at the moment - see https://github.com/florinn/typemoq/issues/10
                 mockChromeConnection
                     .setup(x => x.debugger_setBreakpointByUrl(It.isValue(FILE_NAME), It.isValue(lineNumber), It.isValue(columnNumber)))
                     .returns(() => Promise.resolve(
-                        <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } }));
+                        <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } }))
+                    .verifiable();
             });
         }
 
         function expectRemoveBreakpoint(indicies: number[]): void {
             indicies.forEach(i => {
-                // non-verifiable at the moment - see https://github.com/florinn/typemoq/issues/10
                 mockChromeConnection
                     .setup(x => x.debugger_removeBreakpoint(It.isValue(BP_ID + i)))
-                    .returns(() => Promise.resolve(<Chrome.Response>{ id: 0 }));
+                    .returns(() => Promise.resolve(<Chrome.Response>{ id: 0 }))
+                    .verifiable();
             });
         }
 
