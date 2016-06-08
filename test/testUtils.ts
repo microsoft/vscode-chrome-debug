@@ -117,6 +117,11 @@ export function registerWin32Mocks(): void {
     mockery.registerMock('path', path.win32);
 }
 
+export function registerOSXMocks(): void {
+    mockery.registerMock('os', { platform: () => 'darwin' });
+    mockery.registerMock('path', path.posix);
+}
+
 /**
  * path.resolve + fixing the drive letter to match what VS Code does. Basically tests can use this when they
  * want to force a path to native slashes and the correct letter case, but maybe can't use un-mocked utils.

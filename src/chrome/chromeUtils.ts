@@ -23,8 +23,9 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 
     // If the url is an absolute path to a file that exists, return it without file:///.
     // A remote absolute url (cordova) will still need the logic below.
-    if (aUrl.startsWith('file:///') && utils.existsSync(aUrl.replace(/^file:\/\/\//, ''))) {
-        return utils.canonicalizeUrl(aUrl);
+    const canonicalUrl = utils.canonicalizeUrl(aUrl);
+    if (aUrl.startsWith('file:///') && utils.existsSync(canonicalUrl)) {
+        return canonicalUrl;
     }
 
     // If we don't have the client workingDirectory for some reason, don't try to map the url to a client path
@@ -33,7 +34,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
     }
 
     // Search the filesystem under the webRoot for the file that best matches the given url
-    let pathName = decodeURIComponent(url.parse(utils.canonicalizeUrl(aUrl)).pathname);
+    let pathName = decodeURIComponent(url.parse(canonicalUrl).pathname);
     if (!pathName || pathName === '/') {
         return '';
     }
