@@ -201,6 +201,20 @@ export namespace Runtime {
             wasThrown: boolean;
         };
     }
+
+    export interface CallFrame {
+        lineNumber: number;
+        columnNumber: number;
+        functionName: string;
+        scriptId: Debugger.ScriptId;
+        url: string;
+    }
+
+    export interface StackTrace {
+        description?: string;
+        callFrames: CallFrame[];
+        parent?: StackTrace;
+    }
 }
 
 export namespace Page {
@@ -210,16 +224,6 @@ export namespace Page {
 }
 
 export namespace Console {
-    export interface CallFrame {
-        lineNumber: number;
-        columnNumber: number;
-        functionName: string;
-        scriptId: Debugger.ScriptId;
-        url: string;
-    }
-
-    type StackTrace = CallFrame[];
-
     export interface MessageAddedParams {
         message: Message;
     }
@@ -237,7 +241,7 @@ export namespace Console {
 
         parameters?: Runtime.RemoteObject[];
         repeatCount?: string;
-        stackTrace?: StackTrace;
+        stack?: Runtime.StackTrace;
         text: string;
         url?: string;
         source?: string;

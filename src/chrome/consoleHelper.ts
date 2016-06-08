@@ -19,7 +19,7 @@ export function formatConsoleMessage(m: Chrome.Console.Message): { text: string,
             outputText += ': ' + m.parameters.map(p => p.value).join(' ');
         }
 
-        outputText += '\n' + stackTraceToString(m.stackTrace);
+        outputText += '\n' + stackTraceToString(m.stack);
     } else if (m.type === 'startGroup' || m.type === 'startGroupCollapsed') {
         outputText = '‹Start group›';
         if (m.text) {
@@ -29,7 +29,7 @@ export function formatConsoleMessage(m: Chrome.Console.Message): { text: string,
     } else if (m.type === 'endGroup') {
         outputText = '‹End group›';
     } else if (m.type === 'trace') {
-        outputText = 'console.trace()\n' + stackTraceToString(m.stackTrace);
+        outputText = 'console.trace()\n' + stackTraceToString(m.stack);
     } else {
         // Some types we have to ignore
         outputText = 'Unimplemented console API: ' + m.type;
@@ -128,12 +128,12 @@ function arrayRemoteObjToString(obj: Chrome.Runtime.RemoteObject): string {
     }
 }
 
-function stackTraceToString(stackTrace: Chrome.Console.StackTrace): string {
-    return stackTrace
+function stackTraceToString(stackTrace: Chrome.Runtime.StackTrace): string {
+    return stackTrace.callFrames
         .map(frame => {
             const fnName = frame.functionName || (frame.url ? '(anonymous)' : '(eval)');
             const fileName = frame.url ? url.parse(frame.url).pathname : '(eval)';
-            return `  ${fnName} @${fileName}:${frame.lineNumber}`;
+            return `-  ${fnName} @${fileName}:${frame.lineNumber}`;
         })
         .join('\n');
 }
