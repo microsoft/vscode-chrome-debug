@@ -63,7 +63,7 @@ export class SourceMap {
     /*
      * Return all mapped sources as absolute paths
      */
-    public get sources(): string[] {
+    public get authoredSources(): string[] {
         return this._sources;
     }
 
@@ -78,7 +78,7 @@ export class SourceMap {
      * Returns true if this source map originates from the given source.
      */
     public doesOriginateFrom(absPath: string): boolean {
-        return this.sources.some(path => path === absPath);
+        return this.authoredSources.some(path => path === absPath);
     }
 
     /*

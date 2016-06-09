@@ -225,7 +225,7 @@ suite('SourceMapTransformer', () => {
                 const mock = createMergedSourcesMock(setBPArgs, setBPArgs2);
                 RUNTIME_LINES2.forEach((line, i) => {
                     mock
-                        .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                        .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
                         .returns(() => ({ source: AUTHORED_PATH2, line: AUTHORED_LINES2[i], column: 0 })).verifiable();
                 });
 
@@ -269,7 +269,7 @@ suite('SourceMapTransformer', () => {
 
             RUNTIME_LINES.forEach(line => {
                 mock
-                    .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                    .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
                     .returns(() => null).verifiable();
             });
             utilsMock
@@ -290,7 +290,7 @@ suite('SourceMapTransformer', () => {
 
             RUNTIME_LINES.forEach(line => {
                 mock
-                    .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                    .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
                     .returns(() => null).verifiable();
             });
             utilsMock
@@ -330,7 +330,7 @@ class StubSourceMaps {
 	 * Map location in generated code to location in source language.
 	 * line and column are 0 based.
 	 */
-    public mapToSource(path: string, line: number, column: number): MappedPosition {
+    public mapToAuthored(path: string, line: number, column: number): MappedPosition {
         const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
         return { source: AUTHORED_PATH, line: mappedLine, column: 0 };
     }

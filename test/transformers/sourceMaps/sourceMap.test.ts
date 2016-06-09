@@ -47,14 +47,14 @@ suite('SourceMap', () => {
             const sourceMapJSON = getMockSourceMapJSON(SOURCES, SOURCEROOT);
 
             const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
-            assert.deepEqual(sm.sources, ABSOLUTE_SOURCES);
+            assert.deepEqual(sm.authoredSources, ABSOLUTE_SOURCES);
         });
 
         test('sources with absolute paths are used as-is', () => {
             const sourceMapJSON = getMockSourceMapJSON(ABSOLUTE_SOURCES, SOURCEROOT);
 
             const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
-            assert.deepEqual(sm.sources, ABSOLUTE_SOURCES);
+            assert.deepEqual(sm.authoredSources, ABSOLUTE_SOURCES);
         });
 
         test('file:/// sources are exposed as absolute paths', () => {
@@ -62,7 +62,7 @@ suite('SourceMap', () => {
             const sourceMapJSON = getMockSourceMapJSON(fileSources, SOURCEROOT);
 
             const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
-            assert.deepEqual(sm.sources, ABSOLUTE_SOURCES);
+            assert.deepEqual(sm.authoredSources, ABSOLUTE_SOURCES);
         });
     });
 

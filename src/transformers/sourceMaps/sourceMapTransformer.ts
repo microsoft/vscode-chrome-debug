@@ -133,7 +133,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // Remove breakpoints from files that map to the same file, and map back to source.
                     response.breakpoints = response.breakpoints.filter((_, i) => i < sourceBPLines.length);
                     response.breakpoints.forEach(bp => {
-                        const mapped = this._sourceMaps.mapToSource(args.source.path, bp.line, bp.column);
+                        const mapped = this._sourceMaps.mapToAuthored(args.source.path, bp.line, bp.column);
                         if (mapped) {
                             logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.source}:${mapped.line}`);
                             bp.line = mapped.line;
@@ -160,7 +160,7 @@ export class SourceMapTransformer implements IDebugTransformer {
     public stackTraceResponse(response: IStackTraceResponseBody): void {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
-                const mapped = this._sourceMaps.mapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
+                const mapped = this._sourceMaps.mapToAuthored(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped && utils.existsSync(mapped.source)) {
                     // Script was mapped to a valid path
                     stackFrame.source.path = utils.canonicalizeUrl(mapped.source);
