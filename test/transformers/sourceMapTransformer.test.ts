@@ -9,13 +9,13 @@ import * as mockery from 'mockery';
 import {Mock, MockBehavior, It} from 'typemoq';
 
 import {ISetBreakpointsResponseBody,
-    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
-import * as testUtils from '../../testUtils';
-import {SourceMaps} from '../../../src/transformers/sourceMaps/sourceMaps';
-import {MappedPosition} from '../../../src/transformers/sourceMaps/sourceMap';
-import * as utils from '../../../src/utils';
+    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../src/chrome/debugAdapterInterfaces';
+import * as testUtils from '../testUtils';
+import {SourceMaps} from '../../src/sourceMaps/sourceMaps';
+import {MappedPosition} from '../../src/sourceMaps/sourceMap';
+import * as utils from '../../src/utils';
 
-const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
+const MODULE_UNDER_TEST = '../../src/transformers/sourceMapTransformer';
 
 const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
 const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
@@ -29,7 +29,7 @@ const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];
 
 // Not mocked, use for type only
-import {SourceMapTransformer as _SourceMapTransformer} from '../../../src/transformers/sourceMaps/sourceMapTransformer';
+import {SourceMapTransformer as _SourceMapTransformer} from '../../src/transformers/sourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
     let utilsMock: Mock<typeof utils>;
@@ -40,7 +40,7 @@ suite('SourceMapTransformer', () => {
         // Mock the utils module
         utilsMock = Mock.ofInstance(utils);
         utilsMock.callBase = true;
-        mockery.registerMock('../../utils', utilsMock.object);
+        mockery.registerMock('../utils', utilsMock.object);
 
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true, warnOnUnregistered: false });
@@ -54,7 +54,7 @@ suite('SourceMapTransformer', () => {
 
     function getTransformer(sourceMaps = true, suppressDefaultMock = false): _SourceMapTransformer {
         if (!suppressDefaultMock) {
-            mockery.registerMock('./sourceMaps', { SourceMaps: StubSourceMaps });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: StubSourceMaps });
         }
 
         let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
@@ -84,7 +84,7 @@ suite('SourceMapTransformer', () => {
 
         function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Mock<SourceMaps> {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
             mock
                 .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => RUNTIME_PATH).verifiable();
@@ -132,7 +132,7 @@ suite('SourceMapTransformer', () => {
             const sourceMapURL = 'script.js.map';
 
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
             mock
                 .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => null).verifiable();
@@ -265,7 +265,7 @@ suite('SourceMapTransformer', () => {
 
         test(`keeps the path when the file can't be sourcemapped if it's on disk`, () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
 
             RUNTIME_LINES.forEach(line => {
                 mock
@@ -286,7 +286,7 @@ suite('SourceMapTransformer', () => {
 
         test(`clears the path when it can't be sourcemapped and doesn't exist on disk`, () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
 
             RUNTIME_LINES.forEach(line => {
                 mock

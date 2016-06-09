@@ -6,8 +6,8 @@ import {SourceMapConsumer, MappedPosition} from 'source-map';
 import * as path from 'path';
 
 import * as pathUtils from './pathUtilities';
-import * as utils from '../../utils';
-import * as logger from '../../logger';
+import * as utils from '../utils';
+import * as logger from '../logger';
 
 export type MappedPosition = MappedPosition;
 

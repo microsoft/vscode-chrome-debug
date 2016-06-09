@@ -7,10 +7,10 @@ import * as path from 'path';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {IDebugTransformer, ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
-    ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../chrome/debugAdapterInterfaces';
-import {SourceMaps} from './sourceMaps';
-import * as utils from '../../utils';
-import * as logger from '../../logger';
+    ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../chrome/debugAdapterInterfaces';
+import {SourceMaps} from '../sourceMaps/sourceMaps';
+import * as utils from '../utils';
+import * as logger from '../logger';
 
 interface IPendingBreakpoint {
     resolve: () => void;

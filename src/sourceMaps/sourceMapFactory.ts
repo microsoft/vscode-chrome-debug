@@ -7,8 +7,8 @@ import * as url from 'url';
 import * as fs from 'fs';
 
 import * as pathUtils from './pathUtilities';
-import * as utils from '../../utils';
-import * as logger from '../../logger';
+import * as utils from '../utils';
+import * as logger from '../logger';
 import {SourceMap} from './sourceMap';
 
 /**

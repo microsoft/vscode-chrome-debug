@@ -8,8 +8,8 @@
 import * as Path from 'path';
 import * as URL from 'url';
 
-import * as utils from '../../utils';
-import * as logger from '../../logger';
+import * as utils from '../utils';
+import * as logger from '../logger';
 
 export function getPathRoot(p: string) {
     if (p) {

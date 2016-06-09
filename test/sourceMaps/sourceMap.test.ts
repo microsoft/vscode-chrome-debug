@@ -7,9 +7,9 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as MozSourceMap from 'source-map';
 
-import * as testUtils from '../../testUtils';
+import * as testUtils from '../testUtils';
 
-import {SourceMap} from '../../../src/transformers/sourceMaps/sourceMap';
+import {SourceMap} from '../../src/sourceMaps/sourceMap';
 
 /**
  * Unit tests for SourceMap + source-map (the mozilla lib). source-map is included in the test and not mocked

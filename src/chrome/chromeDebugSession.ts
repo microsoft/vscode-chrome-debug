@@ -14,7 +14,7 @@ import * as logger from '../logger';
 import {AdapterProxy} from '../adapterProxy';
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
-import {SourceMapTransformer} from '../transformers/sourceMaps/sourceMapTransformer';
+import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 
 export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;

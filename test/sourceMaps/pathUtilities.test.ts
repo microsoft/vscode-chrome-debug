@@ -5,12 +5,12 @@
 import * as assert from 'assert';
 import * as mockery from 'mockery';
 
-import * as testUtils from '../../testUtils';
+import * as testUtils from '../testUtils';
 
 // Don't use - imported without mocks for type
-import {getAbsSourceRoot as _getAbsSourceRoot} from '../../../src/transformers/sourceMaps/pathUtilities';
+import {getAbsSourceRoot as _getAbsSourceRoot} from '../../src/sourceMaps/pathUtilities';
 
-const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/pathUtilities';
+const MODULE_UNDER_TEST = '../../src/sourceMaps/pathUtilities';
 
 suite('PathUtilities', () => {
     setup(() => {
