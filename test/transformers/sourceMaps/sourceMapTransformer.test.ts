@@ -11,7 +11,8 @@ import {Mock, MockBehavior, It} from 'typemoq';
 import {ISetBreakpointsResponseBody,
     ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
 import * as testUtils from '../../testUtils';
-import {MappingResult, SourceMaps} from '../../../src/transformers/sourceMaps/sourceMaps';
+import {SourceMaps} from '../../../src/transformers/sourceMaps/sourceMaps';
+import {MappedPosition} from '../../../src/transformers/sourceMaps/sourceMap';
 import * as utils from '../../../src/utils';
 
 const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
@@ -85,23 +86,23 @@ suite('SourceMapTransformer', () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
             mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
             mock
-                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => RUNTIME_PATH).verifiable();
             mock
-                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH2)))
+                .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH2)))
                 .returns(() => RUNTIME_PATH).verifiable();
             mock
                 .setup(x => x.allMappedSources(It.isValue(RUNTIME_PATH)))
                 .returns(() => [AUTHORED_PATH, AUTHORED_PATH2]).verifiable();
             args.lines.forEach((line, i) => {
                 mock
-                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
-                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
+                    .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
             });
             args2.lines.forEach((line, i) => {
                 mock
-                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH2), It.isValue(line), It.isValue(0)))
-                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] })).verifiable();
+                    .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH2), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] })).verifiable();
             });
 
             return mock;
@@ -133,10 +134,10 @@ suite('SourceMapTransformer', () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
             mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
             mock
-                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => null).verifiable();
             mock
-                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => RUNTIME_PATH).verifiable();
             mock
                 .setup(x => x.allMappedSources(It.isValue(RUNTIME_PATH)))
@@ -146,8 +147,8 @@ suite('SourceMapTransformer', () => {
                 .returns(() => Promise.resolve<void>()).verifiable();
             args.lines.forEach((line, i) => {
                 mock
-                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
-                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
+                    .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
             });
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
@@ -225,7 +226,7 @@ suite('SourceMapTransformer', () => {
                 RUNTIME_LINES2.forEach((line, i) => {
                     mock
                         .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
-                        .returns(() => ({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i], column: 0 })).verifiable();
+                        .returns(() => ({ source: AUTHORED_PATH2, line: AUTHORED_LINES2[i], column: 0 })).verifiable();
                 });
 
                 const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
@@ -310,7 +311,7 @@ suite('SourceMapTransformer', () => {
 class StubSourceMaps {
     constructor(private generatedCodeDirectory: string) { }
 
-    public mapPathFromSource(path: string): string {
+    public getGeneratedPathFromAuthoredPath(path: string): string {
         return RUNTIME_PATH;
     }
 
@@ -318,20 +319,20 @@ class StubSourceMaps {
 	 * Map location in source language to location in generated code.
 	 * line and column are 0 based.
 	 */
-    public mapFromSource(path: string, line: number, column: number): MappingResult {
+    public mapToGenerated(path: string, line: number, column: number): MappedPosition {
         const index = AUTHORED_LINES.indexOf(line);
         const mappedLine = RUNTIME_LINES[index];
         const mappedCol = RUNTIME_COLS[index];
-        return { path: RUNTIME_PATH, line: mappedLine, column: mappedCol };
+        return { source: RUNTIME_PATH, line: mappedLine, column: mappedCol };
     }
 
 	/*
 	 * Map location in generated code to location in source language.
 	 * line and column are 0 based.
 	 */
-    public mapToSource(path: string, line: number, column: number): MappingResult {
+    public mapToSource(path: string, line: number, column: number): MappedPosition {
         const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
-        return { path: AUTHORED_PATH, line: mappedLine, column: 0 };
+        return { source: AUTHORED_PATH, line: mappedLine, column: 0 };
     }
 
     public allMappedSources(pathToGenerated: string): string[] {

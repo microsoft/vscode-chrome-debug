@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "source-map": "registry:npm/source-map#0.4.0+20160211003958"
+    "source-map": "github:roblourens/source-map/source-map.d.ts#6f5d5946d022312f41433c8f847635427ed2e854"
   },
   "globalDependencies": {
     "es6-collections": "registry:dt/es6-collections#0.5.1+20160316155526",

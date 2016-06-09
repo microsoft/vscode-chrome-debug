@@ -2,25 +2,19 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as MozSourceMap from 'source-map';
+import {SourceMapConsumer, MappedPosition} from 'source-map';
 import * as path from 'path';
 
 import * as pathUtils from './pathUtilities';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
 
-/**
- * Part of source-map, but not exposed in the .d.ts. It should be.
- */
-export enum Bias {
-    GREATEST_LOWER_BOUND = 1,
-    LEAST_UPPER_BOUND = 2
-}
+export type MappedPosition = MappedPosition;
 
 export class SourceMap {
     private _generatedPath: string; // the generated file for this sourcemap (absolute path)
     private _sources: string[]; // list of authored files (absolute paths)
-    private _smc: MozSourceMap.SourceMapConsumer; // the source map
+    private _smc: SourceMapConsumer; // the source map
 
     /**
      * pathToGenerated - an absolute local path or a URL
@@ -63,7 +57,7 @@ export class SourceMap {
             return utils.pathToFileURL(sourceAbsPath);
         });
 
-        this._smc = new MozSourceMap.SourceMapConsumer(sm);
+        this._smc = new SourceMapConsumer(sm);
     }
 
     /*
@@ -91,20 +85,21 @@ export class SourceMap {
      * Finds the nearest source location for the given location in the generated file.
      * Will return null instead of a mapping on the next line (different from generatedPositionFor).
      */
-    public originalPositionFor(line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.MappedPosition {
-        let position = this._smc.originalPositionFor(<any>{
+    public authoredPositionFor(line: number, column: number): MappedPosition {
+        // source-map lib uses 1-indexed lines.
+        line++;
+
+        const lookupArgs = {
             line,
             column,
-            bias: Bias.LEAST_UPPER_BOUND
-        });
+            bias: SourceMapConsumer.LEAST_UPPER_BOUND
+        };
 
+        let position = this._smc.originalPositionFor(lookupArgs);
         if (!position.source) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
-            position = this._smc.originalPositionFor(<any>{
-                line,
-                column,
-                bias: Bias.GREATEST_LOWER_BOUND
-            });
+            lookupArgs.bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
+            position = this._smc.originalPositionFor(lookupArgs);
         }
 
         if (position.source) {
@@ -112,6 +107,9 @@ export class SourceMap {
             // Probably can combine these?
             position.source = pathUtils.canonicalizeUrl(position.source);
             position.source = utils.canonicalizeUrl(position.source);
+
+            // Back to 0-indexed lines
+            position.line--;
 
             return position;
         } else {
@@ -123,26 +121,35 @@ export class SourceMap {
      * Finds the nearest location in the generated file for the given source location.
      * Will return a mapping on the next line, if there is no subsequent mapping on the expected line.
      */
-    public generatedPositionFor(source: string, line: number, column: number, bias = Bias.LEAST_UPPER_BOUND): MozSourceMap.Position {
+    public generatedPositionFor(source: string, line: number, column: number): MappedPosition {
+        // source-map lib uses 1-indexed lines.
+        line++;
+
+        // sources in the sourcemap have been forced to file:///
         source = utils.pathToFileURL(source);
 
-        let position = this._smc.generatedPositionFor(<any>{
-            source,
+        const lookupArgs = {
             line,
             column,
-            bias: Bias.LEAST_UPPER_BOUND
-        });
+            source,
+            bias: SourceMapConsumer.LEAST_UPPER_BOUND
+        };
 
+        let position = this._smc.generatedPositionFor(lookupArgs);
         if (position.line === null) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
-            position = this._smc.generatedPositionFor(<any>{
-                source,
-                line,
-                column,
-                bias: Bias.GREATEST_LOWER_BOUND
-            });
+            lookupArgs.bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
+            position = this._smc.generatedPositionFor(lookupArgs);
         }
 
-        return position.line === null ? null : position;
+        if (position.line === null) {
+            return null;
+        } else {
+            return {
+                line: position.line - 1, // Back to 0-indexed lines
+                column: position.column,
+                source: this._generatedPath
+            };
+        }
     }
 }

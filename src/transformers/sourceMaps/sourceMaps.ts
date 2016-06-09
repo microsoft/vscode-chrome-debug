@@ -9,19 +9,12 @@ import * as fs from 'fs';
 import * as pathUtils from './pathUtilities';
 import * as utils from '../../utils';
 import * as logger from '../../logger';
-import {SourceMap} from './sourceMap';
-
-export interface MappingResult {
-    path: string;
-    line: number;
-    column: number;
-}
+import {SourceMap, MappedPosition} from './sourceMap';
 
 export class SourceMaps {
-    public static TRACE = false;
-
-    private _generatedToSourceMaps: { [id: string]: SourceMap; } = {}; // generated -> source file
-    private _sourceToGeneratedMaps: { [id: string]: SourceMap; } = {}; // source file -> generated
+    // Maps absolute paths to generated/authored source files to their corresponding SourceMap object
+    private _generatedPathToSourceMap = new Map<string, SourceMap>();
+    private _authoredPathToSourceMap = new Map<string, SourceMap>();
 
     // Path to resolve / paths against
     private _webRoot: string;
@@ -30,74 +23,53 @@ export class SourceMaps {
         this._webRoot = webRoot;
     }
 
-    public mapPathFromSource(pathToSource: string): string {
-        const map = this.findSourceToGeneratedMapping(pathToSource);
+    /**
+     * Returns the generated script path for an authored source path
+     * @param pathToSource - The absolute path to the authored file
+     */
+    public getGeneratedPathFromAuthoredPath(authoredPath: string): string {
+        const map = this.findMapFromAuthoredPath(authoredPath);
         return map ? map.generatedPath() : null;
     }
 
-    public mapFromSource(pathToSource: string, line: number, column: number): MappingResult {
-        const map = this.findSourceToGeneratedMapping(pathToSource);
-        if (map) {
-            // source map impl is 1 based
-            line += 1;
-            const position = map.generatedPositionFor(pathToSource, line, column);
-            if (position) {
-                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToSource)} ${line}:${column} -> ${position.line}:${position.column}`);
-                return {
-                    path: map.generatedPath(),
-                    line: position.line - 1,
-                    column: position.column
-                };
-            }
-        }
-
-        return null;
+    public mapToGenerated(authoredPath: string, line: number, column: number): MappedPosition {
+        const map = this.findMapFromAuthoredPath(authoredPath);
+        return map ? map.generatedPositionFor(authoredPath, line, column) : null;
     }
 
-    public mapToSource(pathToGenerated: string, line: number, column: number): MappingResult {
-        const map = this._generatedToSourceMaps[pathToGenerated];
-        if (map) {
-            // source map impl is 1 based
-            line += 1;
-            const position = map.originalPositionFor(line, column);
-            if (position) {
-                if (SourceMaps.TRACE) logger.log(`${path.basename(pathToGenerated)} ${line}:${column} -> ${position.line}:${position.column}`);
-                return {
-                    path: position.source,
-                    line: position.line - 1,
-                    column: position.column
-                };
-            }
-        }
-
-        return null;
+    public mapToSource(pathToGenerated: string, line: number, column: number): MappedPosition {
+        const map = this._generatedPathToSourceMap.get(pathToGenerated);
+        return map ? map.authoredPositionFor(line, column) : null;
     }
 
     public allMappedSources(pathToGenerated: string): string[] {
-        const map = this._generatedToSourceMaps[pathToGenerated];
+        const map = this._generatedPathToSourceMap.get(pathToGenerated);
         return map ? map.sources : null;
     }
 
     public processNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
-        return this._findGeneratedToSourceMapping(pathToGenerated, sourceMapURL).then(() => { });
+        return this.findMapFromGeneratedPath(pathToGenerated, sourceMapURL).then(() => { });
     }
 
-    private findSourceToGeneratedMapping(pathToSource: string): SourceMap {
-        if (pathToSource) {
-            if (pathToSource in this._sourceToGeneratedMaps) {
-                return this._sourceToGeneratedMaps[pathToSource];
-            }
+    private findMapFromAuthoredPath(authoredPath: string): SourceMap {
+        if (this._authoredPathToSourceMap.has(authoredPath)) {
+            return this._authoredPathToSourceMap.get(authoredPath);
+        }
 
-            for (let key in this._generatedToSourceMaps) {
-                const m = this._generatedToSourceMaps[key];
-                if (m.doesOriginateFrom(pathToSource)) {
-                    this._sourceToGeneratedMaps[pathToSource] = m;
-                    return m;
-                }
+        // Hack because TS - ES5 won't do any other Iterable iteration
+        // Honestly probably better to populate the authored cache when the sourcemap is loaded
+        // Search all existing SourceMaps for one which maps this authored path
+        const values = this._generatedPathToSourceMap.values();
+        let curr: IteratorResult<SourceMap>;
+        while ((curr = values.next()) && !curr.done) {
+            const sourceMap = curr.value;
+            if (sourceMap.doesOriginateFrom(authoredPath)) {
+                this._authoredPathToSourceMap.set(authoredPath, sourceMap);
+                return sourceMap;
             }
         }
 
-        // not found in existing maps
+        // Not found in existing maps
         return null;
     }
 
@@ -105,13 +77,9 @@ export class SourceMaps {
      * pathToGenerated - an absolute local path or a URL.
      * mapPath - a path relative to pathToGenerated.
      */
-    private _findGeneratedToSourceMapping(pathToGenerated: string, mapPath: string): Promise<SourceMap> {
-        if (!pathToGenerated) {
-            return Promise.resolve(null);
-        }
-
-        if (pathToGenerated in this._generatedToSourceMaps) {
-            return Promise.resolve(this._generatedToSourceMaps[pathToGenerated]);
+    private findMapFromGeneratedPath(pathToGenerated: string, mapPath: string): Promise<SourceMap> {
+        if (this._generatedPathToSourceMap.has(pathToGenerated)) {
+            return Promise.resolve(this._generatedPathToSourceMap.get(pathToGenerated));
         }
 
         if (mapPath.indexOf('data:application/json') >= 0) {
@@ -125,14 +93,14 @@ export class SourceMaps {
                 const json = buffer.toString();
                 if (json) {
                     const map = new SourceMap(pathToGenerated, json, this._webRoot);
-                    this._generatedToSourceMaps[pathToGenerated] = map;
+                    this._generatedPathToSourceMap.set(pathToGenerated, map);
                     return Promise.resolve(map);
                 }
             } catch (e) {
                 logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
             }
 
-            return null;
+            return Promise.resolve(null);
         }
 
         // if path is relative make it absolute
@@ -147,25 +115,25 @@ export class SourceMaps {
             }
         }
 
-        return this._createSourceMap(mapPath, pathToGenerated).then(map => {
+        return this.createSourceMap(mapPath, pathToGenerated).then(map => {
             if (!map) {
                 const mapPathNextToSource = pathToGenerated + '.map';
                 if (mapPathNextToSource !== mapPath) {
-                    return this._createSourceMap(mapPathNextToSource, pathToGenerated);
+                    return this.createSourceMap(mapPathNextToSource, pathToGenerated);
                 }
             }
 
             return map;
         }).then(map => {
             if (map) {
-                this._generatedToSourceMaps[pathToGenerated] = map;
+                this._generatedPathToSourceMap.set(pathToGenerated, map);
             }
 
             return map || null;
         });
     }
 
-    private _createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
+    private createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
         if (utils.isURL(mapPath)) {
             logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);

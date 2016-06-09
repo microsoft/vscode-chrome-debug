@@ -61,7 +61,7 @@ export class SourceMapTransformer implements IDebugTransformer {
         return new Promise<void>((resolve, reject) => {
             if (this._sourceMaps && args.source.path) {
                 const argsPath = args.source.path;
-                const mappedPath = this._sourceMaps.mapPathFromSource(argsPath);
+                const mappedPath = this._sourceMaps.getGeneratedPathFromAuthoredPath(argsPath);
                 if (mappedPath) {
                     logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
                     args.authoredPath = argsPath;
@@ -70,7 +70,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
                     const mappedCols = [];
                     const mappedLines = args.lines.map((line, i) => {
-                        const mapped = this._sourceMaps.mapFromSource(argsPath, line, /*column=*/0);
+                        const mapped = this._sourceMaps.mapToGenerated(argsPath, line, /*column=*/0);
                         if (mapped) {
                             logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line}:0 to ${mappedPath}:${mapped.line}:${mapped.column}`);
                             mappedCols[i] = mapped.column;
@@ -135,7 +135,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     response.breakpoints.forEach(bp => {
                         const mapped = this._sourceMaps.mapToSource(args.source.path, bp.line, bp.column);
                         if (mapped) {
-                            logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.path}:${mapped.line}`);
+                            logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.source}:${mapped.line}`);
                             bp.line = mapped.line;
                         } else {
                             logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
@@ -161,11 +161,11 @@ export class SourceMapTransformer implements IDebugTransformer {
         if (this._sourceMaps) {
             response.stackFrames.forEach(stackFrame => {
                 const mapped = this._sourceMaps.mapToSource(stackFrame.source.path, stackFrame.line, stackFrame.column);
-                if (mapped && utils.existsSync(mapped.path)) {
+                if (mapped && utils.existsSync(mapped.source)) {
                     // Script was mapped to a valid path
-                    stackFrame.source.path = utils.canonicalizeUrl(mapped.path);
+                    stackFrame.source.path = utils.canonicalizeUrl(mapped.source);
                     stackFrame.source.sourceReference = 0;
-                    stackFrame.source.name = path.basename(mapped.path);
+                    stackFrame.source.name = path.basename(mapped.source);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
                 } else if (utils.existsSync(stackFrame.source.path)) {

@@ -100,83 +100,83 @@ suite('SourceMap', () => {
 
         test('return statement', () => {
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/12, /*column=*/0),
-                getExpectedResult(/*line=*/14, /*column=*/8));
+                sm.authoredPositionFor(/*line=*/11, /*column=*/0),
+                getExpectedResult(/*line=*/13, /*column=*/8));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/12, /*column=*/8),
-                getExpectedResult(/*line=*/14, /*column=*/8));
+                sm.authoredPositionFor(/*line=*/11, /*column=*/8),
+                getExpectedResult(/*line=*/13, /*column=*/8));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/12, /*column=*/17),
-                getExpectedResult(/*line=*/14, /*column=*/17));
+                sm.authoredPositionFor(/*line=*/11, /*column=*/17),
+                getExpectedResult(/*line=*/13, /*column=*/17));
         });
 
         test('first line of a method', () => {
             // 'let x = ...'
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/10, /*column=*/0),
-                getExpectedResult(/*line=*/12, /*column=*/8));
+                sm.authoredPositionFor(/*line=*/9, /*column=*/0),
+                getExpectedResult(/*line=*/11, /*column=*/8));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/10, /*column=*/8),
-                getExpectedResult(/*line=*/12, /*column=*/8));
+                sm.authoredPositionFor(/*line=*/9, /*column=*/8),
+                getExpectedResult(/*line=*/11, /*column=*/8));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/10, /*column=*/9),
-                getExpectedResult(/*line=*/12, /*column=*/12));
+                sm.authoredPositionFor(/*line=*/9, /*column=*/9),
+                getExpectedResult(/*line=*/11, /*column=*/12));
         });
 
         test('private field initializer', () => {
             // 'private _x = ...'
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/6, /*column=*/0),
-                getExpectedResult(/*line=*/5, /*column=*/12));
+                sm.authoredPositionFor(/*line=*/5, /*column=*/0),
+                getExpectedResult(/*line=*/4, /*column=*/12));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/6, /*column=*/4),
-                getExpectedResult(/*line=*/5, /*column=*/12));
+                sm.authoredPositionFor(/*line=*/5, /*column=*/4),
+                getExpectedResult(/*line=*/4, /*column=*/12));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/6, /*column=*/17),
-                getExpectedResult(/*line=*/5, /*column=*/25));
+                sm.authoredPositionFor(/*line=*/5, /*column=*/17),
+                getExpectedResult(/*line=*/4, /*column=*/25));
         });
 
         test('first line of file', () => {
-            const expected = getExpectedResult(/*line=*/1, /*column=*/0, ABSOLUTE_SOURCES[1]);
+            const expected = getExpectedResult(/*line=*/0, /*column=*/0, ABSOLUTE_SOURCES[1]);
 
             // 'function f() { ...'
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/19, /*column=*/0),
+                sm.authoredPositionFor(/*line=*/18, /*column=*/0),
                 expected);
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/19, /*column=*/9),
+                sm.authoredPositionFor(/*line=*/18, /*column=*/9),
                 expected);
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/19, /*column=*/14),
+                sm.authoredPositionFor(/*line=*/18, /*column=*/14),
                 expected);
         });
 
         test('last line of file', () => {
             // 'f();'
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/23, /*column=*/0),
-                getExpectedResult(/*line=*/6, /*column=*/0, ABSOLUTE_SOURCES[1]));
+                sm.authoredPositionFor(/*line=*/22, /*column=*/0),
+                getExpectedResult(/*line=*/5, /*column=*/0, ABSOLUTE_SOURCES[1]));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/23, /*column=*/1),
-                getExpectedResult(/*line=*/6, /*column=*/1, ABSOLUTE_SOURCES[1]));
+                sm.authoredPositionFor(/*line=*/22, /*column=*/1),
+                getExpectedResult(/*line=*/5, /*column=*/1, ABSOLUTE_SOURCES[1]));
 
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/23, /*column=*/5),
-                getExpectedResult(/*line=*/6, /*column=*/4, ABSOLUTE_SOURCES[1]));
+                sm.authoredPositionFor(/*line=*/22, /*column=*/5),
+                getExpectedResult(/*line=*/5, /*column=*/4, ABSOLUTE_SOURCES[1]));
         });
 
         test('return null when there is no matching mapping', () => {
             assert.deepEqual(
-                sm.originalPositionFor(/*line=*/1000, /*column=*/0),
+                sm.authoredPositionFor(/*line=*/1000, /*column=*/0),
                 null);
         });
     });
@@ -189,89 +189,88 @@ suite('SourceMap', () => {
         });
 
         function getExpectedResult(line: number, column: number): MozSourceMap.Position {
-            // lastColumn missing from typings
             return <any>{
                 line,
                 column,
-                lastColumn: null
+                source: GENERATED_PATH
             };
         }
 
         test('return statement', () => {
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/14, /*column=*/0),
-                getExpectedResult(/*line=*/12, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/13, /*column=*/0),
+                getExpectedResult(/*line=*/11, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/14, /*column=*/8),
-                getExpectedResult(/*line=*/12, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/13, /*column=*/8),
+                getExpectedResult(/*line=*/11, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/14, /*column=*/17),
-                getExpectedResult(/*line=*/12, /*column=*/17));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/13, /*column=*/17),
+                getExpectedResult(/*line=*/11, /*column=*/17));
         });
 
         test('first line of a method', () => {
             // 'let x = ...'
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/12, /*column=*/0),
-                getExpectedResult(/*line=*/10, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/11, /*column=*/0),
+                getExpectedResult(/*line=*/9, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/12, /*column=*/8),
-                getExpectedResult(/*line=*/10, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/11, /*column=*/8),
+                getExpectedResult(/*line=*/9, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/12, /*column=*/19),
-                getExpectedResult(/*line=*/10, /*column=*/20));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/11, /*column=*/19),
+                getExpectedResult(/*line=*/9, /*column=*/20));
         });
 
         test('private field initializer', () => {
             // 'private _x = ...'
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/5, /*column=*/0),
-                getExpectedResult(/*line=*/6, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/4, /*column=*/0),
+                getExpectedResult(/*line=*/5, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/5, /*column=*/4),
-                getExpectedResult(/*line=*/6, /*column=*/8));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/4, /*column=*/4),
+                getExpectedResult(/*line=*/5, /*column=*/8));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/5, /*column=*/20),
-                getExpectedResult(/*line=*/6, /*column=*/18));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/4, /*column=*/20),
+                getExpectedResult(/*line=*/5, /*column=*/18));
         });
 
         test('first line of file', () => {
             // 'function f() { ...'
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/1, /*column=*/0),
-                getExpectedResult(/*line=*/19, /*column=*/0));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/0, /*column=*/0),
+                getExpectedResult(/*line=*/18, /*column=*/0));
 
             // This line only has one mapping, so a non-0 column ends up mapped to the next line.
             // I think this needs a fix but at the moment there is no scenario where this is called with
             // a non-0 column.
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/1, /*column=*/1),
-                getExpectedResult(/*line=*/20, /*column=*/4));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/0, /*column=*/1),
+                getExpectedResult(/*line=*/19, /*column=*/4));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/1, /*column=*/14),
-                getExpectedResult(/*line=*/20, /*column=*/4));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/0, /*column=*/14),
+                getExpectedResult(/*line=*/19, /*column=*/4));
         });
 
         test('last line of file', () => {
             // 'f();'
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/6, /*column=*/0),
-                getExpectedResult(/*line=*/23, /*column=*/0));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/5, /*column=*/0),
+                getExpectedResult(/*line=*/22, /*column=*/0));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/6, /*column=*/1),
-                getExpectedResult(/*line=*/23, /*column=*/1));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/5, /*column=*/1),
+                getExpectedResult(/*line=*/22, /*column=*/1));
 
             assert.deepEqual(
-                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/6, /*column=*/5),
-                getExpectedResult(/*line=*/23, /*column=*/4));
+                sm.generatedPositionFor(ABSOLUTE_SOURCES[1], /*line=*/5, /*column=*/5),
+                getExpectedResult(/*line=*/22, /*column=*/4));
         });
 
         // Discrepency with originalPositionFor bc that's the way the source-map lib works.
@@ -279,7 +278,7 @@ suite('SourceMap', () => {
         test('returns the last mapping when there is no matching mapping', () => {
             assert.deepEqual(
                 sm.generatedPositionFor(ABSOLUTE_SOURCES[0], /*line=*/1000, /*column=*/0),
-                getExpectedResult(/*line=*/18, /*column=*/1));
+                getExpectedResult(/*line=*/17, /*column=*/1));
         });
     });
 });
