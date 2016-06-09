@@ -6,12 +6,12 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
-import {Mock, It} from 'typemoq';
+import {Mock, MockBehavior, It} from 'typemoq';
 
 import {ISetBreakpointsResponseBody,
     ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../../src/chrome/debugAdapterInterfaces';
 import * as testUtils from '../../testUtils';
-import { MappingResult } from '../../../src/transformers/sourceMaps/sourceMaps';
+import {MappingResult, SourceMaps} from '../../../src/transformers/sourceMaps/sourceMaps';
 import * as utils from '../../../src/utils';
 
 const MODULE_UNDER_TEST = '../../../src/transformers/sourceMaps/sourceMapTransformer';
@@ -81,24 +81,27 @@ suite('SourceMapTransformer', () => {
             return args;
         }
 
-        function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Sinon.SinonMock {
-            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
-            mock.expects('mapPathFromSource')
-                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
-            mock.expects('mapPathFromSource')
-                .withExactArgs(AUTHORED_PATH2).returns(RUNTIME_PATH);
-            mock.expects('allMappedSources')
-                .twice()
-                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH, AUTHORED_PATH2]);
+        function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Mock<SourceMaps> {
+            const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
+            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mock
+                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .returns(() => RUNTIME_PATH).verifiable();
+            mock
+                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH2)))
+                .returns(() => RUNTIME_PATH).verifiable();
+            mock
+                .setup(x => x.allMappedSources(It.isValue(RUNTIME_PATH)))
+                .returns(() => [AUTHORED_PATH, AUTHORED_PATH2]).verifiable();
             args.lines.forEach((line, i) => {
-                mock.expects('mapFromSource')
-                    .withExactArgs(AUTHORED_PATH, line, 0)
-                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
+                mock
+                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
             });
             args2.lines.forEach((line, i) => {
-                mock.expects('mapFromSource')
-                    .withExactArgs(AUTHORED_PATH2, line, 0)
-                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] });
+                mock
+                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH2), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES2[i], column: RUNTIME_COLS2[i] })).verifiable();
             });
 
             return mock;
@@ -125,30 +128,35 @@ suite('SourceMapTransformer', () => {
         test(`if the source can't be mapped, waits until the runtime script is loaded`, () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_LINES);
             const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_LINES, RUNTIME_COLS);
+            const sourceMapURL = 'script.js.map';
 
-            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
-            mock.expects('mapPathFromSource')
-                .withExactArgs(AUTHORED_PATH).returns(null);
-            mock.expects('mapPathFromSource')
-                .withExactArgs(AUTHORED_PATH).returns(RUNTIME_PATH);
-            mock.expects('allMappedSources')
-                .twice()
-                .withExactArgs(RUNTIME_PATH).returns([AUTHORED_PATH]);
-            mock.expects('processNewSourceMap')
-                .withExactArgs(RUNTIME_PATH, 'script.js.map').returns(Promise.resolve<void>());
+            const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
+            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
+            mock
+                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .returns(() => null).verifiable();
+            mock
+                .setup(x => x.mapPathFromSource(It.isValue(AUTHORED_PATH)))
+                .returns(() => RUNTIME_PATH).verifiable();
+            mock
+                .setup(x => x.allMappedSources(It.isValue(RUNTIME_PATH)))
+                .returns(() => [AUTHORED_PATH]).verifiable();
+            mock
+                .setup(x => x.processNewSourceMap(It.isValue(RUNTIME_PATH), It.isValue(sourceMapURL)))
+                .returns(() => Promise.resolve<void>()).verifiable();
             args.lines.forEach((line, i) => {
-                mock.expects('mapFromSource')
-                    .withExactArgs(AUTHORED_PATH, line, 0)
-                    .returns({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] });
+                mock
+                    .setup(x => x.mapFromSource(It.isValue(AUTHORED_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => ({ path: RUNTIME_PATH, line: RUNTIME_LINES[i], column: RUNTIME_COLS[i] })).verifiable();
             });
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
-            const setBreakpointsP = transformer.setBreakpoints(args, 0).then(() => {
+            const setBreakpointsP = transformer.setBreakpoints(args, /*requestSeq=*/0).then(() => {
                 assert.deepEqual(args, expected);
-                mock.verify();
+                mock.verifyAll();
             });
 
-            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH, sourceMapURL: 'script.js.map' }));
+            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH, sourceMapURL }));
             return setBreakpointsP;
         });
 
@@ -163,7 +171,7 @@ suite('SourceMapTransformer', () => {
                 return transformer.setBreakpoints(args2, 1);
             }).then(() => {
                 assert.deepEqual(args2, expected);
-                mock.verify();
+                mock.verifyAll();
             });
         });
 
@@ -215,19 +223,19 @@ suite('SourceMapTransformer', () => {
 
                 const mock = createMergedSourcesMock(setBPArgs, setBPArgs2);
                 RUNTIME_LINES2.forEach((line, i) => {
-                    mock.expects('mapToSource')
-                        .withExactArgs(RUNTIME_PATH, line, 0)
-                        .returns({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i] });
+                    mock
+                        .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                        .returns(() => ({ path: AUTHORED_PATH2, line: AUTHORED_LINES2[i], column: 0 })).verifiable();
                 });
 
                 const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
-                return transformer.setBreakpoints(setBPArgs, 0).then(() => {
-                    return transformer.setBreakpoints(setBPArgs2, 1);
-                }).then(() => {
-                    transformer.setBreakpointsResponse(response, 1);
-                    assert.deepEqual(response, expected);
-                    mock.verify();
-                });
+                return transformer.setBreakpoints(setBPArgs, /*requestSeq=*/0)
+                    .then(() => transformer.setBreakpoints(setBPArgs2, /*requestSeq=*/1))
+                    .then(() => {
+                        transformer.setBreakpointsResponse(response, /*requestSeq=*/1);
+                        assert.deepEqual(response, expected);
+                        mock.verifyAll();
+                    });
             });
         });
     });
@@ -255,11 +263,13 @@ suite('SourceMapTransformer', () => {
         });
 
         test(`keeps the path when the file can't be sourcemapped if it's on disk`, () => {
-            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
+            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
 
             RUNTIME_LINES.forEach(line => {
-                mock.expects('mapToSource')
-                    .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
+                mock
+                    .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => null).verifiable();
             });
             utilsMock
                 .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
@@ -270,14 +280,17 @@ suite('SourceMapTransformer', () => {
 
             getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
+            mock.verifyAll();
         });
 
         test(`clears the path when it can't be sourcemapped and doesn't exist on disk`, () => {
-            const mock = testUtils.createRegisteredSinonMock('./sourceMaps', undefined, 'SourceMaps');
+            const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
+            mockery.registerMock('./sourceMaps', { SourceMaps: () => mock.object });
 
             RUNTIME_LINES.forEach(line => {
-                mock.expects('mapToSource')
-                    .withExactArgs(RUNTIME_PATH, line, 0).returns(null);
+                mock
+                    .setup(x => x.mapToSource(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                    .returns(() => null).verifiable();
             });
             utilsMock
                 .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
@@ -289,6 +302,7 @@ suite('SourceMapTransformer', () => {
 
             getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
+            mock.verifyAll();
         });
     });
 });

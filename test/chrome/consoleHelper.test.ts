@@ -56,7 +56,7 @@ suite('ConsoleHelper', () => {
 
     suite('console.assert()', () => {
         test(`Prints params and doesn't resolve format specifiers`, () => {
-            doAssert(Console.makeAssert('Fail %s 123', 456), 'Assertion failed: Fail %s 123 456\n  myFn @/script/a.js:4', true);
+            doAssert(Console.makeAssert('Fail %s 123', 456), 'Assertion failed: Fail %s 123 456\n-  myFn @/script/a.js:4', true);
         });
     });
 });
@@ -108,8 +108,10 @@ namespace Console {
     }
 
     export function makeAssert(...params: any[]): Chrome.Console.Message {
-        const fakeStackTrace = [{ url: '/script/a.js', lineNumber: 4, functionName: 'myFn' }];
-        return makeMockMessage('assert', params, { level: 'error', stackTrace: fakeStackTrace });
+        const fakeStackTrace = {
+            callFrames: [{ url: '/script/a.js', lineNumber: 4, functionName: 'myFn' }]
+        };
+        return makeMockMessage('assert', params, { level: 'error', stack: fakeStackTrace });
     }
 
     export function makeNetworkLog(text: string, url: string): Chrome.Console.Message {

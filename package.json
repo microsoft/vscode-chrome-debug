@@ -27,7 +27,6 @@
     "merge2": "^1.0.1",
     "mocha": "^2.4.5",
     "mockery": "^1.4.1",
-    "sinon": "^1.17.3",
     "tslint": "^3.10.2",
     "tslint-eslint-rules": "^1.3.0",
     "tslint-microsoft-contrib": "^2.0.3",

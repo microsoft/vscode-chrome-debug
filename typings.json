@@ -8,9 +8,6 @@
     "mocha": "registry:dt/mocha#2.2.5+20160317120654",
     "mockery": "registry:dt/mockery#1.4.0+20160316155526",
     "node": "registry:dt/node#6.0.0+20160524002506",
-    "sinon": "registry:dt/sinon#1.16.0+20160517064723",
-    "ws": "registry:dt/ws#0.0.0+20160317120654",
-    "typemoq": "file:.\\node_modules\\typemoq\\typemoq.d.ts",
-    "typemoq-node": "file:.\\node_modules\\typemoq\\typemoq.node.d.ts"
+    "ws": "registry:dt/ws#0.0.0+20160317120654"
   }
 }
