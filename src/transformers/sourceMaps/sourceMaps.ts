@@ -82,34 +82,21 @@ export class SourceMaps {
             return Promise.resolve(this._generatedPathToSourceMap.get(pathToGenerated));
         }
 
+        // For an inlined sourcemap, mapPath is a data URI containing a blob of base64 encoded data, starting
+        // with a tag like "data:application/json;charset:utf-8;base64,". The data should start after the last comma.
+        let sourceMapContentsP: Promise<string>;
         if (mapPath.indexOf('data:application/json') >= 0) {
-            logger.log(`SourceMaps.findGeneratedToSourceMapping: Using inlined sourcemap in ${pathToGenerated}`);
-
-            // sourcemap is inlined
-            const pos = mapPath.lastIndexOf(',');
-            const data = mapPath.substr(pos + 1);
-            try {
-                const buffer = new Buffer(data, 'base64');
-                const json = buffer.toString();
-                if (json) {
-                    const map = new SourceMap(pathToGenerated, json, this._webRoot);
-                    this._generatedPathToSourceMap.set(pathToGenerated, map);
-                    return Promise.resolve(map);
-                }
-            } catch (e) {
-                logger.log(`SourceMaps.findGeneratedToSourceMapping: exception while processing data url (${e.stack})`);
-            }
-
-            return Promise.resolve(null);
+            // Sourcemap is inlined
+            return Promise.resolve(this.createInlineSourceMap(pathToGenerated, mapPath));
         }
 
-        // if path is relative make it absolute
+        // mapPath needs to be resolved to an absolute path or a URL
         if (!path.isAbsolute(mapPath)) {
             if (path.isAbsolute(pathToGenerated)) {
                 // runtime script is on disk, so map should be too
                 mapPath = pathUtils.makePathAbsolute(pathToGenerated, mapPath);
             } else {
-                // runtime script is not on disk, construct the full url for the source map
+                // runtime script is not on disk, resolve a URL for the map relative to the script
                 const scriptUrl = url.parse(pathToGenerated);
                 mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${path.dirname(scriptUrl.pathname)}/${mapPath}`;
             }
@@ -117,6 +104,7 @@ export class SourceMaps {
 
         return this.createSourceMap(mapPath, pathToGenerated).then(map => {
             if (!map) {
+                // Last ditch effort - just look for a .js.map next to the script
                 const mapPathNextToSource = pathToGenerated + '.map';
                 if (mapPathNextToSource !== mapPath) {
                     return this.createSourceMap(mapPathNextToSource, pathToGenerated);
@@ -127,26 +115,55 @@ export class SourceMaps {
         }).then(map => {
             if (map) {
                 this._generatedPathToSourceMap.set(pathToGenerated, map);
+                // And populate the other map
             }
 
-            return map || null;
+            return map;
         });
     }
 
-    private createSourceMap(mapPath: string, pathToGenerated: string): Promise<SourceMap> {
+    /**
+     * Creates a SourceMap from inlined sourcemap data
+     */
+    private createInlineSourceMap(pathToGenerated: string, sourceMapData: string): SourceMap {
+        logger.log(`SourceMaps.createInlineSourceMap: Using inlined sourcemap in ${pathToGenerated}`);
+
+        const lastCommaPos = sourceMapData.lastIndexOf(',');
+        if (lastCommaPos < 0) {
+            logger.log(`SourceMaps.createInlineSourceMap: Inline sourcemap is malformed. Starts with: ${sourceMapData.substr(0, 200)}`);
+            return null;
+        }
+
+        const data = sourceMapData.substr(lastCommaPos + 1);
+        try {
+            const buffer = new Buffer(data, 'base64');
+            const json = buffer.toString();
+            if (json) {
+                const map = new SourceMap(pathToGenerated, json, this._webRoot);
+                this._generatedPathToSourceMap.set(pathToGenerated, map);
+                return map;
+            }
+        } catch (e) {
+            logger.log(`SourceMaps.createInlineSourceMap: exception while processing data url (${e.stack})`);
+        }
+
+        return null;
+    }
+
+    private createSourceMap(mapPathOrURL: string, pathToGenerated: string): Promise<SourceMap> {
         let contentsP: Promise<string>;
-        if (utils.isURL(mapPath)) {
-            logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPath}`);
-            contentsP = utils.getURL(mapPath).catch(e => {
-                logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPath}`);
+        if (utils.isURL(mapPathOrURL)) {
+            logger.log(`SourceMaps.createSourceMap: Downloading sourcemap file from ${mapPathOrURL}`);
+            contentsP = utils.getURL(mapPathOrURL).catch(e => {
+                logger.log(`SourceMaps.createSourceMap: Could not download map from ${mapPathOrURL}`);
                 return null;
             });
         } else {
             contentsP = new Promise((resolve, reject) => {
-                logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPath}`);
-                fs.readFile(mapPath, (err, data) => {
+                logger.log(`SourceMaps.createSourceMap: Reading local sourcemap file from ${mapPathOrURL}`);
+                fs.readFile(mapPathOrURL, (err, data) => {
                     if (err) {
-                        logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPath}`);
+                        logger.log(`SourceMaps.createSourceMap: Could not read map from ${mapPathOrURL}`);
                         resolve(null);
                     } else {
                         resolve(data);
