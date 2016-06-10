@@ -40,7 +40,7 @@ suite('PathUtilities', () => {
         test('handles file:/// sourceRoot', () => {
             assert.equal(
                 getAbsSourceRoot('file:///' + ABS_SOURCEROOT, WEBROOT, GEN_PATH),
-                'c:\\project\\src');
+                ABS_SOURCEROOT);
         });
 
         test('handles /src style sourceRoot', () => {
@@ -52,7 +52,7 @@ suite('PathUtilities', () => {
         test('handles ../../src style sourceRoot', () => {
             assert.equal(
                 getAbsSourceRoot('../../src', WEBROOT, GEN_PATH),
-                'c:\\project\\src');
+                ABS_SOURCEROOT);
         });
 
         test('handles src style sourceRoot', () => {

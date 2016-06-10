@@ -71,7 +71,7 @@ function getSourceMapContent(pathToGenerated: string, mapPath: string): Promise<
         // mapPath needs to be resolved to an absolute path or a URL
         if (path.isAbsolute(pathToGenerated)) {
             // runtime script is on disk, so map should be too
-            mapPath = pathUtils.makePathAbsolute(pathToGenerated, mapPath);
+            mapPath = pathUtils.resolveRelativeToFile(pathToGenerated, mapPath);
         } else {
             // runtime script is not on disk, resolve a URL for the map relative to the script
             const scriptUrl = url.parse(pathToGenerated);

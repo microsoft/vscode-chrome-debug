@@ -145,20 +145,21 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * http://site.com/scripts/code.js => (no change)
  * http://site.com/ => http://site.com
  */
-export function canonicalizeUrl(aUrl: string): string {
-    if (aUrl.startsWith('file:///')) {
-        aUrl = aUrl.replace('file:///', '');
-        if (aUrl[0] !== '/' && aUrl.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
+export function canonicalizeUrl(urlOrPath: string): string {
+    if (urlOrPath.startsWith('file:///')) {
+        urlOrPath = urlOrPath.replace('file:///', '');
+        urlOrPath = decodeURIComponent(urlOrPath);
+        if (urlOrPath[0] !== '/' && urlOrPath.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
             // Ensure osx path starts with /, it can be removed when file:/// was stripped.
             // Don't add if the url still has a protocol
-            aUrl = '/' + aUrl;
+            urlOrPath = '/' + urlOrPath;
         }
     }
 
-    aUrl = stripTrailingSlash(aUrl);
-    aUrl = fixDriveLetterAndSlashes(aUrl);
+    urlOrPath = stripTrailingSlash(urlOrPath);
+    urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
 
-    return aUrl;
+    return urlOrPath;
 }
 
 /**

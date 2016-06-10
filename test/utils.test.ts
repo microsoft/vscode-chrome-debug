@@ -181,6 +181,10 @@ suite('Utils', () => {
             testCanUrl('file:///c:/file.js', 'c:\\file.js');
         });
 
+        test('unescape when doing url -> path', () => {
+            testCanUrl('file:///c:/path%20with%20spaces', 'c:\\path with spaces');
+        });
+
         test('ensures local path starts with / on OSX', () => {
             mockery.registerMock('os', { platform: () => 'darwin' });
             testCanUrl('file:///Users/scripts/app.js', '/Users/scripts/app.js');

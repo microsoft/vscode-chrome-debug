@@ -19,8 +19,6 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
         return '';
     }
 
-    aUrl = decodeURI(aUrl);
-
     // If the url is an absolute path to a file that exists, return it without file:///.
     // A remote absolute url (cordova) will still need the logic below.
     const canonicalUrl = utils.canonicalizeUrl(aUrl);
