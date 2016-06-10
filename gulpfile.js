@@ -12,6 +12,8 @@ const mocha = require('gulp-mocha');
 const tslint = require('gulp-tslint');
 const merge = require('merge2');
 const debug = require('gulp-debug');
+const del = require('del');
+const plumber = require('gulp-plumber');
 
 const sources = [
     'src',
@@ -46,6 +48,7 @@ const projectConfig = {
 
 gulp.task('build', () => {
     const tsResult = gulp.src(tsBuildSources, { base: '.' })
+        .pipe(plumber())
         .pipe(sourcemaps.init())
         .pipe(ts(projectConfig));
 
@@ -60,6 +63,10 @@ gulp.task('build', () => {
         gulp.src(testDataDir + 'app*', { base: '.' })
             .pipe(gulp.dest('out'))
 	]);
+});
+
+gulp.task('clean', () => {
+    return del(['out', 'lib']);
 });
 
 gulp.task('watch', ['build'], () => {
