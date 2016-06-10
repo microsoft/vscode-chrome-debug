@@ -33,7 +33,7 @@ export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string,
                 // Throws for invalid JSON
                 return new SourceMap(pathToGenerated, contents, webRoot);
             } catch (e) {
-                logger.log(`SourceMaps.getMapForGeneratedPath: exception while processing sourcemap: ${e.stack}`);
+                logger.error(`SourceMaps.getMapForGeneratedPath: exception while processing sourcemap: ${e.stack}`);
                 return null;
             }
         } else {
@@ -57,7 +57,7 @@ function getInlineSourceMapContents(sourceMapData: string): string {
         const buffer = new Buffer(data, 'base64');
         return buffer.toString();
     } catch (e) {
-        logger.log(`SourceMaps.getInlineSourceMapContents: exception while processing data uri (${e.stack})`);
+        logger.error(`SourceMaps.getInlineSourceMapContents: exception while processing data uri (${e.stack})`);
     }
 
     return null;
@@ -97,7 +97,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
     if (utils.isURL(mapPathOrURL)) {
         logger.log(`SourceMaps.loadSourceMapContents: Downloading sourcemap file from ${mapPathOrURL}`);
         contentsP = utils.getURL(mapPathOrURL).catch(e => {
-            logger.log(`SourceMaps.loadSourceMapContents: Could not download map from ${mapPathOrURL}`);
+            logger.error(`SourceMaps.loadSourceMapContents: Could not download map from ${mapPathOrURL}`);
             return null;
         });
     } else {
@@ -105,7 +105,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
             logger.log(`SourceMaps.loadSourceMapContents: Reading local sourcemap file from ${mapPathOrURL}`);
             fs.readFile(mapPathOrURL, (err, data) => {
                 if (err) {
-                    logger.log(`SourceMaps.loadSourceMapContents: Could not read map from ${mapPathOrURL}`);
+                    logger.error(`SourceMaps.loadSourceMapContents: Could not read map from ${mapPathOrURL}`);
                     resolve(null);
                 } else {
                     resolve(data);

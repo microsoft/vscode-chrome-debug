@@ -36,13 +36,16 @@ export class SourceMaps {
     }
 
     public mapToAuthored(pathToGenerated: string, line: number, column: number): MappedPosition {
-        const map = this._generatedPathToSourceMap.get(pathToGenerated);
-        return map ? map.authoredPositionFor(line, column) : null;
+        return this._generatedPathToSourceMap.has(pathToGenerated) ?
+            this._generatedPathToSourceMap.get(pathToGenerated)
+                .authoredPositionFor(line, column) :
+            null;
     }
 
     public allMappedSources(pathToGenerated: string): string[] {
-        const map = this._generatedPathToSourceMap.get(pathToGenerated);
-        return map ? map.authoredSources : null;
+        return this._generatedPathToSourceMap.has(pathToGenerated) ?
+            this._generatedPathToSourceMap.get(pathToGenerated).authoredSources :
+            null;
     }
 
     /**
