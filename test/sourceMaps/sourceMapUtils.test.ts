@@ -8,11 +8,11 @@ import * as mockery from 'mockery';
 import * as testUtils from '../testUtils';
 
 // Don't use - imported without mocks for type
-import {getAbsSourceRoot as _getAbsSourceRoot} from '../../src/sourceMaps/pathUtilities';
+import {getAbsSourceRoot as _getAbsSourceRoot} from '../../src/sourceMaps/sourceMapUtils';
 
-const MODULE_UNDER_TEST = '../../src/sourceMaps/pathUtilities';
+const MODULE_UNDER_TEST = '../../src/sourceMaps/sourceMapUtils';
 
-suite('PathUtilities', () => {
+suite('SourceMapUtils', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 

@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 import {SourceMap, MappedPosition} from './sourceMap';
-
 import {getMapForGeneratedPath} from './sourceMapFactory';
 
 export class SourceMaps {

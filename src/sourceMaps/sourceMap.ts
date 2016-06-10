@@ -5,7 +5,7 @@
 import {SourceMapConsumer, MappedPosition} from 'source-map';
 import * as path from 'path';
 
-import * as pathUtils from './pathUtilities';
+import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
@@ -26,7 +26,7 @@ export class SourceMap {
         this._generatedPath = generatedPath;
 
         const sm = JSON.parse(json);
-        const absSourceRoot = pathUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
+        const absSourceRoot = sourceMapUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once

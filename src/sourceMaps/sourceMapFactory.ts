@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
 
-import * as pathUtils from './pathUtilities';
+import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import {SourceMap} from './sourceMap';
@@ -71,7 +71,7 @@ function getSourceMapContent(pathToGenerated: string, mapPath: string): Promise<
         // mapPath needs to be resolved to an absolute path or a URL
         if (path.isAbsolute(pathToGenerated)) {
             // runtime script is on disk, so map should be too
-            mapPath = pathUtils.resolveRelativeToFile(pathToGenerated, mapPath);
+            mapPath = sourceMapUtils.resolveRelativeToFile(pathToGenerated, mapPath);
         } else {
             // runtime script is not on disk, resolve a URL for the map relative to the script
             const scriptUrl = url.parse(pathToGenerated);
