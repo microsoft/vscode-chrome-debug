@@ -6,8 +6,10 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {IStackTraceResponseBody} from '../src/chrome/debugAdapterInterfaces';
 
+import {Mock, It, MockBehavior} from 'typemoq';
 import * as path from 'path';
 import * as mockery from 'mockery';
+import * as fs from 'fs';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -87,4 +89,15 @@ export function pathResolve(...segments: string[]): string {
     }
 
     return aPath;
+}
+
+export function registerMockReadFile(...entries: { absPath: string; data: string }[]): void {
+    const fsMock = Mock.ofInstance(fs, MockBehavior.Strict);
+    mockery.registerMock('fs', fsMock.object);
+
+    entries.forEach(entry => {
+        fsMock
+            .setup(x => x.readFile(It.isValue(entry.absPath), It.isAny()))
+            .callback((path, callback) => callback(null, entry.data));
+    });
 }
