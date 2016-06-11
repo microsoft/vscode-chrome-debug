@@ -5,9 +5,9 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
-import { IDebugAdapter } from './debugAdapterInterfaces';
+import {IDebugAdapter} from './debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
-import {ChromeConnection} from './chromeConnection';
+import {ChromeConnection, ITargetFilter} from './chromeConnection';
 
 import * as logger from '../logger';
 
@@ -16,14 +16,41 @@ import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 
+export interface IChromeDebugSessionOpts {
+    adapter?: IDebugAdapter;
+    targetFilter?: ITargetFilter;
+}
+
 export class ChromeDebugSession extends DebugSession {
     private _adapterProxy: AdapterProxy;
+
+    /**
+     * This needs a bit of explanation -
+     * We call DebugSession.run to create the connection to VS Code, which takes a Class extending DebugSession,
+     * not an instance. That's problematic because a class can't be naturally configured the way an instance
+     * would be. So this factory function dynamically creates a class which has 'opts' in a closure and can
+     * instantiate ChromeDebugSession with it. Otherwise all consumers would need to subclass ChromeDebugSession
+     * in a sort of non-obvious way.
+     */
+    public static getSession(opts: IChromeDebugSessionOpts): typeof ChromeDebugSession {
+        // class expression!
+        return class extends ChromeDebugSession {
+            constructor(
+                targetLinesStartAt1: boolean,
+                isServer = false) {
+                super(targetLinesStartAt1, isServer, opts);
+            }
+        };
+    }
 
     public constructor(
         targetLinesStartAt1: boolean,
         isServer = false,
-        adapter: IDebugAdapter = new ChromeDebugAdapter(new ChromeConnection())) {
+        opts: IChromeDebugSessionOpts = {}) {
         super(targetLinesStartAt1, isServer);
+
+        const connection = new ChromeConnection(opts.targetFilter);
+        const adapter = opts.adapter || new ChromeDebugAdapter(connection);
 
         logger.init(isServer, (msg, level) => this.onLog(msg, level));
         process.addListener('unhandledRejection', reason => {

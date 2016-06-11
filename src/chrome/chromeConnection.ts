@@ -134,14 +134,20 @@ class ResReqWebSocket extends EventEmitter {
     }
 }
 
+export type ITargetFilter = (target: Chrome.ITarget) => boolean;
+
 /**
  * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
  */
 export class ChromeConnection {
     private _nextId: number;
     private _socket: ResReqWebSocket;
+    private _targetFilter: ITargetFilter;
 
-    constructor() {
+    constructor(targetFilter?: ITargetFilter) {
+        // Take the custom targetFilter, default to returning all targets
+        this._targetFilter = targetFilter || (target => true);
+
         // this._socket should exist before attaching so consumers can call on() before attach, which fires events
         this.reset();
     }
@@ -171,7 +177,7 @@ export class ChromeConnection {
                 if (Array.isArray(responseArray)) {
                     // Filter out extension targets and other things
                     // Non-chrome scenarios don't always specify a type, so filter to include ones without a type at all
-                    let pages = responseArray.filter(target => target && (!target.type || target.type === 'page'));
+                    let pages = responseArray.filter(this._targetFilter);
 
                     // If a url was specified (launch mode), try to filter to that url
                     if (url) {

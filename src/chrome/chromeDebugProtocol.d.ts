@@ -249,3 +249,13 @@ export namespace Console {
         executionContextId?: number;
     }
 }
+
+export interface ITarget {
+    description: string;
+    devtoolsFrontendUrl: string;
+    id: string;
+    thumbnailUrl?: string;
+    title: string;
+    type: string;
+    webSocketDebuggerUrl: string;
+}
