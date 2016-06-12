@@ -23,9 +23,9 @@ export function error(msg: string, forceDiagnosticLogging = true): void {
     log(msg, LogLevel.Error, forceDiagnosticLogging);
 }
 
-export function init(isServer: boolean, logCallback: ILogCallback): void {
+export function init(isServer: boolean, logCallback: ILogCallback, logFileDirectory?: string): void {
     if (!_logger) {
-        _logger = new Logger(isServer, logCallback);
+        _logger = new Logger(isServer, logCallback, logFileDirectory);
 
         if (isServer) {
             logVersionInfo();
@@ -58,6 +58,9 @@ class Logger {
     /** True when running in 'server' mode - i.e. running the project on its own, and the test app having 'debugServer' set. */
     public isServer: boolean;
 
+    /** The directory in which to log vscode-chrome-debug.txt */
+    private _logFileDirectory: string;
+
     /** True when logging is enabled outside of server mode */
     private _diagnosticLoggingEnabled: boolean;
 
@@ -72,17 +75,20 @@ class Logger {
     public set diagnosticLoggingEnabled(enabled: boolean) {
         this._diagnosticLoggingEnabled = enabled;
 
-        // Create a log file under the extension's (or module's) root. Overwritten on each run.
-        const logPath = path.resolve(__dirname, '../../vscode-chrome-debug.txt');
-        this._logFileStream = fs.createWriteStream(logPath);
-        this._logFileStream.on('error', e => {
-            this._sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
-        });
+        // Open a log file in the specified location. Overwritten on each run.
+        if (this._logFileDirectory) {
+            const logPath = path.join(this._logFileDirectory, 'vscode-chrome-debug.txt');
+            this._logFileStream = fs.createWriteStream(logPath);
+            this._logFileStream.on('error', e => {
+                this._sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
+            });
+        }
     }
 
-    constructor(isServer: boolean, logCallback: ILogCallback) {
+    constructor(isServer: boolean, logCallback: ILogCallback, logFileDirectory?: string) {
         this.isServer = isServer;
         this._diagnosticLogCallback = logCallback;
+        this._logFileDirectory = logFileDirectory;
     }
 
     /**
