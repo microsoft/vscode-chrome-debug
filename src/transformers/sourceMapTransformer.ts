@@ -163,7 +163,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                 const mapped = this._sourceMaps.mapToAuthored(stackFrame.source.path, stackFrame.line, stackFrame.column);
                 if (mapped && utils.existsSync(mapped.source)) {
                     // Script was mapped to a valid path
-                    stackFrame.source.path = utils.canonicalizeUrl(mapped.source);
+                    stackFrame.source.path = mapped.source;
                     stackFrame.source.sourceReference = 0;
                     stackFrame.source.name = path.basename(mapped.source);
                     stackFrame.line = mapped.line;
@@ -173,6 +173,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     stackFrame.source.sourceReference = 0;
                 } else {
                     // Script could not be mapped and doesn't exist on disk. Clear the path, use sourceReference.
+                    stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
                     stackFrame.source.path = undefined;
                 }
             });

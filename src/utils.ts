@@ -156,6 +156,11 @@ export function canonicalizeUrl(urlOrPath: string): string {
         }
     }
 
+    // Remove query params
+    if (urlOrPath.indexOf('?') >= 0) {
+        urlOrPath = urlOrPath.split('?')[0];
+    }
+
     urlOrPath = stripTrailingSlash(urlOrPath);
     urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
 

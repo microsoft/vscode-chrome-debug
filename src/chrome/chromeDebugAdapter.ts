@@ -27,6 +27,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
+    private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
 
     private _initArgs: DebugProtocol.InitializeRequestArguments;
     private _isLoggingInitialized: boolean;
@@ -38,8 +39,10 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _overlayHelper: utils.DebounceHelper;
     private _exceptionValueObject: Chrome.Runtime.RemoteObject;
     private _expectingResumedEvent: boolean;
-    private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _setBreakpointsRequestQ: Promise<any>;
+
+    private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
+    private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
 
     private _chromeProc: ChildProcess;
     private _chromeConnection: ChromeConnection;
@@ -59,6 +62,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     private clearTargetContext(): void {
         this._scriptsById = new Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>();
+        this._scriptsByUrl = new Map<string, Chrome.Debugger.Script>();
+
         this._committedBreakpointsByUrl = new Map<string, Chrome.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
 
@@ -278,11 +283,18 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     private onScriptParsed(script: Chrome.Debugger.Script): void {
-        this._scriptsById.set(script.scriptId, script);
-
-        if (!this.isExtensionScript(script)) {
-            this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url, sourceMapURL: script.sourceMapURL }));
+        // Totally ignore extension scripts, internal Chrome scripts, and so on
+        if (this.shouldIgnoreScript(script)) {
+            return;
         }
+
+        if (!script.url) {
+            script.url = ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL + script.scriptId;
+        }
+
+        this._scriptsById.set(script.scriptId, script);
+        this._scriptsByUrl.set(script.url, script);
+        this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url, sourceMapURL: script.sourceMapURL }));
     }
 
     private onBreakpointResolved(params: Chrome.Debugger.BreakpointResolvedParams): void {
@@ -366,16 +378,22 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         });
     }
 
-    private _addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointByUrlResponse[]> {
-        // Call setBreakpoint for all breakpoints in the script simultaneously
-        const responsePs = lines
-            .map((lineNumber, i) => this._chromeConnection.debugger_setBreakpointByUrl(url, lineNumber, cols ? cols[i] : 0));
+    private _addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
+        let scriptId: string;
+        if (url.startsWith(ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL)) {
+            scriptId = utils.lstrip(url, ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL);
+        } else {
+            const script = this._scriptsByUrl.get(url);
+            scriptId = script.scriptId;
+        }
+
+        const responsePs = lines.map((lineNumber, i) => this._chromeConnection.debugger_setBreakpoint({ scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
 
         // Join all setBreakpoint requests to a single promise
-        return Promise.all<Chrome.Debugger.SetBreakpointByUrlResponse>(responsePs);
+        return Promise.all(responsePs);
     }
 
-    private _chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointByUrlResponse[], requestLines: number[]): IBreakpoint[] {
+    private _chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): IBreakpoint[] {
         // Don't cache errored responses
         const committedBpIds = responses
             .filter(response => !response.error)
@@ -389,7 +407,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             .map((response, i) => {
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
-                if (response.error || !response.result.locations.length) {
+                if (response.error || !response.result.actualLocation) {
                     return <IBreakpoint>{
                         verified: false,
                         line: requestLines[i],
@@ -399,8 +417,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
                 return <IBreakpoint>{
                     verified: true,
-                    line: response.result.locations[0].lineNumber,
-                    column: response.result.locations[0].columnNumber
+                    line: response.result.actualLocation.lineNumber,
+                    column: response.result.actualLocation.columnNumber
                 };
             });
     }
@@ -456,16 +474,16 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
 
         const stackFrames: DebugProtocol.StackFrame[] = stack
-            .map((callFrame: Chrome.Debugger.CallFrame, i: number) => {
-                const script = this._scriptsById.get(callFrame.location.scriptId);
-                const line = callFrame.location.lineNumber;
-                const column = callFrame.location.columnNumber;
+            .map(({ location, functionName }, i: number) => {
+                const line = location.lineNumber;
+                const column = location.columnNumber;
+                const script = this._scriptsById.get(location.scriptId);
 
                 try {
-                    // When the script has a url and isn't a content script, send the name and path fields. PathTransformer will
+                    // When the script has a url and isn't one we're ignoring, send the name and path fields. PathTransformer will
                     // attempt to resolve it to a script in the workspace. Otherwise, send the name and sourceReference fields.
                     const source: DebugProtocol.Source =
-                        script.url && !this.isExtensionScript(script) ?
+                        script && !this.shouldIgnoreScript(script) ?
                             {
                                 name: path.basename(script.url),
                                 path: script.url,
@@ -473,13 +491,14 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                             } :
                             {
                                 // Name should be undefined, work around VS Code bug 20274
-                                name: 'eval: ' + script.scriptId,
-                                sourceReference: scriptIdToSourceReference(script.scriptId)
+                                name: 'eval: ' + location.scriptId,
+                                path: ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL + location.scriptId,
+                                sourceReference: scriptIdToSourceReference(location.scriptId)
                             };
 
                     // If the frame doesn't have a function name, it's either an anonymous function
                     // or eval script. If its source has a name, it's probably an anonymous function.
-                    const frameName = callFrame.functionName || (script.url ? '(anonymous function)' : '(eval code)');
+                    const frameName = functionName || (script.url ? '(anonymous function)' : '(eval code)');
                     return {
                         id: i,
                         name: frameName,
@@ -627,8 +646,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return result;
     }
 
-    private isExtensionScript(script: Chrome.Debugger.Script): boolean {
-        return script.isContentScript || !script.url || script.url.startsWith('extensions::') || script.url.startsWith('chrome-extension://');
+    private shouldIgnoreScript(script: Chrome.Debugger.Script): boolean {
+        return script.isContentScript || script.isInternalScript || script.url.startsWith('extensions::') || script.url.startsWith('chrome-extension://');
     }
 }
 
