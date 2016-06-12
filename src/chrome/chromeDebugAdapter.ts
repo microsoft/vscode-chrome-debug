@@ -531,7 +531,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             }
 
             return <DebugProtocol.Scope>{
-                name: scope.type,
+                name: scope.type.substr(0, 1).toUpperCase() + scope.type.substr(1), // Take Chrome's scope, uppercase the first letter
                 variablesReference: this._variableHandles.create(scopeHandle),
                 expensive: scope.type === 'global'
             };
