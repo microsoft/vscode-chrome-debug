@@ -12,8 +12,8 @@
   "typings": "./lib/index",
   "dependencies": {
     "source-map": "^0.5.6",
-    "vscode-debugadapter": "^1.8.0-pre.4",
-    "vscode-debugprotocol": "^1.8.0-pre.3",
+    "vscode-debugadapter": "^1.9.0",
+    "vscode-debugprotocol": "^1.9.0",
     "ws": "0.8.0"
   },
   "devDependencies": {
