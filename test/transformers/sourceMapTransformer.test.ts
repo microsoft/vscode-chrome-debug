@@ -284,7 +284,7 @@ suite('SourceMapTransformer', () => {
             mock.verifyAll();
         });
 
-        test(`clears the path when it can't be sourcemapped and doesn't exist on disk`, () => {
+        test(`clears the path and name when it can't be sourcemapped and doesn't exist on disk`, () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
 
@@ -299,7 +299,10 @@ suite('SourceMapTransformer', () => {
 
             const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
-            expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
+            expected.stackFrames.forEach(stackFrame => {
+                stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
+                stackFrame.source.path = undefined;
+            });
 
             getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);

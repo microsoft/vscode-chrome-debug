@@ -195,9 +195,10 @@ suite('Utils', () => {
             testCanUrl('file:///D:/FILE.js', 'd:\\FILE.js');
         });
 
-        test('http:// url - no change', () => {
-            const url = 'http://site.com/My/Cool/Site/script.js?stuff';
-            testCanUrl(url, url);
+        test('removes query params from url', () => {
+            const cleanUrl = 'http://site.com/My/Cool/Site/script.js';
+            const url = cleanUrl + '?stuff';
+            testCanUrl(url, cleanUrl);
         });
 
         test('strips trailing slash', () => {
