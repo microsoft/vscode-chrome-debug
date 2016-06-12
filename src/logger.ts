@@ -105,6 +105,8 @@ class Logger {
     }
 
     private _sendLog(msg: string, level: LogLevel): void {
+        if (msg.length > 1500) msg = msg.substr(0, 1500) + ' [...]';
+
         // In server mode, console APIs are ok. Outside of server mode, VS Code is watching stdin/out, so never use console APIs.
         if (this.isServer) {
             (level === LogLevel.Log ? console.log : console.error)(msg);
