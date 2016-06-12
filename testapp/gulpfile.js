@@ -52,7 +52,7 @@ gulp.task('bs-reload', ['build'], function() {
     browserSync.reload();
 });
 
-gulp.task('watch', ['serve'], function (cb) {
+gulp.task('watch', ['build', 'serve'], function (cb) {
     log('Watching build sources...');
     gulp.watch(sources, ['build', 'bs-reload']);
 });
