@@ -343,9 +343,9 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         if (targetScriptUrl) {
             // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
             const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                .then(() => this._clearAllBreakpoints(targetScriptUrl))
-                .then(() => this._addBreakpoints(targetScriptUrl, args.lines, args.cols))
-                .then(responses => ({ breakpoints: this._chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
+                .then(() => this.clearAllBreakpoints(targetScriptUrl))
+                .then(() => this.addBreakpoints(targetScriptUrl, args.lines, args.cols))
+                .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
 
             const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
 
@@ -362,7 +362,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return Promise.resolve<void>();
     }
 
-    private _clearAllBreakpoints(url: string): Promise<void> {
+    private clearAllBreakpoints(url: string): Promise<void> {
         if (!this._committedBreakpointsByUrl.has(url)) {
             return Promise.resolve<void>();
         }
@@ -378,7 +378,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         });
     }
 
-    private _addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
+    private addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
         let scriptId: string;
         if (url.startsWith(ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL)) {
             scriptId = utils.lstrip(url, ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL);
@@ -393,7 +393,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return Promise.all(responsePs);
     }
 
-    private _chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): IBreakpoint[] {
+    private chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): IBreakpoint[] {
         // Don't cache errored responses
         const committedBpIds = responses
             .filter(response => !response.error)

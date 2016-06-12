@@ -126,7 +126,7 @@ suite('ChromeDebugAdapter', () => {
         }
 
         function emitScriptParsed(url = FILE_NAME, scriptId = SCRIPT_ID): void {
-            mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId: SCRIPT_ID, url: FILE_NAME });
+            mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId, url });
         }
 
         test('When setting one breakpoint, returns the correct result', () => {
@@ -212,6 +212,39 @@ suite('ChromeDebugAdapter', () => {
                 })
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
+
+        test('returns the actual location specified by the runtime', () => {
+            const lines = [5];
+            const cols = [6];
+
+            // Set up the mock to return a different location
+            const location: Chrome.Debugger.Location = {
+                scriptId: SCRIPT_ID, lineNumber: lines[0] + 10, columnNumber: cols[0] + 10 };
+            const expectedResponse: ISetBreakpointsResponseBody = {
+                breakpoints: [{ line: location.lineNumber, column: location.columnNumber, verified: true }]};
+
+            mockChromeConnection
+                .setup(x => x.debugger_setBreakpoint(It.isAny()))
+                .returns(() => Promise.resolve(
+                    <Chrome.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: BP_ID + '0', actualLocation: location } }))
+                .verifiable();
+
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => emitScriptParsed())
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(response => assert.deepEqual(response, expectedResponse));
+        });
+
+        test('setting breakpoints in a sourcemapped eval script handles the placeholder url', () => {
+            const lines = [5];
+            const cols = [6];
+            expectSetBreakpoint(lines, cols);
+
+            return chromeDebugAdapter.attach(ATTACH_ARGS)
+                .then(() => emitScriptParsed(/*url=*/'', SCRIPT_ID))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, lines, cols }))
+                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+        });
     });
 
     suite('launch()', () => {
@@ -244,7 +277,7 @@ suite('ChromeDebugAdapter', () => {
         });
     });
 
-    suite('Console.onMessageAdded', () => {
+    suite('Console.messageAdded', () => {
         test('Fires an output event when a console message is added', () => {
             const testLog = 'Hello, world!';
             let outputEventFired = false;
@@ -272,6 +305,45 @@ suite('ChromeDebugAdapter', () => {
                         { type: 'string', value: testLog }
                     ]
                 }
+            });
+        });
+    });
+
+    suite('Debugger.scriptParsed', () => {
+        const FILE_NAME = 'file:///a.js';
+        const SCRIPT_ID = '1';
+        function emitScriptParsed(url = FILE_NAME, scriptId = SCRIPT_ID, otherArgs: any = {}): void {
+            otherArgs.url = url;
+            otherArgs.scriptId = scriptId;
+
+            mockEventEmitter.emit('Debugger.scriptParsed', otherArgs);
+        }
+
+        test('adds default url when missing', () => {
+            let scriptParsedFired = false;
+            return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
+                chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+                    if (event.event === 'scriptParsed') {
+                        // Assert that the event is fired with some scriptUrl
+                        scriptParsedFired = true;
+                        assert(event.body.scriptUrl);
+                    } else {
+                        assert.fail('An unexpected event was fired: ' + event.event);
+                    }
+                });
+
+                emitScriptParsed(/*url=*/'');
+                assert(scriptParsedFired);
+            });
+        });
+
+        test('ignores internal scripts', () => {
+            return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
+                chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+                    assert.fail('No event should be fired: ' + event.event);
+                });
+
+                emitScriptParsed(/*url=*/'', undefined, { isInternalScript: true });
             });
         });
     });
