@@ -16,6 +16,8 @@ import {SourceMap} from './sourceMap';
  * mapPath - a path relative to pathToGenerated.
  */
 export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot: string): Promise<SourceMap> {
+    logger.log(`SourceMaps.getMapForGeneratedPath: Finding SourceMap for ${pathToGenerated} by URI: ${mapPath} and webRoot: ${webRoot}`);
+
     // For an inlined sourcemap, mapPath is a data URI containing a blob of base64 encoded data, starting
     // with a tag like "data:application/json;charset:utf-8;base64,". The data should start after the last comma.
     let sourceMapContentsP: Promise<string>;
@@ -97,7 +99,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
     if (utils.isURL(mapPathOrURL)) {
         logger.log(`SourceMaps.loadSourceMapContents: Downloading sourcemap file from ${mapPathOrURL}`);
         contentsP = utils.getURL(mapPathOrURL).catch(e => {
-            logger.error(`SourceMaps.loadSourceMapContents: Could not download map from ${mapPathOrURL}`);
+            logger.error(`SourceMaps.loadSourceMapContents: Could not download sourcemap from ${mapPathOrURL}`);
             return null;
         });
     } else {
@@ -105,7 +107,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
             logger.log(`SourceMaps.loadSourceMapContents: Reading local sourcemap file from ${mapPathOrURL}`);
             fs.readFile(mapPathOrURL, (err, data) => {
                 if (err) {
-                    logger.error(`SourceMaps.loadSourceMapContents: Could not read map from ${mapPathOrURL}`);
+                    logger.error(`SourceMaps.loadSourceMapContents: Could not read sourcemap from ${mapPathOrURL}`);
                     resolve(null);
                 } else {
                     resolve(data);

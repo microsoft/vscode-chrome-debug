@@ -7,8 +7,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export enum LogLevel {
-    Log,
-    Error
+    Verbose = 0,
+    Log = 1,
+    Error = 2
 }
 
 export type ILogCallback = (msg: string, level: LogLevel) => void;
@@ -19,50 +20,42 @@ export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = 
     if (_logger) _logger.log(msg, level, forceDiagnosticLogging);
 }
 
+export function verbose(msg: string): void {
+    log(msg, LogLevel.Verbose);
+}
+
 export function error(msg: string, forceDiagnosticLogging = true): void {
     log(msg, LogLevel.Error, forceDiagnosticLogging);
 }
 
-export function init(isServer: boolean, logCallback: ILogCallback, logFileDirectory?: string): void {
-    if (!_logger) {
-        _logger = new Logger(isServer, logCallback, logFileDirectory);
-
-        if (isServer) {
-            logVersionInfo();
-        }
+export function setMinLogLevel(logLevel: LogLevel): void {
+    if (_logger) {
+        _logger.minLogLevel = logLevel;
+        logVersionInfo();
     }
 }
 
-/**
- * Enable diagnostic logging (for non-server mode).
- */
-export function enableDiagnosticLogging(): void {
-    if (_logger) {
-        _logger.diagnosticLoggingEnabled = true;
-        if (!_logger.isServer) {
-            logVersionInfo();
-        }
+export function init(logCallback: ILogCallback, logFileDirectory?: string): void {
+    if (!_logger) {
+        _logger = new Logger(logCallback, logFileDirectory);
     }
 }
 
 function logVersionInfo(): void {
     log(`OS: ${os.platform()} ${os.arch()}`);
-    log('Node version: ' + process.version);
-    log('Adapter version: ' + require('../../package.json').version);
+    log('Node: ' + process.version);
+    log('vscode-chrome-debug-core: ' + require('../../package.json').version);
 }
 
 /**
  * Manages logging, whether to console.log, file, or VS Code console.
  */
 class Logger {
-    /** True when running in 'server' mode - i.e. running the project on its own, and the test app having 'debugServer' set. */
-    public isServer: boolean;
-
     /** The directory in which to log vscode-chrome-debug.txt */
     private _logFileDirectory: string;
 
     /** True when logging is enabled outside of server mode */
-    private _diagnosticLoggingEnabled: boolean;
+    private _minLogLevel: LogLevel;
 
     /** When not in server mode, the log msg is sent to this callback. */
     private _diagnosticLogCallback: ILogCallback;
@@ -70,25 +63,26 @@ class Logger {
     /** Write steam for log file */
     private _logFileStream: fs.WriteStream;
 
-    public get diagnosticLoggingEnabled(): boolean { return this._diagnosticLoggingEnabled; }
+    public get minLogLevel(): LogLevel { return this._minLogLevel; }
 
-    public set diagnosticLoggingEnabled(enabled: boolean) {
-        this._diagnosticLoggingEnabled = enabled;
+    public set minLogLevel(logLevel: LogLevel) {
+        this._minLogLevel = logLevel;
 
         // Open a log file in the specified location. Overwritten on each run.
-        if (this._logFileDirectory) {
+        if (logLevel > LogLevel.Error && this._logFileDirectory) {
             const logPath = path.join(this._logFileDirectory, 'vscode-chrome-debug.txt');
             this._logFileStream = fs.createWriteStream(logPath);
             this._logFileStream.on('error', e => {
-                this._sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
+                this.sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
             });
         }
     }
 
-    constructor(isServer: boolean, logCallback: ILogCallback, logFileDirectory?: string) {
-        this.isServer = isServer;
+    constructor(logCallback: ILogCallback, logFileDirectory?: string) {
         this._diagnosticLogCallback = logCallback;
         this._logFileDirectory = logFileDirectory;
+
+        this.minLogLevel = LogLevel.Error;
     }
 
     /**
@@ -96,12 +90,10 @@ class Logger {
      *      (For warnings/errors that appear whether logging is enabled or not.)
      */
     public log(msg: string, level: LogLevel, forceDiagnosticLogging: boolean): void {
-        if (this.isServer || this.diagnosticLoggingEnabled || forceDiagnosticLogging) {
-            this._sendLog(msg, level);
-        }
+        this.sendLog(msg, level);
 
-        // If an error or something else, prepend with '[LogLevel]'
-        if (level !== LogLevel.Log) {
+        // If an error, prepend with '[LogLevel]'
+        if (level === LogLevel.Error) {
             msg = `[${LogLevel[level]}] ${msg}`;
         }
 
@@ -110,13 +102,13 @@ class Logger {
         }
     }
 
-    private _sendLog(msg: string, level: LogLevel): void {
-        if (msg.length > 1500) msg = msg.substr(0, 1500) + ' [...]';
+    private sendLog(msg: string, level: LogLevel): void {
+        if (level < this.minLogLevel) return;
 
-        // In server mode, console APIs are ok. Outside of server mode, VS Code is watching stdin/out, so never use console APIs.
-        if (this.isServer) {
-            (level === LogLevel.Log ? console.log : console.error)(msg);
-        } else if (this._diagnosticLogCallback) {
+        // Truncate long messages, they can hang VS Code
+        if (msg.length > 1500) msg = msg.substr(0, 1500) + '[...]';
+
+        if (this._diagnosticLogCallback) {
             this._diagnosticLogCallback(msg, level);
         }
     }

@@ -63,7 +63,7 @@ class ResReqWebSocket extends EventEmitter {
                     && !(msgObj.method === 'Debugger.scriptParsed' && msgObj.params && msgObj.params.isContentScript)
                     && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
                     // Not really the right place to examine the content of the message, but don't log annoying extension script notifications.
-                    logger.log('From target: ' + msgStr);
+                    logger.verbose('From target: ' + msgStr);
                 }
 
                 this.onMessage(msgObj);
@@ -93,7 +93,7 @@ class ResReqWebSocket extends EventEmitter {
             this._pendingRequests.set(message.id, resolve);
             this._wsAttached.then(ws => {
                 const msgStr = JSON.stringify(message);
-                logger.log('To target: ' + msgStr);
+                logger.verbose('To target: ' + msgStr);
                 ws.send(msgStr);
             });
         });
