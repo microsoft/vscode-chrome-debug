@@ -82,7 +82,7 @@ class Logger {
         this._minLogLevel = logLevel;
 
         // Open a log file in the specified location. Overwritten on each run.
-        if (logLevel > LogLevel.Error && this._logFileDirectory) {
+        if (logLevel < LogLevel.Error && this._logFileDirectory) {
             const logPath = path.join(this._logFileDirectory, 'vscode-chrome-debug.txt');
             this._logFileStream = fs.createWriteStream(logPath);
             this._logFileStream.on('error', e => {
