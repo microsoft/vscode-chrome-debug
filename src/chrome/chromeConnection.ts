@@ -7,6 +7,7 @@ import {EventEmitter} from 'events';
 
 import * as utils from '../utils';
 import * as logger from '../logger';
+import * as chromeUtils from './chromeUtils';
 import * as Chrome from './chromeDebugProtocol';
 
 interface IMessageWithId {
@@ -62,7 +63,7 @@ class ResReqWebSocket extends EventEmitter {
                     && !(msgObj.method === 'Debugger.scriptParsed' && msgObj.params && msgObj.params.isContentScript)
                     && !(msgObj.params && msgObj.params.url && msgObj.params.url.indexOf('extensions::') === 0)) {
                     // Not really the right place to examine the content of the message, but don't log annoying extension script notifications.
-                    logger.log('From target: ' + msgStr);
+                    logger.verbose('From target: ' + msgStr);
                 }
 
                 this.onMessage(msgObj);
@@ -92,7 +93,7 @@ class ResReqWebSocket extends EventEmitter {
             this._pendingRequests.set(message.id, resolve);
             this._wsAttached.then(ws => {
                 const msgStr = JSON.stringify(message);
-                logger.log('To target: ' + msgStr);
+                logger.verbose('To target: ' + msgStr);
                 ws.send(msgStr);
             });
         });
@@ -169,33 +170,31 @@ export class ChromeConnection {
             .then(() => { });
     }
 
-    public _attach(port: number, url?: string): Promise<void> {
+    public _attach(port: number, targetUrl?: string): Promise<void> {
         return utils.getURL(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
             // Validate every step of processing the response
             try {
                 const responseArray = JSON.parse(jsonResponse);
                 if (Array.isArray(responseArray)) {
-                    // Filter out extension targets and other things
-                    // Non-chrome scenarios don't always specify a type, so filter to include ones without a type at all
-                    let pages = responseArray.filter(this._targetFilter);
+                    // Filter out some targets as specified by the extension
+                    let targets = responseArray.filter(this._targetFilter);
 
-                    // If a url was specified (launch mode), try to filter to that url
-                    if (url) {
-                        url = utils.canonicalizeUrl(url).toLowerCase();
-                        const urlPages = pages.filter(page => utils.canonicalizeUrl(page.url).toLowerCase() === url);
-                        if (!urlPages.length) {
-                            logger.error(`Warning: Can't find a page with url: ${url}. Available pages: ${JSON.stringify(pages.map(page => page.url))}`);
+                    if (targetUrl) {
+                        // If a url was specified, try to filter to that url
+                        const filteredTargets = chromeUtils.getMatchingTargets(targets, targetUrl);
+                        if (filteredTargets.length) {
+                            targets = filteredTargets;
                         } else {
-                            pages = urlPages;
+                            logger.error(`Warning: Can't find a target that matches: ${targetUrl}. Available pages: ${JSON.stringify(targets.map(target => target.url))}`);
                         }
                     }
 
-                    if (pages.length) {
-                        if (pages.length > 1) {
-                            logger.error('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(pages.map(page => page.url)));
+                    if (targets.length) {
+                        if (targets.length > 1) {
+                            logger.error('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(targets.map(target => target.url)));
                         }
 
-                        const wsUrl = pages[0].webSocketDebuggerUrl;
+                        const wsUrl = targets[0].webSocketDebuggerUrl;
                         if (wsUrl) {
                             return this._socket.open(wsUrl);
                         }

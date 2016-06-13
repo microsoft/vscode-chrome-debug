@@ -73,7 +73,10 @@ export class PathTransformer implements IDebugTransformer {
         const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
 
         if (!clientPath) {
-            logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file in the workspace. webRoot: ${this._webRoot}`);
+            // It's expected that eval scripts (debugadapter:) won't be resolved
+            if (!targetUrl.startsWith('debugadapter://')) {
+                logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
+            }
         } else {
             logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
             this._clientPathToTargetUrl.set(clientPath, targetUrl);

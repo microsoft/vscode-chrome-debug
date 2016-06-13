@@ -19,6 +19,7 @@ import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 export interface IChromeDebugSessionOpts {
     adapter?: IDebugAdapter;
     targetFilter?: ITargetFilter;
+    logFileDirectory?: string;
 }
 
 export class ChromeDebugSession extends DebugSession {
@@ -51,10 +52,11 @@ export class ChromeDebugSession extends DebugSession {
 
         const connection = new ChromeConnection(opts.targetFilter);
         const adapter = opts.adapter || new ChromeDebugAdapter(connection);
+        const logFileDirectory = opts.logFileDirectory;
 
-        logger.init(isServer, (msg, level) => this.onLog(msg, level));
+        logger.init((msg, level) => this.onLog(msg, level), logFileDirectory);
         process.addListener('unhandledRejection', reason => {
-            logger.log(`******** ERROR! Unhandled promise rejection: ${reason}`);
+            logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${reason}`);
         });
 
         this._adapterProxy = new AdapterProxy(
@@ -73,7 +75,7 @@ export class ChromeDebugSession extends DebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
         if (event.event !== 'output') {
             // Don't create an infinite loop...
-            logger.log(`To client: ${JSON.stringify(event)}`);
+            logger.verbose(`To client: ${JSON.stringify(event)}`);
         }
 
         super.sendEvent(event);
@@ -83,7 +85,7 @@ export class ChromeDebugSession extends DebugSession {
      * Overload sendResponse to log
      */
     public sendResponse(response: DebugProtocol.Response): void {
-        logger.log(`To client: ${JSON.stringify(response)}`);
+        logger.verbose(`To client: ${JSON.stringify(response)}`);
         super.sendResponse(response);
     }
 
@@ -131,7 +133,7 @@ export class ChromeDebugSession extends DebugSession {
     protected dispatchRequest(request: DebugProtocol.Request): void {
         const response = new Response(request);
         try {
-            logger.log(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
+            logger.verbose(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
             this.sendResponseAsync(
                 request,
                 response,

@@ -54,8 +54,10 @@ export class SourceMaps {
         return this._generatedPathToSourceMap.has(pathToGenerated) ?
             Promise.resolve(null) :
             getMapForGeneratedPath(pathToGenerated, sourceMapURL, this._webRoot).then(sourceMap => {
-                this._generatedPathToSourceMap.set(pathToGenerated, sourceMap);
-                sourceMap.authoredSources.forEach(authoredSource => this._authoredPathToSourceMap.set(authoredSource, sourceMap));
+                if (sourceMap) {
+                    this._generatedPathToSourceMap.set(pathToGenerated, sourceMap);
+                    sourceMap.authoredSources.forEach(authoredSource => this._authoredPathToSourceMap.set(authoredSource, sourceMap));
+                }
             });
     }
 }

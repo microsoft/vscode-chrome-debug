@@ -43,20 +43,26 @@ const projectConfig = {
     module: 'commonjs',
     moduleResolution: 'node',
     declaration: true,
-    typescript
+    typescript,
+    outDir: 'out'
 };
 
+function computeSourceRoot(file) {
+    return path.relative(path.dirname(file.path), __dirname);
+}
+
+const tsProject = ts.createProject(projectConfig);
 gulp.task('build', () => {
     const tsResult = gulp.src(tsBuildSources, { base: '.' })
         .pipe(plumber())
         .pipe(sourcemaps.init())
-        .pipe(ts(projectConfig));
+        .pipe(ts(tsProject));
 
 	return merge([
 		tsResult.dts
             .pipe(gulp.dest('lib')),
 		tsResult.js
-            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
+            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: computeSourceRoot }))
             .pipe(gulp.dest('out')),
         gulp.src(libs, { base: '.' })
             .pipe(gulp.dest('lib')),

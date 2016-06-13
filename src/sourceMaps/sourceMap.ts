@@ -22,10 +22,20 @@ export class SourceMap {
      * webRoot - an absolute path
      */
     public constructor(generatedPath: string, json: string, webRoot: string) {
-        logger.log(`SourceMap: creating SM for ${generatedPath}`);
         this._generatedPath = generatedPath;
 
         const sm = JSON.parse(json);
+        logger.log(`SourceMap: creating for ${generatedPath}`);
+        logger.log(`SourceMap: sourceRoot: ${sm.sourceRoot}`);
+        if (sm.sourceRoot.toLowerCase() === '/source/') {
+            logger.log('Warning: if you are using gulp-sourcemaps < 2.0 directly or indirectly, you may need to set sourceRoot manually in your build config, if your files are not actually under a directory called /source');
+        }
+        logger.log(`SourceMap: sources: ${JSON.stringify(sm.sources)}`);
+        if (sm.sourcesContent && sm.sourcesContent.length) {
+            logger.log(`Warning: SourceMap sources are inlined. This extension ignores inlined sources. If the paths are not correct, sourcemap support won't work.`);
+        }
+        logger.log(`SourceMap: webRoot: ${webRoot}`);
+
         const absSourceRoot = sourceMapUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,

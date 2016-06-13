@@ -149,8 +149,8 @@ export function canonicalizeUrl(urlOrPath: string): string {
     if (urlOrPath.startsWith('file:///')) {
         urlOrPath = urlOrPath.replace('file:///', '');
         urlOrPath = decodeURIComponent(urlOrPath);
-        if (urlOrPath[0] !== '/' && urlOrPath.indexOf(':') < 0 && getPlatform() === Platform.OSX) {
-            // Ensure osx path starts with /, it can be removed when file:/// was stripped.
+        if (urlOrPath[0] !== '/' && urlOrPath.indexOf(':') < 0) {
+            // Ensure unix-style path starts with /, it can be removed when file:/// was stripped.
             // Don't add if the url still has a protocol
             urlOrPath = '/' + urlOrPath;
         }

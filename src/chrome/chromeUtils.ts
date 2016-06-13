@@ -6,7 +6,7 @@ import * as url from 'url';
 import * as path from 'path';
 
 import * as utils from '../utils';
-import * as chrome from './chromeDebugProtocol';
+import * as Chrome from './chromeDebugProtocol';
 
 /**
  * Maps a url from target to an absolute local path.
@@ -56,7 +56,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 /**
  * Convert a RemoteObject to a value+variableHandleRef for the client.
  */
-export function remoteObjectToValue(object: chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
+export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
     let value = '';
     let variableHandleRef: string;
 
@@ -92,4 +92,25 @@ export function remoteObjectToValue(object: chrome.Runtime.RemoteObject, stringi
     }
 
     return { value, variableHandleRef };
+}
+
+export function getMatchingTargets(targets: Chrome.ITarget[], targetUrl: string): Chrome.ITarget[] {
+    const standardizeUrl = aUrl => utils.canonicalizeUrl(aUrl).toLowerCase();
+
+    // Look for an exact match
+    targetUrl = standardizeUrl(targetUrl);
+    const exactMatchTargets = targets.filter(target => standardizeUrl(target.url) === targetUrl);
+
+    if (exactMatchTargets.length) {
+        targets = exactMatchTargets;
+    } else {
+        // Strip the protocol, if present. Don't try parsing this since it may not be an actual url, e.g., 'localhost'.
+        // canonicalizeUrl would have already fixed file:/// or ?params
+        if (targetUrl.indexOf('://') >= 0) targetUrl = targetUrl.split('://')[1];
+
+        // Find targets that have the targetUrl as a substring
+        targets = targets.filter(target => standardizeUrl(target.url).indexOf(targetUrl) >= 0);
+    }
+
+    return targets;
 }

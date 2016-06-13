@@ -30,7 +30,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
 
     private _initArgs: DebugProtocol.InitializeRequestArguments;
-    private _isLoggingInitialized: boolean;
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
@@ -159,16 +158,18 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
-        if (args.diagnosticLogging && !this._isLoggingInitialized) {
-            logger.enableDiagnosticLogging();
-            logger.log(`initialize(${JSON.stringify(this._initArgs) })`);
-            logger.log(`${name}(${JSON.stringify(args) })`);
+        const minLogLevel =
+            args.verboseDiagnosticLogging ?
+                logger.LogLevel.Verbose :
+            args.diagnosticLogging ?
+                logger.LogLevel.Log :
+                logger.LogLevel.Error;
+        logger.setMinLogLevel(minLogLevel);
+        logger.verbose(`initialize(${JSON.stringify(this._initArgs) })`);
+        logger.verbose(`${name}(${JSON.stringify(args) })`);
 
-            if (!args.webRoot) {
-                logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
-            }
-
-            this._isLoggingInitialized = true;
+        if (!args.webRoot) {
+            logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
         }
     }
 
