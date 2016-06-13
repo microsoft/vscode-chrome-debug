@@ -257,5 +257,6 @@ export interface ITarget {
     thumbnailUrl?: string;
     title: string;
     type: string;
+    url?: string;
     webSocketDebuggerUrl: string;
 }

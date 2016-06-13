@@ -6,6 +6,7 @@ import * as mockery from 'mockery';
 import * as assert from 'assert';
 import * as _path from 'path';
 
+import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 import * as testUtils from '../testUtils';
 
 /** ChromeUtils without mocks - use for type only */
@@ -148,6 +149,50 @@ suite('ChromeUtils', () => {
 
         test('null', () => {
             testRemoteObjectToValue({ type: 'object', subtype: 'null' }, 'null');
+        });
+    });
+
+    suite('getMatchingTargets()', () => {
+        const chromeUtils = getChromeUtils();
+
+        function makeTargets(...urls): Chrome.ITarget[] {
+            // Only the url prop is used
+            return <any>urls.map(url => ({ url }));
+        }
+
+        test('tries exact match before fuzzy match', () => {
+            const targets = makeTargets('http://localhost/site/page', 'http://localhost/site');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'http://localhost/site'),
+                [targets[1]]);
+        });
+
+        test('returns fuzzy matches if exact match fails', () => {
+            const targets = makeTargets('http://localhost:8080/site/app/page1?something=3', 'http://cnn.com', 'http://localhost/site');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'http://localhost'),
+                [targets[0], targets[2]]);
+        });
+
+        test('ignores the url protocol', () => {
+            const targets = makeTargets('https://outlook.com', 'http://localhost');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'https://localhost'),
+                [targets[1]]);
+        });
+
+        test('"exact match" is case-insensitive', () => {
+            const targets = makeTargets('http://localhost/site', 'http://localhost');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'http://Localhost'),
+                [targets[1]]);
+        });
+
+        test('ignores query params', () => {
+            const targets = makeTargets('http://testsite.com?q=5');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'testsite.com?q=1'),
+                targets);
         });
     });
 });
