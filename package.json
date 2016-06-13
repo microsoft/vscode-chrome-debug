@@ -18,7 +18,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "0.1.1"
+    "vscode-chrome-debug-core": "0.1.2"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
@@ -120,7 +120,12 @@
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console",
+                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "default": true
+              },
+              "verboseDiagnosticLogging": {
+                "type": "boolean",
+                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
                 "default": true
               },
               "userDataDir": {
@@ -147,7 +152,12 @@
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console",
+                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "default": true
+              },
+              "verboseDiagnosticLogging": {
+                "type": "boolean",
+                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
                 "default": true
               },
               "url": {
