@@ -107,7 +107,7 @@ export class SourceMapTransformer implements IDebugTransformer {
                     logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
                 } else {
                     // Source (or generated) file which is not loaded, need to wait
-                    logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script.`);
+                    logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script. It may just not be loaded yet.`);
                     this._pendingBreakpointsByPath.set(argsPath, { resolve, reject, args, requestSeq });
                     return;
                 }
