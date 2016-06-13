@@ -29,8 +29,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
 
-    private _initArgs: DebugProtocol.InitializeRequestArguments;
-
     private _clientAttached: boolean;
     private _variableHandles: Handles<IScopeVarHandle>;
     private _currentStack: Chrome.Debugger.CallFrame[];
@@ -79,9 +77,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
-        // Cache to log if diagnostic logging is enabled later
-        this._initArgs = args;
-
         // This debug adapter supports two exception breakpoint filters
         return {
             exceptionBreakpointFilters: [
@@ -100,7 +95,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        this.initializeLogging('launch', args);
+        this.setupLogging(args);
 
         // Check exists?
         const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -152,12 +147,12 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             return utils.errP('The "port" field is required in the attach config.');
         }
 
-        this.initializeLogging('attach', args);
+        this.setupLogging(args);
 
         return this._attach(args.port, args.url);
     }
 
-    public initializeLogging(name: string, args: IAttachRequestArgs | ILaunchRequestArgs): void {
+    public setupLogging(args: IAttachRequestArgs | ILaunchRequestArgs): void {
         const minLogLevel =
             args.verboseDiagnosticLogging ?
                 logger.LogLevel.Verbose :
@@ -165,8 +160,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 logger.LogLevel.Log :
                 logger.LogLevel.Error;
         logger.setMinLogLevel(minLogLevel);
-        logger.verbose(`initialize(${JSON.stringify(this._initArgs) })`);
-        logger.verbose(`${name}(${JSON.stringify(args) })`);
 
         if (!args.webRoot) {
             logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');

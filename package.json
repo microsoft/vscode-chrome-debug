@@ -10,6 +10,7 @@
   "bugs": "https://github.com/microsoft/vscode-chrome-debug-core/issues",
   "license": "SEE LICENSE IN LICENSE.txt",
   "typings": "./lib/index",
+  "main": "./out/index",
   "dependencies": {
     "source-map": "^0.5.6",
     "vscode-debugadapter": "^1.9.0",

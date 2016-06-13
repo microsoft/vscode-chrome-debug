@@ -20,7 +20,6 @@ const sources = [
     'test',
     'typings',
 ].map(tsFolder => tsFolder + '/**/*.ts');
-sources.push('index.ts');
 
 // tsBuildSources needs to explicitly exclude testData because it's built and copied separately.
 const testDataDir = 'test/**/testData/';

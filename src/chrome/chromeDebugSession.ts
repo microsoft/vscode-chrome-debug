@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as os from 'os';
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
@@ -55,6 +56,8 @@ export class ChromeDebugSession extends DebugSession {
         const logFileDirectory = opts.logFileDirectory;
 
         logger.init((msg, level) => this.onLog(msg, level), logFileDirectory);
+        logVersionInfo();
+
         process.addListener('unhandledRejection', reason => {
             logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${reason}`);
         });
@@ -90,7 +93,7 @@ export class ChromeDebugSession extends DebugSession {
     }
 
     private onLog(msg: string, level: logger.LogLevel): void {
-        const outputCategory = level === logger.LogLevel.Log ? undefined : 'stderr';
+        const outputCategory = level === logger.LogLevel.Error ? 'stderr' : undefined;
         this.sendEvent(new OutputEvent(`  ›${msg}\n`, outputCategory));
     }
 
@@ -142,6 +145,12 @@ export class ChromeDebugSession extends DebugSession {
             this.sendErrorResponse(response, 1104, 'Exception while processing request (exception: {_exception})', { _exception: e.message }, ErrorDestination.Telemetry);
         }
     }
+}
+
+function logVersionInfo(): void {
+    logger.log(`OS: ${os.platform()} ${os.arch()}`);
+    logger.log('Node: ' + process.version);
+    logger.log('vscode-chrome-debug-core: ' + require('../../../package.json').version);
 }
 
 /**

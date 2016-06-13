@@ -2,7 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -14,10 +13,20 @@ export enum LogLevel {
 
 export type ILogCallback = (msg: string, level: LogLevel) => void;
 
+interface ILogItem {
+    msg: string;
+    level: LogLevel;
+}
+
 /** Logger singleton */
 let _logger: Logger;
+let _pendingLogQ: ILogItem[] = [];
 export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = false): void {
-    if (_logger) _logger.log(msg, level, forceDiagnosticLogging);
+    if (_pendingLogQ) {
+        _pendingLogQ.push({ msg, level });
+    } else {
+        _logger.log(msg, level, forceDiagnosticLogging);
+    }
 }
 
 export function verbose(msg: string): void {
@@ -28,10 +37,20 @@ export function error(msg: string, forceDiagnosticLogging = true): void {
     log(msg, LogLevel.Error, forceDiagnosticLogging);
 }
 
+/**
+ * Set the logger's minimum level to log. Log messages are queued before this is
+ * called the first time, because minLogLevel defaults to Error.
+ */
 export function setMinLogLevel(logLevel: LogLevel): void {
     if (_logger) {
         _logger.minLogLevel = logLevel;
-        logVersionInfo();
+
+        // Clear out the queue of pending messages
+        if (_pendingLogQ) {
+            const logQ = _pendingLogQ;
+            _pendingLogQ = null;
+            logQ.forEach(item => log(item.msg, item.level));
+        }
     }
 }
 
@@ -39,12 +58,6 @@ export function init(logCallback: ILogCallback, logFileDirectory?: string): void
     if (!_logger) {
         _logger = new Logger(logCallback, logFileDirectory);
     }
-}
-
-function logVersionInfo(): void {
-    log(`OS: ${os.platform()} ${os.arch()}`);
-    log('Node: ' + process.version);
-    log('vscode-chrome-debug-core: ' + require('../../package.json').version);
 }
 
 /**
