@@ -373,15 +373,35 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     private addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
-        let scriptId: string;
+        let responsePs: Promise<Chrome.Debugger.SetBreakpointResponse>[];
         if (url.startsWith(ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL)) {
-            scriptId = utils.lstrip(url, ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL);
+            // eval script with no real url - use debugger_setBreakpoint
+            const scriptId = utils.lstrip(url, ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL);
+            responsePs = lines.map((lineNumber, i) => this._chromeConnection.debugger_setBreakpoint({ scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
         } else {
+            // script that has a url - use debugger_setBreakpointByUrl so that Chrome will rebind the breakpoint immediately
+            // after refreshing the page. This is the only way to allow hitting breakpoints in code that runs immediately when
+            // the page loads.
             const script = this._scriptsByUrl.get(url);
-            scriptId = script.scriptId;
+            responsePs = lines.map((lineNumber, i) => {
+                return this._chromeConnection.debugger_setBreakpointByUrl(url, lineNumber, cols ? cols[i] : 0).then(response => {
+                    // Now convert the response to a SetBreakpointResponse so both response types can be handled the same
+                    const locations = response.result.locations;
+                    return <Chrome.Debugger.SetBreakpointResponse>{
+                        id: response.id,
+                        error: response.error,
+                        result: {
+                            breakpointId: response.result.breakpointId,
+                            actualLocation: locations[0] && {
+                                lineNumber: locations[0].lineNumber,
+                                columnNumber: locations[0].columnNumber,
+                                scriptId: script.scriptId
+                            }
+                        }
+                    };
+                });
+            });
         }
-
-        const responsePs = lines.map((lineNumber, i) => this._chromeConnection.debugger_setBreakpoint({ scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
 
         // Join all setBreakpoint requests to a single promise
         return Promise.all(responsePs);
