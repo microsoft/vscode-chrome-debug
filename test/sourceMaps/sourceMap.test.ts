@@ -42,6 +42,15 @@ suite('SourceMap', () => {
         testUtils.removeUnhandledRejectionListener();
     });
 
+    suite('constructor', () => {
+        test('does not crash when sourceRoot is undefined', () => {
+            // Rare and possibly invalid, but I saw it
+            const sourceMapJSON = getMockSourceMapJSON(SOURCES, undefined);
+            const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
+            assert(sm);
+        });
+    });
+
     suite('.sources', () => {
         test('relative sources are made absolute', () => {
             const sourceMapJSON = getMockSourceMapJSON(SOURCES, SOURCEROOT);
