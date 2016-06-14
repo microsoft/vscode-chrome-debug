@@ -1,3 +1,6 @@
+const globalCode = 'page loaded';
+console.log(globalCode);
+
 function locals() {
     var arr1 = [1, 2];
 
