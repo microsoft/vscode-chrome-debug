@@ -139,7 +139,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             this.terminateSession();
         });
 
-        return this._attach(port, launchUrl);
+        return this._attach(port, launchUrl, args.address);
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
@@ -149,7 +149,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
         this.setupLogging(args);
 
-        return this._attach(args.port, args.url);
+        return this._attach(args.port, args.url, args.address);
     }
 
     public setupLogging(args: IAttachRequestArgs | ILaunchRequestArgs): void {
@@ -187,7 +187,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
     }
 
-    private _attach(port: number, url?: string): Promise<void> {
+    private _attach(port: number, url?: string, address?: string): Promise<void> {
         // Client is attaching - if not attached to the chrome target, create a connection and attach
         this._clientAttached = true;
         if (!this._chromeConnection.isAttached) {
@@ -203,7 +203,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession());
             this._chromeConnection.on('error', () => this.terminateSession());
 
-            return this._chromeConnection.attach(port, url).then(
+            return this._chromeConnection.attach(port, url, address).then(
                 () => this.fireEvent(new InitializedEvent()),
                 e => {
                     this.clearEverything();

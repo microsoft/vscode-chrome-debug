@@ -162,16 +162,17 @@ export class ChromeConnection {
     /**
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
-    public attach(port: number, url?: string): Promise<void> {
+    public attach(port: number, url?: string, address?: string): Promise<void> {
         logger.log('Attempting to attach on port ' + port);
-        return utils.retryAsync(() => this._attach(port, url), 6000)
+        return utils.retryAsync(() => this._attach(port, url, address), /*timeoutMs*/ 6000)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
     }
 
-    public _attach(port: number, targetUrl?: string): Promise<void> {
-        return utils.getURL(`http://127.0.0.1:${port}/json`).then(jsonResponse => {
+    public _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
+        address = address || '127.0.0.1';
+        return utils.getURL(`http://${address}:${port}/json`).then(jsonResponse => {
             // Validate every step of processing the response
             try {
                 const responseArray = JSON.parse(jsonResponse);
