@@ -11,4 +11,6 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         targetFilter: target => target && (!target.type || target.type === 'page'),
         logFileDirectory: path.resolve(__dirname, '../../')
     }));
+
+/* tslint:disable:no-var-requires */
 logger.log('debugger-for-chrome: ' + require('../../package.json').version);
