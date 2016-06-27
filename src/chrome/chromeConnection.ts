@@ -196,7 +196,7 @@ export class ChromeConnection {
                         }
 
                         const wsUrl = targets[0].webSocketDebuggerUrl;
-                        logger.log(`wsUrl: ${wsUrl}`);
+                        logger.verbose(`WebSocket Url: ${wsUrl}`);
                         if (wsUrl) {
                             return this._socket.open(wsUrl);
                         }

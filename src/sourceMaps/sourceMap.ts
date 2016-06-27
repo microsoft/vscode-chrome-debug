@@ -58,14 +58,14 @@ export class SourceMap {
                 sourcePath = path.resolve(absSourceRoot, sourcePath);
             }
 
-            return sourcePath;
+            // We lowercase so authored <-> generated mapping is not case sensitive
+            return sourcePath.toLowerCase();
         });
 
         // Rewrite sm.sources to same as this._sources but forward slashes and file url
         sm.sources = this._sources.map(sourceAbsPath => {
             // Convert to file:/// url. After this, it's a file URL for an absolute path to a file on disk with forward slashes.
-            // We lowercase so authored <-> generated mapping is not case sensitive
-            return utils.pathToFileURL(sourceAbsPath).toLowerCase();
+            return utils.pathToFileURL(sourceAbsPath);
         });
 
         this._smc = new SourceMapConsumer(sm);
