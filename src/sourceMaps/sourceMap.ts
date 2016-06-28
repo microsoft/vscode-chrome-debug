@@ -67,7 +67,7 @@ export class SourceMap {
             // Convert to file:/// url. After this, it's a file URL for an absolute path to a file on disk with forward slashes.
             // We lowercase so authored <-> generated mapping is not case sensitive.
             const lowerCaseSourceAbsPath = sourceAbsPath.toLowerCase();
-            this._authoredPathCaseMap[lowerCaseSourceAbsPath] = sourceAbsPath;
+            this._authoredPathCaseMap.set(lowerCaseSourceAbsPath, sourceAbsPath);
             return utils.pathToFileURL(lowerCaseSourceAbsPath);
         });
 
@@ -121,7 +121,7 @@ export class SourceMap {
             position.source = utils.canonicalizeUrl(position.source);
 
             // Convert back to original case
-            position.source = this._authoredPathCaseMap[position.source] || position.source;
+            position.source = this._authoredPathCaseMap.get(position.source) || position.source;
 
             // Back to 0-indexed lines
             position.line--;
@@ -141,7 +141,8 @@ export class SourceMap {
         line++;
 
         // sources in the sourcemap have been forced to file:///
-        source = utils.pathToFileURL(source);
+        // Convert to lowerCase so search is case insensitive
+        source = utils.pathToFileURL(source.toLowerCase());
 
         const lookupArgs = {
             line,
