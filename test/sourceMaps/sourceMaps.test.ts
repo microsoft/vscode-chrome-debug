@@ -11,9 +11,9 @@ import {MappedPosition} from '../../src/sourceMaps/sourceMap';
 
 suite('SourceMaps', () => {
     const DIRNAME = __dirname.toLowerCase();
-    const GENERATED_PATH = path.resolve(DIRNAME, 'testdata/app.js');
-    const AUTHORED_PATH = path.resolve(DIRNAME, 'testdata/source1.ts');
-    const ALL_SOURCES = [AUTHORED_PATH, path.resolve(DIRNAME, 'testdata/source2.ts')];
+    const GENERATED_PATH = path.resolve(DIRNAME, 'testData/app.js');
+    const AUTHORED_PATH = path.resolve(DIRNAME, 'testData/source1.ts');
+    const ALL_SOURCES = [AUTHORED_PATH, path.resolve(DIRNAME, 'testData/source2.ts')];
     const WEBROOT = 'http://localhost';
     const SOURCEMAP_URL = 'app.js.map';
     const sourceMaps = new SourceMaps(WEBROOT);

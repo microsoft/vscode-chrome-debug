@@ -15,6 +15,7 @@ export class SourceMap {
     private _generatedPath: string; // the generated file for this sourcemap (absolute path)
     private _sources: string[]; // list of authored files (absolute paths)
     private _smc: SourceMapConsumer; // the source map
+    private _authoredPathCaseMap = new Map<string, string>(); // Maintain pathCase map because VSCode is case sensitive
 
     /**
      * pathToGenerated - an absolute local path or a URL
@@ -58,14 +59,16 @@ export class SourceMap {
                 sourcePath = path.resolve(absSourceRoot, sourcePath);
             }
 
-            // We lowercase so authored <-> generated mapping is not case sensitive
-            return sourcePath.toLowerCase();
+            return sourcePath;
         });
 
         // Rewrite sm.sources to same as this._sources but forward slashes and file url
         sm.sources = this._sources.map(sourceAbsPath => {
             // Convert to file:/// url. After this, it's a file URL for an absolute path to a file on disk with forward slashes.
-            return utils.pathToFileURL(sourceAbsPath);
+            // We lowercase so authored <-> generated mapping is not case sensitive.
+            const lowerCaseSourceAbsPath = sourceAbsPath.toLowerCase();
+            this._authoredPathCaseMap[lowerCaseSourceAbsPath] = sourceAbsPath;
+            return utils.pathToFileURL(lowerCaseSourceAbsPath);
         });
 
         this._smc = new SourceMapConsumer(sm);
@@ -116,6 +119,9 @@ export class SourceMap {
         if (position.source) {
             // file:/// -> absolute path
             position.source = utils.canonicalizeUrl(position.source);
+
+            // Convert back to original case
+            position.source = this._authoredPathCaseMap[position.source] || position.source;
 
             // Back to 0-indexed lines
             position.line--;
