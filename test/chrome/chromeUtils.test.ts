@@ -114,7 +114,9 @@ suite('ChromeUtils', () => {
         });
 
         test('number', () => {
-            testRemoteObjectToValue({ type: 'number', value: 1, description: '1' }, '1');
+            testRemoteObjectToValue({ type: 'number', value: 1 }, '1');
+            testRemoteObjectToValue({ type: 'number', value: 'NaN' }, 'NaN');
+            testRemoteObjectToValue({ type: 'number', value: 'Infinity' }, 'Infinity');
         });
 
         test('array', () => {
