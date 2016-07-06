@@ -23,6 +23,8 @@ newlines`;
     m.set('a', 1);
 
     var b = document.body;
+    let nan = NaN;
+    let inf = 1/0;
 
     eval('var evalVar3 = [1,2,3]');
     eval('var evalVar1 = 16');
