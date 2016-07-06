@@ -22,6 +22,8 @@ interface ILogItem {
 let _logger: Logger;
 let _pendingLogQ: ILogItem[] = [];
 export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = false): void {
+    // null, undefined => string
+    msg = msg + '';
     if (_pendingLogQ) {
         _pendingLogQ.push({ msg, level });
     } else {
