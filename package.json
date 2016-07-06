@@ -4,6 +4,9 @@
   "version": "0.4.5",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
+  "author": {
+    "name": "Microsoft Corporation"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-chrome-debug"
@@ -82,6 +85,11 @@
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
               },
+              "address" :{
+                "type": "string",
+                "description": "TCP/IP address of debug port",
+                "default": "127.0.0.1"
+              },
               "file": {
                 "type": "string",
                 "description": "A local html file to open in the browser",
@@ -144,6 +152,11 @@
                 "type": "number",
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
+              },
+              "address" :{
+                "type": "string",
+                "description": "TCP/IP address of debug port",
+                "default": "127.0.0.1"
               },
               "sourceMaps": {
                 "type": "boolean",

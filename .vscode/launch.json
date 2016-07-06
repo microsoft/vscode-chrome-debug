@@ -7,7 +7,7 @@
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/out/src/chromeDebug.js",
-			"runtimeArgs": ["--harmony"],
+            "runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
