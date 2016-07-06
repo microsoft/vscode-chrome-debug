@@ -1,2 +1,12 @@
+.vscode/
 src/
 test/
+out/test
+typings/
+
+.travis.yml
+gulpfile.js
+STYLE.md
+tsconfig.json
+tslint.json
+typings.json
