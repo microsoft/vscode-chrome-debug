@@ -85,9 +85,10 @@ export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringi
             // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
             if (typeof object.value === 'undefined') {
                 value = object.description;
-            } else if (object.value === 'NaN' || object.value === 'Infinity') {
-                // Don't stringify these
-                value = object.value;
+            } else if (object.type === 'number') {
+                // 3 => "3"
+                // "Infinity" => "Infinity" (not stringified)
+                value = object.value + '';
             } else {
                 value = stringify ? JSON.stringify(object.value) : object.value;
             }
