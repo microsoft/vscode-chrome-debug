@@ -4,7 +4,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IDebugAdapter, IDebugTransformer} from './chrome/debugAdapterInterfaces';
+import {IDebugAdapter, IDebugTransformer} from './debugAdapterInterfaces';
 import * as utils from './utils';
 import * as logger from './logger';
 

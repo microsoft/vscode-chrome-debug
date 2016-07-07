@@ -9,7 +9,7 @@ import * as mockery from 'mockery';
 import {Mock, MockBehavior, It} from 'typemoq';
 
 import {ISetBreakpointsResponseBody,
-    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../src/chrome/debugAdapterInterfaces';
+    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../src/debugAdapterInterfaces';
 import * as testUtils from '../testUtils';
 import {SourceMaps} from '../../src/sourceMaps/sourceMaps';
 import {MappedPosition} from '../../src/sourceMaps/sourceMap';

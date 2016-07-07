@@ -7,7 +7,7 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, E
 
 import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IBreakpoint, IScopesResponseBody, IVariablesResponseBody,
-    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from './debugAdapterInterfaces';
+    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from '../debugAdapterInterfaces';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import * as utils from '../utils';

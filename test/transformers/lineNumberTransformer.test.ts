@@ -6,7 +6,7 @@ import * as assert from 'assert';
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../src/chrome/debugAdapterInterfaces';
+import {ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../../src/debugAdapterInterfaces';
 import { LineNumberTransformer } from '../../src/transformers/lineNumberTransformer';
 import * as testUtils from '../testUtils';
 

@@ -4,7 +4,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IStackTraceResponseBody} from '../src/chrome/debugAdapterInterfaces';
+import {IStackTraceResponseBody} from '../src/debugAdapterInterfaces';
 
 import {Mock, It, MockBehavior} from 'typemoq';
 import * as path from 'path';

@@ -4,7 +4,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../chrome/debugAdapterInterfaces';
+import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as ChromeUtils from '../chrome/chromeUtils';

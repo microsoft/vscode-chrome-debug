@@ -4,7 +4,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {IDebugTransformer, ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../chrome/debugAdapterInterfaces';
+import {IDebugTransformer, ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 
 /**
  * Converts from 1 based lines on the client side to 0 based lines on the target side

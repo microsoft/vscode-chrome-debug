@@ -6,7 +6,7 @@ import * as os from 'os';
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
-import {IDebugAdapter} from './debugAdapterInterfaces';
+import {IDebugAdapter} from '../debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import {ChromeConnection, ITargetFilter} from './chromeConnection';
 
