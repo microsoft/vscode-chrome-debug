@@ -108,13 +108,22 @@ suite('ChromeUtils', () => {
             testRemoteObjectToValue({ type: 'string', value }, `"${value}"`);
             testRemoteObjectToValue({ type: 'string', value }, `${value}`, undefined, /*stringify=*/false);
 
+            value = 'NaN';
+            testRemoteObjectToValue({ type: 'string', value }, `"${value}"`);
+
+            value = '-Infinity';
+            testRemoteObjectToValue({ type: 'string', value }, `"${value}"`);
+
             value = 'test string\r\nwith\nnewlines\n\n';
             const expValue = 'test string\\r\\nwith\\nnewlines\\n\\n';
             testRemoteObjectToValue({ type: 'string', value }, `"${expValue}"`);
         });
 
         test('number', () => {
-            testRemoteObjectToValue({ type: 'number', value: 1, description: '1' }, '1');
+            testRemoteObjectToValue({ type: 'number', value: 1 }, '1');
+            testRemoteObjectToValue({ type: 'number', value: 'NaN' }, 'NaN');
+            testRemoteObjectToValue({ type: 'number', value: 'Infinity' }, 'Infinity');
+            testRemoteObjectToValue({ type: 'number', value: '-Infinity' }, '-Infinity');
         });
 
         test('array', () => {

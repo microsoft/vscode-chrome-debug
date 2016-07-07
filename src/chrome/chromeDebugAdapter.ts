@@ -556,40 +556,42 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     public variables(args: DebugProtocol.VariablesArguments): Promise<IVariablesResponseBody> {
         const handle = this._variableHandles.get(args.variablesReference);
-        if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
-            // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
-            const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
-            return Promise.resolve({ variables: [this.propertyDescriptorToVariable(excValuePropDescriptor)] });
-        } else if (handle != null) {
-            return Promise.all([
-                // Need to make two requests to get all properties
-                this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
-                this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
-            ]).then(getPropsResponses => {
-                // Sometimes duplicates will be returned - merge all property descriptors returned
-                const propsByName = new Map<string, Chrome.Runtime.PropertyDescriptor>();
-                getPropsResponses.forEach(response => {
-                    if (!response.error) {
-                        response.result.result.forEach(propDesc =>
-                            propsByName.set(propDesc.name, propDesc));
-                    }
-                });
-
-                // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
-                const variables: DebugProtocol.Variable[] = [];
-                propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
-                variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
-
-                // If this is a scope that should have the 'this', prop, insert it at the top of the list
-                if (handle.thisObj) {
-                    variables.unshift(this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }));
-                }
-
-                return { variables };
-            });
-        } else {
+        if (!handle) {
             return Promise.resolve<IVariablesResponseBody>(undefined);
         }
+
+        // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
+        if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
+            const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
+            return Promise.resolve({ variables: [this.propertyDescriptorToVariable(excValuePropDescriptor)] });
+        }
+
+        return Promise.all([
+            // Need to make two requests to get all properties
+            this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
+            this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
+        ]).then(getPropsResponses => {
+            // Sometimes duplicates will be returned - merge all property descriptors returned
+            const propsByName = new Map<string, Chrome.Runtime.PropertyDescriptor>();
+            getPropsResponses.forEach(response => {
+                if (!response.error) {
+                    response.result.result.forEach(propDesc =>
+                        propsByName.set(propDesc.name, propDesc));
+                }
+            });
+
+            // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
+            const variables: DebugProtocol.Variable[] = [];
+            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
+            variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
+
+            // If this is a scope that should have the 'this', prop, insert it at the top of the list
+            if (handle.thisObj) {
+                variables.unshift(this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }));
+            }
+
+            return { variables };
+        });
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
