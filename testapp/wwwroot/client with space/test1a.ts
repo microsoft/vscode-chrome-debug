@@ -25,6 +25,7 @@ newlines`;
     var b = document.body;
     let nan = NaN;
     let inf = 1/0;
+    let infStr = "Infinity";
 
     eval('var evalVar3 = [1,2,3]');
     eval('var evalVar1 = 16');
