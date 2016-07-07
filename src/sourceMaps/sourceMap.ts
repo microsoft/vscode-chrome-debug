@@ -9,19 +9,7 @@ import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
-export {MappedPosition};
-
-const WEBPACK_SOURCE_PREFIX = 'webpack:///';
-
-export interface ISourceMap {
-    version: string;
-    sources: string[];
-    names: string[];
-    mappings: string;
-    file?: string;
-    sourcesContent?: string[];
-    sourceRoot?: string;
-}
+export type MappedPosition = MappedPosition;
 
 export class SourceMap {
     private _generatedPath: string; // the generated file for this sourcemap (absolute path)
@@ -37,7 +25,7 @@ export class SourceMap {
     public constructor(generatedPath: string, json: string, webRoot: string) {
         this._generatedPath = generatedPath;
 
-        const sm: ISourceMap = JSON.parse(json);
+        const sm = JSON.parse(json);
         logger.log(`SourceMap: creating for ${generatedPath}`);
         logger.log(`SourceMap: sourceRoot: ${sm.sourceRoot}`);
         if (sm.sourceRoot && sm.sourceRoot.toLowerCase() === '/source/') {
@@ -53,7 +41,6 @@ export class SourceMap {
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
-        const originalSourceRoot = sm.sourceRoot;
         sm.sourceRoot = null;
 
         // sm.sources are relative paths or file:/// urls - (or other URLs?) read the spec...
@@ -62,25 +49,14 @@ export class SourceMap {
         // note - the source-map library doesn't like backslashes, but some tools output them.
         // Which is wrong? Consider filing issues on source-map or tools that output backslashes?
         // In either case, support whatever works
-        this._sources = sm.sources.map((sourcePath: string) => {
+        this._sources = sm.sources.map(sourcePath => {
             // Special-case webpack:/// prefixed sources which is kind of meaningless
-            let isWebpackURL = false;
-            if (sourcePath.startsWith(WEBPACK_SOURCE_PREFIX)) {
-                sourcePath = utils.lstrip(sourcePath, WEBPACK_SOURCE_PREFIX);
-                isWebpackURL = true;
-            }
-
+            sourcePath = utils.lstrip(sourcePath, 'webpack:///');
             sourcePath = utils.canonicalizeUrl(sourcePath);
 
-            // If not already an absolute path, make it an absolute path
+            // If not already an absolute path, make it an absolute path with this._absSourceRoot. Also resolves '..' parts.
             if (!path.isAbsolute(sourcePath)) {
-                if (isWebpackURL && !originalSourceRoot) {
-                    // By default, webpack produces paths that are relative to the project root. So this is more likely to be right.
-                    // And I don't think it's normally possible to set the sourceRoot in webpack, but if someone manages to do it, use that.
-                    sourcePath = path.resolve(webRoot, sourcePath);
-                } else {
-                    sourcePath = path.resolve(absSourceRoot, sourcePath);
-                }
+                sourcePath = path.resolve(absSourceRoot, sourcePath);
             }
 
             return sourcePath;

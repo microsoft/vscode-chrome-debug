@@ -73,25 +73,6 @@ suite('SourceMap', () => {
             const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
             assert.deepEqual(sm.authoredSources, ABSOLUTE_SOURCES);
         });
-
-        test(`webpack:/// sources are resolved relative to the webRoot, when sourceRoot isn't set`, () => {
-            const sources = ['webpack:///./src/app.ts', 'test.ts', 'webpack:///app2.ts'];
-            const sourceMapJSON = getMockSourceMapJSON(sources, '');
-            const expectedSources = [path.join(WEBROOT, 'src/app.ts'), path.join(path.dirname(GENERATED_PATH), 'test.ts'), path.join(WEBROOT, 'app2.ts')];
-
-            const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
-            assert.deepEqual(sm.authoredSources, expectedSources);
-        });
-
-        test(`webpack:/// sources are resolved normally, when sourceRoot is set`, () => {
-            const sources = ['webpack:///./src/app.ts', 'test.ts', 'webpack:///app2.ts'];
-            const generatedDir = path.dirname(GENERATED_PATH);
-            const sourceMapJSON = getMockSourceMapJSON(sources, SOURCEROOT);
-            const expectedSources = [path.join(generatedDir, 'src/app.ts'), path.join(generatedDir, 'test.ts'), path.join(generatedDir, 'app2.ts')];
-
-            const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT);
-            assert.deepEqual(sm.authoredSources, expectedSources);
-        });
     });
 
     suite('doesOriginateFrom', () => {
