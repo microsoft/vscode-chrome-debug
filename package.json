@@ -52,15 +52,7 @@
         "runtime": "node",
         "initialConfigurations": [
           {
-            "name": "Launch index.html with sourcemaps",
-            "type": "chrome",
-            "request": "launch",
-            "file": "${workspaceRoot}/index.html",
-            "sourceMaps": true,
-            "webRoot": "${workspaceRoot}"
-          },
-          {
-            "name": "Launch localhost with sourcemaps",
+            "name": "Launch Chrome against localhost, with sourcemaps",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080",
@@ -68,7 +60,7 @@
             "webRoot": "${workspaceRoot}"
           },
           {
-            "name": "Attach with sourcemaps",
+            "name": "Attach to Chrome, with sourcemaps",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
@@ -140,6 +132,11 @@
                 "type": "string",
                 "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
                 "default": ""
+              },
+              "sourceMapPathOverrides": {
+                "type": "object",
+                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "default": {}
               }
             }
           },
@@ -182,6 +179,11 @@
                 "type": "string",
                 "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
                 "default": "${workspaceRoot}"
+              },
+              "sourceMapPathOverrides": {
+                "type": "object",
+                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "default": {}
               }
             }
           }

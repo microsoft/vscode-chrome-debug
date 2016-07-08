@@ -88,6 +88,23 @@ You can also theoretically attach to other targets that support the same Chrome 
 * runtimeExecutable: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * runtimeArgs: Optional arguments passed to the runtime executable
 * userDataDir: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
+* sourceMapPathOverrides: A mapping of source paths from the sourcemap, to the locations of these sources on disk. Useful when the sourcemap isn't accurate or can't be fixed during the build process. The left hand side of the mapping is a pattern that can contain a wildcard, and will be tested against the `sourceRoot` + `sources` entry in the source map. If it matches, the source file will be resolved to the path on the right hand side, which should be an absolute path to the source file on disk.
+ A couple mappings are applied by default, corresponding to the default configs for Webpack and Meteor -
+```
+"sourceMapOverrides": {
+    "webpack:///*": "${webRoot}/*", // Example: "webpack:///src/app.js" -> "/users/me/project/src/app.js"
+    "meteor://💻app/*": "${webRoot}/*" // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
+}
+```
+If you set `sourceMapOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `diagnosticLogging` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
+
+## Ionic/gulp-sourcemaps note
+Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
+```
+"sourceMapOverrides": {
+    "/source/*": "${workspaceRoot}/*"
+}
+```
 
 ## Usage
 When your launch config is set up, you can debug your project! Pick a launch config from the dropdown on the Debug pane in Code. Press the play button or F5 to start.
