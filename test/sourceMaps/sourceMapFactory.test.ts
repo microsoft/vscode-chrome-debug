@@ -38,10 +38,12 @@ suite('SourceMapFactory', () => {
      * Should take the same args as the SourceMap constructor, but you can't enforce that with TS.
      * Mocks need to be registered before calling this.
      */
-    function setExpectedConstructorArgs(generatedPath: string, json: string, webRoot: string): void {
-        const expectedArgs = arguments;
+    function setExpectedConstructorArgs(generatedPath: string, json: string, webRoot: string, sourceMapSourceOverrides: string = undefined): void {
+        const expectedArgs = [generatedPath, json, webRoot, sourceMapSourceOverrides]; // arguments doesn't have the default param
         function mockSourceMapConstructor(): void {
-            assert.deepEqual(arguments, expectedArgs);
+            assert.deepEqual(
+                Array.prototype.slice.call(arguments),
+                expectedArgs);
         }
 
         mockery.registerMock('./sourceMap', { SourceMap: mockSourceMapConstructor });

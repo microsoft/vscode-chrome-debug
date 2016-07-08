@@ -8,6 +8,7 @@ import * as path from 'path';
 import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
+import {ISourceMapOverrides} from '../debugAdapterInterfaces';
 
 export type MappedPosition = MappedPosition;
 
@@ -22,7 +23,7 @@ export class SourceMap {
      * json - sourcemap contents
      * webRoot - an absolute path
      */
-    public constructor(generatedPath: string, json: string, webRoot: string) {
+    public constructor(generatedPath: string, json: string, webRoot?: string, sourceMapSourceOverrides?: ISourceMapOverrides) {
         this._generatedPath = generatedPath;
 
         const sm = JSON.parse(json);
@@ -37,32 +38,40 @@ export class SourceMap {
         }
         logger.log(`SourceMap: webRoot: ${webRoot}`);
 
-        const absSourceRoot = sourceMapUtils.getAbsSourceRoot(sm.sourceRoot, webRoot, this._generatedPath);
+        // Absolute path
+        const computedSourceRoot = sourceMapUtils.getAbsSourceRoot(sm.sourceRoot, this._generatedPath, webRoot);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
+        const origSourceRoot = sm.sourceRoot;
         sm.sourceRoot = null;
 
-        // sm.sources are relative paths or file:/// urls - (or other URLs?) read the spec...
+        // sm.sources are initially relative paths, file:/// urls, made-up urls like webpack:///./app.js, or paths that start with /.
         // resolve them to file:/// urls, using absSourceRoot, to be simpler and unambiguous, since
         // it needs to look them up later in exactly the same format.
-        // note - the source-map library doesn't like backslashes, but some tools output them.
-        // Which is wrong? Consider filing issues on source-map or tools that output backslashes?
-        // In either case, support whatever works
         this._sources = sm.sources.map(sourcePath => {
-            // Special-case webpack:/// prefixed sources which is kind of meaningless
-            sourcePath = utils.lstrip(sourcePath, 'webpack:///');
-            sourcePath = utils.canonicalizeUrl(sourcePath);
-
-            // If not already an absolute path, make it an absolute path with this._absSourceRoot. Also resolves '..' parts.
-            if (!path.isAbsolute(sourcePath)) {
-                sourcePath = path.resolve(absSourceRoot, sourcePath);
+            if (sourceMapSourceOverrides) {
+                const fullSourceEntry = origSourceRoot ? path.join(origSourceRoot, sourcePath) : sourcePath;
+                const mappedFullSourceEntry = sourceMapUtils.applySourceMapPathOverrides(fullSourceEntry, sourceMapSourceOverrides);
+                if (fullSourceEntry !== mappedFullSourceEntry) {
+                    return utils.canonicalizeUrl(mappedFullSourceEntry);
+                }
             }
 
-            return sourcePath;
+            if (sourcePath.startsWith('file://')) {
+                // strip file://
+                return utils.canonicalizeUrl(sourcePath);
+            }
+
+            if (!path.isAbsolute(sourcePath)) {
+                // Overrides not applied, use the computed sourceRoot
+                sourcePath = path.resolve(computedSourceRoot, sourcePath);
+            }
+
+            return utils.canonicalizeUrl(sourcePath);
         });
 
-        // Rewrite sm.sources to same as this._sources but forward slashes and file url
+        // Rewrite sm.sources to same as this._sources but file url with forward slashes
         sm.sources = this._sources.map(sourceAbsPath => {
             // Convert to file:/// url. After this, it's a file URL for an absolute path to a file on disk with forward slashes.
             // We lowercase so authored <-> generated mapping is not case sensitive.

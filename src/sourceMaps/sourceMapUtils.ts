@@ -7,6 +7,7 @@ import * as url from 'url';
 
 import * as utils from '../utils';
 import * as logger from '../logger';
+import {ISourceMapOverrides} from '../debugAdapterInterfaces';
 
 /**
  * Resolves a relative path in terms of another file
@@ -18,7 +19,7 @@ export function resolveRelativeToFile(absPath: string, relPath: string): string 
 /**
  * Determine the absolute path to the sourceRoot.
  */
-export function getAbsSourceRoot(sourceRoot: string, webRoot: string, generatedPath: string): string {
+export function getAbsSourceRoot(sourceRoot: string, generatedPath: string, webRoot?: string): string {
     let absSourceRoot: string;
     if (sourceRoot) {
         if (sourceRoot.startsWith('file:///')) {
@@ -54,4 +55,74 @@ export function getAbsSourceRoot(sourceRoot: string, webRoot: string, generatedP
     absSourceRoot = utils.fixDriveLetterAndSlashes(absSourceRoot);
 
     return absSourceRoot;
+}
+
+/**
+ * Returns a copy of sourceMapPathOverrides with the ${webRoot} pattern resolved in all entries.
+ */
+export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapOverrides): ISourceMapOverrides {
+    const resolvedOverrides: ISourceMapOverrides = {};
+    for (let pattern in sourceMapPathOverrides) {
+        const replacePattern = sourceMapPathOverrides[pattern];
+        resolvedOverrides[pattern] = replacePattern;
+
+        const webRootIndex = replacePattern.indexOf('${webRoot}');
+        if (webRootIndex === 0) {
+            if (webRoot) {
+                resolvedOverrides[pattern] = replacePattern.replace('${webRoot}', webRoot);
+            } else {
+                logger.log('Warning: sourceMapPathOverrides entry contains ${webRoot}, but webRoot is not set');
+            }
+        } else if (webRootIndex > 0) {
+            logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
+        }
+    }
+
+    return resolvedOverrides;
+}
+
+/**
+ * Applies a set of path pattern mappings to the given path. See tests for examples.
+ * Returns something validated to be an absolute path.
+ */
+export function applySourceMapPathOverrides(sourcePath: string, sourceMapPathOverrides: ISourceMapOverrides): string {
+    // Iterate the key/vals, only apply the first one that matches
+    for (let pattern in sourceMapPathOverrides) {
+        let replacePattern = sourceMapPathOverrides[pattern];
+        const entryStr = `"${pattern}": "${replacePattern}"`;
+
+        // Validate the entry
+        if (!path.isAbsolute(replacePattern)) {
+            logger.log(`Warning: sourceMapPathOverrides entry does not map to an absolute path - ${entryStr}`);
+            continue;
+        }
+
+        const asterisks = pattern.match(/\*/g) || [];
+        if (asterisks.length > 1) {
+            logger.log(`Warning: only one asterisk allowed in a sourceMapPathOverrides entry - ${entryStr}`);
+            continue;
+        }
+
+        const replacePatternAsterisks = replacePattern.match(/\*/g) || [];
+        if (replacePatternAsterisks.length > asterisks.length) {
+            logger.log(`Warning: the right side of a sourceMapPathOverrides entry must have 0 or 1 asterisks - ${entryStr}}`);
+            continue;
+        }
+
+        // Does it match?
+        const patternRegex = new RegExp('^' + pattern.replace(/\*/g, '(.*)') + '$', 'i');
+        const overridePatternMatches = sourcePath.match(patternRegex);
+        if (!overridePatternMatches)
+            continue;
+
+        // Grab the value of the wildcard from the match above, replace the wildcard in the
+        // replacement pattern, and return the result.
+        const wildcardValue = overridePatternMatches[1];
+        let mappedPath = replacePattern.replace(/\*/g, wildcardValue);
+        mappedPath = path.join(mappedPath); // Fix any ..
+        logger.log(`SourceMap: mapping ${sourcePath} => ${mappedPath}, via sourceMapPathOverrides entry - ${entryStr}`);
+        return mappedPath;
+    }
+
+    return sourcePath;
 }

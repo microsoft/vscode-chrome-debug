@@ -10,12 +10,13 @@ import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import {SourceMap} from './sourceMap';
+import {ISourceMapOverrides} from '../debugAdapterInterfaces';
 
 /**
  * pathToGenerated - an absolute local path or a URL.
  * mapPath - a path relative to pathToGenerated.
  */
-export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot: string): Promise<SourceMap> {
+export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot?: string, sourceMapSourceOverrides?: ISourceMapOverrides): Promise<SourceMap> {
     logger.log(`SourceMaps.getMapForGeneratedPath: Finding SourceMap for ${pathToGenerated} by URI: ${mapPath} and webRoot: ${webRoot}`);
 
     // For an inlined sourcemap, mapPath is a data URI containing a blob of base64 encoded data, starting
@@ -33,7 +34,7 @@ export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string,
         if (contents) {
             try {
                 // Throws for invalid JSON
-                return new SourceMap(pathToGenerated, contents, webRoot);
+                return new SourceMap(pathToGenerated, contents, webRoot, sourceMapSourceOverrides);
             } catch (e) {
                 logger.error(`SourceMaps.getMapForGeneratedPath: exception while processing sourcemap: ${e.stack}`);
                 return null;
@@ -77,7 +78,8 @@ function getSourceMapContent(pathToGenerated: string, mapPath: string): Promise<
         } else {
             // runtime script is not on disk, resolve a URL for the map relative to the script
             const scriptUrl = url.parse(pathToGenerated);
-            mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${path.dirname(scriptUrl.pathname)}/${mapPath}`;
+            const mapUrlPathSegment = mapPath.startsWith('/') ? mapPath : path.posix.join(path.dirname(scriptUrl.pathname), mapPath);
+            mapPath = `${scriptUrl.protocol}//${scriptUrl.host}${mapUrlPathSegment}`;
         }
     }
 

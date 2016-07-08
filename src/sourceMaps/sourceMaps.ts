@@ -4,6 +4,8 @@
 
 import {SourceMap, MappedPosition} from './sourceMap';
 import {getMapForGeneratedPath} from './sourceMapFactory';
+import {ISourceMapOverrides} from '../debugAdapterInterfaces';
+import * as sourceMapUtils from './sourceMapUtils';
 
 export class SourceMaps {
     // Maps absolute paths to generated/authored source files to their corresponding SourceMap object
@@ -13,8 +15,11 @@ export class SourceMaps {
     // Path to resolve / paths against
     private _webRoot: string;
 
-    public constructor(webRoot: string) {
+    private _sourceMapSourceOverrides: ISourceMapOverrides;
+
+    public constructor(webRoot?: string, sourceMapSourceOverrides?: ISourceMapOverrides) {
         this._webRoot = webRoot;
+        this._sourceMapSourceOverrides = sourceMapUtils.resolveWebRootPattern(webRoot, sourceMapSourceOverrides);
     }
 
     /**
@@ -57,7 +62,7 @@ export class SourceMaps {
     public processNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
         return this._generatedPathToSourceMap.has(pathToGenerated.toLowerCase()) ?
             Promise.resolve(null) :
-            getMapForGeneratedPath(pathToGenerated, sourceMapURL, this._webRoot).then(sourceMap => {
+            getMapForGeneratedPath(pathToGenerated, sourceMapURL, this._webRoot, this._sourceMapSourceOverrides).then(sourceMap => {
                 if (sourceMap) {
                     this._generatedPathToSourceMap.set(pathToGenerated.toLowerCase(), sourceMap);
                     sourceMap.authoredSources.forEach(authoredSource => this._authoredPathToSourceMap.set(authoredSource.toLowerCase(), sourceMap));

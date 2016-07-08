@@ -7,7 +7,7 @@ import * as path from 'path';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {IDebugTransformer, ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
-    ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../debugAdapterInterfaces';
+    ISetBreakpointsResponseBody, IStackTraceResponseBody, ISourceMapOverrides} from '../debugAdapterInterfaces';
 import {SourceMaps} from '../sourceMaps/sourceMaps';
 import * as utils from '../utils';
 import * as logger from '../logger';
@@ -19,6 +19,12 @@ interface IPendingBreakpoint {
     requestSeq: number;
 }
 
+// Can be applied, or not, by consumers
+export const DefaultWebSourceMapSourceOverrides: ISourceMapOverrides = {
+    'webpack:///*': '${webRoot}/*',
+    'meteor://💻app/*': '${webRoot}/*'
+};
+
 /**
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
  */
@@ -27,7 +33,6 @@ export class SourceMapTransformer implements IDebugTransformer {
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
-    private _webRoot: string;
     private _authoredPathsToMappedBPLines: Map<string, number[]>;
     private _authoredPathsToMappedBPCols: Map<string, number[]>;
 
@@ -41,8 +46,7 @@ export class SourceMapTransformer implements IDebugTransformer {
 
     private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
-            this._webRoot = args.webRoot;
-            this._sourceMaps = new SourceMaps(this._webRoot);
+            this._sourceMaps = new SourceMaps(args.webRoot, args.sourceMapSourceOverrides || DefaultWebSourceMapSourceOverrides);
             this._requestSeqToSetBreakpointsArgs = new Map<number, ISetBreakpointsArgs>();
             this._allRuntimeScriptPaths = new Set<string>();
             this._authoredPathsToMappedBPLines = new Map<string, number[]>();
