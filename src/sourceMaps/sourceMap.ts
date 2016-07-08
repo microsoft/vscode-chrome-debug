@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
-import {ISourceMapOverrides} from '../debugAdapterInterfaces';
+import {ISourceMapPathOverrides} from '../debugAdapterInterfaces';
 
 export type MappedPosition = MappedPosition;
 
@@ -23,7 +23,7 @@ export class SourceMap {
      * json - sourcemap contents
      * webRoot - an absolute path
      */
-    public constructor(generatedPath: string, json: string, webRoot?: string, sourceMapSourceOverrides?: ISourceMapOverrides) {
+    public constructor(generatedPath: string, json: string, webRoot?: string, sourceMapPathOverrides?: ISourceMapPathOverrides) {
         this._generatedPath = generatedPath;
 
         const sm = JSON.parse(json);
@@ -50,9 +50,9 @@ export class SourceMap {
         // resolve them to file:/// urls, using computedSourceRoot, to be simpler and unambiguous, since
         // it needs to look them up later in exactly the same format.
         this._sources = sm.sources.map(sourcePath => {
-            if (sourceMapSourceOverrides) {
+            if (sourceMapPathOverrides) {
                 const fullSourceEntry = origSourceRoot ? (origSourceRoot + sourcePath) : sourcePath;
-                const mappedFullSourceEntry = sourceMapUtils.applySourceMapPathOverrides(fullSourceEntry, sourceMapSourceOverrides);
+                const mappedFullSourceEntry = sourceMapUtils.applySourceMapPathOverrides(fullSourceEntry, sourceMapPathOverrides);
                 if (fullSourceEntry !== mappedFullSourceEntry) {
                     return utils.canonicalizeUrl(mappedFullSourceEntry);
                 }

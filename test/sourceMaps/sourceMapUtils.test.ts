@@ -8,7 +8,7 @@ import * as mockery from 'mockery';
 import * as testUtils from '../testUtils';
 
 import {getComputedSourceRoot, applySourceMapPathOverrides, resolveWebRootPattern} from '../../src/sourceMaps/sourceMapUtils';
-import {ISourceMapOverrides} from '../../src/debugAdapterInterfaces';
+import {ISourceMapPathOverrides} from '../../src/debugAdapterInterfaces';
 
 suite('SourceMapUtils', () => {
     setup(() => {
@@ -81,7 +81,7 @@ suite('SourceMapUtils', () => {
         const WEBROOT = testUtils.pathResolve('/project/webroot');
 
         test('does nothing when no ${webRoot} present', () => {
-            const overrides: ISourceMapOverrides = { '/src': '/project' };
+            const overrides: ISourceMapPathOverrides = { '/src': '/project' };
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, overrides),
                 overrides);
@@ -89,26 +89,26 @@ suite('SourceMapUtils', () => {
 
         test('resolves the webRoot pattern', () => {
             assert.deepEqual(
-                resolveWebRootPattern(WEBROOT, <ISourceMapOverrides>{ '/src': '${webRoot}/app/src'}),
+                resolveWebRootPattern(WEBROOT, <ISourceMapPathOverrides>{ '/src': '${webRoot}/app/src'}),
                 { '/src': WEBROOT + '/app/src' });
         });
 
         test(`ignores the webRoot pattern when it's not at the beginning of the string`, () => {
-            const overrides: ISourceMapOverrides = { '/src': '/app/${webRoot}/src'};
+            const overrides: ISourceMapPathOverrides = { '/src': '/app/${webRoot}/src'};
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, overrides),
                 overrides);
         });
 
         test('works on a set of overrides', () => {
-            const overrides: ISourceMapOverrides = {
+            const overrides: ISourceMapPathOverrides = {
                 '/src*': '${webRoot}/app',
                 '*/app.js': '*/app.js',
                 '/src/app.js': '/src/${webRoot}',
                 '/app.js': '${webRoot}/app.js'
             };
 
-            const expOverrides: ISourceMapOverrides = {
+            const expOverrides: ISourceMapPathOverrides = {
                 '/src*': WEBROOT + '/app',
                 '*/app.js': '*/app.js',
                 '/src/app.js': '/src/${webRoot}',
@@ -121,7 +121,7 @@ suite('SourceMapUtils', () => {
         });
     });
 
-    suite('applySourceMapSourceOverrides', () => {
+    suite('applySourceMapPathOverrides', () => {
         test('removes a matching webpack prefix', () => {
             assert.deepEqual(
                 applySourceMapPathOverrides('webpack:///src/app.js', { 'webpack:///*': testUtils.pathResolve('/project/*') }),

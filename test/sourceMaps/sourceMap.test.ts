@@ -10,7 +10,7 @@ import * as MozSourceMap from 'source-map';
 import * as testUtils from '../testUtils';
 
 import {SourceMap} from '../../src/sourceMaps/sourceMap';
-import {ISourceMapOverrides} from '../../src/debugAdapterInterfaces';
+import {ISourceMapPathOverrides} from '../../src/debugAdapterInterfaces';
 
 /**
  * Unit tests for SourceMap + source-map (the mozilla lib). source-map is included in the test and not mocked
@@ -78,7 +78,7 @@ suite('SourceMap', () => {
         test('sourceMapPathOverrides are respected', () => {
             const sourceMapJSON = getMockSourceMapJSON(SOURCES, SOURCEROOT);
 
-            const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT, <ISourceMapOverrides>{ '/src/*': testUtils.pathResolve('/project/client/*') });
+            const sm = new SourceMap(GENERATED_PATH, sourceMapJSON, WEBROOT, <ISourceMapPathOverrides>{ '/src/*': testUtils.pathResolve('/project/client/*') });
             const expectedSources = SOURCES.map(sourcePath => path.join(testUtils.pathResolve('/project/client'), sourcePath));
             assert.deepEqual(sm.authoredSources, expectedSources);
         });

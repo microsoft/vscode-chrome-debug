@@ -8,7 +8,7 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-export type ISourceMapOverrides = { [pattern: string]: string };
+export type ISourceMapPathOverrides = { [pattern: string]: string };
 
 export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     webRoot?: string;
@@ -23,7 +23,7 @@ export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
     userDataDir?: string;
-    sourceMapSourceOverrides?: ISourceMapOverrides;
+    sourceMapPathOverrides?: ISourceMapPathOverrides;
 }
 
 export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
@@ -34,7 +34,7 @@ export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments
     sourceMaps?: boolean;
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
-    sourceMapSourceOverrides?: ISourceMapOverrides;
+    sourceMapPathOverrides?: ISourceMapPathOverrides;
 }
 
 export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {

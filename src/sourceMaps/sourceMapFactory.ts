@@ -10,13 +10,13 @@ import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import {SourceMap} from './sourceMap';
-import {ISourceMapOverrides} from '../debugAdapterInterfaces';
+import {ISourceMapPathOverrides} from '../debugAdapterInterfaces';
 
 /**
  * pathToGenerated - an absolute local path or a URL.
  * mapPath - a path relative to pathToGenerated.
  */
-export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot?: string, sourceMapSourceOverrides?: ISourceMapOverrides): Promise<SourceMap> {
+export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot?: string, sourceMapPathOverrides?: ISourceMapPathOverrides): Promise<SourceMap> {
     logger.log(`SourceMaps.getMapForGeneratedPath: Finding SourceMap for ${pathToGenerated} by URI: ${mapPath} and webRoot: ${webRoot}`);
 
     // For an inlined sourcemap, mapPath is a data URI containing a blob of base64 encoded data, starting
@@ -34,7 +34,7 @@ export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string,
         if (contents) {
             try {
                 // Throws for invalid JSON
-                return new SourceMap(pathToGenerated, contents, webRoot, sourceMapSourceOverrides);
+                return new SourceMap(pathToGenerated, contents, webRoot, sourceMapPathOverrides);
             } catch (e) {
                 logger.error(`SourceMaps.getMapForGeneratedPath: exception while processing sourcemap: ${e.stack}`);
                 return null;
