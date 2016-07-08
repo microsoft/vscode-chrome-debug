@@ -43,7 +43,7 @@ suite('SourceMapUtils', () => {
         test('handles /src style sourceRoot', () => {
             assert.equal(
                 getAbsSourceRoot('/src', GEN_PATH, WEBROOT),
-                'c:\\project\\webroot\\src');
+                testUtils.pathResolve('/project/webroot/src'));
         });
 
         test('handles ../../src style sourceRoot', () => {
@@ -55,31 +55,25 @@ suite('SourceMapUtils', () => {
         test('handles src style sourceRoot', () => {
             assert.equal(
                 getAbsSourceRoot('src', GEN_PATH, WEBROOT),
-                'c:\\project\\webroot\\code\\src');
+                testUtils.pathResolve('/project/webroot/code/src'));
         });
 
         test('handles runtime script not on disk', () => {
             assert.equal(
                 getAbsSourceRoot('../src', GEN_URL, WEBROOT),
-                'c:\\project\\webroot\\src');
+                testUtils.pathResolve('/project/webroot/src'));
         });
 
         test('when no sourceRoot specified and runtime script is on disk, uses the runtime script dirname', () => {
             assert.equal(
                 getAbsSourceRoot('', GEN_PATH, WEBROOT),
-                'c:\\project\\webroot\\code');
+                testUtils.pathResolve('/project/webroot/code'));
         });
 
         test('when no sourceRoot specified and runtime script is not on disk, uses the runtime script dirname', () => {
             assert.equal(
                 getAbsSourceRoot('', GEN_URL, WEBROOT),
-                'c:\\project\\webroot\\code');
-        });
-
-        test('strips a trailing slash and uses lowercase drive letter', () => {
-            assert.equal(
-                getAbsSourceRoot('/src/', 'C:' + GEN_PATH.substr(1), WEBROOT),
-                'c:\\project\\webroot\\src');
+                testUtils.pathResolve('/project/webroot/code'));
         });
     });
 
