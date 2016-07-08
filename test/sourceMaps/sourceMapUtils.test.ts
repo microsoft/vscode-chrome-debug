@@ -7,7 +7,7 @@ import * as mockery from 'mockery';
 
 import * as testUtils from '../testUtils';
 
-import {getAbsSourceRoot, applySourceMapPathOverrides, resolveWebRootPattern} from '../../src/sourceMaps/sourceMapUtils';
+import {getComputedSourceRoot, applySourceMapPathOverrides, resolveWebRootPattern} from '../../src/sourceMaps/sourceMapUtils';
 import {ISourceMapOverrides} from '../../src/debugAdapterInterfaces';
 
 suite('SourceMapUtils', () => {
@@ -28,7 +28,7 @@ suite('SourceMapUtils', () => {
         // todo
     });
 
-    suite('getAbsSourceRoot()', () => {
+    suite('getComputedSourceRoot()', () => {
         const GEN_PATH = testUtils.pathResolve('/project/webroot/code/script.js');
         const GEN_URL = 'http://localhost:8080/code/script.js';
         const ABS_SOURCEROOT = testUtils.pathResolve('/project/src');
@@ -36,43 +36,43 @@ suite('SourceMapUtils', () => {
 
         test('handles file:/// sourceRoot', () => {
             assert.equal(
-                getAbsSourceRoot('file:///' + ABS_SOURCEROOT, GEN_PATH, WEBROOT),
+                getComputedSourceRoot('file:///' + ABS_SOURCEROOT, GEN_PATH, WEBROOT),
                 ABS_SOURCEROOT);
         });
 
         test('handles /src style sourceRoot', () => {
             assert.equal(
-                getAbsSourceRoot('/src', GEN_PATH, WEBROOT),
+                getComputedSourceRoot('/src', GEN_PATH, WEBROOT),
                 testUtils.pathResolve('/project/webroot/src'));
         });
 
         test('handles ../../src style sourceRoot', () => {
             assert.equal(
-                getAbsSourceRoot('../../src', GEN_PATH, WEBROOT),
+                getComputedSourceRoot('../../src', GEN_PATH, WEBROOT),
                 ABS_SOURCEROOT);
         });
 
         test('handles src style sourceRoot', () => {
             assert.equal(
-                getAbsSourceRoot('src', GEN_PATH, WEBROOT),
+                getComputedSourceRoot('src', GEN_PATH, WEBROOT),
                 testUtils.pathResolve('/project/webroot/code/src'));
         });
 
         test('handles runtime script not on disk', () => {
             assert.equal(
-                getAbsSourceRoot('../src', GEN_URL, WEBROOT),
+                getComputedSourceRoot('../src', GEN_URL, WEBROOT),
                 testUtils.pathResolve('/project/webroot/src'));
         });
 
         test('when no sourceRoot specified and runtime script is on disk, uses the runtime script dirname', () => {
             assert.equal(
-                getAbsSourceRoot('', GEN_PATH, WEBROOT),
+                getComputedSourceRoot('', GEN_PATH, WEBROOT),
                 testUtils.pathResolve('/project/webroot/code'));
         });
 
         test('when no sourceRoot specified and runtime script is not on disk, uses the runtime script dirname', () => {
             assert.equal(
-                getAbsSourceRoot('', GEN_URL, WEBROOT),
+                getComputedSourceRoot('', GEN_URL, WEBROOT),
                 testUtils.pathResolve('/project/webroot/code'));
         });
     });

@@ -39,7 +39,7 @@ export class SourceMap {
         logger.log(`SourceMap: webRoot: ${webRoot}`);
 
         // Absolute path
-        const computedSourceRoot = sourceMapUtils.getAbsSourceRoot(sm.sourceRoot, this._generatedPath, webRoot);
+        const computedSourceRoot = sourceMapUtils.getComputedSourceRoot(sm.sourceRoot, this._generatedPath, webRoot);
 
         // Overwrite the sourcemap's sourceRoot with the version that's resolved to an absolute path,
         // so the work above only has to be done once
@@ -47,7 +47,7 @@ export class SourceMap {
         sm.sourceRoot = null;
 
         // sm.sources are initially relative paths, file:/// urls, made-up urls like webpack:///./app.js, or paths that start with /.
-        // resolve them to file:/// urls, using absSourceRoot, to be simpler and unambiguous, since
+        // resolve them to file:/// urls, using computedSourceRoot, to be simpler and unambiguous, since
         // it needs to look them up later in exactly the same format.
         this._sources = sm.sources.map(sourcePath => {
             if (sourceMapSourceOverrides) {
