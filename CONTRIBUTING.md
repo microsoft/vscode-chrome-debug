@@ -29,6 +29,11 @@ There is a set of mocha tests which can be run with `gulp test` or with the `tes
 See the project under testapp/ for a bunch of test scenarios crammed onto one page.
 
 ## Naming
-Client: VS Code
-Target: The debuggee, which implements the Chrome Debug Protocol
-Server-mode: In the normal use-case, the extension does not run in server-mode. For debugging, you can run it as a debug server - see the 'Debugging' section above.
+* "Client": VS Code
+* "Target": The debuggee, which implements the Chrome Debug Protocol
+* "Server-mode": In the normal use-case, the extension does not run in server-mode. For debugging, you can run it as a debug server - see the 'Debugging' section above.
+
+## Issue tags
+* "Bug": Something that should work is broken
+* "Enhancement": AKA feature request - adds new functionality
+* "Task": Something that needs to be done that doesn't really fix anything or add major functionality. Tests, engineering, documentation, etc.
