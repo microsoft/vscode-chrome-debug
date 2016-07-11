@@ -41,7 +41,7 @@ suite('ChromeDebugAdapter', () => {
             .setup(x => x.on(It.isAnyString(), It.isAny()))
             .callback((eventName: string, handler: (msg: any) => void) => mockEventEmitter.on(eventName, handler));
         mockChromeConnection
-            .setup(x => x.attach(It.isAnyNumber(), It.isValue(undefined), It.isValue(undefined)))
+            .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isValue(undefined)))
             .returns(() => Promise.resolve<void>());
         mockChromeConnection
             .setup(x => x.isAttached)
@@ -77,7 +77,7 @@ suite('ChromeDebugAdapter', () => {
 
         test('if unsuccessful, the promise is rejected and an initialized event is not fired', () => {
             mockChromeConnection
-                .setup(x => x.attach(It.isAnyNumber()))
+                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber()))
                 .returns(() => utils.errP('Testing attach failed'));
 
             chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
@@ -276,7 +276,7 @@ suite('ChromeDebugAdapter', () => {
             require('fs').statSync = () => true;
 
             mockChromeConnection
-                .setup(x => x.attach(It.isAnyNumber(), It.isAnyString(), It.isValue(undefined)))
+                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
                 .returns(() => Promise.resolve<void>())
                 .verifiable();
 
