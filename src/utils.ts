@@ -171,6 +171,8 @@ export function fileUrlToPath(urlOrPath: string): string {
             // Don't add if the url still has a protocol
             urlOrPath = '/' + urlOrPath;
         }
+
+        urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
     }
 
     return urlOrPath;
