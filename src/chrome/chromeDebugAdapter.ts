@@ -526,7 +526,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                     return {
                         id: i,
                         name: 'Unknown',
-                        source: {name: 'eval:Unknown'},
+                        source: {name: 'eval:Unknown', path: ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL + 'Unknown'},
                         line,
                         column
                     };
