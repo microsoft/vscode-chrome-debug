@@ -146,6 +146,23 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(urlOrPath: string): string {
+    urlOrPath = fileUrlToPath(urlOrPath);
+
+    // Remove query params
+    if (urlOrPath.indexOf('?') >= 0) {
+        urlOrPath = urlOrPath.split('?')[0];
+    }
+
+    urlOrPath = stripTrailingSlash(urlOrPath);
+    urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
+
+    return urlOrPath;
+}
+
+/**
+ * If urlOrPath is a file URL, removes the 'file:///', adjusting for platform differences
+ */
+export function fileUrlToPath(urlOrPath: string): string {
     if (urlOrPath.startsWith('file:///')) {
         urlOrPath = urlOrPath.replace('file:///', '');
         urlOrPath = decodeURIComponent(urlOrPath);
@@ -155,14 +172,6 @@ export function canonicalizeUrl(urlOrPath: string): string {
             urlOrPath = '/' + urlOrPath;
         }
     }
-
-    // Remove query params
-    if (urlOrPath.indexOf('?') >= 0) {
-        urlOrPath = urlOrPath.split('?')[0];
-    }
-
-    urlOrPath = stripTrailingSlash(urlOrPath);
-    urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
 
     return urlOrPath;
 }

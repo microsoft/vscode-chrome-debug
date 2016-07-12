@@ -99,18 +99,20 @@ export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringi
 }
 
 /**
- * Returns the targets from the given list that match the targetUrl, which may have * wildcards
- * Ignores the protocol, query params, and is case-insensitive.
+ * Returns the targets from the given list that match the targetUrl, which may have * wildcards.
+ * Ignores the protocol and is case-insensitive.
  */
-export function getMatchingTargets(targets: Chrome.ITarget[], targetUrl: string): Chrome.ITarget[] {
+export function getMatchingTargets(targets: Chrome.ITarget[], targetUrlPattern: string): Chrome.ITarget[] {
     const standardizeUrl = aUrl => {
-        aUrl = utils.canonicalizeUrl(aUrl).toLowerCase();
+        // Strip file:///, if present
+        aUrl = utils.fileUrlToPath(aUrl).toLowerCase();
 
         // Strip the protocol, if present
         if (aUrl.indexOf('://') >= 0) aUrl = aUrl.split('://')[1];
+
         return aUrl;
     };
 
-    const targetUrlRegex = new RegExp('^' + standardizeUrl(targetUrl).replace(/\*/g, '(.*)') + '$', 'g');
+    const targetUrlRegex = new RegExp('^' + standardizeUrl(targetUrlPattern).replace(/\*/g, '.*') + '$', 'g');
     return targets.filter(target => !!standardizeUrl(target.url).match(targetUrlRegex));
 }
