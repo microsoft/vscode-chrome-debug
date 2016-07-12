@@ -8,7 +8,7 @@
             "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
             "args": [ "test" ],
             "cwd": "${workspaceRoot}",
-            // "sourceMaps": true,
+            "sourceMaps": true,
             "outDir": "${workspaceRoot}/out"
         },
         // Since debugging is difficult when using npm link from the project that consumes this extension, here's a workaround.

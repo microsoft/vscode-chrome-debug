@@ -103,16 +103,17 @@ export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringi
  * Ignores the protocol and is case-insensitive.
  */
 export function getMatchingTargets(targets: Chrome.ITarget[], targetUrlPattern: string): Chrome.ITarget[] {
-    const standardizeUrl = aUrl => {
+    const standardizeMatch = aUrl => {
         // Strip file:///, if present
         aUrl = utils.fileUrlToPath(aUrl).toLowerCase();
 
         // Strip the protocol, if present
         if (aUrl.indexOf('://') >= 0) aUrl = aUrl.split('://')[1];
 
-        return aUrl;
+        // Need to do a regex match, but URLs can have special regex chars. Escape those.
+        return encodeURIComponent(aUrl);
     };
 
-    const targetUrlRegex = new RegExp('^' + standardizeUrl(targetUrlPattern).replace(/\*/g, '.*') + '$', 'g');
-    return targets.filter(target => !!standardizeUrl(target.url).match(targetUrlRegex));
+    const targetUrlRegex = new RegExp('^' + standardizeMatch(targetUrlPattern).replace(/\*/g, '.*') + '$', 'g');
+    return targets.filter(target => !!standardizeMatch(target.url).match(targetUrlRegex));
 }
