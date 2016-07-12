@@ -27,9 +27,6 @@ suite('Utils', () => {
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
         path = require('path');
-
-        mockery.registerAllowables([
-            MODULE_UNDER_TEST, 'url', './logger']);
     });
 
     teardown(() => {
