@@ -10,6 +10,20 @@
             "cwd": "${workspaceRoot}",
             // "sourceMaps": true,
             "outDir": "${workspaceRoot}/out"
+        },
+        // Since debugging is difficult when using npm link from the project that consumes this extension, here's a workaround.
+        // Replace the paths below with the paths to your own project.
+        {
+            "name": "launch as server",
+            "type": "node",
+            "request": "launch",
+            "cwd": "C:/users/roblo/.vscode/extensions/vscode-chrome-debug",
+            "program": "C:/users/roblo/.vscode/extensions/vscode-chrome-debug/out/src/chromeDebug.js",
+            "runtimeArgs": ["--harmony"],
+            "stopOnEntry": false,
+            "args": [ "--server=4712" ],
+            "sourceMaps": true,
+            "outDir": "${workspaceRoot}/out"
         }
     ]
 }

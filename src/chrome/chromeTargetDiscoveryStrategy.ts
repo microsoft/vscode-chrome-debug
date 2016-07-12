@@ -15,9 +15,16 @@ export const getChromeTargetWebSocketURL: ITargetDiscoveryStrategy = (address: s
     targetFilter = targetFilter || (target => true);
 
     return _getTargets(address, port, targetFilter).then(targets => {
+        if (!targets.length) {
+            return utils.errP('Got a response from the target app, but no target pages found');
+        }
+
         const target = _selectTarget(targets, targetUrl);
+        logger.verbose(`Attaching to target: ${JSON.stringify(target)}`);
+
         const wsUrl = target.webSocketDebuggerUrl;
         logger.verbose(`WebSocket Url: ${wsUrl}`);
+
         return wsUrl;
     });
 };
@@ -50,18 +57,13 @@ function _selectTarget(targets: Chrome.ITarget[], targetUrl?: string): Chrome.IT
         if (filteredTargets.length) {
             targets = filteredTargets;
         } else {
-            logger.error(`Warning: Can't find a target that matches: ${targetUrl}. Available pages: ${JSON.stringify(targets.map(target => target.url))}`);
+            throw new Error(`Can't find a target that matches: ${targetUrl}. Available pages: ${JSON.stringify(targets.map(target => target.url))}`);
         }
     }
 
-    if (targets.length) {
-        if (targets.length > 1) {
-            logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(targets.map(target => target.url)));
-        }
-
-        return targets[0];
-    } else {
-        logger.log('Got a response from the target app, but no target pages found');
-        return null;
+    if (targets.length > 1) {
+        logger.log('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(targets.map(target => target.url)));
     }
+
+    return targets[0];
 }

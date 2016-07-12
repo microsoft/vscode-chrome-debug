@@ -98,23 +98,19 @@ export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringi
     return { value, variableHandleRef };
 }
 
+/**
+ * Returns the targets from the given list that match the targetUrl, which may have * wildcards
+ * Ignores the protocol, query params, and is case-insensitive.
+ */
 export function getMatchingTargets(targets: Chrome.ITarget[], targetUrl: string): Chrome.ITarget[] {
-    const standardizeUrl = aUrl => utils.canonicalizeUrl(aUrl).toLowerCase();
+    const standardizeUrl = aUrl => {
+        aUrl = utils.canonicalizeUrl(aUrl).toLowerCase();
 
-    // Look for an exact match
-    targetUrl = standardizeUrl(targetUrl);
-    const exactMatchTargets = targets.filter(target => standardizeUrl(target.url) === targetUrl);
+        // Strip the protocol, if present
+        if (aUrl.indexOf('://') >= 0) aUrl = aUrl.split('://')[1];
+        return aUrl;
+    };
 
-    if (exactMatchTargets.length) {
-        targets = exactMatchTargets;
-    } else {
-        // Strip the protocol, if present. Don't try parsing this since it may not be an actual url, e.g., 'localhost'.
-        // canonicalizeUrl would have already fixed file:/// or ?params
-        if (targetUrl.indexOf('://') >= 0) targetUrl = targetUrl.split('://')[1];
-
-        // Find targets that have the targetUrl as a substring
-        targets = targets.filter(target => standardizeUrl(target.url).indexOf(targetUrl) >= 0);
-    }
-
-    return targets;
+    const targetUrlRegex = new RegExp('^' + standardizeUrl(targetUrl).replace(/\*/g, '(.*)') + '$', 'g');
+    return targets.filter(target => !!standardizeUrl(target.url).match(targetUrlRegex));
 }
