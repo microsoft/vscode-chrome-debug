@@ -9,6 +9,7 @@ import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 import {IDebugAdapter} from '../debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import {ChromeConnection, ITargetFilter} from './chromeConnection';
+import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
 
 import * as logger from '../logger';
 
@@ -51,7 +52,7 @@ export class ChromeDebugSession extends DebugSession {
         opts: IChromeDebugSessionOpts = {}) {
         super(targetLinesStartAt1, isServer);
 
-        const connection = new ChromeConnection(opts.targetFilter);
+        const connection = new ChromeConnection(getChromeTargetWebSocketURL, opts.targetFilter);
         const adapter = opts.adapter || new ChromeDebugAdapter(connection);
         const logFileDirectory = opts.logFileDirectory;
 

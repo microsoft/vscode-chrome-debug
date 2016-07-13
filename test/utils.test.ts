@@ -22,14 +22,11 @@ suite('Utils', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
 
-        mockery.enable({ useCleanCache: true, warnOnReplace: false });
+        mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
         testUtils.registerWin32Mocks();
         mockery.registerMock('fs', { statSync: () => { } });
         mockery.registerMock('http', {});
         path = require('path');
-
-        mockery.registerAllowables([
-            MODULE_UNDER_TEST, 'url', './logger']);
     });
 
     teardown(() => {
@@ -177,24 +174,6 @@ suite('Utils', () => {
             testCanUrl('c:/thing/file.js', 'c:\\thing\\file.js');
         });
 
-        test('removes file:///', () => {
-            testCanUrl('file:///c:/file.js', 'c:\\file.js');
-        });
-
-        test('unescape when doing url -> path', () => {
-            testCanUrl('file:///c:/path%20with%20spaces', 'c:\\path with spaces');
-        });
-
-        test('ensures local path starts with / on OSX', () => {
-            mockery.registerMock('os', { platform: () => 'darwin' });
-            testCanUrl('file:///Users/scripts/app.js', '/Users/scripts/app.js');
-        });
-
-        test('force lowercase drive letter on Win to match VS Code', () => {
-            // note default 'os' mock is win32
-            testCanUrl('file:///D:/FILE.js', 'd:\\FILE.js');
-        });
-
         test('removes query params from url', () => {
             const cleanUrl = 'http://site.com/My/Cool/Site/script.js';
             const url = cleanUrl + '?stuff';
@@ -203,6 +182,35 @@ suite('Utils', () => {
 
         test('strips trailing slash', () => {
             testCanUrl('http://site.com/', 'http://site.com');
+        });
+    });
+
+    suite('fileUrlToPath()', () => {
+        function testFileUrlToPath(inUrl: string, expectedUrl: string): void {
+            assert.equal(getUtils().fileUrlToPath(inUrl), expectedUrl);
+        }
+
+        test('removes file:///', () => {
+            testFileUrlToPath('file:///c:/file.js', 'c:\\file.js');
+        });
+
+        test('unescape when doing url -> path', () => {
+            testFileUrlToPath('file:///c:/path%20with%20spaces', 'c:\\path with spaces');
+        });
+
+        test('ensures local path starts with / on OSX', () => {
+            mockery.registerMock('os', { platform: () => 'darwin' });
+            testFileUrlToPath('file:///Users/scripts/app.js', '/Users/scripts/app.js');
+        });
+
+        test('force lowercase drive letter on Win to match VS Code', () => {
+            // note default 'os' mock is win32
+            testFileUrlToPath('file:///D:/FILE.js', 'd:\\FILE.js');
+        });
+
+        test('ignores non-file URLs', () => {
+            const url = 'http://localhost/blah';
+            testFileUrlToPath(url, url);
         });
     });
 

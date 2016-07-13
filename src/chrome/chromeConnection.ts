@@ -5,9 +5,7 @@
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
 
-import * as utils from '../utils';
 import * as logger from '../logger';
-import * as chromeUtils from './chromeUtils';
 import * as Chrome from './chromeDebugProtocol';
 
 interface IMessageWithId {
@@ -136,6 +134,7 @@ class ResReqWebSocket extends EventEmitter {
 }
 
 export type ITargetFilter = (target: Chrome.ITarget) => boolean;
+export type ITargetDiscoveryStrategy = (address: string, port: number, targetFilter?: ITargetFilter, targetUrl?: string) => Promise<string>;
 
 /**
  * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
@@ -144,10 +143,11 @@ export class ChromeConnection {
     private _nextId: number;
     private _socket: ResReqWebSocket;
     private _targetFilter: ITargetFilter;
+    private _targetDiscoveryStrategy: ITargetDiscoveryStrategy;
 
-    constructor(targetFilter?: ITargetFilter) {
-        // Take the custom targetFilter, default to returning all targets
-        this._targetFilter = targetFilter || (target => true);
+    constructor(targetDiscovery: ITargetDiscoveryStrategy, targetFilter?: ITargetFilter) {
+        this._targetFilter = targetFilter;
+        this._targetDiscoveryStrategy = targetDiscovery;
 
         // this._socket should exist before attaching so consumers can call on() before attach, which fires events
         this.reset();
@@ -162,55 +162,16 @@ export class ChromeConnection {
     /**
      * Attach the websocket to the first available tab in the chrome instance with the given remote debugging port number.
      */
-    public attach(port: number, url?: string, address?: string): Promise<void> {
-        return utils.retryAsync(() => this._attach(port, url, address), /*timeoutMs*/ 6000)
+    public attach(address = '127.0.0.1', port = 9222, targetUrl?: string): Promise<void> {
+        return this._attach(address, port, targetUrl)
             .then(() => this.sendMessage('Debugger.enable'))
             .then(() => this.sendMessage('Console.enable'))
             .then(() => { });
     }
 
-    public _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
-        address = address || '127.0.0.1';
-        logger.log(`Attempting to attach on ${address}:${port}`);
-        return utils.getURL(`http://${address}:${port}/json`).then(jsonResponse => {
-            // Validate every step of processing the response
-            try {
-                const responseArray = JSON.parse(jsonResponse);
-                if (Array.isArray(responseArray)) {
-                    // Filter out some targets as specified by the extension
-                    let targets = responseArray.filter(this._targetFilter);
-
-                    if (targetUrl) {
-                        // If a url was specified, try to filter to that url
-                        const filteredTargets = chromeUtils.getMatchingTargets(targets, targetUrl);
-                        if (filteredTargets.length) {
-                            targets = filteredTargets;
-                        } else {
-                            logger.error(`Warning: Can't find a target that matches: ${targetUrl}. Available pages: ${JSON.stringify(targets.map(target => target.url))}`);
-                        }
-                    }
-
-                    if (targets.length) {
-                        if (targets.length > 1) {
-                            logger.error('Warning: Found more than one valid target page. Attaching to the first one. Available pages: ' + JSON.stringify(targets.map(target => target.url)));
-                        }
-
-                        const wsUrl = targets[0].webSocketDebuggerUrl;
-                        logger.verbose(`WebSocket Url: ${wsUrl}`);
-                        if (wsUrl) {
-                            return this._socket.open(wsUrl);
-                        }
-                    }
-                }
-            } catch (e) {
-                // JSON.parse can throw
-            }
-
-            return utils.errP('Got response from target app, but no valid target pages found');
-        },
-        e => {
-            return utils.errP('Cannot connect to the target: ' + e.message);
-        });
+    private _attach(address: string, port: number, targetUrl?: string): Promise<void> {
+        return this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl)
+            .then(wsUrl => this._socket.open(wsUrl));
     }
 
     public close(): void {

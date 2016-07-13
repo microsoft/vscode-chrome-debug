@@ -4,11 +4,9 @@
 
 import * as assert from 'assert';
 import * as mockery from 'mockery';
-import {Mock, It, MockBehavior} from 'typemoq';
 import * as path from 'path';
 
 import * as testUtils from '../testUtils';
-import * as utils from '../../src/utils';
 
 import {getMapForGeneratedPath as _getMapForGeneratedPath} from '../../src/sourceMaps/sourceMapFactory';
 const MODULE_UNDER_TEST = '../../src/sourceMaps/sourceMapFactory';
@@ -48,17 +46,6 @@ suite('SourceMapFactory', () => {
 
         mockery.registerMock('./sourceMap', { SourceMap: mockSourceMapConstructor });
         getMapForGeneratedPath = require(MODULE_UNDER_TEST).getMapForGeneratedPath;
-    }
-
-    function registerMockGetURL(url: string, contents: string): void {
-        const utilsMock = Mock.ofInstance(utils, MockBehavior.Strict);
-        mockery.registerMock('../utils', utilsMock.object);
-        utilsMock
-            .setup(x => x.getURL(It.isValue(url)))
-            .returns(() => Promise.resolve(contents));
-        utilsMock
-            .setup(x => x.isURL(It.isValue(url)))
-            .returns(() => true);
     }
 
     // How these tests basically work - The factory function should call the mocked SourceMap constructor
@@ -108,7 +95,7 @@ suite('SourceMapFactory', () => {
         });
 
         test('handles a relative path with a generated script url', () => {
-            registerMockGetURL(GENERATED_SCRIPT_URL + '.map', FILEDATA);
+            testUtils.registerMockGetURL('../utils', GENERATED_SCRIPT_URL + '.map', FILEDATA);
             setExpectedConstructorArgs(GENERATED_SCRIPT_URL, FILEDATA, WEBROOT);
 
             return getMapForGeneratedPath(GENERATED_SCRIPT_URL, 'script.js.map', WEBROOT).then(sourceMap => {

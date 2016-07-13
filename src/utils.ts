@@ -146,15 +146,7 @@ export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<a
  * http://site.com/ => http://site.com
  */
 export function canonicalizeUrl(urlOrPath: string): string {
-    if (urlOrPath.startsWith('file:///')) {
-        urlOrPath = urlOrPath.replace('file:///', '');
-        urlOrPath = decodeURIComponent(urlOrPath);
-        if (urlOrPath[0] !== '/' && urlOrPath.indexOf(':') < 0) {
-            // Ensure unix-style path starts with /, it can be removed when file:/// was stripped.
-            // Don't add if the url still has a protocol
-            urlOrPath = '/' + urlOrPath;
-        }
-    }
+    urlOrPath = fileUrlToPath(urlOrPath);
 
     // Remove query params
     if (urlOrPath.indexOf('?') >= 0) {
@@ -163,6 +155,25 @@ export function canonicalizeUrl(urlOrPath: string): string {
 
     urlOrPath = stripTrailingSlash(urlOrPath);
     urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
+
+    return urlOrPath;
+}
+
+/**
+ * If urlOrPath is a file URL, removes the 'file:///', adjusting for platform differences
+ */
+export function fileUrlToPath(urlOrPath: string): string {
+    if (urlOrPath.startsWith('file:///')) {
+        urlOrPath = urlOrPath.replace('file:///', '');
+        urlOrPath = decodeURIComponent(urlOrPath);
+        if (urlOrPath[0] !== '/' && urlOrPath.indexOf(':') < 0) {
+            // Ensure unix-style path starts with /, it can be removed when file:/// was stripped.
+            // Don't add if the url still has a protocol
+            urlOrPath = '/' + urlOrPath;
+        }
+
+        urlOrPath = fixDriveLetterAndSlashes(urlOrPath);
+    }
 
     return urlOrPath;
 }
@@ -210,11 +221,13 @@ export function stripTrailingSlash(aPath: string): string {
  * when passing on a failure from a Promise error handler.
  * @param msg - Should be either a string or an Error
  */
-export function errP(msg: any): Promise<any> {
+export function errP(msg: string|Error): Promise<any> {
+    const isErrorLike = (thing: any): thing is Error => !!thing.message;
+
     let e: Error;
     if (!msg) {
         e = new Error('Unknown error');
-    } else if (msg.message) {
+    } else if (isErrorLike(msg)) {
         // msg is already an Error object
         e = msg;
     } else {
@@ -237,7 +250,7 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
-                    logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
+                    logger.error('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });

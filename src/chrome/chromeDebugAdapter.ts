@@ -187,7 +187,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
     }
 
-    private _attach(port: number, url?: string, address?: string): Promise<void> {
+    private _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
         // Client is attaching - if not attached to the chrome target, create a connection and attach
         this._clientAttached = true;
         if (!this._chromeConnection.isAttached) {
@@ -203,7 +203,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession());
             this._chromeConnection.on('error', () => this.terminateSession());
 
-            return this._chromeConnection.attach(port, url, address).then(
+            return this._chromeConnection.attach(address, port, targetUrl).then(
                 () => this.fireEvent(new InitializedEvent()),
                 e => {
                     this.clearEverything();
