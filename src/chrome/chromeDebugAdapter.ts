@@ -42,8 +42,9 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
 
     private _chromeProc: ChildProcess;
-    private _chromeConnection: ChromeConnection;
     private _eventHandler: (event: DebugProtocol.Event) => void;
+
+    protected _chromeConnection: ChromeConnection;
 
     public constructor(chromeConnection: ChromeConnection) {
         this._chromeConnection = chromeConnection;
