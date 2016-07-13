@@ -228,7 +228,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this.clearTargetContext();
     }
 
-    private onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
+    protected onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
 
         this._overlayHelper.doAndCancel(() => this._chromeConnection.page_setOverlayMessage(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
@@ -264,7 +264,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this.fireEvent(new StoppedEvent(reason, /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
     }
 
-    private onDebuggerResumed(): void {
+    protected onDebuggerResumed(): void {
         this._overlayHelper.wait(() => this._chromeConnection.page_clearOverlayMessage());
         this._currentStack = null;
 
@@ -277,7 +277,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
     }
 
-    private onScriptParsed(script: Chrome.Debugger.Script): void {
+    protected onScriptParsed(script: Chrome.Debugger.Script): void {
         // Totally ignore extension scripts, internal Chrome scripts, and so on
         if (this.shouldIgnoreScript(script)) {
             return;
@@ -292,7 +292,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url, sourceMapURL: script.sourceMapURL }));
     }
 
-    private onBreakpointResolved(params: Chrome.Debugger.BreakpointResolvedParams): void {
+    protected onBreakpointResolved(params: Chrome.Debugger.BreakpointResolvedParams): void {
         const script = this._scriptsById.get(params.location.scriptId);
         if (!script) {
             // Breakpoint resolved for a script we don't know about
@@ -304,7 +304,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this._committedBreakpointsByUrl.set(script.url, committedBps);
     }
 
-    private onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
+    protected onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
         const formattedMessage = formatConsoleMessage(params.message);
         if (formattedMessage) {
             this.fireEvent(new OutputEvent(

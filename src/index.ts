@@ -6,6 +6,7 @@ import {ChromeConnection} from './chrome/chromeConnection';
 import {ChromeDebugAdapter} from './chrome/chromeDebugAdapter';
 import * as Chrome from './chrome/chromeDebugProtocol';
 import {ChromeDebugSession, IChromeDebugSessionOpts} from './chrome/chromeDebugSession';
+import * as chromeTargetDiscoveryStrategy from './chrome/chromeTargetDiscoveryStrategy';
 import * as chromeUtils from './chrome/chromeUtils';
 
 import * as debugAdapterInterfaces from './debugAdapterInterfaces';
@@ -22,6 +23,7 @@ export {
     Chrome,
     ChromeDebugSession,
     IChromeDebugSessionOpts,
+    chromeTargetDiscoveryStrategy,
     chromeUtils,
 
     debugAdapterInterfaces,
