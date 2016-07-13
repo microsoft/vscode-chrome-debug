@@ -223,6 +223,29 @@ export namespace Page {
     }
 }
 
+export namespace Emulation {
+    interface SetDeviceMetricsOverrideParams {
+        width: number;
+        height: number;
+        deviceScaleFactor: number;
+        mobile: boolean;
+        fitWindow: boolean;
+        scale?: number;
+        offsetX?: number;
+        offsetY?: number;
+        screenWidth?: number;
+        screenHeight?: number;
+        positionX?: number;
+        positionY?: number;
+        screenOrientation?: ScreenOrientation;
+    }
+
+    interface ScreenOrientation {
+        type: string;
+        angle: number;
+    }
+}
+
 export namespace Console {
     export interface MessageAddedParams {
         message: Message;
