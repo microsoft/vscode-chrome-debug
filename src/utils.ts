@@ -250,7 +250,7 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
-                    logger.log('Http Get failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
+                    logger.error('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });
