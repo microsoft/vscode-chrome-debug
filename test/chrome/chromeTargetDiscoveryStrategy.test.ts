@@ -73,5 +73,21 @@ suite('ChromeTargetDiscoveryStrategy', () => {
                 assert.deepEqual(wsUrl, targets[1].webSocketDebuggerUrl);
             });
         });
+
+        test('rejects promise if no matching targets', () => {
+            const targets = [
+                {
+                    url: 'http://localhost/foo',
+                    webSocketDebuggerUrl: 'ws://1'
+                },
+                {
+                    url: 'http://localhost/bar',
+                    webSocketDebuggerUrl: 'ws://2'
+                }];
+            registerTargetListContents(JSON.stringify(targets));
+
+            return testUtils.assertPromiseRejected(
+                getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, target => target.url === targets[1].url, 'blah.com'));
+        });
     });
 });

@@ -108,7 +108,8 @@ export function registerMockReadFile(...entries: { absPath: string; data: string
  * Note that if you call this twice, the second call will overwrite the first.
  */
 export function registerMockGetURL(utilsRelativePath: string, url: string, contents: string, isError = false): void {
-    const utilsMock = Mock.ofInstance(utils, MockBehavior.Strict);
+    const utilsMock = Mock.ofInstance(utils);
+    utilsMock.callBase = true;
     mockery.registerMock(utilsRelativePath, utilsMock.object);
     utilsMock
         .setup(x => x.getURL(It.isValue(url)))

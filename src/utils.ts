@@ -119,14 +119,14 @@ export function promiseTimeout(p?: Promise<any>, timeoutMs = 1000, timeoutMsg?: 
     });
 }
 
-export function retryAsync(fn: () => Promise<any>, timeoutMs: number): Promise<any> {
+export function retryAsync(fn: () => Promise<any>, timeoutMs: number, intervalDelay = 0): Promise<any> {
     const startTime = Date.now();
 
     function tryUntilTimeout(): Promise<any> {
         return fn().catch(
             e => {
-                if (Date.now() - startTime < timeoutMs) {
-                    return tryUntilTimeout();
+                if (Date.now() - startTime < (timeoutMs - intervalDelay)) {
+                    return promiseTimeout(null, intervalDelay).then(tryUntilTimeout);
                 } else {
                     return errP(e);
                 }
