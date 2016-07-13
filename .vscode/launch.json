@@ -17,9 +17,12 @@
             "name": "launch as server",
             "type": "node",
             "request": "launch",
-            "cwd": "C:/users/roblo/.vscode/extensions/vscode-chrome-debug",
-            "program": "C:/users/roblo/.vscode/extensions/vscode-chrome-debug/out/src/chromeDebug.js",
-            "runtimeArgs": ["--harmony"],
+
+            // These paths are only valid for my particular setup! You need to replace them with your own.
+            "windows": {
+                "cwd": "${workspaceRoot}/../../.vscode/extensions/vscode-chrome-debug",
+                "program": "${workspaceRoot}/../../.vscode/extensions/vscode-chrome-debug/out/src/chromeDebug.js"
+            },
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
