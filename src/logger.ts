@@ -57,9 +57,9 @@ export function setMinLogLevel(logLevel: LogLevel): void {
 }
 
 export function init(logCallback: ILogCallback, logFileDirectory?: string): void {
-    if (!_logger) {
-        _logger = new Logger(logCallback, logFileDirectory);
-    }
+    // Re-init, create new global Logger
+    _pendingLogQ = [];
+    _logger = new Logger(logCallback, logFileDirectory);
 }
 
 /**

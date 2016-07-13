@@ -114,6 +114,13 @@ export function getMatchingTargets(targets: Chrome.ITarget[], targetUrlPattern: 
         return encodeURIComponent(aUrl);
     };
 
-    const targetUrlRegex = new RegExp('^' + standardizeMatch(targetUrlPattern).replace(/\*/g, '.*') + '$', 'g');
+    targetUrlPattern = standardizeMatch(targetUrlPattern).replace(/\*/g, '.*');
+    const encodedSlash = encodeURIComponent('/');
+    if (!targetUrlPattern.endsWith(encodedSlash)) {
+        // Add optional ending slash - so "localhost:3000" will match "localhost:3000/"
+        targetUrlPattern += `(${encodedSlash})?`;
+    }
+
+    const targetUrlRegex = new RegExp('^' + targetUrlPattern + '$', 'g');
     return targets.filter(target => !!standardizeMatch(target.url).match(targetUrlRegex));
 }

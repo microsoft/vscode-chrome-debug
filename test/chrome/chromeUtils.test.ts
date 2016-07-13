@@ -225,5 +225,12 @@ suite('ChromeUtils', () => {
                 chromeUtils.getMatchingTargets(targets, 'http://localhost/[bar]/?(*)'),
                 [targets[0], targets[2]]);
         });
+
+        test('matches an ending slash', () => {
+            const targets = makeTargets('http://localhost/', 'http://localhost');
+            assert.deepEqual(
+                chromeUtils.getMatchingTargets(targets, 'http://localhost'),
+                targets);
+        });
     });
 });
