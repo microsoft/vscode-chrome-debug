@@ -8,6 +8,7 @@ import * as Chrome from './chrome/chromeDebugProtocol';
 import {ChromeDebugSession, IChromeDebugSessionOpts} from './chrome/chromeDebugSession';
 import * as chromeUtils from './chrome/chromeUtils';
 
+import * as debugAdapterInterfaces from './debugAdapterInterfaces';
 import {AdapterProxy} from './adapterProxy';
 import {LineNumberTransformer} from './transformers/lineNumberTransformer';
 import {SourceMapTransformer} from './transformers/sourceMapTransformer';
@@ -23,6 +24,7 @@ export {
     IChromeDebugSessionOpts,
     chromeUtils,
 
+    debugAdapterInterfaces,
     AdapterProxy,
     LineNumberTransformer,
     SourceMapTransformer,
