@@ -4,4 +4,4 @@
 * Make the attach retry logic more resilient.
 * Support wildcards in the `"url"` parameter for 'attach' configs - #200
 * Fix `NaN` and `Infinity` display (Microsoft/vscode-chrome-debug#190)
-* Fix `sourceMapPathOverrides` doc mistake - thanks @lijunle!
+* Fix `sourceMapPathOverrides` doc mistake - #194, thanks @lijunle!
