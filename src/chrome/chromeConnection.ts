@@ -245,6 +245,32 @@ export class ChromeConnection {
         return this.sendMessage('Page.setOverlayMessage');
     }
 
+    public emulation_clearDeviceMetricsOverride(): Promise<Chrome.Response> {
+        return this.sendMessage('Emulation.clearDeviceMetricsOverride');
+    }
+
+    public emulation_setEmulatedMedia(media: string): Promise<Chrome.Response> {
+        return this.sendMessage('Emulation.setEmulatedMedia', { media });
+    }
+
+    public emulation_setTouchEmulationEnabled(enabled: boolean, configuration?: string): Promise<Chrome.Response> {
+        let messageData: { enabled: boolean; configuration?: string; } = { enabled };
+
+        if (configuration) {
+            messageData.configuration = configuration;
+        }
+
+        return this.sendMessage('Emulation.setTouchEmulationEnabled', messageData);
+    }
+
+    public emulation_resetScrollAndPageScaleFactor(): Promise<Chrome.Response> {
+        return this.sendMessage('Emulation.resetScrollAndPageScaleFactor');
+    }
+
+    public emulation_setDeviceMetricsOverride(metrics: Chrome.Emulation.SetDeviceMetricsOverrideParams): Promise<Chrome.Response> {
+        return this.sendMessage('Emulation.setDeviceMetricsOverride', metrics);
+    }
+
     private sendMessage(method: any, params?: any): Promise<Chrome.Response> {
         return this._socket.sendMessage({
             id: this._nextId++,
