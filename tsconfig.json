@@ -5,7 +5,8 @@
         "noImplicitAny": false,
         "target": "ES5",
         "sourceMap": true,
-        "outDir": "out"
+        "outDir": "out",
+        "declaration": true
     },
     "exclude": [
         "node_modules",
