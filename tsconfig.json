@@ -6,7 +6,9 @@
         "target": "ES5",
         "sourceMap": true,
         "outDir": "out",
-        "declaration": true
+        "declaration": true,
+        "noUnusedLocals": true,
+        "noImplicitThis": true
     },
     "exclude": [
         "node_modules",

@@ -58,12 +58,8 @@ suite('SourceMapTransformer', () => {
         }
 
         let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
-        const transformer = new SourceMapTransformer();
-        transformer.launch(<ILaunchRequestArgs><any>{
-            sourceMaps,
-            generatedCodeDirectory: 'test'
-        });
-
+        const transformer: _SourceMapTransformer = new SourceMapTransformer();
+        transformer.launch(<ILaunchRequestArgs>{ sourceMaps });
         return transformer;
     }
 
@@ -312,8 +308,6 @@ suite('SourceMapTransformer', () => {
 });
 
 class StubSourceMaps {
-    constructor(private generatedCodeDirectory: string) { }
-
     public getGeneratedPathFromAuthoredPath(path: string): string {
         return RUNTIME_PATH;
     }
