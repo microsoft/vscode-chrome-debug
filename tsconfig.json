@@ -8,7 +8,9 @@
         "outDir": "out",
         "declaration": true,
         "noUnusedLocals": true,
-        "noImplicitThis": true
+        "noImplicitThis": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true
     },
     "exclude": [
         "node_modules",
