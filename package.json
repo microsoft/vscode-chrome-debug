@@ -21,7 +21,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "0.1.11"
+    "vscode-chrome-debug-core": "0.1.16"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
@@ -29,11 +29,14 @@
     "gulp-tslint": "^3.3.1",
     "gulp-typescript": "^2.12.1",
     "gulp-util": "^3.0.5",
+    "mocha": "^2.5.3",
     "tslint": "^2.5.1",
     "typescript": "^1.8.9",
-    "typings": "^0.7.12"
+    "typings": "^0.7.12",
+    "vscode-debugadapter-testsupport": "^1.10.0"
   },
   "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test",
     "postinstall": "typings install"
   },
   "contributes": {
@@ -77,7 +80,7 @@
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
               },
-              "address" :{
+              "address": {
                 "type": "string",
                 "description": "TCP/IP address of debug port",
                 "default": "127.0.0.1"
@@ -150,7 +153,7 @@
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
               },
-              "address" :{
+              "address": {
                 "type": "string",
                 "description": "TCP/IP address of debug port",
                 "default": "127.0.0.1"
