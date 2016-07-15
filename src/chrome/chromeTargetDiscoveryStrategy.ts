@@ -36,8 +36,11 @@ function _getTargets(address: string, port: number, targetFilter: ITargetFilter)
         try {
             const responseArray = JSON.parse(jsonResponse);
             if (Array.isArray(responseArray)) {
-                // Filter out some targets as specified by the extension
-                return responseArray.filter(targetFilter);
+                return (responseArray as Chrome.ITarget[])
+                    // Filter out some targets as specified by the extension
+                    .filter(targetFilter)
+                    // Targets that have some devtool attached already have webSocketDebuggerUrl: undefined
+                    .filter(target => !!target.webSocketDebuggerUrl);
             }
         } catch (e) {
             // JSON.parse can throw

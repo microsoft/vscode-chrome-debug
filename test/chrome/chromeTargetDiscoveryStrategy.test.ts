@@ -87,7 +87,38 @@ suite('ChromeTargetDiscoveryStrategy', () => {
             registerTargetListContents(JSON.stringify(targets));
 
             return testUtils.assertPromiseRejected(
-                getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, target => target.url === targets[1].url, 'blah.com'));
+                getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, undefined, 'blah.com'));
+        });
+
+        test('ignores targets with no webSocketDebuggerUrl (as when chrome devtools is attached)', () => {
+            const targets = [
+                {
+                    url: 'http://localhost/foo',
+                },
+                {
+                    url: 'http://localhost/bar',
+                }];
+            registerTargetListContents(JSON.stringify(targets));
+
+            return testUtils.assertPromiseRejected(
+                getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, undefined, 'localhost/*'));
+        });
+
+        test('returns the first target when no target url pattern given', () => {
+            const targets = [
+                {
+                    url: 'http://localhost/foo',
+                    webSocketDebuggerUrl: 'ws://1'
+                },
+                {
+                    url: 'http://localhost/bar',
+                    webSocketDebuggerUrl: 'ws://2'
+                }];
+            registerTargetListContents(JSON.stringify(targets));
+
+            return getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT).then(wsUrl => {
+                assert.deepEqual(wsUrl, targets[0].webSocketDebuggerUrl);
+            });
         });
     });
 });
