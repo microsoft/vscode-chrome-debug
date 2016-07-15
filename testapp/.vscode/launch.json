@@ -9,16 +9,8 @@
             "url": "http://localhost:8080/index.html",
             "sourceMaps": true,
             "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
-        },
-        {
-            "name": "launch for file",
-            "type": "chrome",
-            "request": "launch",
-            "file": "${workspaceRoot}/wwwroot/index.html",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "webRoot": "${workspaceRoot}/wwwroot",
+            "userDataDir": "${workspaceRoot}/.vscode/chrome"
         },
         {
             "name": "attach to chrome",
@@ -28,7 +20,7 @@
             "sourceMaps": true,
             "diagnosticLogging": true,
             "webRoot": "${workspaceRoot}/wwwroot",
-            "url": "http://localhost:8080"
+            "url": "http://localhost:8080*"
         }
     ]
 }

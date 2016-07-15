@@ -6,3 +6,4 @@ lib/
 vscode-chrome-debug.txt
 typings/
 .browse.VC.db
+testapp/.vscode/chrome
