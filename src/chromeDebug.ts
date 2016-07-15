@@ -9,7 +9,7 @@ import * as path from 'path';
 ChromeDebugSession.run(ChromeDebugSession.getSession(
     {
         targetFilter: target => target && (!target.type || target.type === 'page'),
-        logFileDirectory: path.resolve(__dirname, '../../')
+        logFilePath: path.resolve(__dirname, '../../vscode-chrome-debug.txt') // non-.txt file types can't be uploaded to github
     }));
 
 /* tslint:disable:no-var-requires */
