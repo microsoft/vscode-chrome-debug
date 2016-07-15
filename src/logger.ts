@@ -3,7 +3,6 @@
  *--------------------------------------------------------*/
 
 import * as fs from 'fs';
-import * as path from 'path';
 
 export enum LogLevel {
     Verbose = 0,
@@ -56,10 +55,13 @@ export function setMinLogLevel(logLevel: LogLevel): void {
     }
 }
 
-export function init(logCallback: ILogCallback, logFileDirectory?: string): void {
+export function init(logCallback: ILogCallback, logFilePath?: string): void {
     // Re-init, create new global Logger
     _pendingLogQ = [];
-    _logger = new Logger(logCallback, logFileDirectory);
+    _logger = new Logger(logCallback, logFilePath);
+    if (logFilePath) {
+        log(`Verbose logs are written to ${logFilePath}`);
+    }
 }
 
 /**
@@ -67,7 +69,7 @@ export function init(logCallback: ILogCallback, logFileDirectory?: string): void
  */
 class Logger {
     /** The directory in which to log vscode-chrome-debug.txt */
-    private _logFileDirectory: string;
+    private _logFilePath: string;
 
     /** True when logging is enabled outside of server mode */
     private _minLogLevel: LogLevel;
@@ -84,18 +86,17 @@ class Logger {
         this._minLogLevel = logLevel;
 
         // Open a log file in the specified location. Overwritten on each run.
-        if (logLevel < LogLevel.Error && this._logFileDirectory) {
-            const logPath = path.join(this._logFileDirectory, 'vscode-chrome-debug.txt');
-            this._logFileStream = fs.createWriteStream(logPath);
+        if (logLevel < LogLevel.Error && this._logFilePath) {
+            this._logFileStream = fs.createWriteStream(this._logFilePath);
             this._logFileStream.on('error', e => {
-                this.sendLog(`Error involving log file at path: ${logPath}. Error: ${e.toString()}`, LogLevel.Error);
+                this.sendLog(`Error involving log file at path: ${this._logFilePath}. Error: ${e.toString()}`, LogLevel.Error);
             });
         }
     }
 
-    constructor(logCallback: ILogCallback, logFileDirectory?: string) {
+    constructor(logCallback: ILogCallback, logFilePath?: string) {
         this._diagnosticLogCallback = logCallback;
-        this._logFileDirectory = logFileDirectory;
+        this._logFilePath = logFilePath;
 
         this.minLogLevel = LogLevel.Error;
     }

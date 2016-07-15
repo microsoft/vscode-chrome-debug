@@ -21,7 +21,7 @@ import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 export interface IChromeDebugSessionOpts {
     adapter?: IDebugAdapter;
     targetFilter?: ITargetFilter;
-    logFileDirectory?: string;
+    logFilePath?: string;
 }
 
 export class ChromeDebugSession extends DebugSession {
@@ -54,9 +54,9 @@ export class ChromeDebugSession extends DebugSession {
 
         const connection = new ChromeConnection(getChromeTargetWebSocketURL, opts.targetFilter);
         const adapter = opts.adapter || new ChromeDebugAdapter(connection);
-        const logFileDirectory = opts.logFileDirectory;
+        const logFilePath =  opts.logFilePath;
 
-        logger.init((msg, level) => this.onLog(msg, level), logFileDirectory);
+        logger.init((msg, level) => this.onLog(msg, level), logFilePath);
         logVersionInfo();
 
         process.addListener('unhandledRejection', reason => {
