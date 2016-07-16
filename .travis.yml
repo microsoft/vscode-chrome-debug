@@ -4,8 +4,11 @@ node_js:
   - "5.10"
 
 before_script:
-  - npm install -g gulp
-  - npm install -g typings
+  - npm i -g gulp
+  - npm i -g typings
+  - pushd testapp
+  - npm i
+  - popd
 
 script:
     - gulp build

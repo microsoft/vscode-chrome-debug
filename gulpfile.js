@@ -9,6 +9,9 @@ const log = require('gulp-util').log;
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const tslint = require('gulp-tslint');
+const cp = require('child_process');
+const mocha = require('gulp-mocha');
+const os = require('os');
 
 const sources = [
     'src',
@@ -47,4 +50,45 @@ gulp.task('tslint', function() {
       return gulp.src(lintSources, { base: '.' })
         .pipe(tslint())
         .pipe(tslint.report('verbose'));
+});
+
+function runTests(child, cb) {
+    gulp.src('out/test/**/*.test.js', { read: false })
+        .pipe(mocha({ ui: 'tdd' }))
+        .on('error', () => {
+            // handled
+        })
+        .on('end', () => {
+            if (os.platform() === 'win32') {
+                // Windows-only hack, .kill() should work on linux/osx
+                const taskKillCmd = 'taskkill /F /T /PID ' + child.pid;
+                console.log(taskKillCmd);
+                cp.exec(taskKillCmd);
+            } else {
+                child.kill();
+            }
+
+            cb();
+        });
+}
+
+gulp.task('test', done => {
+    const child = cp.spawn('gulp.cmd', ['buildAndServe'], { cwd: './testapp' });
+
+    child.stderr.on('data', (data) => {
+        console.log(`stderr: ${data}`);
+    });
+
+    child.on('close', (code) => {
+        console.log(`child process exited with code ${code}`);
+    });
+
+    return new Promise(resolve => {
+        child.stdout.on('data', (data) => {
+            console.log(`stdout: ${data}`);
+            if (data.indexOf("Finished 'buildAndServe'") >= 0) {
+                runTests(child, resolve);
+            }
+        });
+    });
 });
