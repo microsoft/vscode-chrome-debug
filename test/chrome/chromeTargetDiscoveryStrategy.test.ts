@@ -90,7 +90,7 @@ suite('ChromeTargetDiscoveryStrategy', () => {
                 getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, undefined, 'blah.com'));
         });
 
-        test('ignores targets with no webSocketDebuggerUrl (as when chrome devtools is attached)', () => {
+        test('when no targets have webSocketDebuggerUrl, fails', () => {
             const targets = [
                 {
                     url: 'http://localhost/foo',
@@ -102,6 +102,23 @@ suite('ChromeTargetDiscoveryStrategy', () => {
 
             return testUtils.assertPromiseRejected(
                 getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, undefined, 'localhost/*'));
+        });
+
+        test('ignores targets with no webSocketDebuggerUrl (as when chrome devtools is attached)', () => {
+            const targets = [
+                {
+                    url: 'http://localhost/foo',
+                    webSocketDebuggerUrl: undefined,
+                },
+                {
+                    url: 'http://localhost/bar',
+                    webSocketDebuggerUrl: 'ws://2'
+                }];
+            registerTargetListContents(JSON.stringify(targets));
+
+            return getChromeTargetDiscoveryStrategy()(TARGET_ADDRESS, TARGET_PORT, target => target.url === targets[1].url).then(wsUrl => {
+                assert.deepEqual(wsUrl, targets[1].webSocketDebuggerUrl);
+            });
         });
 
         test('returns the first target when no target url pattern given', () => {

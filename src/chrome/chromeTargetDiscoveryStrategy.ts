@@ -38,9 +38,7 @@ function _getTargets(address: string, port: number, targetFilter: ITargetFilter)
             if (Array.isArray(responseArray)) {
                 return (responseArray as Chrome.ITarget[])
                     // Filter out some targets as specified by the extension
-                    .filter(targetFilter)
-                    // Targets that have some devtool attached already have webSocketDebuggerUrl: undefined
-                    .filter(target => !!target.webSocketDebuggerUrl);
+                    .filter(targetFilter);
             }
         } catch (e) {
             // JSON.parse can throw
@@ -58,7 +56,13 @@ function _selectTarget(targets: Chrome.ITarget[], targetUrl?: string): Chrome.IT
         // If a url was specified, try to filter to that url
         const filteredTargets = chromeUtils.getMatchingTargets(targets, targetUrl);
         if (filteredTargets.length) {
-            targets = filteredTargets;
+            // If all possible targets appear to be attached to have some other devtool attached, then fail
+            const targetsWithWSURLs = filteredTargets.filter(target => !!target.webSocketDebuggerUrl);
+            if (targetsWithWSURLs.length === 0) {
+                throw new Error(`Can't attach to this target that may have Chrome DevTools attached - ${filteredTargets[0].url}`);
+            }
+
+            targets = targetsWithWSURLs;
         } else {
             throw new Error(`Can't find a target that matches: ${targetUrl}. Available pages: ${JSON.stringify(targets.map(target => target.url))}`);
         }
