@@ -20,8 +20,8 @@ interface ILogItem {
 /** Logger singleton */
 let _logger: Logger;
 let _pendingLogQ: ILogItem[] = [];
-export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = false): void {
-    // null, undefined => string
+export function log(msg: string, forceDiagnosticLogging = false, level = LogLevel.Log): void {
+    // [null, undefined] => string
     msg = msg + '';
     if (_pendingLogQ) {
         _pendingLogQ.push({ msg, level });
@@ -31,11 +31,11 @@ export function log(msg: string, level = LogLevel.Log, forceDiagnosticLogging = 
 }
 
 export function verbose(msg: string): void {
-    log(msg, LogLevel.Verbose);
+    log(msg, undefined, LogLevel.Verbose);
 }
 
 export function error(msg: string, forceDiagnosticLogging = true): void {
-    log(msg, LogLevel.Error, forceDiagnosticLogging);
+    log(msg, forceDiagnosticLogging, LogLevel.Error);
 }
 
 /**
@@ -50,7 +50,7 @@ export function setMinLogLevel(logLevel: LogLevel): void {
         if (_pendingLogQ) {
             const logQ = _pendingLogQ;
             _pendingLogQ = null;
-            logQ.forEach(item => log(item.msg, item.level));
+            logQ.forEach(item => log(item.msg, undefined, item.level));
         }
     }
 }
