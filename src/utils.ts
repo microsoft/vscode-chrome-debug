@@ -10,11 +10,12 @@ import * as path from 'path';
 
 import * as logger from './logger';
 
+const WIN_APPDATA = process.env.LOCALAPPDATA || '/';
 const DEFAULT_CHROME_PATH = {
     OSX: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     WIN: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     WINx86: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    WIN_LOCALAPPDATA: path.join(process.env.LOCALAPPDATA, 'Google\\Chrome\\Application\\chrome.exe'),
+    WIN_LOCALAPPDATA: path.join(WIN_APPDATA, 'Google\\Chrome\\Application\\chrome.exe'),
     LINUX: '/usr/bin/google-chrome'
 };
 
