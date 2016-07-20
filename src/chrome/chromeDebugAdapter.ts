@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event, ModuleEvent} from 'vscode-debugadapter';
 
 import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
@@ -584,7 +584,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
             const variables: DebugProtocol.Variable[] = [];
             propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
-            variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
+            variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
 
             // If this is a scope that should have the 'this', prop, insert it at the top of the list
             if (handle.thisObj) {
