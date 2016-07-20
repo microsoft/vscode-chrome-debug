@@ -106,7 +106,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
         // Start with remote debugging enabled
         const port = args.port || 9222;
-        const chromeArgs: string[] = ['--remote-debugging-port=' + port];
+        const chromeArgs: string[] = ['--remote-debugging-port=' + port, '--disable-restore-session-state'];
 
         // Also start with extra stuff disabled
         chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
