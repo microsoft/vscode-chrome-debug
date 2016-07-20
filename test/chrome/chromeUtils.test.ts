@@ -26,7 +26,6 @@ suite('ChromeUtils', () => {
         testUtils.registerWin32Mocks();
 
         mockery.registerMock('fs', { statSync: () => { } });
-        testUtils.registerEmptyMocks('http');
 
         // Get path with win32 mocks
         path = require('path');
