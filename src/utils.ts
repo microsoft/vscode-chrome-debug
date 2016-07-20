@@ -14,6 +14,7 @@ const DEFAULT_CHROME_PATH = {
     OSX: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
     WIN: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
     WINx86: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+    WIN_LOCALAPPDATA: path.join(process.env.LOCALAPPDATA, 'Google\\Chrome\\Application\\chrome.exe'),
     LINUX: '/usr/bin/google-chrome'
 };
 
@@ -26,6 +27,8 @@ export function getBrowserPath(): string {
             return DEFAULT_CHROME_PATH.WINx86;
         } else if (existsSync(DEFAULT_CHROME_PATH.WIN)) {
             return DEFAULT_CHROME_PATH.WIN;
+        } else if (existsSync(DEFAULT_CHROME_PATH.WIN_LOCALAPPDATA)) {
+            return DEFAULT_CHROME_PATH.WIN_LOCALAPPDATA;
         } else {
             return null;
         }
