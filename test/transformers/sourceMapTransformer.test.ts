@@ -9,7 +9,7 @@ import * as mockery from 'mockery';
 import {Mock, MockBehavior, It} from 'typemoq';
 
 import {ISetBreakpointsResponseBody,
-    ILaunchRequestArgs, ISetBreakpointsArgs, IBreakpoint} from '../../src/debugAdapterInterfaces';
+    ILaunchRequestArgs, ISetBreakpointsArgs} from '../../src/debugAdapterInterfaces';
 import * as testUtils from '../testUtils';
 import {SourceMaps} from '../../src/sourceMaps/sourceMaps';
 import {MappedPosition} from '../../src/sourceMaps/sourceMap';
@@ -180,7 +180,7 @@ suite('SourceMapTransformer', () => {
             function getResponseBody(lines: number[], column?: number): ISetBreakpointsResponseBody {
                 return {
                     breakpoints: lines.map(line => {
-                        const bp: IBreakpoint = { line, verified: true };
+                        const bp: DebugProtocol.Breakpoint = { line, verified: true };
                         if (column !== undefined) {
                             bp.column = column;
                         }

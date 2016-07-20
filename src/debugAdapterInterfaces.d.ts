@@ -43,20 +43,17 @@ export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArgumen
     authoredPath?: string;
 }
 
-export interface IBreakpoint extends DebugProtocol.Breakpoint {
-    column?: number;
-}
-
 /*
  * The ResponseBody interfaces are copied from debugProtocol.d.ts which defines these inline in the Response interfaces.
  * They should always match those interfaces, see the original for comments.
  */
 export interface ISetBreakpointsResponseBody {
-    breakpoints: IBreakpoint[];
+    breakpoints: DebugProtocol.Breakpoint[];
 }
 
 export interface ISourceResponseBody {
     content: string;
+    mimeType?: string;
 }
 
 export interface IThreadsResponseBody {

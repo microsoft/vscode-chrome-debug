@@ -6,7 +6,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
 
 import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
-    IAttachRequestArgs, IBreakpoint, IScopesResponseBody, IVariablesResponseBody,
+    IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
     ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from '../debugAdapterInterfaces';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
@@ -408,7 +408,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return Promise.all(responsePs);
     }
 
-    private chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): IBreakpoint[] {
+    private chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
         // Don't cache errored responses
         const committedBpIds = responses
             .filter(response => !response.error)
@@ -423,14 +423,14 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
                 if (response.error || !response.result.actualLocation) {
-                    return <IBreakpoint>{
+                    return <DebugProtocol.Breakpoint>{
                         verified: false,
                         line: requestLines[i],
                         column: 0
                     };
                 }
 
-                return <IBreakpoint>{
+                return <DebugProtocol.Breakpoint>{
                     verified: true,
                     line: response.result.actualLocation.lineNumber,
                     column: response.result.actualLocation.columnNumber
@@ -597,7 +597,10 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
         return this._chromeConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(chromeResponse => {
-            return { content: chromeResponse.result.scriptSource };
+            return {
+                content: chromeResponse.result.scriptSource,
+                mimeType: 'text/javascript'
+            };
         });
     }
 
