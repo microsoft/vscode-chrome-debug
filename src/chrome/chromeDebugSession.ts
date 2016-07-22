@@ -11,12 +11,14 @@ import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import {ChromeConnection, ITargetFilter} from './chromeConnection';
 import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
 
-import * as logger from '../logger';
-
-import {AdapterProxy} from '../adapterProxy';
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
+
+import * as utils from '../utils';
+import * as logger from '../logger';
+
+import {AdapterProxy} from '../adapterProxy';
 
 export interface IChromeDebugSessionOpts {
     adapter?: IDebugAdapter;
@@ -25,7 +27,7 @@ export interface IChromeDebugSessionOpts {
 }
 
 export class ChromeDebugSession extends DebugSession {
-    private _adapterProxy: AdapterProxy;
+    private _debugAdapter: IDebugAdapter;
 
     /**
      * This needs a bit of explanation -
@@ -53,24 +55,22 @@ export class ChromeDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         const connection = new ChromeConnection(getChromeTargetWebSocketURL, opts.targetFilter);
-        const adapter = opts.adapter || new ChromeDebugAdapter(connection);
-        const logFilePath =  opts.logFilePath;
+        this._debugAdapter = opts.adapter ||
+            new ChromeDebugAdapter(
+                connection,
+                new LineNumberTransformer(targetLinesStartAt1),
+                new SourceMapTransformer(),
+                new PathTransformer());
 
+        this._debugAdapter.registerEventHandler(e => this.sendEvent(e));
+
+        const logFilePath =  opts.logFilePath;
         logger.init((msg, level) => this.onLog(msg, level), logFilePath);
         logVersionInfo();
 
         process.addListener('unhandledRejection', reason => {
             logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${reason}`);
         });
-
-        this._adapterProxy = new AdapterProxy(
-            [
-                new LineNumberTransformer(targetLinesStartAt1),
-                new SourceMapTransformer(),
-                new PathTransformer()
-            ],
-            adapter,
-            event => this.sendEvent(event));
     }
 
     /**
@@ -138,10 +138,15 @@ export class ChromeDebugSession extends DebugSession {
         const response = new Response(request);
         try {
             logger.verbose(`From client: ${request.command}(${JSON.stringify(request.arguments) })`);
+
+            const responseP = (request.command in this._debugAdapter) ?
+                Promise.resolve(this._debugAdapter[request.command](request.arguments, request.seq)) :
+                utils.errP('unknowncommand');
+
             this.sendResponseAsync(
                 request,
                 response,
-                this._adapterProxy.dispatchRequest(request));
+                responseP);
         } catch (e) {
             this.sendErrorResponse(response, 1104, 'Exception while processing request (exception: {_exception})', { _exception: e.message }, ErrorDestination.Telemetry);
         }

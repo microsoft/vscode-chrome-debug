@@ -15,6 +15,10 @@ import * as logger from '../logger';
 import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
 
+import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
+import {PathTransformer} from '../transformers/pathTransformer';
+import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
+
 import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
 
@@ -46,10 +50,19 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     protected _chromeConnection: ChromeConnection;
 
-    public constructor(chromeConnection: ChromeConnection) {
+    private _lineNumberTransformer: LineNumberTransformer;
+    private _sourceMapTransformer: SourceMapTransformer;
+    private _pathTransformer: PathTransformer;
+
+    public constructor(chromeConnection: ChromeConnection, lineNumberTransformer: LineNumberTransformer,
+        sourceMapTransformer: SourceMapTransformer, pathTransformer: PathTransformer) {
         this._chromeConnection = chromeConnection;
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
+
+        this._lineNumberTransformer = lineNumberTransformer;
+        this._sourceMapTransformer = sourceMapTransformer;
+        this._pathTransformer = pathTransformer;
 
         this.clearEverything();
     }
@@ -59,18 +72,20 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     private clearTargetContext(): void {
+        this._sourceMapTransformer.clearTargetContext();
+
         this._scriptsById = new Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>();
         this._scriptsByUrl = new Map<string, Chrome.Debugger.Script>();
 
         this._committedBreakpointsByUrl = new Map<string, Chrome.Debugger.BreakpointId[]>();
         this._setBreakpointsRequestQ = Promise.resolve<void>();
 
-        this.fireEvent(new Event('clearTargetContext'));
+        this._pathTransformer.clearTargetContext();
     }
 
     private clearClientContext(): void {
         this._clientAttached = false;
-        this.fireEvent(new Event('clearClientContext'));
+        this._pathTransformer.clearClientContext();
     }
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
@@ -78,6 +93,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
+        this._lineNumberTransformer.initialize(args);
+
         // This debug adapter supports two exception breakpoint filters
         return {
             exceptionBreakpointFilters: [
@@ -96,6 +113,9 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        this._sourceMapTransformer.launch(args);
+        this._pathTransformer.launch(args);
+
         this.setupLogging(args);
 
         // Check exists?
@@ -144,6 +164,9 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
+        this._sourceMapTransformer.attach(args);
+        this._pathTransformer.attach(args);
+
         if (args.port == null) {
             return utils.errP('The "port" field is required in the attach config.');
         }
@@ -229,7 +252,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     protected onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
-
         this._overlayHelper.doAndCancel(() => this._chromeConnection.page_setOverlayMessage(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
@@ -289,7 +311,9 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
         this._scriptsById.set(script.scriptId, script);
         this._scriptsByUrl.set(script.url, script);
-        this.fireEvent(new Event('scriptParsed', { scriptUrl: script.url, sourceMapURL: script.sourceMapURL }));
+
+        const mappedUrl = this._pathTransformer.scriptParsed(script.url);
+        this._sourceMapTransformer.scriptParsed(mappedUrl, script.sourceMapURL);
     }
 
     protected onBreakpointResolved(params: Chrome.Debugger.BreakpointResolvedParams): void {
@@ -324,33 +348,42 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return Promise.resolve<void>();
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<ISetBreakpointsResponseBody> {
-        let targetScriptUrl: string;
-        if (args.source.path) {
-            targetScriptUrl = args.source.path;
-        } else if (args.source.sourceReference) {
-            const targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
-            if (targetScript) {
-                targetScriptUrl = targetScript.url;
-            }
-        }
+    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
+        this._lineNumberTransformer.setBreakpoints(args);
+        return this._sourceMapTransformer.setBreakpoints(args, requestSeq)
+            .then(() => this._pathTransformer.setBreakpoints(args))
+            .then(() => {
+                let targetScriptUrl: string;
+                if (args.source.path) {
+                    targetScriptUrl = args.source.path;
+                } else if (args.source.sourceReference) {
+                    const targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
+                    if (targetScript) {
+                        targetScriptUrl = targetScript.url;
+                    }
+                }
 
-        if (targetScriptUrl) {
-            // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-            const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                .then(() => this.clearAllBreakpoints(targetScriptUrl))
-                .then(() => this.addBreakpoints(targetScriptUrl, args.lines, args.cols))
-                .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
+                if (targetScriptUrl) {
+                    // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
+                    const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
+                        .then(() => this.clearAllBreakpoints(targetScriptUrl))
+                        .then(() => this.addBreakpoints(targetScriptUrl, args.lines, args.cols))
+                        .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
 
-            const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+                    const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
 
-            // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
-            // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
-            this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
-            return setBreakpointsPTimeout;
-        } else {
-            return utils.errP(`Can't find script for breakpoint request`);
-        }
+                    // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
+                    // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
+                    this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
+                    return setBreakpointsPTimeout.then(body => {
+                        this._lineNumberTransformer.setBreakpointsResponse(body);
+                        this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
+                        return body;
+                    })
+                } else {
+                    return utils.errP(`Can't find script for breakpoint request`);
+                }
+            });
     }
 
     public setFunctionBreakpoints(): Promise<any> {
@@ -534,7 +567,12 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 }
             });
 
-        return { stackFrames };
+        const stackTraceResponse = { stackFrames };
+        this._pathTransformer.stackTraceResponse(stackTraceResponse);
+        this._sourceMapTransformer.stackTraceResponse(stackTraceResponse);
+        this._lineNumberTransformer.stackTraceResponse(stackTraceResponse);
+
+        return stackTraceResponse;
     }
 
     public scopes(args: DebugProtocol.ScopesArguments): IScopesResponseBody {

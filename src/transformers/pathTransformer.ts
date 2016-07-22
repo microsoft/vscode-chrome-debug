@@ -18,7 +18,7 @@ interface IPendingBreakpoint {
 /**
  * Converts a local path from Code to a path on the target.
  */
-export class PathTransformer implements IDebugTransformer {
+export class PathTransformer {
     private _webRoot: string;
     private _clientPathToTargetUrl = new Map<string, string>();
     private _targetUrlToClientPath = new Map<string, string>();
@@ -68,8 +68,8 @@ export class PathTransformer implements IDebugTransformer {
         this._targetUrlToClientPath = new Map<string, string>();
     }
 
-    public scriptParsed(event: DebugProtocol.Event): void {
-        const targetUrl: string = event.body.scriptUrl;
+    public scriptParsed(scriptUrl: string): string {
+        const targetUrl: string = scriptUrl;
         const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
 
         if (!clientPath) {
@@ -82,15 +82,17 @@ export class PathTransformer implements IDebugTransformer {
             this._clientPathToTargetUrl.set(clientPath, targetUrl);
             this._targetUrlToClientPath.set(targetUrl, clientPath);
 
-            event.body.scriptUrl = clientPath;
+            scriptUrl = clientPath;
         }
 
-        if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
-            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${event.body.scriptUrl}`);
-            const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
-            this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
+        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
+            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
+            const pendingBreakpoint = this._pendingBreakpointsByPath.get(scriptUrl);
+            this._pendingBreakpointsByPath.delete(scriptUrl);
             this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
         }
+
+        return scriptUrl;
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {

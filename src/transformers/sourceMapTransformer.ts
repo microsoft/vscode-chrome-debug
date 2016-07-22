@@ -28,7 +28,7 @@ export const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
 /**
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
  */
-export class SourceMapTransformer implements IDebugTransformer {
+export class SourceMapTransformer {
     private _sourceMaps: SourceMaps;
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
@@ -191,21 +191,21 @@ export class SourceMapTransformer implements IDebugTransformer {
         }
     }
 
-    public scriptParsed(event: DebugProtocol.Event): void {
+    public scriptParsed(scriptUrl: string, sourceMapURL: string): void {
         if (this._sourceMaps) {
-            this._allRuntimeScriptPaths.add(event.body.scriptUrl);
+            this._allRuntimeScriptPaths.add(scriptUrl);
 
-            if (!event.body.sourceMapURL) {
+            if (!sourceMapURL) {
                 // If a file does not have a source map, check if we've seen any breakpoints
                 // for it anyway and make sure to enable them
-                this.resolvePendingBreakpointsForScript(event.body.scriptUrl);
+                this.resolvePendingBreakpointsForScript(scriptUrl);
                 return;
             }
 
-            this._sourceMaps.processNewSourceMap(event.body.scriptUrl, event.body.sourceMapURL).then(() => {
-                const sources = this._sourceMaps.allMappedSources(event.body.scriptUrl);
+            this._sourceMaps.processNewSourceMap(scriptUrl, sourceMapURL).then(() => {
+                const sources = this._sourceMaps.allMappedSources(scriptUrl);
                 if (sources) {
-                    logger.log(`SourceMaps.scriptParsed: ${event.body.scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
+                    logger.log(`SourceMaps.scriptParsed: ${scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                     sources.forEach(sourcePath => {
                         this.resolvePendingBreakpointsForScript(sourcePath);
                     });
