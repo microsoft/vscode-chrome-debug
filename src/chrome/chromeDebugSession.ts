@@ -18,8 +18,6 @@ import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
-import {AdapterProxy} from '../adapterProxy';
-
 export interface IChromeDebugSessionOpts {
     adapter?: IDebugAdapter;
     targetFilter?: ITargetFilter;
