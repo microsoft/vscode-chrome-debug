@@ -7,7 +7,7 @@
   <br>
 </h1>
 
-<h4 align="center">Debug your JavaScript code running in Google Chrmome from VS Code.</h4>
+<h4 align="center">Debug your JavaScript code running in Google Chrome from VS Code.</h4>
 
 <p align="center">
   <a href="https://travis-ci.com/Microsoft/vscode-chrome-debug"><img src="https://api.travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master" alt="Travis"></a>
@@ -17,7 +17,7 @@
 </p>
 
 
-A VS Code extension to debug your JavaScript code in the Chrome browser, or other targets that support the [Chrome Debugging Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
+A VS Code extension to debug your JavaScript code in the Google Chrome browser, or other targets that support the [Chrome Debugging Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
 
 ![Demo](https://cdn.rawgit.com/Microsoft/vscode-chrome-debug/master/images/demo.gif)
 
@@ -32,7 +32,6 @@ A VS Code extension to debug your JavaScript code in the Chrome browser, or othe
 **Unsupported scenarios**
 * Debugging web workers
 * Any features that aren't script debugging.
-* 
 
 ## Getting Started
 To use this extension, you must first open the folder containing the project you want to work on.
