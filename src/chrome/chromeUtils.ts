@@ -126,6 +126,7 @@ export function getMatchingTargets(targets: Chrome.ITarget[], targetUrlPattern: 
 }
 
 const PROTO_NAME = '__proto__';
+const NUM_REGEX = /^[0-9]+$/;
 export function compareVariableNames(var1: string, var2: string): number {
     // __proto__ at the end
     if (var1 === PROTO_NAME) {
@@ -134,10 +135,8 @@ export function compareVariableNames(var1: string, var2: string): number {
         return -1;
     }
 
-    const int1 = parseInt(var1, 10);
-    const int2 = parseInt(var2, 10);
-    const isNum1 = !isNaN(int1);
-    const isNum2 = !isNaN(int2);
+    const isNum1 = !!var1.match(NUM_REGEX);
+    const isNum2 = !!var2.match(NUM_REGEX);
 
     if (isNum1 && !isNum2) {
         // Numbers after names
@@ -147,6 +146,8 @@ export function compareVariableNames(var1: string, var2: string): number {
         return -1;
     } else if (isNum1 && isNum2) {
         // Compare numbers as numbers
+        const int1 = parseInt(var1, 10);
+        const int2 = parseInt(var2, 10);
         return int1 - int2;
     }
 

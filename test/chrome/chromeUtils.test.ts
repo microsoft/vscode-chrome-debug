@@ -242,8 +242,8 @@ suite('ChromeUtils', () => {
         });
 
         test('string names before number names', () => {
-            assert(chromeUtils.compareVariableNames('a', '1') > 0);
-            assert(chromeUtils.compareVariableNames('16', 'b') < 0);
+            assert(chromeUtils.compareVariableNames('a', '1') < 0);
+            assert(chromeUtils.compareVariableNames('16', 'b') > 0);
         });
 
         test('string names ordered correctly', () => {
