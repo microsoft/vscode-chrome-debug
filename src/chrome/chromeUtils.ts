@@ -134,8 +134,8 @@ export function compareVariableNames(var1: string, var2: string): number {
         return -1;
     }
 
-    const int1 = parseInt(var1);
-    const int2 = parseInt(var2);
+    const int1 = parseInt(var1, 10);
+    const int2 = parseInt(var2, 10);
     const isNum1 = !isNaN(int1);
     const isNum2 = !isNaN(int2);
 
