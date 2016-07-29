@@ -2,12 +2,9 @@ const globalCode = 'page loaded';
 console.log(globalCode);
 
 function locals() {
-    var arr1 = [1, 2];
+    const manyPropsObj: any = { prop2: 'abc', prop1: 'def' };
+    for (let i=0; i<=100; i++) manyPropsObj[i] = Math.random();
 
-
-    arr1.forEach(x => {
-        console.log(x);
-    });
     var r = /^asdf.*$/g;
     var longStr = `this is a
 string with
