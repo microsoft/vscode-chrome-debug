@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-    <img src="images/icon.png" alt="logo" width="200">
+    <img src="https://cdn.rawgit.com/Microsoft/vscode-chrome-debug/master/images/icon.png" alt="logo" width="200">
   <br>
   VS Code - Debugger for Chrome
   <br>
