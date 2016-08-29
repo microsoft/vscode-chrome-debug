@@ -142,6 +142,8 @@ export type ITargetDiscoveryStrategy = (address: string, port: number, targetFil
  * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
  */
 export class ChromeConnection {
+    private static ATTACH_TIMEOUT = 10000; // ms
+
     private _nextId: number;
     private _socket: ResReqWebSocket;
     private _targetFilter: ITargetFilter;
@@ -171,8 +173,8 @@ export class ChromeConnection {
             .then(() => { });
     }
 
-    private _attach(address: string, port: number, targetUrl?: string): Promise<void> {
-        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), /*timeoutMs=*/7000, /*intervalDelay=*/200)
+    private _attach(address: string, port: number, targetUrl?: string, timeout?: number): Promise<void> {
+        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), timeout || ChromeConnection.ATTACH_TIMEOUT, /*intervalDelay=*/200)
             .then(wsUrl => this._socket.open(wsUrl));
     }
 
