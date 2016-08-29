@@ -8,6 +8,7 @@ import {EventEmitter} from 'events';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as Chrome from './chromeDebugProtocol';
+import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
 
 interface IMessageWithId {
     id: number;
@@ -146,9 +147,9 @@ export class ChromeConnection {
     private _targetFilter: ITargetFilter;
     private _targetDiscoveryStrategy: ITargetDiscoveryStrategy;
 
-    constructor(targetDiscovery: ITargetDiscoveryStrategy, targetFilter?: ITargetFilter) {
+    constructor(targetDiscovery?: ITargetDiscoveryStrategy, targetFilter?: ITargetFilter) {
         this._targetFilter = targetFilter;
-        this._targetDiscoveryStrategy = targetDiscovery;
+        this._targetDiscoveryStrategy = targetDiscovery || getChromeTargetWebSocketURL;
 
         // this._socket should exist before attaching so consumers can call on() before attach, which fires events
         this.reset();

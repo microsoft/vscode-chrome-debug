@@ -9,7 +9,6 @@ import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 import {IDebugAdapter} from '../debugAdapterInterfaces';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import {ChromeConnection, ITargetFilter} from './chromeConnection';
-import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
 
 import * as logger from '../logger';
 
@@ -52,8 +51,7 @@ export class ChromeDebugSession extends DebugSession {
         opts: IChromeDebugSessionOpts = {}) {
         super(targetLinesStartAt1, isServer);
 
-        const connection = new ChromeConnection(getChromeTargetWebSocketURL, opts.targetFilter);
-        const adapter = opts.adapter || new ChromeDebugAdapter(connection);
+        const adapter = opts.adapter || new ChromeDebugAdapter(new ChromeConnection(undefined, opts.targetFilter));
         const logFilePath =  opts.logFilePath;
 
         logger.init((msg, level) => this.onLog(msg, level), logFilePath);
@@ -109,6 +107,11 @@ export class ChromeDebugSession extends DebugSession {
                 this.sendResponse(response);
             },
             e => {
+                if (e.format) {
+                    this.sendErrorResponse(response, e as DebugProtocol.Message);
+                    return;
+                }
+
                 const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
                     this.sendErrorResponse(response, 1014, '[debugger-for-chrome] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
@@ -117,7 +120,7 @@ export class ChromeDebugSession extends DebugSession {
 
                 if (request.command === 'evaluate') {
                     // Errors from evaluate show up in the console or watches pane. Doesn't seem right
-                    // as it's not really a failed request. So it doesn't need the tag and worth special casing.
+                    // as it's not really a failed request. So it doesn't need the [debugger-for-chrome] tag and worth special casing.
                     response.message = eStr;
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they

@@ -46,8 +46,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     protected _chromeConnection: ChromeConnection;
 
-    public constructor(chromeConnection: ChromeConnection) {
-        this._chromeConnection = chromeConnection;
+    public constructor(chromeConnection?: ChromeConnection) {
+        this._chromeConnection = chromeConnection || new ChromeConnection();
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
@@ -188,7 +188,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
     }
 
-    private _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
+    protected _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
         // Client is attaching - if not attached to the chrome target, create a connection and attach
         this._clientAttached = true;
         if (!this._chromeConnection.isAttached) {
