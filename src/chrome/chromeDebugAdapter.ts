@@ -229,7 +229,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     protected onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
-
         this._overlayHelper.doAndCancel(() => this._chromeConnection.page_setOverlayMessage(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
