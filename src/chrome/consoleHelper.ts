@@ -30,6 +30,9 @@ export function formatConsoleMessage(m: Chrome.Console.Message): { text: string,
         outputText = '‹End group›';
     } else if (m.type === 'trace') {
         outputText = 'console.trace()\n' + stackTraceToString(m.stack);
+    } else if (m.text) {
+        // Chrome >= 54 (Console.consoleMessageAdded deprecated)
+        outputText = m.text;
     } else {
         // Some types we have to ignore
         outputText = 'Unimplemented console API: ' + m.type;

@@ -20,13 +20,13 @@ interface ILogItem {
 /** Logger singleton */
 let _logger: Logger;
 let _pendingLogQ: ILogItem[] = [];
-export function log(msg: string, forceDiagnosticLogging = false, level = LogLevel.Log): void {
+export function log(msg: string, forceLog = false, level = LogLevel.Log): void {
     // [null, undefined] => string
     msg = msg + '';
     if (_pendingLogQ) {
         _pendingLogQ.push({ msg, level });
     } else {
-        _logger.log(msg, level, forceDiagnosticLogging);
+        _logger.log(msg, level, forceLog);
     }
 }
 
@@ -34,8 +34,8 @@ export function verbose(msg: string): void {
     log(msg, undefined, LogLevel.Verbose);
 }
 
-export function error(msg: string, forceDiagnosticLogging = true): void {
-    log(msg, forceDiagnosticLogging, LogLevel.Error);
+export function error(msg: string, forceLog = true): void {
+    log(msg, forceLog, LogLevel.Error);
 }
 
 /**
@@ -102,13 +102,15 @@ class Logger {
     }
 
     /**
-     * @param forceDiagnosticLogging - Writes to the diagnostic logging channel, even if diagnostic logging is not enabled.
-     *      (For warnings/errors that appear whether logging is enabled or not.)
+     * @param forceLog - Writes to the diagnostic logging channel, even if diagnostic logging is not enabled.
+     *      (For messages that appear whether logging is enabled or not.)
      */
-    public log(msg: string, level: LogLevel, forceDiagnosticLogging: boolean): void {
-        this.sendLog(msg, level);
+    public log(msg: string, level: LogLevel, forceLog: boolean): void {
+        if (level >= this.minLogLevel || forceLog) {
+            this.sendLog(msg, level);
+        }
 
-        // If an error, prepend with '[LogLevel]'
+        // If an error, prepend with '[Error]'
         if (level === LogLevel.Error) {
             msg = `[${LogLevel[level]}] ${msg}`;
         }
@@ -119,8 +121,6 @@ class Logger {
     }
 
     private sendLog(msg: string, level: LogLevel): void {
-        if (level < this.minLogLevel) return;
-
         // Truncate long messages, they can hang VS Code
         if (msg.length > 1500) msg = msg.substr(0, 1500) + '[...]';
 

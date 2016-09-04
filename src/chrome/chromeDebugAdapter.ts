@@ -6,7 +6,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
 
 import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
-    IAttachRequestArgs, IBreakpoint, IScopesResponseBody, IVariablesResponseBody,
+    IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
     ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from '../debugAdapterInterfaces';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
@@ -19,7 +19,6 @@ import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 
-import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
 
 interface IScopeVarHandle {
@@ -27,7 +26,7 @@ interface IScopeVarHandle {
     thisObj?: Chrome.Runtime.RemoteObject;
 }
 
-export class ChromeDebugAdapter implements IDebugAdapter {
+export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
@@ -45,8 +44,8 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
 
-    private _chromeProc: ChildProcess;
     private _eventHandler: (event: DebugProtocol.Event) => void;
+    private _requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void;
 
     protected _chromeConnection: ChromeConnection;
 
@@ -54,15 +53,15 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _sourceMapTransformer: SourceMapTransformer;
     private _pathTransformer: PathTransformer;
 
-    public constructor(chromeConnection: ChromeConnection, lineNumberTransformer: LineNumberTransformer,
-        sourceMapTransformer: SourceMapTransformer, pathTransformer: PathTransformer) {
-        this._chromeConnection = chromeConnection;
+    public constructor(chromeConnection?: ChromeConnection) {
+        this._chromeConnection = chromeConnection || new ChromeConnection();
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
-        this._lineNumberTransformer = lineNumberTransformer;
-        this._sourceMapTransformer = sourceMapTransformer;
-        this._pathTransformer = pathTransformer;
+        // TODO - take in constructor to allow overriding?
+        this._lineNumberTransformer = new LineNumberTransformer(/*targetLinesStartAt1=*/false);
+        this._sourceMapTransformer = new SourceMapTransformer();
+        this._pathTransformer = new PathTransformer();
 
         this.clearEverything();
     }
@@ -92,6 +91,10 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         this._eventHandler = eventHandler;
     }
 
+    public registerRequestHandler(requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void {
+        this._requestHandler = requestHandler;
+    }
+
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
         this._lineNumberTransformer.initialize(args);
 
@@ -118,49 +121,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
         this.setupLogging(args);
 
-        // Check exists?
-        const chromePath = args.runtimeExecutable || utils.getBrowserPath();
-        if (!chromePath) {
-            return utils.errP(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
-        }
-
-        // Start with remote debugging enabled
-        const port = args.port || 9222;
-        const chromeArgs: string[] = ['--remote-debugging-port=' + port];
-
-        // Also start with extra stuff disabled
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args.runtimeArgs) {
-            chromeArgs.push(...args.runtimeArgs);
-        }
-
-        if (args.userDataDir) {
-            chromeArgs.push('--user-data-dir=' + args.userDataDir);
-        }
-
-        let launchUrl: string;
-        if (args.file) {
-            launchUrl = utils.pathToFileURL(args.file);
-        } else if (args.url) {
-            launchUrl = args.url;
-        }
-
-        if (launchUrl) {
-            chromeArgs.push(launchUrl);
-        }
-
-        logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-        this._chromeProc = spawn(chromePath, chromeArgs, {
-            detached: true,
-            stdio: ['ignore']
-        });
-        this._chromeProc.unref();
-        this._chromeProc.on('error', (err) => {
-            logger.log('chrome error: ' + err);
-            this.terminateSession();
-        });
-
-        return this._attach(port, launchUrl, args.address);
+        return Promise.resolve<void>();
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
@@ -173,7 +134,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
         this.setupLogging(args);
 
-        return this._attach(args.port, args.url, args.address);
+        return this.doAttach(args.port, args.url, args.address);
     }
 
     public setupLogging(args: IAttachRequestArgs | ILaunchRequestArgs): void {
@@ -204,14 +165,13 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     public clearEverything(): void {
         this.clearClientContext();
         this.clearTargetContext();
-        this._chromeProc = null;
 
         if (this._chromeConnection.isAttached) {
             this._chromeConnection.close();
         }
     }
 
-    private _attach(port: number, targetUrl?: string, address?: string): Promise<void> {
+    protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number): Promise<void> {
         // Client is attaching - if not attached to the chrome target, create a connection and attach
         this._clientAttached = true;
         if (!this._chromeConnection.isAttached) {
@@ -238,9 +198,15 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         }
     }
 
-    private fireEvent(event: DebugProtocol.Event): void {
+    protected fireEvent(event: DebugProtocol.Event): void {
         if (this._eventHandler) {
             this._eventHandler(event);
+        }
+    }
+
+    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+        if (this._requestHandler) {
+            this._requestHandler(command, args, timeout, cb);
         }
     }
 
@@ -338,11 +304,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public disconnect(): Promise<void> {
-        if (this._chromeProc) {
-            this._chromeProc.kill('SIGINT');
-            this._chromeProc = null;
-        }
-
         this.clearEverything();
 
         return Promise.resolve<void>();
@@ -441,7 +402,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         return Promise.all(responsePs);
     }
 
-    private chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): IBreakpoint[] {
+    private chromeBreakpointResponsesToODPBreakpoints(url: string, responses: Chrome.Debugger.SetBreakpointResponse[], requestLines: number[]): DebugProtocol.Breakpoint[] {
         // Don't cache errored responses
         const committedBpIds = responses
             .filter(response => !response.error)
@@ -456,14 +417,14 @@ export class ChromeDebugAdapter implements IDebugAdapter {
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
                 if (response.error || !response.result.actualLocation) {
-                    return <IBreakpoint>{
+                    return <DebugProtocol.Breakpoint>{
                         verified: false,
                         line: requestLines[i],
                         column: 0
                     };
                 }
 
-                return <IBreakpoint>{
+                return <DebugProtocol.Breakpoint>{
                     verified: true,
                     line: response.result.actualLocation.lineNumber,
                     column: response.result.actualLocation.columnNumber
@@ -622,7 +583,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
             // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
             const variables: DebugProtocol.Variable[] = [];
             propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
-            variables.sort((var1, var2) => var1.name.localeCompare(var2.name));
+            variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
 
             // If this is a scope that should have the 'this', prop, insert it at the top of the list
             if (handle.thisObj) {
@@ -635,7 +596,10 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
         return this._chromeConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(chromeResponse => {
-            return { content: chromeResponse.result.scriptSource };
+            return {
+                content: chromeResponse.result.scriptSource,
+                mimeType: 'text/javascript'
+            };
         });
     }
 

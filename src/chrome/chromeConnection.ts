@@ -8,6 +8,7 @@ import {EventEmitter} from 'events';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as Chrome from './chromeDebugProtocol';
+import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
 
 interface IMessageWithId {
     id: number;
@@ -141,14 +142,16 @@ export type ITargetDiscoveryStrategy = (address: string, port: number, targetFil
  * Connects to a target supporting the Chrome Debug Protocol and sends and receives messages
  */
 export class ChromeConnection {
+    private static ATTACH_TIMEOUT = 10000; // ms
+
     private _nextId: number;
     private _socket: ResReqWebSocket;
     private _targetFilter: ITargetFilter;
     private _targetDiscoveryStrategy: ITargetDiscoveryStrategy;
 
-    constructor(targetDiscovery: ITargetDiscoveryStrategy, targetFilter?: ITargetFilter) {
+    constructor(targetDiscovery?: ITargetDiscoveryStrategy, targetFilter?: ITargetFilter) {
         this._targetFilter = targetFilter;
-        this._targetDiscoveryStrategy = targetDiscovery;
+        this._targetDiscoveryStrategy = targetDiscovery || getChromeTargetWebSocketURL;
 
         // this._socket should exist before attaching so consumers can call on() before attach, which fires events
         this.reset();
@@ -170,8 +173,8 @@ export class ChromeConnection {
             .then(() => { });
     }
 
-    private _attach(address: string, port: number, targetUrl?: string): Promise<void> {
-        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), /*timeoutMs=*/7000, /*intervalDelay=*/200)
+    private _attach(address: string, port: number, targetUrl?: string, timeout?: number): Promise<void> {
+        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), timeout || ChromeConnection.ATTACH_TIMEOUT, /*intervalDelay=*/200)
             .then(wsUrl => this._socket.open(wsUrl));
     }
 

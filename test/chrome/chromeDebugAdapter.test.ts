@@ -32,7 +32,6 @@ suite('ChromeDebugAdapter', () => {
         testUtils.setupUnhandledRejectionListener();
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
         testUtils.registerWin32Mocks();
-        testUtils.registerEmptyMocks('child_process', 'url', 'path', 'net', 'fs', 'http');
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
         mockEventEmitter = new EventEmitter();
@@ -144,7 +143,7 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
@@ -155,7 +154,7 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
 
@@ -166,7 +165,7 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => {
                     lines.push(321);
                     cols.push(123);
@@ -174,7 +173,7 @@ suite('ChromeDebugAdapter', () => {
                     expectRemoveBreakpoint([0, 1]);
                     expectSetBreakpoint(lines, cols, FILE_NAME);
 
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
@@ -186,14 +185,14 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => {
                     lines.shift();
                     cols.shift();
 
                     expectRemoveBreakpoint([0, 1]);
                     expectSetBreakpoint(lines, cols, FILE_NAME);
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
@@ -205,7 +204,7 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => {
                     expectRemoveBreakpoint([2, 3]);
                     mockEventEmitter.emit('Debugger.globalObjectCleared');
@@ -216,7 +215,7 @@ suite('ChromeDebugAdapter', () => {
                     lines.push(321);
                     cols.push(123);
                     expectSetBreakpoint(lines, cols, FILE_NAME, 'afterRefreshScriptId');
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols });
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
         });
@@ -239,7 +238,7 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
                 .then(response => assert.deepEqual(response, expectedResponse));
         });
 
@@ -250,38 +249,8 @@ suite('ChromeDebugAdapter', () => {
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed(/*url=*/'', SCRIPT_ID))
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, lines, cols }))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, lines, cols }, 0))
                 .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
-        });
-    });
-
-    suite('launch()', () => {
-        test('launches with minimal correct args', () => {
-            let spawnCalled = false;
-            function spawn(chromePath: string, args: string[]): any {
-                // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
-                assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
-                assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
-                assert(args.indexOf('abc') >= 0);
-                assert(args.indexOf('def') >= 0);
-                spawnCalled = true;
-
-                return { on: () => { }, unref: () => { } };
-            }
-
-            // Mock spawn for chrome process, and 'fs' for finding chrome.exe.
-            // These are mocked as empty above - note that it's too late for mockery here.
-            require('child_process').spawn = spawn;
-            require('fs').statSync = () => true;
-
-            mockChromeConnection
-                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
-                .returns(() => Promise.resolve<void>())
-                .verifiable();
-
-            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
-                .then(() => assert(spawnCalled));
         });
     });
 

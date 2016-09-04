@@ -42,12 +42,6 @@ export class MockEvent implements DebugProtocol.Event {
     constructor(public event: string, public body?: any) { }
 }
 
-export function registerEmptyMocks(...moduleNames: string[]): void {
-    (<string[]>moduleNames).forEach(name => {
-        mockery.registerMock(name, {});
-    });
-}
-
 export function getStackTraceResponseBody(aPath: string, lines: number[], sourceReferences: number[] = []): IStackTraceResponseBody {
     return {
         stackFrames: lines.map((line, i) => ({

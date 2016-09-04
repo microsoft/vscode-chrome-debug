@@ -26,7 +26,6 @@ suite('ChromeUtils', () => {
         testUtils.registerWin32Mocks();
 
         mockery.registerMock('fs', { statSync: () => { } });
-        testUtils.registerEmptyMocks('http');
 
         // Get path with win32 mocks
         path = require('path');
@@ -231,6 +230,25 @@ suite('ChromeUtils', () => {
             assert.deepEqual(
                 chromeUtils.getMatchingTargets(targets, 'http://localhost'),
                 targets);
+        });
+    });
+
+    suite('compareVariableNames', () => {
+        const chromeUtils = getChromeUtils();
+
+        test('numbers sorted numerically', () => {
+            assert(chromeUtils.compareVariableNames('6', '1') > 0);
+            assert(chromeUtils.compareVariableNames('2', '10') < 0);
+        });
+
+        test('string names before number names', () => {
+            assert(chromeUtils.compareVariableNames('a', '1') < 0);
+            assert(chromeUtils.compareVariableNames('16', 'b') > 0);
+        });
+
+        test('string names ordered correctly', () => {
+            assert.equal(chromeUtils.compareVariableNames('a', 'b'), 'a'.localeCompare('b'));
+            assert.equal(chromeUtils.compareVariableNames('xyz123', '890kjh'), 'xyz123'.localeCompare('890kjh'));
         });
     });
 });

@@ -7,9 +7,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
 import {IDebugAdapter} from '../debugAdapterInterfaces';
-import {ChromeDebugAdapter} from './chromeDebugAdapter';
-import {ChromeConnection, ITargetFilter} from './chromeConnection';
-import {getChromeTargetWebSocketURL} from './chromeTargetDiscoveryStrategy';
+import {ITargetFilter} from './chromeConnection';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
@@ -19,7 +17,7 @@ import * as utils from '../utils';
 import * as logger from '../logger';
 
 export interface IChromeDebugSessionOpts {
-    adapter?: IDebugAdapter;
+    adapter: IDebugAdapter;
     targetFilter?: ITargetFilter;
     logFilePath?: string;
 }
@@ -49,18 +47,12 @@ export class ChromeDebugSession extends DebugSession {
     public constructor(
         targetLinesStartAt1: boolean,
         isServer = false,
-        opts: IChromeDebugSessionOpts = {}) {
+        opts?: IChromeDebugSessionOpts) {
         super(targetLinesStartAt1, isServer);
 
-        const connection = new ChromeConnection(getChromeTargetWebSocketURL, opts.targetFilter);
-        this._debugAdapter = opts.adapter ||
-            new ChromeDebugAdapter(
-                connection,
-                new LineNumberTransformer(targetLinesStartAt1),
-                new SourceMapTransformer(),
-                new PathTransformer());
-
+        this._debugAdapter = opts.adapter;
         this._debugAdapter.registerEventHandler(e => this.sendEvent(e));
+        this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
 
         const logFilePath =  opts.logFilePath;
         logger.init((msg, level) => this.onLog(msg, level), logFilePath);
@@ -81,6 +73,15 @@ export class ChromeDebugSession extends DebugSession {
         }
 
         super.sendEvent(event);
+    }
+
+    /**
+     * Overload sendRequest to log
+     */
+    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+        logger.verbose(`To client: ${JSON.stringify(command)}(${JSON.stringify(args)}), timeout: ${timeout}`);
+
+        super.sendRequest(command, args, timeout, cb);
     }
 
     /**
@@ -107,6 +108,11 @@ export class ChromeDebugSession extends DebugSession {
                 this.sendResponse(response);
             },
             e => {
+                if (e.format) {
+                    this.sendErrorResponse(response, e as DebugProtocol.Message);
+                    return;
+                }
+
                 const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
                     this.sendErrorResponse(response, 1014, '[debugger-for-chrome] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
@@ -115,7 +121,7 @@ export class ChromeDebugSession extends DebugSession {
 
                 if (request.command === 'evaluate') {
                     // Errors from evaluate show up in the console or watches pane. Doesn't seem right
-                    // as it's not really a failed request. So it doesn't need the tag and worth special casing.
+                    // as it's not really a failed request. So it doesn't need the [debugger-for-chrome] tag and worth special casing.
                     response.message = eStr;
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they

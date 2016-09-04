@@ -76,11 +76,11 @@ export class SourceMapTransformer {
                     const mappedLines = args.lines.map((line, i) => {
                         const mapped = this._sourceMaps.mapToGenerated(argsPath, line, /*column=*/0);
                         if (mapped) {
-                            logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line}:0 to ${mappedPath}:${mapped.line}:${mapped.column}`);
+                            logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line + 1}:1 to ${mappedPath}:${mapped.line + 1}:${mapped.column + 1}`);
                             mappedCols[i] = mapped.column;
                             return mapped.line;
                         } else {
-                            logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line}, column 0`);
+                            logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line + 1}, column 1`);
                             mappedCols[i] = 0;
                             return line;
                         }
@@ -139,10 +139,10 @@ export class SourceMapTransformer {
                     response.breakpoints.forEach(bp => {
                         const mapped = this._sourceMaps.mapToAuthored(args.source.path, bp.line, bp.column);
                         if (mapped) {
-                            logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line}:${bp.column} to ${mapped.source}:${mapped.line}`);
+                            logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line + 1}:${bp.column + 1} to ${mapped.source}:${mapped.line + 1}`);
                             bp.line = mapped.line;
                         } else {
-                            logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line}:${bp.column}, keeping the line number as-is.`);
+                            logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line + 1}:${bp.column + 1}, keeping the line number as-is.`);
                         }
 
                         this._requestSeqToSetBreakpointsArgs.delete(requestSeq);

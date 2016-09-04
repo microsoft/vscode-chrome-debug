@@ -10,16 +10,12 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 export type ISourceMapPathOverrides = { [pattern: string]: string };
 
+/**
+ * Properties needed by -core, just a subset of the properties needed for launch in general
+ */
 export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     webRoot?: string;
-    runtimeArgs?: string[];
-    runtimeExecutable?: string;
-    file?: string;
-    url?: string;
-    stopOnEntry?: boolean;
     sourceMaps?: boolean;
-    address?: string;
-    port?: number;
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
     userDataDir?: string;
@@ -43,20 +39,17 @@ export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArgumen
     authoredPath?: string;
 }
 
-export interface IBreakpoint extends DebugProtocol.Breakpoint {
-    column?: number;
-}
-
 /*
  * The ResponseBody interfaces are copied from debugProtocol.d.ts which defines these inline in the Response interfaces.
  * They should always match those interfaces, see the original for comments.
  */
 export interface ISetBreakpointsResponseBody {
-    breakpoints: IBreakpoint[];
+    breakpoints: DebugProtocol.Breakpoint[];
 }
 
 export interface ISourceResponseBody {
     content: string;
+    mimeType?: string;
 }
 
 export interface IThreadsResponseBody {
@@ -83,6 +76,7 @@ export interface IEvaluateResponseBody {
 declare type PromiseOrNot<T> = T | Promise<T>;
 export interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
+    registerRequestHandler(eventHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void;
 
     initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilites>;
     launch(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
