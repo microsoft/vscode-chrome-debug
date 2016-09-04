@@ -80,6 +80,7 @@ export interface IEvaluateResponseBody {
 declare type PromiseOrNot<T> = T | Promise<T>;
 export interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
+    registerRequestHandler(eventHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void;
 
     initialize(args: DebugProtocol.InitializeRequestArguments): PromiseOrNot<DebugProtocol.Capabilites>;
     launch(args: ILaunchRequestArgs): PromiseOrNot<void>;

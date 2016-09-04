@@ -69,6 +69,7 @@ export class ChromeDebugSession extends DebugSession {
             ],
             adapter,
             event => this.sendEvent(event));
+        adapter.registerRequestHandler(this.sendRequest.bind(this));
     }
 
     /**
@@ -81,6 +82,15 @@ export class ChromeDebugSession extends DebugSession {
         }
 
         super.sendEvent(event);
+    }
+
+    /**
+     * Overload sendRequest to log
+     */
+    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+        logger.verbose(`To client: ${JSON.stringify(command)}(${JSON.stringify(args)}), timeout: ${timeout}`);
+
+        super.sendRequest(command, args, timeout, cb);
     }
 
     /**

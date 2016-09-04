@@ -43,6 +43,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     private _chromeProc: ChildProcess;
     private _eventHandler: (event: DebugProtocol.Event) => void;
+    private _requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void;
 
     protected _chromeConnection: ChromeConnection;
 
@@ -75,6 +76,10 @@ export class ChromeDebugAdapter implements IDebugAdapter {
 
     public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
         this._eventHandler = eventHandler;
+    }
+
+    public registerRequestHandler(requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void {
+        this._requestHandler = requestHandler;
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
@@ -218,6 +223,12 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     protected fireEvent(event: DebugProtocol.Event): void {
         if (this._eventHandler) {
             this._eventHandler(event);
+        }
+    }
+
+    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+        if (this._requestHandler) {
+            this._requestHandler(command, args, timeout, cb);
         }
     }
 

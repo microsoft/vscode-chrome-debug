@@ -23,6 +23,10 @@
                 "cwd": "${workspaceRoot}/../../.vscode/extensions/vscode-chrome-debug",
                 "program": "${workspaceRoot}/../../.vscode/extensions/vscode-chrome-debug/out/src/chromeDebug.js"
             },
+            "osx": {
+                "cwd": "${workspaceRoot}/../vscode-chrome-debug",
+                "program": "${workspaceRoot}/../vscode-chrome-debug/out/src/chromeDebug.js"
+            },
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
