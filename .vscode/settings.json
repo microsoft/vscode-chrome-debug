@@ -14,5 +14,6 @@
         "bin": true,
         "out": true,
         "lib": true
-    }
+    },
+    "typescript.tsdk": "node_modules/typescript/lib"
 }
