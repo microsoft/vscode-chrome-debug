@@ -7,8 +7,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
 
 import {IDebugAdapter} from '../debugAdapterInterfaces';
-import {ChromeDebugAdapter} from './chromeDebugAdapter';
-import {ChromeConnection, ITargetFilter} from './chromeConnection';
+import {ITargetFilter} from './chromeConnection';
 
 import * as logger from '../logger';
 
@@ -18,7 +17,7 @@ import {PathTransformer} from '../transformers/pathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 
 export interface IChromeDebugSessionOpts {
-    adapter?: IDebugAdapter;
+    adapter: IDebugAdapter;
     targetFilter?: ITargetFilter;
     logFilePath?: string;
 }
@@ -48,10 +47,9 @@ export class ChromeDebugSession extends DebugSession {
     public constructor(
         targetLinesStartAt1: boolean,
         isServer = false,
-        opts: IChromeDebugSessionOpts = {}) {
+        opts?: IChromeDebugSessionOpts) {
         super(targetLinesStartAt1, isServer);
 
-        const adapter = opts.adapter || new ChromeDebugAdapter(new ChromeConnection(undefined, opts.targetFilter));
         const logFilePath =  opts.logFilePath;
 
         logger.init((msg, level) => this.onLog(msg, level), logFilePath);
@@ -67,9 +65,9 @@ export class ChromeDebugSession extends DebugSession {
                 new SourceMapTransformer(),
                 new PathTransformer()
             ],
-            adapter,
+            opts.adapter,
             event => this.sendEvent(event));
-        adapter.registerRequestHandler(this.sendRequest.bind(this));
+        opts.adapter.registerRequestHandler(this.sendRequest.bind(this));
     }
 
     /**

@@ -10,16 +10,12 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 export type ISourceMapPathOverrides = { [pattern: string]: string };
 
+/**
+ * Properties needed by -core, just a subset of the properties needed for launch in general
+ */
 export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
     webRoot?: string;
-    runtimeArgs?: string[];
-    runtimeExecutable?: string;
-    file?: string;
-    url?: string;
-    stopOnEntry?: boolean;
     sourceMaps?: boolean;
-    address?: string;
-    port?: number;
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
     userDataDir?: string;

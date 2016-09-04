@@ -36,57 +36,6 @@ suite('Utils', () => {
         mockery.disable();
     });
 
-    suite('getPlatform()/getBrowserPath()', () => {
-        test('osx', () => {
-            mockery.registerMock('os', { platform: () => 'darwin' });
-            const Utils = getUtils();
-            assert.equal(Utils.getPlatform(), Utils.Platform.OSX);
-            assert.equal(
-                Utils.getBrowserPath(),
-                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
-        });
-
-        test('win', () => {
-            // Overwrite the statSync mock to say the x86 path doesn't exist
-            const statSync = (aPath: string) => {
-                if (aPath.indexOf('(x86)') >= 0) throw new Error('Not found');
-            };
-            mockery.registerMock('fs', { statSync });
-
-            const Utils = getUtils();
-            assert.equal(Utils.getPlatform(), Utils.Platform.Windows);
-            assert.equal(
-                Utils.getBrowserPath(),
-                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
-        });
-
-        test('winx86', () => {
-            const Utils = getUtils();
-            assert.equal(Utils.getPlatform(), Utils.Platform.Windows);
-            assert.equal(
-                Utils.getBrowserPath(),
-                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe');
-        });
-
-        test('linux', () => {
-            mockery.registerMock('os', { platform: () => 'linux' });
-            const Utils = getUtils();
-            assert.equal(Utils.getPlatform(), Utils.Platform.Linux);
-            assert.equal(
-                Utils.getBrowserPath(),
-                '/usr/bin/google-chrome');
-        });
-
-        test('freebsd (default to Linux for anything unknown)', () => {
-            mockery.registerMock('os', { platform: () => 'freebsd' });
-            const Utils = getUtils();
-            assert.equal(Utils.getPlatform(), Utils.Platform.Linux);
-            assert.equal(
-                Utils.getBrowserPath(),
-                '/usr/bin/google-chrome');
-        });
-    });
-
     suite('existsSync()', () => {
         test('it returns false when statSync throws', () => {
             const statSync = (aPath: string) => {

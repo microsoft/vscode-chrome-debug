@@ -254,36 +254,6 @@ suite('ChromeDebugAdapter', () => {
         });
     });
 
-    suite('launch()', () => {
-        test('launches with minimal correct args', () => {
-            let spawnCalled = false;
-            function spawn(chromePath: string, args: string[]): any {
-                // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
-                assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
-                assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
-                assert(args.indexOf('abc') >= 0);
-                assert(args.indexOf('def') >= 0);
-                spawnCalled = true;
-
-                return { on: () => { }, unref: () => { } };
-            }
-
-            // Mock spawn for chrome process, and 'fs' for finding chrome.exe.
-            // These are mocked as empty above - note that it's too late for mockery here.
-            require('child_process').spawn = spawn;
-            require('fs').statSync = () => true;
-
-            mockChromeConnection
-                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
-                .returns(() => Promise.resolve<void>())
-                .verifiable();
-
-            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
-                .then(() => assert(spawnCalled));
-        });
-    });
-
     suite('Console.messageAdded', () => {
         test('Fires an output event when a console message is added', () => {
             const testLog = 'Hello, world!';

@@ -15,7 +15,6 @@ import * as logger from '../logger';
 import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
 
-import {spawn, ChildProcess} from 'child_process';
 import * as path from 'path';
 
 interface IScopeVarHandle {
@@ -23,7 +22,7 @@ interface IScopeVarHandle {
     thisObj?: Chrome.Runtime.RemoteObject;
 }
 
-export class ChromeDebugAdapter implements IDebugAdapter {
+export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
@@ -41,7 +40,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
 
-    private _chromeProc: ChildProcess;
     private _eventHandler: (event: DebugProtocol.Event) => void;
     private _requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void;
 
@@ -100,53 +98,7 @@ export class ChromeDebugAdapter implements IDebugAdapter {
         };
     }
 
-    public launch(args: ILaunchRequestArgs): Promise<void> {
-        this.setupLogging(args);
-
-        // Check exists?
-        const chromePath = args.runtimeExecutable || utils.getBrowserPath();
-        if (!chromePath) {
-            return utils.errP(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
-        }
-
-        // Start with remote debugging enabled
-        const port = args.port || 9222;
-        const chromeArgs: string[] = ['--remote-debugging-port=' + port];
-
-        // Also start with extra stuff disabled
-        chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
-        if (args.runtimeArgs) {
-            chromeArgs.push(...args.runtimeArgs);
-        }
-
-        if (args.userDataDir) {
-            chromeArgs.push('--user-data-dir=' + args.userDataDir);
-        }
-
-        let launchUrl: string;
-        if (args.file) {
-            launchUrl = utils.pathToFileURL(args.file);
-        } else if (args.url) {
-            launchUrl = args.url;
-        }
-
-        if (launchUrl) {
-            chromeArgs.push(launchUrl);
-        }
-
-        logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-        this._chromeProc = spawn(chromePath, chromeArgs, {
-            detached: true,
-            stdio: ['ignore']
-        });
-        this._chromeProc.unref();
-        this._chromeProc.on('error', (err) => {
-            logger.log('chrome error: ' + err);
-            this.terminateSession();
-        });
-
-        return this.doAttach(port, launchUrl, args.address);
-    }
+    public abstract launch(args: ILaunchRequestArgs): Promise<void>;
 
     public attach(args: IAttachRequestArgs): Promise<void> {
         if (args.port == null) {
@@ -186,7 +138,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     public clearEverything(): void {
         this.clearClientContext();
         this.clearTargetContext();
-        this._chromeProc = null;
 
         if (this._chromeConnection.isAttached) {
             this._chromeConnection.close();
@@ -324,11 +275,6 @@ export class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public disconnect(): Promise<void> {
-        if (this._chromeProc) {
-            this._chromeProc.kill('SIGINT');
-            this._chromeProc = null;
-        }
-
         this.clearEverything();
 
         return Promise.resolve<void>();
