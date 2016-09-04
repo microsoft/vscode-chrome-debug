@@ -5,15 +5,17 @@
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
 
-import {IDebugAdapter, ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
+import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
     ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from '../debugAdapterInterfaces';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
-import * as utils from '../utils';
-import * as logger from '../logger';
 import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
+
+import * as utils from '../utils';
+import * as logger from '../logger';
+import {BaseDebugAdapter} from '../baseDebugAdapter';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {PathTransformer} from '../transformers/pathTransformer';
@@ -26,7 +28,7 @@ interface IScopeVarHandle {
     thisObj?: Chrome.Runtime.RemoteObject;
 }
 
-export abstract class ChromeDebugAdapter implements IDebugAdapter {
+export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
@@ -44,9 +46,6 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
 
-    private _eventHandler: (event: DebugProtocol.Event) => void;
-    private _requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void;
-
     protected _chromeConnection: ChromeConnection;
 
     private _lineNumberTransformer: LineNumberTransformer;
@@ -54,6 +53,8 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private _pathTransformer: PathTransformer;
 
     public constructor(chromeConnection?: ChromeConnection) {
+        super();
+
         this._chromeConnection = chromeConnection || new ChromeConnection();
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -85,14 +86,6 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private clearClientContext(): void {
         this._clientAttached = false;
         this._pathTransformer.clearClientContext();
-    }
-
-    public registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void {
-        this._eventHandler = eventHandler;
-    }
-
-    public registerRequestHandler(requestHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void {
-        this._requestHandler = requestHandler;
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
@@ -156,7 +149,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
      */
     public terminateSession(): void {
         if (this._clientAttached) {
-            this.fireEvent(new TerminatedEvent());
+            this.sendEvent(new TerminatedEvent());
         }
 
         this.clearEverything();
@@ -187,26 +180,15 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession());
             this._chromeConnection.on('error', () => this.terminateSession());
 
+            this.sendRequest
             return this._chromeConnection.attach(address, port, targetUrl).then(
-                () => this.fireEvent(new InitializedEvent()),
+                () => this.sendEvent(new InitializedEvent()),
                 e => {
                     this.clearEverything();
                     return utils.errP(e);
                 });
         } else {
             return Promise.resolve<void>();
-        }
-    }
-
-    protected fireEvent(event: DebugProtocol.Event): void {
-        if (this._eventHandler) {
-            this._eventHandler(event);
-        }
-    }
-
-    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
-        if (this._requestHandler) {
-            this._requestHandler(command, args, timeout, cb);
         }
     }
 
@@ -249,7 +231,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
             reason = (notification.hitBreakpoints && notification.hitBreakpoints.length) ? 'breakpoint' : 'step';
         }
 
-        this.fireEvent(new StoppedEvent(reason, /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+        this.sendEvent(new StoppedEvent(reason, /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
     }
 
     protected onDebuggerResumed(): void {
@@ -259,7 +241,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         if (!this._expectingResumedEvent) {
             // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
             let resumedEvent = new Event('continued', { threadId: ChromeDebugAdapter.THREAD_ID });
-            this.fireEvent(resumedEvent);
+            this.sendEvent(resumedEvent);
         } else {
             this._expectingResumedEvent = false;
         }
@@ -297,7 +279,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     protected onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
         const formattedMessage = formatConsoleMessage(params.message);
         if (formattedMessage) {
-            this.fireEvent(new OutputEvent(
+            this.sendEvent(new OutputEvent(
                 formattedMessage.text + '\n',
                 formattedMessage.isError ? 'stderr' : 'stdout'));
         }

@@ -4,7 +4,7 @@
 
 import * as os from 'os';
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {DebugSession, ErrorDestination, OutputEvent} from 'vscode-debugadapter';
+import {DebugSession, ErrorDestination, OutputEvent, Response} from 'vscode-debugadapter';
 
 import {IDebugAdapter} from '../debugAdapterInterfaces';
 import {ITargetFilter} from './chromeConnection';
@@ -51,7 +51,7 @@ export class ChromeDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         this._debugAdapter = opts.adapter;
-        this._debugAdapter.registerEventHandler(e => this.sendEvent(e));
+        this._debugAdapter.registerEventHandler(this.sendEvent.bind(this));
         this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
 
         const logFilePath =  opts.logFilePath;
@@ -136,7 +136,7 @@ export class ChromeDebugSession extends DebugSession {
     }
 
     /**
-     * Overload dispatchRequest to dispatch to the adapter proxy instead of debugSession's methods for each request.
+     * Overload dispatchRequest to the debug adapters' Promise-based methods instead of DebugSession's callback-based methods
      */
     protected dispatchRequest(request: DebugProtocol.Request): void {
         const response = new Response(request);
@@ -161,36 +161,4 @@ function logVersionInfo(): void {
     logger.log(`OS: ${os.platform()} ${os.arch()}`);
     logger.log('Node: ' + process.version);
     logger.log('vscode-chrome-debug-core: ' + require('../../../package.json').version);
-}
-
-/**
- * Classes copied from vscode-debugadapter - consider exporting these instead
- */
-
-class Message implements DebugProtocol.ProtocolMessage {
-    public seq: number;
-    public type: string;
-
-    public constructor(type: string) {
-        this.seq = 0;
-        this.type = type;
-    }
-}
-
-class Response extends Message implements DebugProtocol.Response {
-    public request_seq: number;
-    public success: boolean;
-    public command: string;
-
-    public constructor(request: DebugProtocol.Request, message?: string) {
-        super('response');
-        this.request_seq = request.seq;
-        this.command = request.command;
-        if (message) {
-            this.success = false;
-            (<any>this).message = message;
-        } else {
-            this.success = true;
-        }
-    }
 }
