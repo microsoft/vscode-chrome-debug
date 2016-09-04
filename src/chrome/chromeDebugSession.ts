@@ -18,12 +18,14 @@ import * as logger from '../logger';
 
 export interface IChromeDebugSessionOpts {
     adapter: IDebugAdapter;
+    extensionName: string;
     targetFilter?: ITargetFilter;
     logFilePath?: string;
 }
 
 export class ChromeDebugSession extends DebugSession {
     private _debugAdapter: IDebugAdapter;
+    private _extensionName: string;
 
     /**
      * This needs a bit of explanation -
@@ -50,6 +52,7 @@ export class ChromeDebugSession extends DebugSession {
         opts?: IChromeDebugSessionOpts) {
         super(targetLinesStartAt1, isServer);
 
+        this._extensionName = opts.extensionName;
         this._debugAdapter = opts.adapter;
         this._debugAdapter.registerEventHandler(this.sendEvent.bind(this));
         this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
@@ -115,18 +118,18 @@ export class ChromeDebugSession extends DebugSession {
 
                 const eStr = e ? e.message : 'Unknown error';
                 if (eStr === 'Error: unknowncommand') {
-                    this.sendErrorResponse(response, 1014, '[debugger-for-chrome] Unrecognized request: ' + request.command, null, ErrorDestination.Telemetry);
+                    this.sendErrorResponse(response, 1014, `[${this._extensionName}] Unrecognized request: ${request.command}`, null, ErrorDestination.Telemetry);
                     return;
                 }
 
                 if (request.command === 'evaluate') {
                     // Errors from evaluate show up in the console or watches pane. Doesn't seem right
-                    // as it's not really a failed request. So it doesn't need the [debugger-for-chrome] tag and worth special casing.
+                    // as it's not really a failed request. So it doesn't need the [extensionName] tag and worth special casing.
                     response.message = eStr;
                 } else {
                     // These errors show up in the message bar at the top (or nowhere), sometimes not obvious that they
                     // come from the adapter
-                    response.message = '[debugger-for-chrome] ' + eStr;
+                    response.message = `[${this._extensionName}] ${eStr}`;
                     logger.log('Error: ' + e ? e.stack : eStr);
                 }
 
