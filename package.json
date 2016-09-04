@@ -35,8 +35,9 @@
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
     "tslint": "^2.5.1",
-    "typescript": "^1.8.9",
-    "typings": "^0.7.12"
+    "typemoq": "^0.3.3",
+    "typescript": "^2.0.0",
+    "typings": "^1.3.3"
   },
   "scripts": {
     "postinstall": "typings install"
