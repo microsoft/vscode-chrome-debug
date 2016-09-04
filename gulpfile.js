@@ -9,10 +9,13 @@ const log = require('gulp-util').log;
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const tslint = require('gulp-tslint');
+const mocha = require('gulp-mocha');
 
 const sources = [
     'src',
-    'typings/main'
+    'test',
+    'typings/main',
+    'typings/globals'
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
 const lintSources = [
@@ -47,3 +50,12 @@ gulp.task('tslint', function() {
         .pipe(tslint())
         .pipe(tslint.report('verbose'));
 });
+
+gulp.task('test', function() {
+    return gulp.src('out/test/**/*.test.js', { read: false })
+        .pipe(mocha({ ui: 'tdd' }))
+        .on('error', e => {
+            log(e ? e.toString() : 'error in test task!');
+            this.emit('end');
+        });
+})
