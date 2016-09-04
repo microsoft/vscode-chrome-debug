@@ -36,6 +36,31 @@ suite('Utils', () => {
         mockery.disable();
     });
 
+    suite('getPlatform()', () => {
+        test('osx', () => {
+            mockery.registerMock('os', { platform: () => 'darwin' });
+            const Utils = getUtils();
+            assert.equal(Utils.getPlatform(), Utils.Platform.OSX);
+        });
+
+        test('win', () => {
+            const Utils = getUtils();
+            assert.equal(Utils.getPlatform(), Utils.Platform.Windows);
+        });
+
+        test('linux', () => {
+            mockery.registerMock('os', { platform: () => 'linux' });
+            const Utils = getUtils();
+            assert.equal(Utils.getPlatform(), Utils.Platform.Linux);
+        });
+
+        test('freebsd (default to Linux for anything unknown)', () => {
+            mockery.registerMock('os', { platform: () => 'freebsd' });
+            const Utils = getUtils();
+            assert.equal(Utils.getPlatform(), Utils.Platform.Linux);
+        });
+    });
+
     suite('existsSync()', () => {
         test('it returns false when statSync throws', () => {
             const statSync = (aPath: string) => {
