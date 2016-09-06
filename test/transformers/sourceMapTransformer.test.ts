@@ -157,7 +157,7 @@ suite('SourceMapTransformer', () => {
                 mock.verifyAll();
             });
 
-            transformer.scriptParsed(new testUtils.MockEvent('scriptParsed', { scriptUrl: RUNTIME_PATH, sourceMapURL }));
+            transformer.scriptParsed(RUNTIME_PATH, sourceMapURL);
             return setBreakpointsP;
         });
 

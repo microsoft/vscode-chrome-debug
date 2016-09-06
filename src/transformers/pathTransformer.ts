@@ -2,9 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugProtocol} from 'vscode-debugprotocol';
-
-import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
+import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as ChromeUtils from '../chrome/chromeUtils';
@@ -18,7 +16,7 @@ interface IPendingBreakpoint {
 /**
  * Converts a local path from Code to a path on the target.
  */
-export class PathTransformer implements IDebugTransformer {
+export class PathTransformer {
     private _webRoot: string;
     private _clientPathToTargetUrl = new Map<string, string>();
     private _targetUrlToClientPath = new Map<string, string>();
@@ -68,29 +66,30 @@ export class PathTransformer implements IDebugTransformer {
         this._targetUrlToClientPath = new Map<string, string>();
     }
 
-    public scriptParsed(event: DebugProtocol.Event): void {
-        const targetUrl: string = event.body.scriptUrl;
-        const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
+    public scriptParsed(scriptUrl: string): string {
+        const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, scriptUrl);
 
         if (!clientPath) {
             // It's expected that eval scripts (debugadapter:) won't be resolved
-            if (!targetUrl.startsWith('debugadapter://')) {
-                logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
+            if (!scriptUrl.startsWith('debugadapter://')) {
+                logger.log(`Paths.scriptParsed: could not resolve ${scriptUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
             }
         } else {
-            logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
-            this._clientPathToTargetUrl.set(clientPath, targetUrl);
-            this._targetUrlToClientPath.set(targetUrl, clientPath);
+            logger.log(`Paths.scriptParsed: resolved ${scriptUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+            this._clientPathToTargetUrl.set(clientPath, scriptUrl);
+            this._targetUrlToClientPath.set(scriptUrl, clientPath);
 
-            event.body.scriptUrl = clientPath;
+            scriptUrl = clientPath;
         }
 
-        if (this._pendingBreakpointsByPath.has(event.body.scriptUrl)) {
-            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${event.body.scriptUrl}`);
-            const pendingBreakpoint = this._pendingBreakpointsByPath.get(event.body.scriptUrl);
-            this._pendingBreakpointsByPath.delete(event.body.scriptUrl);
+        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
+            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
+            const pendingBreakpoint = this._pendingBreakpointsByPath.get(scriptUrl);
+            this._pendingBreakpointsByPath.delete(scriptUrl);
             this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
         }
+
+        return scriptUrl;
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
