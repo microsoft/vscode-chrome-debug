@@ -231,6 +231,7 @@ export function getURL(aUrl: string): Promise<string> {
                 }
             });
         }).on('error', e => {
+            logger.error('HTTP GET failed: ' + e.toString());
             reject(e);
         });
     });
