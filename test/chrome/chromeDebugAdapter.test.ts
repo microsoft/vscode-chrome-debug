@@ -4,9 +4,16 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
+// import {MockSourceMapTransformer} from '../mocks/sourceMapTransformer.mock';
+import {getMockLineNumberTransformer, getMockPathTransformer, getMockSourceMapTransformer} from '../mocks/transformerMocks';
+
 import {ISetBreakpointsResponseBody} from '../../src/debugAdapterInterfaces';
 import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 import {ChromeConnection} from '../../src/chrome/chromeConnection';
+
+import {LineNumberTransformer} from '../../src/transformers/lineNumberTransformer';
+import {SourceMapTransformer} from '../../src/transformers/sourceMapTransformer';
+import {PathTransformer} from '../../src/transformers/pathTransformer';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
@@ -25,6 +32,9 @@ suite('ChromeDebugAdapter', () => {
 
     let mockChromeConnection: Mock<ChromeConnection>;
     let mockEventEmitter: EventEmitter;
+    let mockLineNumberTransformer: Mock<LineNumberTransformer>;
+    let mockSourceMapTransformer: Mock<SourceMapTransformer>;
+    let mockPathTransformer: Mock<PathTransformer>;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;
 
@@ -46,8 +56,13 @@ suite('ChromeDebugAdapter', () => {
             .setup(x => x.isAttached)
             .returns(() => false);
 
+        mockLineNumberTransformer = getMockLineNumberTransformer();
+        mockSourceMapTransformer = getMockSourceMapTransformer();
+        mockPathTransformer = getMockPathTransformer();
+
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
-        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)(mockChromeConnection.object);
+        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)(mockChromeConnection.object,
+            mockLineNumberTransformer.object, mockSourceMapTransformer.object, mockPathTransformer.object);
     });
 
     teardown(() => {
@@ -299,15 +314,11 @@ suite('ChromeDebugAdapter', () => {
         test('adds default url when missing', () => {
             let scriptParsedFired = false;
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
-                chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
-                    if (event.event === 'scriptParsed') {
-                        // Assert that the event is fired with some scriptUrl
+                mockPathTransformer.setup(m => m.scriptParsed(It.isAnyString()))
+                    .callback(url => {
                         scriptParsedFired = true;
-                        assert(event.body.scriptUrl);
-                    } else {
-                        assert.fail('An unexpected event was fired: ' + event.event);
-                    }
-                });
+                        assert(!!url); // Should be called with some default url
+                    });
 
                 emitScriptParsed(/*url=*/'');
                 assert(scriptParsedFired);

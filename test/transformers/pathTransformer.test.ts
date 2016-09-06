@@ -59,7 +59,7 @@ suite('PathTransformer', () => {
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => CLIENT_PATH).verifiable();
 
-            transformer.scriptParsed(<any>{ body: { scriptUrl: TARGET_URL } });
+            transformer.scriptParsed(TARGET_URL);
             return transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
                 assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
             });
@@ -76,7 +76,7 @@ suite('PathTransformer', () => {
                 assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
             });
 
-            transformer.scriptParsed(<any>{ body: { scriptUrl: TARGET_URL } });
+            transformer.scriptParsed(TARGET_URL);
             return setBreakpointsP;
         });
 
@@ -89,26 +89,20 @@ suite('PathTransformer', () => {
     });
 
     suite('scriptParsed', () => {
-        test('modifies args.source.path of the script parsed event when the file can be mapped', () => {
+        test('returns the client path when the file can be mapped', () => {
             chromeUtilsMock
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => CLIENT_PATH).verifiable();
 
-            const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
-            const expectedScriptParsedArgs = <any>{ body: { scriptUrl: CLIENT_PATH } };
-            transformer.scriptParsed(scriptParsedArgs);
-            assert.deepEqual(scriptParsedArgs, expectedScriptParsedArgs);
+            assert.deepEqual(transformer.scriptParsed(TARGET_URL), CLIENT_PATH);
         });
 
-        test(`doesn't modify args.source.path when the file can't be mapped`, () => {
+        test(`returns the given path when the file can't be mapped`, () => {
             chromeUtilsMock
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => '').verifiable();
 
-            const scriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
-            const expectedScriptParsedArgs = <any>{ body: { scriptUrl: TARGET_URL } };
-            transformer.scriptParsed(scriptParsedArgs);
-            assert.deepEqual(scriptParsedArgs, expectedScriptParsedArgs);
+            assert.deepEqual(transformer.scriptParsed(TARGET_URL), TARGET_URL);
         });
     });
 

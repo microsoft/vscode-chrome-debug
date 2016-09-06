@@ -2,9 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugProtocol} from 'vscode-debugprotocol';
-
-import {ISetBreakpointsArgs, IDebugTransformer, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
+import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as ChromeUtils from '../chrome/chromeUtils';
@@ -69,18 +67,17 @@ export class PathTransformer {
     }
 
     public scriptParsed(scriptUrl: string): string {
-        const targetUrl: string = scriptUrl;
-        const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, targetUrl);
+        const clientPath = ChromeUtils.targetUrlToClientPath(this._webRoot, scriptUrl);
 
         if (!clientPath) {
             // It's expected that eval scripts (debugadapter:) won't be resolved
-            if (!targetUrl.startsWith('debugadapter://')) {
-                logger.log(`Paths.scriptParsed: could not resolve ${targetUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
+            if (!scriptUrl.startsWith('debugadapter://')) {
+                logger.log(`Paths.scriptParsed: could not resolve ${scriptUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
             }
         } else {
-            logger.log(`Paths.scriptParsed: resolved ${targetUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
-            this._clientPathToTargetUrl.set(clientPath, targetUrl);
-            this._targetUrlToClientPath.set(targetUrl, clientPath);
+            logger.log(`Paths.scriptParsed: resolved ${scriptUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
+            this._clientPathToTargetUrl.set(clientPath, scriptUrl);
+            this._targetUrlToClientPath.set(scriptUrl, clientPath);
 
             scriptUrl = clientPath;
         }

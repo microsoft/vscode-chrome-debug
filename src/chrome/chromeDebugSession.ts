@@ -9,10 +9,6 @@ import {DebugSession, ErrorDestination, OutputEvent, Response} from 'vscode-debu
 import {IDebugAdapter} from '../debugAdapterInterfaces';
 import {ITargetFilter} from './chromeConnection';
 
-import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
-import {PathTransformer} from '../transformers/pathTransformer';
-import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
-
 import * as utils from '../utils';
 import * as logger from '../logger';
 

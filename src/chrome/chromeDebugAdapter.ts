@@ -52,17 +52,16 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private _sourceMapTransformer: SourceMapTransformer;
     private _pathTransformer: PathTransformer;
 
-    public constructor(chromeConnection?: ChromeConnection) {
+    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: SourceMapTransformer, pathTransformer?: PathTransformer) {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
         this._variableHandles = new Handles<IScopeVarHandle>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
-        // TODO - take in constructor to allow overriding?
-        this._lineNumberTransformer = new LineNumberTransformer(/*targetLinesStartAt1=*/false);
-        this._sourceMapTransformer = new SourceMapTransformer();
-        this._pathTransformer = new PathTransformer();
+        this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
+        this._sourceMapTransformer = sourceMapTransformer || new SourceMapTransformer();
+        this._pathTransformer = pathTransformer || new PathTransformer();
 
         this.clearEverything();
     }
@@ -180,7 +179,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession());
             this._chromeConnection.on('error', () => this.terminateSession());
 
-            this.sendRequest
             return this._chromeConnection.attach(address, port, targetUrl).then(
                 () => this.sendEvent(new InitializedEvent()),
                 e => {
@@ -322,7 +320,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                         this._lineNumberTransformer.setBreakpointsResponse(body);
                         this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
                         return body;
-                    })
+                    });
                 } else {
                     return utils.errP(`Can't find script for breakpoint request`);
                 }

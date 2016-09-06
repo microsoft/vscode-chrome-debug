@@ -4,9 +4,7 @@
 
 import * as path from 'path';
 
-import {DebugProtocol} from 'vscode-debugprotocol';
-
-import {IDebugTransformer, ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
+import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
     ISetBreakpointsResponseBody, IStackTraceResponseBody, ISourceMapPathOverrides} from '../debugAdapterInterfaces';
 import {SourceMaps} from '../sourceMaps/sourceMaps';
 import * as utils from '../utils';
