@@ -543,7 +543,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
         if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
             const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
-            return Promise.resolve({ variables: [this.propertyDescriptorToVariable(excValuePropDescriptor)] });
+            return this.propertyDescriptorToVariable(excValuePropDescriptor)
+                .then(variable => ({ variables: [variable]}));
         }
 
         return Promise.all([
@@ -561,17 +562,48 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             });
 
             // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
-            const variables: DebugProtocol.Variable[] = [];
-            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc)));
+            const variables: Promise<DebugProtocol.Variable>[] = [];
+            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, handle.objectId)));
+            return Promise.all(variables);
+        }).then(variables => {
             variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
 
-            // If this is a scope that should have the 'this', prop, insert it at the top of the list
             if (handle.thisObj) {
-                variables.unshift(this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }));
+                // If this is a scope that should have the 'this', prop, insert it at the top of the list
+                return this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }).then(thisObjVar => {
+                    variables.unshift(thisObjVar);
+                    return { variables };
+                });
+            } else {
+                return { variables };
             }
-
-            return { variables };
         });
+    }
+
+    private propertyDescriptorToVariable(propDesc: Chrome.Runtime.PropertyDescriptor, owningObjectId?: string): Promise<DebugProtocol.Variable> {
+        if (propDesc.get) {
+            const grabGetterValue = 'function remoteFunction(propName) { return this[propName]; }';
+            return this._chromeConnection.runtime_callFunctionOn(owningObjectId, grabGetterValue, [{ value: propDesc.name }]).then(response => {
+                if (response.error) {
+                    logger.error('Error evaluating getter - ' + response.error.toString());
+                    return { name: propDesc.name, value: response.error.toString(), variablesReference: 0 };
+                } else if (response.result.exceptionDetails) {
+                    // Not an error, getter could be `get foo() { throw new Error('bar'); }`
+                    const exceptionDetails = response.result.exceptionDetails;
+                    logger.log('Exception thrown evaluating getter - ' + JSON.stringify(exceptionDetails.exception));
+                    return { name: propDesc.name, value: response.result.exceptionDetails.exception.description, variablesReference: 0 };
+                } else {
+                    const { value, variablesReference } = this.remoteObjectToValueWithHandle(response.result.result);
+                    return { name: propDesc.name, value, variablesReference };
+                }
+            });
+        } else if (propDesc.set) {
+            // setter without a getter, unlikely
+            return Promise.resolve({ name: propDesc.name, value: 'setter', variablesReference: 0 });
+        } else {
+            const { value, variablesReference } = this.remoteObjectToValueWithHandle(propDesc.value);
+            return Promise.resolve({ name: propDesc.name, value, variablesReference });
+        }
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
@@ -618,17 +650,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             const { value, variablesReference } = this.remoteObjectToValueWithHandle(evalResponse.result.result);
             return { result: value, variablesReference };
         });
-    }
-
-    private propertyDescriptorToVariable(propDesc: Chrome.Runtime.PropertyDescriptor): DebugProtocol.Variable {
-        if (propDesc.get || propDesc.set) {
-            // A property doesn't have a value here, and we shouldn't evaluate the getter because it may have side effects.
-            // Node adapter shows 'undefined', Chrome can eval the getter on demand.
-            return { name: propDesc.name, value: 'property', variablesReference: 0 };
-        } else {
-            const { value, variablesReference } = this.remoteObjectToValueWithHandle(propDesc.value);
-            return { name: propDesc.name, value, variablesReference };
-        }
     }
 
     /**

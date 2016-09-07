@@ -215,6 +215,23 @@ export namespace Runtime {
         callFrames: CallFrame[];
         parent?: StackTrace;
     }
+
+    /**
+     * Represents function call argument. Either remote object id objectId, primitive value,
+     * unserializable primitive value or neither of (for undefined) them should be specified.
+     */
+    export interface CallArgument {
+        value?: any;
+        unserializableValue?: "Infinity" | "NaN" | "-Infinity" | "-0";
+        objectId?: string;
+    }
+
+    export interface CallFunctionOnResponse extends Response {
+        result: {
+            result: RemoteObject;
+            exceptionDetails: any;
+        };
+    }
 }
 
 export namespace Page {

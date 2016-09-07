@@ -236,8 +236,13 @@ export class ChromeConnection {
         return this.sendMessage('Runtime.getProperties', <Chrome.Runtime.GetPropertiesParams>{ objectId, ownProperties, accessorPropertiesOnly });
     }
 
-    public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId?: number, returnByValue = false): Promise<Chrome.Runtime.EvaluateResponse> {
-        return this.sendMessage('Runtime.evaluate', <Chrome.Runtime.EvaluateParams>{ expression, objectGroup, contextId, returnByValue });
+    public runtime_evaluate(expression: string, objectGroup = 'dummyObjectGroup', contextId = 1, returnByValue = false): Promise<Chrome.Runtime.EvaluateResponse> {
+        return this.sendMessage('Runtime.evaluate', <Chrome.Runtime.EvaluateParams>{ expression, contextId });
+    }
+
+    public runtime_callFunctionOn(objectId: string, functionDeclaration: string, args?: Chrome.Runtime.CallArgument[], silent?: boolean, returnByValue?: boolean,
+        generatePreview?: boolean, userGesture?: boolean, awaitPromise?: boolean): Promise<Chrome.Runtime.CallFunctionOnResponse> {
+        return this.sendMessage('Runtime.callFunctionOn', { objectId, functionDeclaration, arguments: args, silent, returnByValue, generatePreview, userGesture, awaitPromise });
     }
 
     public page_setOverlayMessage(message: string): Promise<Chrome.Response> {
