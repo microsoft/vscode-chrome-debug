@@ -80,8 +80,8 @@ export interface IDebugAdapter {
 
     initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilites>;
     launch(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
-    disconnect(): PromiseOrNot<void>;
     attach(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;
+    disconnect(): PromiseOrNot<void>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments, requestSeq?: number): PromiseOrNot<ISetBreakpointsResponseBody>;
     setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;
 
@@ -97,6 +97,9 @@ export interface IDebugAdapter {
     source(args: DebugProtocol.SourceArguments, requestSeq?: number): PromiseOrNot<ISourceResponseBody>;
     threads(): PromiseOrNot<IThreadsResponseBody>;
     evaluate(args: DebugProtocol.EvaluateArguments, requestSeq?: number): PromiseOrNot<IEvaluateResponseBody>;
+
+    // Optional methods
+    configurationDone?(): PromiseOrNot<void>;
 }
 
 export interface IDebugTransformer {

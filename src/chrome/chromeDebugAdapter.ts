@@ -146,7 +146,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     /**
      * Chrome is closing, or error'd somehow, stop the debug session
      */
-    public terminateSession(): void {
+    public terminateSession(reason: string): void {
+        logger.log('Terminated: ' + reason);
+
         if (this._clientAttached) {
             this.sendEvent(new TerminatedEvent());
         }
@@ -175,9 +177,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
             this._chromeConnection.on('Console.messageAdded', params => this.onConsoleMessage(params));
 
-            this._chromeConnection.on('Inspector.detached', () => this.terminateSession());
-            this._chromeConnection.on('close', () => this.terminateSession());
-            this._chromeConnection.on('error', () => this.terminateSession());
+            this._chromeConnection.on('Inspector.detached', () => this.terminateSession('Debug connection detached'));
+            this._chromeConnection.on('close', () => this.terminateSession('Debug connection closed'));
+            this._chromeConnection.on('error', e => this.terminateSession('Debug connection error: ' + e));
 
             return this._chromeConnection.attach(address, port, targetUrl).then(
                 () => this.sendEvent(new InitializedEvent()),
