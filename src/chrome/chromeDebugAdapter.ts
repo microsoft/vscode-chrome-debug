@@ -349,7 +349,12 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         });
     }
 
-    private addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
+    /**
+     * Makes the actual call to either Debugger.setBreakpoint or Debugger.setBreakpointByUrl, and returns the response.
+     * Responses from setBreakpointByUrl are transformed to look like the response from setBreakpoint, so they can be
+     * handled the same.
+     */
+    protected addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
         let responsePs: Promise<Chrome.Debugger.SetBreakpointResponse>[];
         if (url.startsWith(ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL)) {
             // eval script with no real url - use debugger_setBreakpoint

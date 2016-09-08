@@ -7,7 +7,6 @@ import {ChromeDebugAdapter} from './chrome/chromeDebugAdapter';
 import {ChromeDebugSession, IChromeDebugSessionOpts} from './chrome/chromeDebugSession';
 import * as chromeTargetDiscoveryStrategy from './chrome/chromeTargetDiscoveryStrategy';
 import * as chromeUtils from './chrome/chromeUtils';
-import * as Chrome from './chrome/chromeDebugProtocol';
 
 import {LineNumberTransformer} from './transformers/lineNumberTransformer';
 import {SourceMapTransformer} from './transformers/sourceMapTransformer';
@@ -26,7 +25,6 @@ export {
     IChromeDebugSessionOpts,
     chromeTargetDiscoveryStrategy,
     chromeUtils,
-    Chrome,
 
     LineNumberTransformer,
     SourceMapTransformer,
