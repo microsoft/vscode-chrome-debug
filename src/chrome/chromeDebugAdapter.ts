@@ -70,7 +70,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         return !!this._currentStack;
     }
 
-    private clearTargetContext(): void {
+    /**
+     * Called on 'clearEverything' or on a navigation/refresh
+     */
+    protected clearTargetContext(): void {
         this._sourceMapTransformer.clearTargetContext();
 
         this._scriptsById = new Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>();
@@ -103,8 +106,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                     filter: 'uncaught',
                     default: true
                 }
-            ]
+            ],
+            supportsConfigurationDoneRequest: true
         };
+    }
+
+    public configurationDone(): Promise<void> {
+        return Promise.resolve<void>();
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
@@ -182,7 +190,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             this._chromeConnection.on('error', e => this.terminateSession('Debug connection error: ' + e));
 
             return this._chromeConnection.attach(address, port, targetUrl).then(
-                () => this.sendEvent(new InitializedEvent()),
+                () => this.sendInitializedEvent(),
                 e => {
                     this.clearEverything();
                     return utils.errP(e);
@@ -190,6 +198,14 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         } else {
             return Promise.resolve<void>();
         }
+    }
+
+    /**
+     * This event tells the client to begin sending setBP requests, etc. Some consumers need to override this
+     * to send it at a later time of their choosing.
+     */
+    protected sendInitializedEvent(): void {
+        this.sendEvent(new InitializedEvent());
     }
 
     /**

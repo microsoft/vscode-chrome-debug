@@ -168,8 +168,11 @@ export class ChromeConnection {
      */
     public attach(address = '127.0.0.1', port = 9222, targetUrl?: string): Promise<void> {
         return this._attach(address, port, targetUrl)
-            .then(() => this.sendMessage('Debugger.enable'))
-            .then(() => this.sendMessage('Console.enable'))
+            .then(() => Promise.all([
+                    this.sendMessage('Runtime.enable'),
+                    this.sendMessage('Debugger.enable'),
+                    this.sendMessage('Console.enable'),
+                    this.runtime_runIfWaitingForDebugger()]))
             .then(() => { });
     }
 
@@ -243,6 +246,10 @@ export class ChromeConnection {
     public runtime_callFunctionOn(objectId: string, functionDeclaration: string, args?: Chrome.Runtime.CallArgument[], silent?: boolean, returnByValue?: boolean,
         generatePreview?: boolean, userGesture?: boolean, awaitPromise?: boolean): Promise<Chrome.Runtime.CallFunctionOnResponse> {
         return this.sendMessage('Runtime.callFunctionOn', { objectId, functionDeclaration, arguments: args, silent, returnByValue, generatePreview, userGesture, awaitPromise });
+    }
+
+    public runtime_runIfWaitingForDebugger(): Promise<Chrome.Response> {
+        return this.sendMessage('Runtime.runIfWaitingForDebugger');
     }
 
     public page_setOverlayMessage(message: string): Promise<Chrome.Response> {
