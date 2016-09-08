@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, Event} from 'vscode-debugadapter';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, ContinuedEvent} from 'vscode-debugadapter';
 
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
@@ -239,8 +239,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._currentStack = null;
 
         if (!this._expectingResumedEvent) {
-            // This is a private undocumented event provided by VS Code to support the 'continue' button on a paused Chrome page
-            let resumedEvent = new Event('continued', { threadId: ChromeDebugAdapter.THREAD_ID });
+            let resumedEvent = new ContinuedEvent(ChromeDebugAdapter.THREAD_ID);
             this.sendEvent(resumedEvent);
         } else {
             this._expectingResumedEvent = false;
