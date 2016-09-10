@@ -51,8 +51,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             });
             this._chromeProc.unref();
             this._chromeProc.on('error', (err) => {
-                logger.log('chrome error: ' + err);
-                this.terminateSession();
+                const errMsg = 'Chrome error: ' + err;
+                logger.error(errMsg);
+                this.terminateSession(errMsg);
             });
 
             return this.doAttach(port, launchUrl, args.address);
