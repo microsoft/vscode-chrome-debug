@@ -151,16 +151,20 @@ export namespace Runtime {
     export interface GetPropertiesResponse extends Response {
         result: {
             result: PropertyDescriptor[];
+            internalProperties: InternalPropertiesDescriptor[];
         };
     }
 
-    export interface PropertyDescriptor {
+    export interface InternalPropertiesDescriptor {
+        name: string;
+        value?: RemoteObject;
+    }
+
+    export interface PropertyDescriptor extends InternalPropertiesDescriptor {
         configurable: boolean;
         enumerable: boolean;
         get?: RemoteObject;
-        name: string;
         set?: RemoteObject;
-        value?: RemoteObject;
         wasThrown?: boolean;
         writeable?: boolean;
     }

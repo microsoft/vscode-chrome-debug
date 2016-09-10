@@ -574,20 +574,30 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
             this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
         ]).then(getPropsResponses => {
-            // Sometimes duplicates will be returned - merge all property descriptors returned
+            // Sometimes duplicates will be returned - merge all descriptors by name
             const propsByName = new Map<string, Chrome.Runtime.PropertyDescriptor>();
+            const internalPropsByName = new Map<string, Chrome.Runtime.InternalPropertiesDescriptor>();
             getPropsResponses.forEach(response => {
                 if (!response.error) {
                     response.result.result.forEach(propDesc =>
                         propsByName.set(propDesc.name, propDesc));
+
+                    if (response.result.internalProperties) {
+                        response.result.internalProperties.forEach(internalProp => {
+                            internalPropsByName.set(internalProp.name, internalProp);
+                        });
+                    }
                 }
             });
 
-            // Convert Chrome prop descriptors to DebugProtocol vars, sort the result
+            // Convert Chrome prop descriptors to DebugProtocol vars
             const variables: Promise<DebugProtocol.Variable>[] = [];
             propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, handle.objectId)));
+            internalPropsByName.forEach(internalProp => variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp))));
+
             return Promise.all(variables);
         }).then(variables => {
+            // Sort all variables properly
             variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
 
             if (handle.thisObj) {
@@ -623,9 +633,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             // setter without a getter, unlikely
             return Promise.resolve({ name: propDesc.name, value: 'setter', variablesReference: 0 });
         } else {
-            const { value, variablesReference } = this.remoteObjectToValueWithHandle(propDesc.value);
-            return Promise.resolve({ name: propDesc.name, value, variablesReference });
+            return this.internalPropertyDescriptorToVariable(propDesc);
         }
+    }
+
+    private internalPropertyDescriptorToVariable(propDesc: Chrome.Runtime.InternalPropertiesDescriptor): Promise<DebugProtocol.Variable> {
+        const { value, variablesReference } = this.remoteObjectToValueWithHandle(propDesc.value);
+        return Promise.resolve({ name: propDesc.name, value, variablesReference });
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
