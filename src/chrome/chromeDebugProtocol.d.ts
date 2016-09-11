@@ -202,7 +202,7 @@ export namespace Runtime {
     export interface EvaluateResponse extends Response {
         result: {
             result: Runtime.RemoteObject;
-            wasThrown: boolean;
+            exceptionDetails: any;
         };
     }
 
