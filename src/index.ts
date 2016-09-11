@@ -8,6 +8,8 @@ import {ChromeDebugSession, IChromeDebugSessionOpts} from './chrome/chromeDebugS
 import * as chromeTargetDiscoveryStrategy from './chrome/chromeTargetDiscoveryStrategy';
 import * as chromeUtils from './chrome/chromeUtils';
 
+import {BasePathTransformer} from './transformers/basePathTransformer';
+import {PathTransformer} from './transformers/pathTransformer';
 import {LineNumberTransformer} from './transformers/lineNumberTransformer';
 import {SourceMapTransformer} from './transformers/sourceMapTransformer';
 
@@ -26,6 +28,8 @@ export {
     chromeTargetDiscoveryStrategy,
     chromeUtils,
 
+    PathTransformer,
+    BasePathTransformer,
     LineNumberTransformer,
     SourceMapTransformer,
 

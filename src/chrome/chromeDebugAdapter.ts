@@ -18,7 +18,7 @@ import * as logger from '../logger';
 import {BaseDebugAdapter} from '../baseDebugAdapter';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
-import {PathTransformer} from '../transformers/pathTransformer';
+import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
 
 import * as path from 'path';
@@ -50,9 +50,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     private _lineNumberTransformer: LineNumberTransformer;
     private _sourceMapTransformer: SourceMapTransformer;
-    private _pathTransformer: PathTransformer;
+    private _pathTransformer: BasePathTransformer;
 
-    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: SourceMapTransformer, pathTransformer?: PathTransformer) {
+    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: SourceMapTransformer, pathTransformer?: BasePathTransformer) {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
@@ -61,7 +61,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
         this._sourceMapTransformer = sourceMapTransformer || new SourceMapTransformer();
-        this._pathTransformer = pathTransformer || new PathTransformer();
+        this._pathTransformer = pathTransformer || new BasePathTransformer();
 
         this.clearEverything();
     }

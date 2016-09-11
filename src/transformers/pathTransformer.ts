@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {BasePathTransformer} from './basePathTransformer';
+
 import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
@@ -16,7 +18,7 @@ interface IPendingBreakpoint {
 /**
  * Converts a local path from Code to a path on the target.
  */
-export class PathTransformer {
+export class PathTransformer extends BasePathTransformer {
     private _webRoot: string;
     private _clientPathToTargetUrl = new Map<string, string>();
     private _targetUrlToClientPath = new Map<string, string>();
