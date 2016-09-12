@@ -61,7 +61,7 @@ export class SourceMaps {
      */
     public processNewSourceMap(pathToGenerated: string, sourceMapURL: string): Promise<void> {
         return this._generatedPathToSourceMap.has(pathToGenerated.toLowerCase()) ?
-            Promise.resolve(null) :
+            Promise.resolve<void>() :
             getMapForGeneratedPath(pathToGenerated, sourceMapURL, this._webRoot, this._sourceMapPathOverrides).then(sourceMap => {
                 if (sourceMap) {
                     this._generatedPathToSourceMap.set(pathToGenerated.toLowerCase(), sourceMap);

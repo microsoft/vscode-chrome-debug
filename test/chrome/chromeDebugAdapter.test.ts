@@ -4,7 +4,6 @@
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-// import {MockSourceMapTransformer} from '../mocks/sourceMapTransformer.mock';
 import {getMockLineNumberTransformer, getMockPathTransformer, getMockSourceMapTransformer} from '../mocks/transformerMocks';
 
 import {ISetBreakpointsResponseBody} from '../../src/debugAdapterInterfaces';
@@ -12,7 +11,7 @@ import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 import {ChromeConnection} from '../../src/chrome/chromeConnection';
 
 import {LineNumberTransformer} from '../../src/transformers/lineNumberTransformer';
-import {SourceMapTransformer} from '../../src/transformers/sourceMapTransformer';
+import {LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
 import {PathTransformer} from '../../src/transformers/pathTransformer';
 
 import * as mockery from 'mockery';
@@ -33,7 +32,7 @@ suite('ChromeDebugAdapter', () => {
     let mockChromeConnection: Mock<ChromeConnection>;
     let mockEventEmitter: EventEmitter;
     let mockLineNumberTransformer: Mock<LineNumberTransformer>;
-    let mockSourceMapTransformer: Mock<SourceMapTransformer>;
+    let mockSourceMapTransformer: Mock<LazySourceMapTransformer>;
     let mockPathTransformer: Mock<PathTransformer>;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;

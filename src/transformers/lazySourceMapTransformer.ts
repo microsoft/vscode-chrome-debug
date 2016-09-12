@@ -26,8 +26,9 @@ export const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
 /**
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
  */
-export class SourceMapTransformer {
-    private _sourceMaps: SourceMaps;
+export class LazySourceMapTransformer {
+    protected _sourceMaps: SourceMaps;
+
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
@@ -42,7 +43,7 @@ export class SourceMapTransformer {
         this.init(args);
     }
 
-    private init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
+    protected init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         if (args.sourceMaps) {
             this._sourceMaps = new SourceMaps(args.webRoot, args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides);
             this._requestSeqToSetBreakpointsArgs = new Map<number, ISetBreakpointsArgs>();
@@ -189,21 +190,21 @@ export class SourceMapTransformer {
         }
     }
 
-    public scriptParsed(scriptUrl: string, sourceMapURL: string): void {
+    public scriptParsed(pathToGenerated: string, sourceMapURL: string): void {
         if (this._sourceMaps) {
-            this._allRuntimeScriptPaths.add(scriptUrl);
+            this._allRuntimeScriptPaths.add(pathToGenerated);
 
             if (!sourceMapURL) {
                 // If a file does not have a source map, check if we've seen any breakpoints
                 // for it anyway and make sure to enable them
-                this.resolvePendingBreakpointsForScript(scriptUrl);
+                this.resolvePendingBreakpointsForScript(pathToGenerated);
                 return;
             }
 
-            this._sourceMaps.processNewSourceMap(scriptUrl, sourceMapURL).then(() => {
-                const sources = this._sourceMaps.allMappedSources(scriptUrl);
+            this._sourceMaps.processNewSourceMap(pathToGenerated, sourceMapURL).then(() => {
+                const sources = this._sourceMaps.allMappedSources(pathToGenerated);
                 if (sources) {
-                    logger.log(`SourceMaps.scriptParsed: ${scriptUrl} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
+                    logger.log(`SourceMaps.scriptParsed: ${pathToGenerated} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                     sources.forEach(sourcePath => {
                         this.resolvePendingBreakpointsForScript(sourcePath);
                     });

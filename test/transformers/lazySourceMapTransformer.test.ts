@@ -15,7 +15,7 @@ import {SourceMaps} from '../../src/sourceMaps/sourceMaps';
 import {MappedPosition} from '../../src/sourceMaps/sourceMap';
 import * as utils from '../../src/utils';
 
-const MODULE_UNDER_TEST = '../../src/transformers/sourceMapTransformer';
+const MODULE_UNDER_TEST = '../../src/transformers/lazySourceMapTransformer';
 
 const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
 const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
@@ -29,7 +29,7 @@ const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];
 
 // Not mocked, use for type only
-import {SourceMapTransformer as _SourceMapTransformer} from '../../src/transformers/sourceMapTransformer';
+import {LazySourceMapTransformer as _LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
 
 suite('SourceMapTransformer', () => {
     let utilsMock: Mock<typeof utils>;
@@ -52,7 +52,7 @@ suite('SourceMapTransformer', () => {
         mockery.disable();
     });
 
-    function getTransformer(sourceMaps = true, suppressDefaultMock = false): _SourceMapTransformer {
+    function getTransformer(sourceMaps = true, suppressDefaultMock = false): _LazySourceMapTransformer {
         if (!suppressDefaultMock) {
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: StubSourceMaps });
         }

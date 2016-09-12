@@ -19,7 +19,7 @@ import {BaseDebugAdapter} from '../baseDebugAdapter';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
-import {SourceMapTransformer} from '../transformers/sourceMapTransformer';
+import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer';
 
 import * as path from 'path';
 
@@ -49,10 +49,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _chromeConnection: ChromeConnection;
 
     private _lineNumberTransformer: LineNumberTransformer;
-    private _sourceMapTransformer: SourceMapTransformer;
+    private _sourceMapTransformer: LazySourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
-    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: SourceMapTransformer, pathTransformer?: BasePathTransformer) {
+    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: LazySourceMapTransformer, pathTransformer?: BasePathTransformer) {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
@@ -60,7 +60,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
-        this._sourceMapTransformer = sourceMapTransformer || new SourceMapTransformer();
+        this._sourceMapTransformer = sourceMapTransformer || new LazySourceMapTransformer();
         this._pathTransformer = pathTransformer || new BasePathTransformer();
 
         this.clearEverything();
