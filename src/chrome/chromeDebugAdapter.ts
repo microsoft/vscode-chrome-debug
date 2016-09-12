@@ -54,6 +54,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     private _hasTerminated: boolean;
     protected _inShutdown: boolean;
+    protected _attachMode: boolean;
 
     public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: LazySourceMapTransformer, pathTransformer?: BasePathTransformer) {
         super();
@@ -89,6 +90,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     private clearClientContext(): void {
+        this._attachMode = false;
         this._clientAttached = false;
         this._pathTransformer.clearClientContext();
     }
@@ -128,6 +130,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
+        this._attachMode = true;
         this._sourceMapTransformer.attach(args);
         this._pathTransformer.attach(args);
 
