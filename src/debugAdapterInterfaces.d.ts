@@ -11,26 +11,28 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 export type ISourceMapPathOverrides = { [pattern: string]: string };
 
 /**
- * Properties needed by -core, just a subset of the properties needed for launch in general
+ * Properties valid for both Launch and Attach
  */
-export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments {
+export interface CommonRequestArgs {
     webRoot?: string;
+    outDir?: string;
     sourceMaps?: boolean;
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
-    userDataDir?: string;
     sourceMapPathOverrides?: ISourceMapPathOverrides;
 }
 
-export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments {
-    url?: string;
-    webRoot?: string;
-    address?: string;
+/**
+ * Properties needed by -core, just a subset of the properties needed for launch in general
+ */
+export interface ILaunchRequestArgs extends DebugProtocol.LaunchRequestArguments, CommonRequestArgs {
+    userDataDir?: string;
+}
+
+export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments, CommonRequestArgs {
     port: number;
-    sourceMaps?: boolean;
-    diagnosticLogging?: boolean;
-    verboseDiagnosticLogging?: boolean;
-    sourceMapPathOverrides?: ISourceMapPathOverrides;
+    url?: string;
+    address?: string;
 }
 
 export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
