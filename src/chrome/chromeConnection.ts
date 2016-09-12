@@ -172,13 +172,23 @@ export class ChromeConnection {
                     this.sendMessage('Runtime.enable'),
                     this.sendMessage('Debugger.enable'),
                     this.sendMessage('Console.enable'),
-                    this.runtime_runIfWaitingForDebugger()]))
+                    this.run()]))
             .then(() => { });
     }
 
     private _attach(address: string, port: number, targetUrl?: string, timeout?: number): Promise<void> {
         return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), timeout || ChromeConnection.ATTACH_TIMEOUT, /*intervalDelay=*/200)
             .then(wsUrl => this._socket.open(wsUrl));
+    }
+
+    private run(): Promise<void> {
+        // This is a CDP version difference which will have to be handled more elegantly with others later...
+        // For now, we need to send both messages and ignore a failing one.
+        return Promise.all([
+            this.runtime_runIfWaitingForDebugger(),
+            this.runtime_run()
+        ])
+        .then(() => { }, e => { });
     }
 
     public close(): void {
@@ -250,6 +260,10 @@ export class ChromeConnection {
 
     public runtime_runIfWaitingForDebugger(): Promise<Chrome.Response> {
         return this.sendMessage('Runtime.runIfWaitingForDebugger');
+    }
+
+    public runtime_run(): Promise<Chrome.Response> {
+        return this.sendMessage('Runtime.run');
     }
 
     public page_setOverlayMessage(message: string): Promise<Chrome.Response> {
