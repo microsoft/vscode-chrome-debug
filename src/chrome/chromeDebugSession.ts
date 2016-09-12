@@ -91,6 +91,11 @@ export class ChromeDebugSession extends DebugSession {
         super.sendResponse(response);
     }
 
+    public shutdown(): void {
+        this._debugAdapter.shutdown();
+        super.shutdown();
+    }
+
     private onLog(msg: string, level: logger.LogLevel): void {
         const outputCategory = level === logger.LogLevel.Error ? 'stderr' : undefined;
         this.sendEvent(new OutputEvent(`  ›${msg}\n`, outputCategory));

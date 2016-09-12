@@ -76,9 +76,17 @@ export interface IEvaluateResponseBody {
 }
 
 declare type PromiseOrNot<T> = T | Promise<T>;
+
+/**
+ * All methods returning PromiseOrNot can either return a Promise or a value, and if they reject the Promise, it can be with an Error or a
+ * DebugProtocol.Message object, which will be sent to sendErrorResponse.
+ */
 export interface IDebugAdapter {
     registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
     registerRequestHandler(eventHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void;
+
+    // From DebugSession
+    shutdown(): void;
 
     initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilites>;
     launch(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
@@ -86,6 +94,7 @@ export interface IDebugAdapter {
     disconnect(): PromiseOrNot<void>;
     setBreakpoints(args: DebugProtocol.SetBreakpointsArguments, requestSeq?: number): PromiseOrNot<ISetBreakpointsResponseBody>;
     setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;
+    configurationDone(): PromiseOrNot<void>;
 
     continue(): PromiseOrNot<void>;
     next(): PromiseOrNot<void>;
@@ -99,9 +108,6 @@ export interface IDebugAdapter {
     source(args: DebugProtocol.SourceArguments, requestSeq?: number): PromiseOrNot<ISourceResponseBody>;
     threads(): PromiseOrNot<IThreadsResponseBody>;
     evaluate(args: DebugProtocol.EvaluateArguments, requestSeq?: number): PromiseOrNot<IEvaluateResponseBody>;
-
-    // Optional methods
-    configurationDone?(): PromiseOrNot<void>;
 }
 
 export interface IDebugTransformer {

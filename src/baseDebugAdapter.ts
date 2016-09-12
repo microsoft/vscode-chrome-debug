@@ -32,12 +32,15 @@ export abstract class BaseDebugAdapter implements IDebugAdapter {
     }
 
     // TS says unimplemented methods need to be here, even in an abstract class
+    public abstract shutdown(): void;
+
     public abstract initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilites>;
     public abstract launch(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     public abstract disconnect(): PromiseOrNot<void>;
     public abstract attach(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     public abstract setBreakpoints(args: DebugProtocol.SetBreakpointsArguments, requestSeq?: number): PromiseOrNot<ISetBreakpointsResponseBody>;
     public abstract setExceptionBreakpoints(args: DebugProtocol.SetExceptionBreakpointsArguments, requestSeq?: number): PromiseOrNot<void>;
+    public abstract configurationDone(): PromiseOrNot<void>;
 
     public abstract continue(): PromiseOrNot<void>;
     public abstract next(): PromiseOrNot<void>;

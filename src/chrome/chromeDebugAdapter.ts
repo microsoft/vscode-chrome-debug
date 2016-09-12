@@ -52,6 +52,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private _sourceMapTransformer: LazySourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
+    private _hasTerminated: boolean;
+    protected _inShutdown: boolean;
+
     public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: LazySourceMapTransformer, pathTransformer?: BasePathTransformer) {
         super();
 
@@ -152,16 +155,26 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     /**
+     * From DebugSession
+     */
+    public shutdown(): void {
+        this._inShutdown = true;
+    }
+
+    /**
      * Chrome is closing, or error'd somehow, stop the debug session
      */
-    public terminateSession(reason: string): void {
+    public terminateSession(reason: string, restart?: boolean): void {
         logger.log('Terminated: ' + reason);
 
-        if (this._clientAttached) {
-            this.sendEvent(new TerminatedEvent());
-        }
+        if (!this._hasTerminated) {
+            this._hasTerminated = true;
+            if (this._clientAttached) {
+                this.sendEvent(new TerminatedEvent(restart));
+            }
 
-        this.clearEverything();
+            this.clearEverything();
+        }
     }
 
     public clearEverything(): void {
