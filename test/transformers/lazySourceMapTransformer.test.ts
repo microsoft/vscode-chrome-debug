@@ -31,7 +31,7 @@ const RUNTIME_COLS2 = [0, 1];
 // Not mocked, use for type only
 import {LazySourceMapTransformer as _LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
 
-suite('SourceMapTransformer', () => {
+suite('LazySourceMapTransformer', () => {
     let utilsMock: Mock<typeof utils>;
 
     setup(() => {
@@ -57,8 +57,8 @@ suite('SourceMapTransformer', () => {
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: StubSourceMaps });
         }
 
-        let SourceMapTransformer = require(MODULE_UNDER_TEST).SourceMapTransformer;
-        const transformer = new SourceMapTransformer();
+        let LazySourceMapTransformer = require(MODULE_UNDER_TEST).LazySourceMapTransformer;
+        const transformer = new LazySourceMapTransformer();
         transformer.launch(<ILaunchRequestArgs><any>{
             sourceMaps,
             generatedCodeDirectory: 'test'
