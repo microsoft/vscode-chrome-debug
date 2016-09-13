@@ -8,10 +8,12 @@ import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTrace
  * Converts a local path from Code to a path on the target.
  */
 export class BasePathTransformer {
-    public launch(args: ILaunchRequestArgs): void {
+    public launch(args: ILaunchRequestArgs): Promise<void> {
+        return Promise.resolve<void>();
     }
 
-    public attach(args: IAttachRequestArgs): void {
+    public attach(args: IAttachRequestArgs): Promise<void> {
+        return Promise.resolve<void>();
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
@@ -24,8 +26,8 @@ export class BasePathTransformer {
     public clearTargetContext(): void {
     }
 
-    public scriptParsed(scriptUrl: string): string {
-        return scriptUrl;
+    public scriptParsed(scriptPath: string): string {
+        return scriptPath;
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {

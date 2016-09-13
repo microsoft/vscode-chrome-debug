@@ -24,12 +24,14 @@ export class UrlPathTransformer extends BasePathTransformer {
     private _targetUrlToClientPath = new Map<string, string>();
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
-    public launch(args: ILaunchRequestArgs): void {
+    public launch(args: ILaunchRequestArgs): Promise<void> {
         this._webRoot = args.webRoot;
+        return super.launch(args);
     }
 
-    public attach(args: IAttachRequestArgs): void {
+    public attach(args: IAttachRequestArgs): Promise<void> {
         this._webRoot = args.webRoot;
+        return super.attach(args);
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {

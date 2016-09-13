@@ -2,38 +2,96 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
+import * as path from 'path';
+import * as fs from 'fs';
+
+import {BasePathTransformer} from './basePathTransformer';
+
+import * as utils from '../utils';
+import * as errors from '../errors';
+import {ISetBreakpointsArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 
 /**
  * Converts a local path from Code to a path on the target.
  */
-export class BasePathTransformer {
-    public launch(args: ILaunchRequestArgs): void {
+export class RemotePathTransformer extends BasePathTransformer {
+    private _localRoot: string;
+    private _remoteRoot: string;
+
+    private get shouldMapPaths(): boolean {
+        return !!this._localRoot && !!this._remoteRoot;
     }
 
-    public attach(args: IAttachRequestArgs): void {
+    public attach(args: IAttachRequestArgs): Promise<void> {
+        // Validate that localRoot is absolute and exists
+        let localRootP = Promise.resolve<void>();
+        if (args.localRoot) {
+            const localRoot = args.localRoot;
+            if (!path.isAbsolute(localRoot)) {
+                return Promise.reject(errors.attributePathRelative('localRoot', localRoot));
+            }
+
+            localRootP = new Promise<void>((resolve, reject) => {
+                fs.exists(localRoot, exists => {
+                    if (!exists) {
+                        reject(errors.attributePathNotExist('localRoot', localRoot));
+                    }
+
+                    this._localRoot = localRoot;
+                    resolve();
+                });
+            });
+        }
+
+        // Maybe validate that it's absolute, for either windows or unix
+        this._remoteRoot = args.remoteRoot;
+
+        return localRootP;
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        return Promise.resolve<void>();
+        if (!args.source.path) {
+            return Promise.resolve<void>();
+        }
+
+        args.source.path = this.localToRemote(args.source.path);
+        return super.setBreakpoints(args);
     }
 
-    public clearClientContext(): void {
-    }
-
-    public clearTargetContext(): void {
-    }
-
-    public scriptParsed(scriptUrl: string): string {
-        return scriptUrl;
+    public scriptParsed(scriptPath: string): string {
+        scriptPath = this.remoteToLocal(scriptPath);
+        return super.scriptParsed(scriptPath);
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
-        // Have a responsibility to clean up the sourceReference here when it's not needed... See #93
         response.stackFrames.forEach(frame => {
-            if (frame.source.path) {
-                frame.source.sourceReference = 0;
+            const remotePath = frame.source.path;
+            if (remotePath) {
+                frame.source.path = this.remoteToLocal(remotePath);
             }
         });
+
+        return super.stackTraceResponse(response);
+    }
+
+    private remoteToLocal(remotePath: string): string {
+        if (!this.shouldMapPaths) return remotePath;
+
+        // need / paths for path.relative, if this platform is posix
+        remotePath = utils.forceForwardSlashes(remotePath);
+
+        const relPath = path.relative(this._remoteRoot, remotePath);
+        const localPath = path.join(this._localRoot, relPath);
+
+        return utils.fixDriveLetterAndSlashes(localPath);
+    }
+
+    private localToRemote(localPath: string): string {
+        if (!this.shouldMapPaths) return localPath;
+
+        const relPath = path.relative(this._localRoot, localPath);
+        const remotePath = path.join(this._remoteRoot, relPath);
+
+        return utils.fixDriveLetterAndSlashes(remotePath);
     }
 }

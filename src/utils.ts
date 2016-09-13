@@ -166,18 +166,16 @@ export function forceForwardSlashes(aUrl: string): string {
  * Ensure lower case drive letter and \ on Windows
  */
 export function fixDriveLetterAndSlashes(aPath: string): string {
-    if (getPlatform() === Platform.Windows) {
-        if (aPath.match(/file:\/\/\/[A-Za-z]:/)) {
-            const prefixLen = 'file:///'.length;
-            aPath =
-                'file:///' +
-                aPath[prefixLen].toLowerCase() +
-                aPath.substr(prefixLen + 1).replace(/\//g, path.sep);
-        } else if (aPath.match(/^[A-Za-z]:/)) {
-            // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
-            aPath = aPath[0].toLowerCase() + aPath.substr(1);
-            aPath = aPath.replace(/\//g, path.sep);
-        }
+    if (aPath.match(/file:\/\/\/[A-Za-z]:/)) {
+        const prefixLen = 'file:///'.length;
+        aPath =
+            'file:///' +
+            aPath[prefixLen].toLowerCase() +
+            aPath.substr(prefixLen + 1).replace(/\//g, path.sep);
+    } else if (aPath.match(/^[A-Za-z]:/)) {
+        // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
+        aPath = aPath[0].toLowerCase() + aPath.substr(1);
+        aPath = aPath.replace(/\//g, path.sep);
     }
 
     return aPath;
@@ -263,4 +261,15 @@ export function pathToFileURL(absPath: string): string {
     absPath = (absPath.startsWith('/') ? 'file://' : 'file:///') +
         absPath;
     return encodeURI(absPath);
+}
+
+/**
+ * Placeholder localize function
+ */
+export function localize(id: string, msg: string, ...args: any[]): string {
+    args.forEach((arg, i) => {
+        msg = msg.replace(new RegExp(`\\{${i}\\}`, 'g'), arg);
+    });
+
+    return msg;
 }

@@ -19,6 +19,7 @@ import {BaseDebugAdapter} from '../baseDebugAdapter';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
+import {RemotePathTransformer} from '../transformers/remotePathTransformer';
 import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer';
 
 import * as path from 'path';
@@ -65,7 +66,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
         this._sourceMapTransformer = sourceMapTransformer || new LazySourceMapTransformer();
-        this._pathTransformer = pathTransformer || new BasePathTransformer();
+        this._pathTransformer = pathTransformer || new RemotePathTransformer();
 
         this.clearEverything();
     }

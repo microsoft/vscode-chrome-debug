@@ -20,7 +20,7 @@ function createTransformer(): _UrlPathTransformer {
     return new (require(MODULE_UNDER_TEST).UrlPathTransformer)();
 }
 
-suite('PathTransformer', () => {
+suite('UrlPathTransformer', () => {
     const TARGET_URL = 'http://mysite.com/scripts/script1.js';
     const CLIENT_PATH = testUtils.pathResolve('/projects/mysite/scripts/script1.js');
 

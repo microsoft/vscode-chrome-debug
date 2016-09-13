@@ -33,6 +33,8 @@ export interface IAttachRequestArgs extends DebugProtocol.AttachRequestArguments
     port: number;
     url?: string;
     address?: string;
+    remoteRoot?: string;
+    localRoot?: string;
 }
 
 export interface ISetBreakpointsArgs extends DebugProtocol.SetBreakpointsArguments {
