@@ -224,12 +224,12 @@ export function getURL(aUrl: string): Promise<string> {
                 if (response.statusCode === 200) {
                     resolve(responseData);
                 } else {
-                    logger.error('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
+                    logger.log('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
                     reject(responseData);
                 }
             });
         }).on('error', e => {
-            logger.error('HTTP GET failed: ' + e.toString());
+            logger.log('HTTP GET failed: ' + e.toString());
             reject(e);
         });
     });
