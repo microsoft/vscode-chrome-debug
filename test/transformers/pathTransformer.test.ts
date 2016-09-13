@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import * as mockery from 'mockery';
 
 import * as testUtils from '../testUtils';
-import {PathTransformer as _PathTransformer} from '../../src/transformers/pathTransformer';
+import {UrlPathTransformer as _UrlPathTransformer} from '../../src/transformers/urlPathTransformer';
 import * as chromeUtils from '../../src/chrome/chromeUtils';
 
 // As of 0.1.0, the included .d.ts is not in the right format to use the import syntax here
@@ -15,9 +15,9 @@ import * as chromeUtils from '../../src/chrome/chromeUtils';
 
 import {Mock, MockBehavior, It} from 'typemoq';
 
-const MODULE_UNDER_TEST = '../../src/transformers/pathTransformer';
-function createTransformer(): _PathTransformer {
-    return new (require(MODULE_UNDER_TEST).PathTransformer)();
+const MODULE_UNDER_TEST = '../../src/transformers/urlPathTransformer';
+function createTransformer(): _UrlPathTransformer {
+    return new (require(MODULE_UNDER_TEST).UrlPathTransformer)();
 }
 
 suite('PathTransformer', () => {
@@ -25,7 +25,7 @@ suite('PathTransformer', () => {
     const CLIENT_PATH = testUtils.pathResolve('/projects/mysite/scripts/script1.js');
 
     let chromeUtilsMock: Mock<typeof chromeUtils>;
-    let transformer: _PathTransformer;
+    let transformer: _UrlPathTransformer;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();

@@ -18,7 +18,7 @@ interface IPendingBreakpoint {
 /**
  * Converts a local path from Code to a path on the target.
  */
-export class PathTransformer extends BasePathTransformer {
+export class UrlPathTransformer extends BasePathTransformer {
     private _webRoot: string;
     private _clientPathToTargetUrl = new Map<string, string>();
     private _targetUrlToClientPath = new Map<string, string>();

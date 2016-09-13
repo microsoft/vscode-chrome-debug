@@ -12,7 +12,7 @@ import {ChromeConnection} from '../../src/chrome/chromeConnection';
 
 import {LineNumberTransformer} from '../../src/transformers/lineNumberTransformer';
 import {LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
-import {PathTransformer} from '../../src/transformers/pathTransformer';
+import {UrlPathTransformer} from '../../src/transformers/urlPathTransformer';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
@@ -33,7 +33,7 @@ suite('ChromeDebugAdapter', () => {
     let mockEventEmitter: EventEmitter;
     let mockLineNumberTransformer: Mock<LineNumberTransformer>;
     let mockSourceMapTransformer: Mock<LazySourceMapTransformer>;
-    let mockPathTransformer: Mock<PathTransformer>;
+    let mockPathTransformer: Mock<UrlPathTransformer>;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;
 

@@ -9,7 +9,7 @@ import * as chromeTargetDiscoveryStrategy from './chrome/chromeTargetDiscoverySt
 import * as chromeUtils from './chrome/chromeUtils';
 
 import {BasePathTransformer} from './transformers/basePathTransformer';
-import {PathTransformer} from './transformers/pathTransformer';
+import {UrlPathTransformer} from './transformers/urlPathTransformer';
 import {LineNumberTransformer} from './transformers/lineNumberTransformer';
 import {LazySourceMapTransformer} from './transformers/lazySourceMapTransformer';
 
@@ -28,7 +28,7 @@ export {
     chromeTargetDiscoveryStrategy,
     chromeUtils,
 
-    PathTransformer,
+    UrlPathTransformer,
     BasePathTransformer,
     LineNumberTransformer,
     LazySourceMapTransformer,
