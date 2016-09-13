@@ -57,8 +57,10 @@ export class ChromeDebugSession extends DebugSession {
         logger.init((msg, level) => this.onLog(msg, level), logFilePath);
         logVersionInfo();
 
-        process.addListener('unhandledRejection', reason => {
-            logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${reason}`);
+        process.addListener('unhandledRejection', err => {
+            // err is a DebugProtocol.Message or Error
+            const errMsg = err.format ? JSON.stringify(err) : err.toString();
+            logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${errMsg}`);
         });
     }
 
