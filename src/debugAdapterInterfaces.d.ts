@@ -77,6 +77,10 @@ export interface IEvaluateResponseBody {
     variablesReference: number;
 }
 
+export interface ISetVariableResponseBody {
+    value: string;
+}
+
 declare type PromiseOrNot<T> = T | Promise<T>;
 
 /**

@@ -7,12 +7,14 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, C
 
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
-    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody} from '../debugAdapterInterfaces';
+    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody, ISetVariableResponseBody} from '../debugAdapterInterfaces';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
+import {PropertyContainer, ScopeContainer, IVariableContainer} from './variables';
 
+import * as errors from '../errors';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import {BaseDebugAdapter} from '../baseDebugAdapter';
@@ -24,11 +26,6 @@ import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer
 
 import * as path from 'path';
 
-interface IScopeVarHandle {
-    objectId: string;
-    thisObj?: Chrome.Runtime.RemoteObject;
-}
-
 export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -36,7 +33,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
 
     private _clientAttached: boolean;
-    private _variableHandles: Handles<IScopeVarHandle>;
+    private _variableHandles: Handles<IVariableContainer>;
     private _currentStack: Chrome.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
@@ -61,7 +58,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
-        this._variableHandles = new Handles<IScopeVarHandle>();
+        this._variableHandles = new Handles<IVariableContainer>();
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
@@ -113,7 +110,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                     default: true
                 }
             ],
-            supportsConfigurationDoneRequest: true
+            supportsConfigurationDoneRequest: true,
+            supportsSetVariable: true
         };
     }
 
@@ -556,16 +554,15 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public scopes(args: DebugProtocol.ScopesArguments): IScopesResponseBody {
-        const scopes = this._currentStack[args.frameId].scopeChain.map((scope: Chrome.Debugger.Scope, i: number) => {
-            const scopeHandle: IScopeVarHandle = { objectId: scope.object.objectId };
-            if (i === 0) {
-                // The first scope should include 'this'. Keep the RemoteObject reference for use by the variables request
-                scopeHandle.thisObj = this._currentStack[args.frameId]['this'];
-            }
+        const currentFrame = this._currentStack[args.frameId];
+        const scopes = currentFrame.scopeChain.map((scope: Chrome.Debugger.Scope, i: number) => {
+            // The first scope should include 'this'. Keep the RemoteObject reference for use by the variables request
+            const thisObj = i === 0 ? currentFrame['this'] : undefined;
+            const variablesReference = this._variableHandles.create(new ScopeContainer(currentFrame.callFrameId, i, scope.object.objectId, thisObj));
 
             return <DebugProtocol.Scope>{
                 name: scope.type.substr(0, 1).toUpperCase() + scope.type.substr(1), // Take Chrome's scope, uppercase the first letter
-                variablesReference: this._variableHandles.create(scopeHandle),
+                variablesReference,
                 expensive: scope.type === 'global'
             };
         });
@@ -705,6 +702,46 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         });
     }
 
+    public setVariable(args: DebugProtocol.SetVariableArguments): Promise<ISetVariableResponseBody> {
+        const handle = this._variableHandles.get(args.variablesReference);
+        if (!handle) {
+            return Promise.reject(errors.setValueNotSupported());
+        }
+
+        return handle.setValue(this, args.name, args.value)
+            .then(value => ({ value }));
+    }
+
+    public _setVariableValue(frameId: string, scopeIndex: number, name: string, value: string): Promise<string> {
+        let evalResultObject: Chrome.Runtime.RemoteObject;
+        return this._chromeConnection.debugger_evaluateOnCallFrame(frameId, value, undefined, undefined, /*silent=*/true).then(evalResponse => {
+            if (evalResponse.error) {
+                return Promise.reject(errors.errorFromEvaluate(evalResponse.error.message));
+            } else if (evalResponse.result.exceptionDetails) {
+                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(evalResponse.result.exceptionDetails);
+                return Promise.reject(errors.errorFromEvaluate(errMsg));
+            } else {
+                evalResultObject = evalResponse.result.result;
+                const newVal = ChromeUtils.remoteObjectToCallArgument(evalResultObject);
+                return this._chromeConnection.debugger_setVariableValue(frameId, scopeIndex, name, newVal);
+            }
+        })
+        .then(setVarResponse => ChromeUtils.remoteObjectToValue(evalResultObject).value);
+    }
+
+    public _setPropertyValue(objectId: string, propName: string, value: string): Promise<string> {
+        return this._chromeConnection.runtime_callFunctionOn(objectId, `function() { return this["${propName}"] = ${value} }`, undefined, /*silent=*/true).then(response => {
+            if (response.error) {
+                return Promise.reject(errors.errorFromEvaluate(response.error.message));
+            } else if (response.result.exceptionDetails) {
+                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
+                return Promise.reject(errors.errorFromEvaluate(errMsg));
+            } else {
+                return ChromeUtils.remoteObjectToValue(response.result.result).value;
+            }
+        });
+    }
+
     /**
      * Run the object through ChromeUtilities.remoteObjectToValue, and if it returns a variableHandle reference,
      * use it with this instance's variableHandles to create a variable handle.
@@ -713,7 +750,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const { value, variableHandleRef } = ChromeUtils.remoteObjectToValue(object);
         const result = { value, variablesReference: 0 };
         if (variableHandleRef) {
-            result.variablesReference = this._variableHandles.create({ objectId: variableHandleRef });
+            result.variablesReference = this._variableHandles.create(new PropertyContainer(variableHandleRef));
         }
 
         return result;

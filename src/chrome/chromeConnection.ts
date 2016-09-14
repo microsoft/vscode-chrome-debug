@@ -233,8 +233,8 @@ export class ChromeConnection {
         return this.sendMessage('Debugger.pause');
     }
 
-    public debugger_evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean): Promise<Chrome.Debugger.EvaluateOnCallFrameResponse> {
-        return this.sendMessage('Debugger.evaluateOnCallFrame', <Chrome.Debugger.EvaluateOnCallFrameParams>{ callFrameId, expression, objectGroup, returnByValue });
+    public debugger_evaluateOnCallFrame(callFrameId: string, expression: string, objectGroup = 'dummyObjectGroup', returnByValue?: boolean, silent?: boolean): Promise<Chrome.Debugger.EvaluateOnCallFrameResponse> {
+        return this.sendMessage('Debugger.evaluateOnCallFrame', <Chrome.Debugger.EvaluateOnCallFrameParams>{ callFrameId, expression, objectGroup, returnByValue, silent });
     }
 
     public debugger_setPauseOnExceptions(state: string): Promise<Chrome.Response> {
@@ -243,6 +243,10 @@ export class ChromeConnection {
 
     public debugger_getScriptSource(scriptId: Chrome.Debugger.ScriptId): Promise<Chrome.Debugger.GetScriptSourceResponse> {
         return this.sendMessage('Debugger.getScriptSource', <Chrome.Debugger.GetScriptSourceParams>{ scriptId });
+    }
+
+    public debugger_setVariableValue(callFrameId: string, scopeNumber: number, variableName: string, newValue: Chrome.Runtime.CallArgument): Promise<Chrome.Debugger.SetVariableResponse> {
+        return this.sendMessage('Debugger.setVariableValue', <Chrome.Debugger.SetVariableParams>{ callFrameId, scopeNumber, variableName, newValue });
     }
 
     public runtime_getProperties(objectId: string, ownProperties: boolean, accessorPropertiesOnly: boolean): Promise<Chrome.Runtime.GetPropertiesResponse> {
