@@ -26,6 +26,11 @@ import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer
 
 import * as path from 'path';
 
+interface IPropCount {
+    indexedVariables: number;
+    namedVariables: number;
+}
+
 export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -242,10 +247,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             reason = 'exception';
             if (notification.data && this._currentStack.length) {
                 // Insert a scope to wrap the exception object. exceptionText is unused by Code at the moment.
-                const remoteObjValue = ChromeUtils.remoteObjectToValue(notification.data, /*stringify=*/false);
                 let scopeObject: Chrome.Runtime.RemoteObject;
 
-                if (remoteObjValue.variableHandleRef) {
+                if (notification.data.objectId) {
                     // If the remote object is an object (probably an Error), treat the object like a scope.
                     exceptionText = notification.data.description;
                     scopeObject = notification.data;
@@ -576,6 +580,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             return Promise.resolve<IVariablesResponseBody>(undefined);
         }
 
+        // TODO create Container for this special  exception scope
         // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
         if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
             const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
@@ -583,10 +588,41 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 .then(variable => ({ variables: [variable]}));
         }
 
+        return handle.expand(this, args.filter, args.start, args.count).then(variables => {
+            return { variables };
+        });
+    }
+
+    public propertyDescriptorToVariable(propDesc: Chrome.Runtime.PropertyDescriptor, owningObjectId?: string): Promise<DebugProtocol.Variable> {
+        if (propDesc.get) {
+            const grabGetterValue = 'function remoteFunction(propName) { return this[propName]; }';
+            return this._chromeConnection.runtime_callFunctionOn(owningObjectId, grabGetterValue, [{ value: propDesc.name }]).then(response => {
+                if (response.error) {
+                    logger.error('Error evaluating getter - ' + response.error.toString());
+                    return { name: propDesc.name, value: response.error.toString(), variablesReference: 0 };
+                } else if (response.result.exceptionDetails) {
+                    // Not an error, getter could be `get foo() { throw new Error('bar'); }`
+                    const exceptionDetails = response.result.exceptionDetails;
+                    logger.log('Exception thrown evaluating getter - ' + JSON.stringify(exceptionDetails.exception));
+                    return { name: propDesc.name, value: response.result.exceptionDetails.exception.description, variablesReference: 0 };
+                } else {
+                    return this.remoteObjectToVariable(propDesc.name, response.result.result);
+                }
+            });
+        } else if (propDesc.set) {
+            // setter without a getter, unlikely
+            return Promise.resolve({ name: propDesc.name, value: 'setter', variablesReference: 0 });
+        } else {
+            // Non getter/setter
+            return this.internalPropertyDescriptorToVariable(propDesc);
+        }
+    }
+
+    public getVariablesForObjectId(objectId: string): Promise<DebugProtocol.Variable[]> {
         return Promise.all([
             // Need to make two requests to get all properties
-            this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
-            this._chromeConnection.runtime_getProperties(handle.objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
+            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
+            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
         ]).then(getPropsResponses => {
             // Sometimes duplicates will be returned - merge all descriptors by name
             const propsByName = new Map<string, Chrome.Runtime.PropertyDescriptor>();
@@ -606,54 +642,18 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
             // Convert Chrome prop descriptors to DebugProtocol vars
             const variables: Promise<DebugProtocol.Variable>[] = [];
-            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, handle.objectId)));
+            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, objectId)));
             internalPropsByName.forEach(internalProp => variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp))));
 
             return Promise.all(variables);
         }).then(variables => {
             // Sort all variables properly
-            variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
-
-            if (handle.thisObj) {
-                // If this is a scope that should have the 'this', prop, insert it at the top of the list
-                return this.propertyDescriptorToVariable(<any>{ name: 'this', value: handle.thisObj }).then(thisObjVar => {
-                    variables.unshift(thisObjVar);
-                    return { variables };
-                });
-            } else {
-                return { variables };
-            }
+            return variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
         });
     }
 
-    private propertyDescriptorToVariable(propDesc: Chrome.Runtime.PropertyDescriptor, owningObjectId?: string): Promise<DebugProtocol.Variable> {
-        if (propDesc.get) {
-            const grabGetterValue = 'function remoteFunction(propName) { return this[propName]; }';
-            return this._chromeConnection.runtime_callFunctionOn(owningObjectId, grabGetterValue, [{ value: propDesc.name }]).then(response => {
-                if (response.error) {
-                    logger.error('Error evaluating getter - ' + response.error.toString());
-                    return { name: propDesc.name, value: response.error.toString(), variablesReference: 0 };
-                } else if (response.result.exceptionDetails) {
-                    // Not an error, getter could be `get foo() { throw new Error('bar'); }`
-                    const exceptionDetails = response.result.exceptionDetails;
-                    logger.log('Exception thrown evaluating getter - ' + JSON.stringify(exceptionDetails.exception));
-                    return { name: propDesc.name, value: response.result.exceptionDetails.exception.description, variablesReference: 0 };
-                } else {
-                    const { value, variablesReference } = this.remoteObjectToValueWithHandle(response.result.result);
-                    return { name: propDesc.name, value, variablesReference };
-                }
-            });
-        } else if (propDesc.set) {
-            // setter without a getter, unlikely
-            return Promise.resolve({ name: propDesc.name, value: 'setter', variablesReference: 0 });
-        } else {
-            return this.internalPropertyDescriptorToVariable(propDesc);
-        }
-    }
-
     private internalPropertyDescriptorToVariable(propDesc: Chrome.Runtime.InternalPropertiesDescriptor): Promise<DebugProtocol.Variable> {
-        const { value, variablesReference } = this.remoteObjectToValueWithHandle(propDesc.value);
-        return Promise.resolve({ name: propDesc.name, value, variablesReference });
+        return this.remoteObjectToVariable(propDesc.name, propDesc.value);
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
@@ -697,8 +697,15 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 return utils.errP(errorMessage);
             }
 
-            const { value, variablesReference } = this.remoteObjectToValueWithHandle(evalResponse.result.result);
-            return { result: value, variablesReference };
+            // Convert to a Variable object then just copy the relevant fields off
+            return this.remoteObjectToVariable('', evalResponse.result.result);
+        }).then(variable => {
+            return <IEvaluateResponseBody>{
+                result: variable.value,
+                variablesReference: variable.variablesReference,
+                indexedVariables: variable.indexedVariables,
+                namedVariables: variable.namedVariables
+            };
         });
     }
 
@@ -726,6 +733,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 return this._chromeConnection.debugger_setVariableValue(frameId, scopeIndex, name, newVal);
             }
         })
+        // Temporary, Microsoft/vscode#12019
         .then(setVarResponse => ChromeUtils.remoteObjectToValue(evalResultObject).value);
     }
 
@@ -737,23 +745,132 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
                 return Promise.reject(errors.errorFromEvaluate(errMsg));
             } else {
+                // Temporary, Microsoft/vscode#12019
                 return ChromeUtils.remoteObjectToValue(response.result.result).value;
             }
         });
     }
 
-    /**
-     * Run the object through ChromeUtilities.remoteObjectToValue, and if it returns a variableHandle reference,
-     * use it with this instance's variableHandles to create a variable handle.
-     */
-    private remoteObjectToValueWithHandle(object: Chrome.Runtime.RemoteObject): { value: string, variablesReference: number } {
-        const { value, variableHandleRef } = ChromeUtils.remoteObjectToValue(object);
-        const result = { value, variablesReference: 0 };
-        if (variableHandleRef) {
-            result.variablesReference = this._variableHandles.create(new PropertyContainer(variableHandleRef));
+    private remoteObjectToVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
+        let value = '';
+
+        if (object) {
+            if (object.type === 'object') {
+                if (object.subtype === 'null') {
+                    value = 'null';
+                } else {
+                    return this.createObjectVariable(name, object);
+                }
+            } else if (object.type === 'undefined') {
+                value = 'undefined';
+            } else if (object.type === 'function') {
+                return Promise.resolve(this.createFunctionVariable(name, object));
+            } else {
+                // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+                if (typeof object.value === 'undefined') {
+                    value = object.description;
+                } else if (object.type === 'number') {
+                    // 3 => "3"
+                    // "Infinity" => "Infinity" (not stringified)
+                    value = object.value + '';
+                } else {
+                    value = stringify ? JSON.stringify(object.value) : object.value;
+                }
+            }
         }
 
-        return result;
+        return Promise.resolve(<DebugProtocol.Variable>{
+            name,
+            value,
+            variablesReference: 0
+        });
+    }
+
+    public createFunctionVariable(name: string, object: Chrome.Runtime.RemoteObject): DebugProtocol.Variable {
+        let value: string;
+        const firstBraceIdx = object.description.indexOf('{');
+        if (firstBraceIdx >= 0) {
+            value = object.description.substring(0, firstBraceIdx) + '{ … }';
+        } else {
+            const firstArrowIdx = object.description.indexOf('=>');
+            value = firstArrowIdx >= 0 ?
+                object.description.substring(0, firstArrowIdx + 2) + ' …' :
+                object.description;
+        }
+
+        return { name, value, variablesReference: 0 };
+    }
+
+    public createObjectVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
+        let propCountP: Promise<IPropCount>;
+        if (object.subtype === 'array' || object.subtype === 'typedarray') {
+            if (object.preview.overflow) {
+                propCountP = this.getArrayNumPropsByEval(object.objectId);
+            } else {
+                propCountP = Promise.resolve(this.getArrayNumPropsByPreview(object));
+            }
+        } else {
+            if (object.preview.overflow) {
+                propCountP = this.getObjectNumPropsByEval(object.objectId);
+            } else {
+                propCountP = Promise.resolve(this.getObjectNumPropsByPreview(object));
+            }
+        }
+
+        const value = object.description;
+        const variablesReference = this._variableHandles.create(new PropertyContainer(object.objectId));
+        return propCountP.then(({ indexedVariables, namedVariables }) => (<DebugProtocol.Variable>{
+            name,
+            value,
+            variablesReference,
+            indexedVariables,
+            namedVariables
+        }));
+    }
+
+    private getArrayNumPropsByEval(objectId: string): Promise<IPropCount> {
+        const getNumPropsFn = 'function() { return [this.length, Object.keys(this).length - this.length ];}';
+        return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
+            if (response.error) {
+                return Promise.reject(errors.errorFromEvaluate(response.error.message));
+            } else if (response.result.exceptionDetails) {
+                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
+                return Promise.reject(errors.errorFromEvaluate(errMsg));
+            } else {
+                const resultProps = response.result.result.value;
+                if (resultProps.length !== 2) {
+                    return Promise.reject(errors.errorFromEvaluate("Did not get expected props, got " + JSON.stringify(resultProps)));
+                }
+
+                return { indexedVariables: resultProps[0], namedVariables: resultProps[1] };
+            }
+        });
+    }
+
+    private getArrayNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
+        let indexedVariables = 0;
+        let namedVariables = 0;
+        object.preview.properties.forEach(prop => isNaN(parseInt(prop.name, 10)) ? namedVariables++ : indexedVariables++);
+        return { indexedVariables, namedVariables };
+    }
+
+    private getObjectNumPropsByEval(objectId: string): Promise<IPropCount> {
+        const getNumPropsFn = 'function() { return Object.keys(this).length - this.length;}';
+        return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true).then(response => {
+            if (response.error) {
+                return Promise.reject(errors.errorFromEvaluate(response.error.message));
+            } else if (response.result.exceptionDetails) {
+                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
+                return Promise.reject(errors.errorFromEvaluate(errMsg));
+            } else {
+                return { indexedVariables: 0, namedVariables: response.result.result.value };
+            }
+        });
+    }
+
+    private getObjectNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
+        let namedVariables = object.preview.properties.length;
+        return { indexedVariables: 0, namedVariables };
     }
 
     private shouldIgnoreScript(script: Chrome.Debugger.Script): boolean {

@@ -188,7 +188,6 @@ export namespace Runtime {
         preview?: {
             type: string;
             description: string;
-            lossless: boolean;
             overflow: boolean;
             properties: PropertyPreview[];
         };

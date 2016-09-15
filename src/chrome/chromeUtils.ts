@@ -5,8 +5,8 @@
 import * as url from 'url';
 import * as path from 'path';
 
-import * as utils from '../utils';
 import * as Chrome from './chromeDebugProtocol';
+import * as utils from '../utils';
 
 /**
  * Maps a url from target to an absolute local path.
@@ -55,6 +55,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 
 /**
  * Convert a RemoteObject to a value+variableHandleRef for the client.
+ * TODO - Delete after Microsoft/vscode#12019!
  */
 export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
     let value = '';
