@@ -104,7 +104,7 @@ An example `launch.json` config.
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "url": "<url of the open browser tab, you wanna connect to"
+            "url": "<url of the open browser tab, you wanna connect to",
             "webRoot": "${workspaceRoot}/out"
         }
     ]
