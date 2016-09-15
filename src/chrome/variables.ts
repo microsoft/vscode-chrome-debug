@@ -4,16 +4,12 @@
 
 import * as DebugProtocol from 'vscode-debugadapter';
 
-import {Handles} from 'vscode-debugadapter';
-
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import * as Chrome from './chromeDebugProtocol.d';
 
-import * as utils from '../utils';
-
 export interface IVariableContainer {
     objectId: string;
-    expand(adapter: ChromeDebugAdapter, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]>;
+    expand(adapter: ChromeDebugAdapter, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]>;
     setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string>;
 }
 
@@ -21,17 +17,8 @@ export abstract class BaseVariableContainer implements IVariableContainer {
     constructor(public objectId: string) {
     }
 
-    public expand(adapter: ChromeDebugAdapter, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
-        return adapter.getVariablesForObjectId(this.objectId).then(variables => {
-            let filteredVars: DebugProtocol.Variable[] = [];
-            if (filter === 'indexed' && typeof start === 'number' && typeof count === 'number') {
-                for (let i = start; i < (count + start) && i < variables.length; i++) filteredVars[i] = variables[i];
-            } else {
-                filteredVars = variables;
-            }
-
-            return filteredVars;
-        });
+    public expand(adapter: ChromeDebugAdapter, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
+        return adapter.getVariablesForObjectId(this.objectId, filter, start, count);
     }
 
     public abstract setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string>;
@@ -59,8 +46,9 @@ export class ScopeContainer extends BaseVariableContainer {
     /**
      * Call super then insert the 'this' object if needed
      */
-    public expand(adapter: ChromeDebugAdapter, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
-        return super.expand(adapter, filter, start, count).then(variables => {
+    public expand(adapter: ChromeDebugAdapter, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
+        // No filtering in scopes right now
+        return super.expand(adapter, 'all', start, count).then(variables => {
             if (this.thisObj) {
                 // If this is a scope that should have the 'this', prop, insert it at the top of the list
                 return adapter.propertyDescriptorToVariable(<any>{ name: 'this', value: this.thisObj }).then(thisObjVar => {
@@ -76,4 +64,8 @@ export class ScopeContainer extends BaseVariableContainer {
     public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
         return adapter._setVariableValue(this._frameId, this._scopeIndex, name, value);
     }
+}
+
+export function isIndexedPropName(name: string): boolean {
+    return !isNaN(parseInt(name, 10));
 }

@@ -12,7 +12,7 @@ import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
-import {PropertyContainer, ScopeContainer, IVariableContainer} from './variables';
+import {PropertyContainer, ScopeContainer, IVariableContainer, isIndexedPropName} from './variables';
 
 import * as errors from '../errors';
 import * as utils from '../utils';
@@ -618,11 +618,15 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         }
     }
 
-    public getVariablesForObjectId(objectId: string): Promise<DebugProtocol.Variable[]> {
+    public getVariablesForObjectId(objectId: string, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
+        if (typeof start === 'number' && typeof count === 'number') {
+            return this.getFilteredVariablesForObjectId(objectId, filter, start, count);
+        }
+
         return Promise.all([
             // Need to make two requests to get all properties
-            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true),
-            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false)
+            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/false, /*accessorPropertiesOnly=*/true, /*generatePreview=*/true),
+            this._chromeConnection.runtime_getProperties(objectId, /*ownProperties=*/true, /*accessorPropertiesOnly=*/false, /*generatePreview=*/true)
         ]).then(getPropsResponses => {
             // Sometimes duplicates will be returned - merge all descriptors by name
             const propsByName = new Map<string, Chrome.Runtime.PropertyDescriptor>();
@@ -647,6 +651,12 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
             return Promise.all(variables);
         }).then(variables => {
+            // After retrieving all props, apply the filter
+            if (filter === 'indexed' || filter === 'named') {
+                const keepIndexed = filter === 'indexed';
+                variables = variables.filter(variable => keepIndexed === isIndexedPropName(variable.name));
+            }
+
             // Sort all variables properly
             return variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
         });
@@ -654,6 +664,36 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     private internalPropertyDescriptorToVariable(propDesc: Chrome.Runtime.InternalPropertiesDescriptor): Promise<DebugProtocol.Variable> {
         return this.remoteObjectToVariable(propDesc.name, propDesc.value);
+    }
+
+    private getFilteredVariablesForObjectId(objectId: string, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
+        // No ES6, in case we talk to an old runtime
+        const getIndexedVariablesFn = `
+            function getIndexedVariables(start, count) {
+                var result = [];
+                for (var i = start; i < (start + count); i++) result[i] = this[i];
+                return result;
+            }`;
+        // TODO order??
+        const getNamedVariablesFn = `
+            function getNamedVariablesFn(start, count) {
+                var result = [];
+                var ownProps = Object.getOwnProperties(this);
+                for (var i = start; i < (start + count); i++) result[i] = ownProps[i];
+                return result;
+            }`;
+
+        const getVarsFn = filter === 'indexed' ? getIndexedVariablesFn : getNamedVariablesFn;
+        return this._chromeConnection.runtime_callFunctionOn(objectId, getVarsFn, [{ value: start }, { value: count }], /*silent=*/true).then(evalResponse => {
+            if (evalResponse.error) {
+                return Promise.reject(errors.errorFromEvaluate(evalResponse.error.message));
+            } else if (evalResponse.result.exceptionDetails) {
+                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(evalResponse.result.exceptionDetails);
+                return Promise.reject(errors.errorFromEvaluate(errMsg));
+            } else {
+                return this.getVariablesForObjectId(evalResponse.result.result.objectId, filter);
+            }
+        });
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
@@ -804,16 +844,16 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     public createObjectVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
         let propCountP: Promise<IPropCount>;
         if (object.subtype === 'array' || object.subtype === 'typedarray') {
-            if (object.preview.overflow) {
-                propCountP = this.getArrayNumPropsByEval(object.objectId);
-            } else {
+            if (object.preview && !object.preview.overflow) {
                 propCountP = Promise.resolve(this.getArrayNumPropsByPreview(object));
+            } else {
+                propCountP = this.getArrayNumPropsByEval(object.objectId);
             }
         } else {
-            if (object.preview.overflow) {
-                propCountP = this.getObjectNumPropsByEval(object.objectId);
-            } else {
+            if (object.preview && !object.preview.overflow) {
                 propCountP = Promise.resolve(this.getObjectNumPropsByPreview(object));
+            } else {
+                propCountP = this.getObjectNumPropsByEval(object.objectId);
             }
         }
 
@@ -829,7 +869,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     private getArrayNumPropsByEval(objectId: string): Promise<IPropCount> {
-        const getNumPropsFn = 'function() { return [this.length, Object.keys(this).length - this.length ];}';
+        const getNumPropsFn = `function() {return [this.length, Object.keys(this).length - this.length ];}`;
         return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
             if (response.error) {
                 return Promise.reject(errors.errorFromEvaluate(response.error.message));
@@ -850,20 +890,27 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private getArrayNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
         let indexedVariables = 0;
         let namedVariables = 0;
-        object.preview.properties.forEach(prop => isNaN(parseInt(prop.name, 10)) ? namedVariables++ : indexedVariables++);
+        object.preview.properties.forEach(prop => isIndexedPropName(prop.name) ? indexedVariables++ : namedVariables++);
         return { indexedVariables, namedVariables };
     }
 
     private getObjectNumPropsByEval(objectId: string): Promise<IPropCount> {
-        const getNumPropsFn = 'function() { return Object.keys(this).length - this.length;}';
-        return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true).then(response => {
+        // TODO - counting and order?
+        const getNumPropsFn = `function() {
+            function isIndexed(name) { return !isNaN(parseInt(name, 10)); }
+            function isNamed(name) { return isNaN(parseInt(name, 10)); }
+
+            var keys = Object.keys(this);
+            return [keys.filter(isIndexed).length, keys.filter(isNamed).length];
+        }`;
+        return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
             if (response.error) {
                 return Promise.reject(errors.errorFromEvaluate(response.error.message));
             } else if (response.result.exceptionDetails) {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
                 return Promise.reject(errors.errorFromEvaluate(errMsg));
             } else {
-                return { indexedVariables: 0, namedVariables: response.result.result.value };
+                return { indexedVariables: response.result.result.value[0], namedVariables: response.result.result.value[1] };
             }
         });
     }
