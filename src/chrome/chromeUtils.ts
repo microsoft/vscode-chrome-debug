@@ -5,8 +5,8 @@
 import * as url from 'url';
 import * as path from 'path';
 
-import * as utils from '../utils';
 import * as Chrome from './chromeDebugProtocol';
+import * as utils from '../utils';
 
 /**
  * Maps a url from target to an absolute local path.
@@ -55,6 +55,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 
 /**
  * Convert a RemoteObject to a value+variableHandleRef for the client.
+ * TODO - Delete after Microsoft/vscode#12019!
  */
 export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
     let value = '';
@@ -153,4 +154,36 @@ export function compareVariableNames(var1: string, var2: string): number {
 
     // Compare strings as strings
     return var1.localeCompare(var2);
+}
+
+/**
+ * Maybe this can be merged with remoteObjectToValue, they are somewhat similar
+ */
+export function remoteObjectToCallArgument(object: Chrome.Runtime.RemoteObject): Chrome.Runtime.CallArgument {
+    if (object) {
+        if (object.type === 'object') {
+            if (object.subtype === 'null') {
+                return { value: null };
+            } else {
+                // It's a non-null object, create a variable reference so the client can ask for its props
+                return { objectId: object.objectId };
+            }
+        } else if (object.type === 'undefined') {
+            return { value: undefined }; // ?
+        } else if (object.type === 'function') {
+            return { objectId: object.objectId };
+        } else {
+            // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+            if (typeof object.value === 'undefined') {
+                return { value: undefined }; // uh
+            } else {
+                return { value: object.value }; // ??
+            }
+        }
+    }
+}
+
+export function errorMessageFromExceptionDetails(exceptionDetails: any): string {
+    const description: string = exceptionDetails.exception.description;
+    return description.substr(0, description.indexOf('\n'));
 }

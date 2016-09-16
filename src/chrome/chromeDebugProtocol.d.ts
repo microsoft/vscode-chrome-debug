@@ -139,6 +139,15 @@ export namespace Debugger {
             scriptSource: string;
         };
     }
+
+    export interface SetVariableParams {
+        scopeNumber: number;
+        variableName: string;
+        newValue: Runtime.CallArgument;
+        callFrameId: string;
+    }
+
+    export type SetVariableResponse = Response;
 }
 
 export namespace Runtime {
@@ -179,7 +188,6 @@ export namespace Runtime {
         preview?: {
             type: string;
             description: string;
-            lossless: boolean;
             overflow: boolean;
             properties: PropertyPreview[];
         };

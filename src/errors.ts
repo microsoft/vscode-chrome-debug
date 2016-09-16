@@ -39,3 +39,17 @@ export function withInfoLink(id: number, format: string, variables: any, infoId:
         urlLabel: localize('more.information', "More Information")
     };
 }
+
+export function setValueNotSupported(): DebugProtocol.Message {
+    return {
+        id: 2004,
+        format: localize('setVariable.error', "Setting value not supported")
+    };
+}
+
+export function errorFromEvaluate(errMsg: string): DebugProtocol.Message {
+    return {
+        id: 2025,
+        format: errMsg
+    };
+}

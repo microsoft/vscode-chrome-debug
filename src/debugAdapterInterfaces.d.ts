@@ -75,7 +75,14 @@ export interface IVariablesResponseBody {
 
 export interface IEvaluateResponseBody {
     result: string;
+    type?: string;
     variablesReference: number;
+    namedVariables?: number;
+    indexedVariables?: number;
+}
+
+export interface ISetVariableResponseBody {
+    value: string;
 }
 
 declare type PromiseOrNot<T> = T | Promise<T>;
