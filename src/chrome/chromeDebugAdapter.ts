@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, ContinuedEvent} from 'vscode-debugadapter';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, ContinuedEvent, BreakpointEvent} from 'vscode-debugadapter';
 
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
@@ -23,6 +23,7 @@ import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {RemotePathTransformer} from '../transformers/remotePathTransformer';
 import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer';
+import {EagerSourceMapTransformer} from '../transformers/eagerSourceMapTransformer';
 
 import * as path from 'path';
 
@@ -39,6 +40,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     private _clientAttached: boolean;
     private _variableHandles: Handles<IVariableContainer>;
+    private _breakpointIdHandles: utils.ReverseHandles<string>;
     private _currentStack: Chrome.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
@@ -64,10 +66,12 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
         this._variableHandles = new Handles<IVariableContainer>();
+        this._breakpointIdHandles = new utils.ReverseHandles<string>();
+
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
-        this._sourceMapTransformer = sourceMapTransformer || new LazySourceMapTransformer();
+        this._sourceMapTransformer = sourceMapTransformer || new EagerSourceMapTransformer();
         this._pathTransformer = pathTransformer || new RemotePathTransformer();
 
         this.clearEverything();
@@ -308,6 +312,19 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const committedBps = this._committedBreakpointsByUrl.get(script.url) || [];
         committedBps.push(params.breakpointId);
         this._committedBreakpointsByUrl.set(script.url, committedBps);
+
+        // TODO - Handle bps removed before resolve (can set ID on BP)
+        // and #38
+        const bp = <DebugProtocol.Breakpoint>{
+            id: this._breakpointIdHandles.lookup(params.breakpointId),
+            verified: true,
+            line: params.location.lineNumber,
+            column: params.location.columnNumber
+        };
+        const scriptPath = this._pathTransformer.breakpointResolved(bp, script.url);
+        this._sourceMapTransformer.breakpointResolved(bp, scriptPath);
+        this._lineNumberTransformer.breakpointResolved(bp);
+        this.sendEvent(new BreakpointEvent('new', bp));
     }
 
     protected onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
@@ -326,6 +343,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
+        // const requestedLines = args.lines;
         this._lineNumberTransformer.setBreakpoints(args);
         return this._sourceMapTransformer.setBreakpoints(args, requestSeq)
             .then(() => this._pathTransformer.setBreakpoints(args))
@@ -353,8 +371,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                     // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
                     this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
                     return setBreakpointsPTimeout.then(body => {
-                        this._lineNumberTransformer.setBreakpointsResponse(body);
                         this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
+                        this._lineNumberTransformer.setBreakpointsResponse(body);
                         return body;
                     });
                 } else {
@@ -435,17 +453,21 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         // Map committed breakpoints to DebugProtocol response breakpoints
         return responses
             .map((response, i) => {
+                const id = response.result ? this._breakpointIdHandles.create(response.result.breakpointId) : undefined;
+
                 // The output list needs to be the same length as the input list, so map errors to
                 // unverified breakpoints.
                 if (response.error || !response.result.actualLocation) {
                     return <DebugProtocol.Breakpoint>{
+                        id,
                         verified: false,
                         line: requestLines[i],
-                        column: 0
+                        column: 0,
                     };
                 }
 
                 return <DebugProtocol.Breakpoint>{
+                    id,
                     verified: true,
                     line: response.result.actualLocation.lineNumber,
                     column: response.result.actualLocation.columnNumber

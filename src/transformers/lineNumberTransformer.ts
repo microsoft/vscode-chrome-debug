@@ -33,6 +33,10 @@ export class LineNumberTransformer implements IDebugTransformer  {
         response.stackFrames.forEach(frame => frame.line = this.convertTargetLineToClient(frame.line));
     }
 
+    public breakpointResolved(bp: DebugProtocol.Breakpoint): void {
+        bp.line = this.convertTargetLineToClient(bp.line);
+    }
+
     private convertClientLineToTarget(line: number): number {
         if (this._targetLinesStartAt1) {
             return this._clientLinesStartAt1 ? line : line + 1;

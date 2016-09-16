@@ -2,6 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import {DebugProtocol} from 'vscode-debugprotocol';
+
 import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
 
 /**
@@ -27,6 +29,10 @@ export class BasePathTransformer {
     }
 
     public scriptParsed(scriptPath: string): string {
+        return scriptPath;
+    }
+
+    public breakpointResolved(bp: DebugProtocol.Breakpoint, scriptPath: string): string {
         return scriptPath;
     }
 

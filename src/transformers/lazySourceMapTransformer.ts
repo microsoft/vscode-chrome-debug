@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
+import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
     ISetBreakpointsResponseBody, IStackTraceResponseBody, ISourceMapPathOverrides} from '../debugAdapterInterfaces';
@@ -210,6 +211,17 @@ export class LazySourceMapTransformer {
                     });
                 }
             });
+        }
+    }
+
+    public breakpointResolved(bp: DebugProtocol.Breakpoint, scriptPath: string): void {
+        if (this._sourceMaps) {
+            const mapped = this._sourceMaps.mapToAuthored(scriptPath, bp.line, bp.column);
+            if (mapped) {
+                // Not sending back the path here, since the bp has an ID
+                bp.line = mapped.line;
+                bp.column = mapped.column;
+            }
         }
     }
 

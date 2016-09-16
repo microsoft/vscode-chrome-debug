@@ -5,6 +5,9 @@
 import * as path from 'path';
 import * as url from 'url';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as crypto from 'crypto';
+const xhr = require('request-light');
 
 import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
@@ -119,4 +122,28 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
     }
 
     return contentsP;
+}
+
+function downloadSourceMapContents(sourceMapUri: string): Promise<string> {
+    // use sha256 to ensure the hash value can be used in filenames
+    const hash = crypto.createHash('sha256').update(sourceMapUri).digest('hex');
+
+    const cachePath = path.join(os.tmpdir(), 'com.microsoft.VSCode', 'node-debug2', 'sm-cache');
+    const sourceMapPath = path.join(cachePath, hash);
+
+    const exists = fs.existsSync(sourceMapPath);
+    if (exists) {
+        return loadSourceMapContents(sourceMapPath);
+    }
+
+    const options = {
+        url: sourceMapUri,
+        followRedirects: 5
+    };
+
+    return xhr.xhr(options)
+        .then(
+            response => this._writeFile(path, response.responseText)
+                .then(() => response.responseText),
+            error => utils.errP(xhr.getErrorStatusDescription(error.status)));
 }

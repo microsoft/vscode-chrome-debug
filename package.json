@@ -12,7 +12,8 @@
   "typings": "./lib/src/index",
   "main": "./out/src/index",
   "dependencies": {
-    "globby": "^6.0.0",
+    "glob": "^7.0.6",
+    "request-light": "^0.1.0",
     "source-map": "^0.5.6",
     "vscode-debugadapter": "^1.12.0",
     "vscode-debugprotocol": "^1.12.0",
