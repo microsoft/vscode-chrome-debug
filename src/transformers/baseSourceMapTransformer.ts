@@ -27,7 +27,7 @@ export const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
 /**
  * If sourcemaps are enabled, converts from source files on the client side to runtime files on the target side
  */
-export class LazySourceMapTransformer {
+export class BaseSourceMapTransformer {
     protected _sourceMaps: SourceMaps;
 
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;

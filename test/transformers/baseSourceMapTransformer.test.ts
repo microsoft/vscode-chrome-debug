@@ -15,7 +15,7 @@ import {SourceMaps} from '../../src/sourceMaps/sourceMaps';
 import {MappedPosition} from '../../src/sourceMaps/sourceMap';
 import * as utils from '../../src/utils';
 
-const MODULE_UNDER_TEST = '../../src/transformers/lazySourceMapTransformer';
+const MODULE_UNDER_TEST = '../../src/transformers/baseSourceMapTransformer';
 
 const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
 const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
@@ -29,9 +29,9 @@ const RUNTIME_LINES2 = [78, 81];
 const RUNTIME_COLS2 = [0, 1];
 
 // Not mocked, use for type only
-import {LazySourceMapTransformer as _LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
+import {BaseSourceMapTransformer as _BaseSourceMapTransformer} from '../../src/transformers/baseSourceMapTransformer';
 
-suite('LazySourceMapTransformer', () => {
+suite('BaseSourceMapTransformer', () => {
     let utilsMock: Mock<typeof utils>;
 
     setup(() => {
@@ -52,13 +52,13 @@ suite('LazySourceMapTransformer', () => {
         mockery.disable();
     });
 
-    function getTransformer(sourceMaps = true, suppressDefaultMock = false): _LazySourceMapTransformer {
+    function getTransformer(sourceMaps = true, suppressDefaultMock = false): _BaseSourceMapTransformer {
         if (!suppressDefaultMock) {
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: StubSourceMaps });
         }
 
-        let LazySourceMapTransformer = require(MODULE_UNDER_TEST).LazySourceMapTransformer;
-        const transformer = new LazySourceMapTransformer();
+        let BaseSourceMapTransformer = require(MODULE_UNDER_TEST).BaseSourceMapTransformer;
+        const transformer = new BaseSourceMapTransformer();
         transformer.launch(<ILaunchRequestArgs><any>{
             sourceMaps,
             generatedCodeDirectory: 'test'

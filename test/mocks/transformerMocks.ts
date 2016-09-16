@@ -5,15 +5,15 @@
 import {Mock, It} from 'typemoq';
 
 import {LineNumberTransformer} from '../../src/transformers/lineNumberTransformer';
-import {LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
+import {BaseSourceMapTransformer} from '../../src/transformers/baseSourceMapTransformer';
 import {UrlPathTransformer} from '../../src/transformers/urlPathTransformer';
 
 export function getMockLineNumberTransformer(): Mock<LineNumberTransformer> {
     return Mock.ofType(LineNumberTransformer);
 }
 
-export function getMockSourceMapTransformer(): Mock<LazySourceMapTransformer> {
-    const mock = Mock.ofType(LazySourceMapTransformer);
+export function getMockSourceMapTransformer(): Mock<BaseSourceMapTransformer> {
+    const mock = Mock.ofType(BaseSourceMapTransformer);
     mock.setup(m => m.setBreakpoints(It.isAny(), It.isAny()))
         .returns(() => Promise.resolve<void>());
 

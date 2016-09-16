@@ -2,7 +2,6 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {URI} from './uri';
 import {SourceMap, MappedPosition} from './sourceMap';
 import {getMapForGeneratedPath} from './sourceMapFactory';
 import {ISourceMapPathOverrides} from '../debugAdapterInterfaces';

@@ -11,7 +11,7 @@ import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 import {ChromeConnection} from '../../src/chrome/chromeConnection';
 
 import {LineNumberTransformer} from '../../src/transformers/lineNumberTransformer';
-import {LazySourceMapTransformer} from '../../src/transformers/lazySourceMapTransformer';
+import {BaseSourceMapTransformer} from '../../src/transformers/baseSourceMapTransformer';
 import {UrlPathTransformer} from '../../src/transformers/urlPathTransformer';
 
 import * as mockery from 'mockery';
@@ -32,7 +32,7 @@ suite('ChromeDebugAdapter', () => {
     let mockChromeConnection: Mock<ChromeConnection>;
     let mockEventEmitter: EventEmitter;
     let mockLineNumberTransformer: Mock<LineNumberTransformer>;
-    let mockSourceMapTransformer: Mock<LazySourceMapTransformer>;
+    let mockSourceMapTransformer: Mock<BaseSourceMapTransformer>;
     let mockPathTransformer: Mock<UrlPathTransformer>;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;
@@ -146,6 +146,16 @@ suite('ChromeDebugAdapter', () => {
             return { breakpoints };
         }
 
+        function assertExpectedResponse(response: ISetBreakpointsResponseBody, lines: number[], cols?: number[]): void {
+            // Assert that each bp has some id, then remove, because we don't know or care what it is
+            response.breakpoints.forEach(bp => {
+                assert(typeof bp.id === 'number');
+                delete bp.id;
+            });
+
+            assert.deepEqual(response, makeExpectedResponse(lines, cols));
+        }
+
         function emitScriptParsed(url = FILE_NAME, scriptId = SCRIPT_ID): void {
             mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId, url });
         }
@@ -158,7 +168,7 @@ suite('ChromeDebugAdapter', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
                 .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
 
         test('When setting multiple breakpoints, returns the correct result', () => {
@@ -169,7 +179,7 @@ suite('ChromeDebugAdapter', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
                 .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
 
         test('The adapter clears all previous breakpoints in a script before setting the new ones', () => {
@@ -189,7 +199,7 @@ suite('ChromeDebugAdapter', () => {
 
                     return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
 
         test('The adapter handles removing a breakpoint', () => {
@@ -208,7 +218,7 @@ suite('ChromeDebugAdapter', () => {
                     expectSetBreakpoint(lines, cols, FILE_NAME);
                     return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
 
         test('After a page refresh, clears the newly resolved breakpoints before adding new ones', () => {
@@ -231,7 +241,7 @@ suite('ChromeDebugAdapter', () => {
                     expectSetBreakpoint(lines, cols, FILE_NAME, 'afterRefreshScriptId');
                     return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
                 })
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
 
         test('returns the actual location specified by the runtime', () => {
@@ -242,7 +252,7 @@ suite('ChromeDebugAdapter', () => {
             const location: Chrome.Debugger.Location = {
                 scriptId: SCRIPT_ID, lineNumber: lines[0] + 10, columnNumber: cols[0] + 10 };
             const expectedResponse: ISetBreakpointsResponseBody = {
-                breakpoints: [{ line: location.lineNumber, column: location.columnNumber, verified: true }]};
+                breakpoints: [{ line: location.lineNumber, column: location.columnNumber, verified: true, id: 1000 }]};
 
             mockChromeConnection
                 .setup(x => x.debugger_setBreakpointByUrl(FILE_NAME, lines[0], cols[0]))
@@ -264,7 +274,7 @@ suite('ChromeDebugAdapter', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed(/*url=*/'', SCRIPT_ID))
                 .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, lines, cols }, 0))
-                .then(response => assert.deepEqual(response, makeExpectedResponse(lines, cols)));
+                .then(response => assertExpectedResponse(response, lines, cols));
         });
     });
 

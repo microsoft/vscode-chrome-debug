@@ -279,13 +279,16 @@ export function localize(id: string, msg: string, ...args: any[]): string {
 export function fsReadDirP(path: string): Promise<string[]> {
     return new Promise((resolve, reject) => {
         fs.readdir(path, (err, files) => {
-            if (err) reject(err);
-            else resolve(files);
+            if (err) {
+                reject(err);
+            } else {
+                resolve(files);
+            }
         });
     });
 }
 
-export function readFileP(path: string, encoding: string = 'utf8'): Promise<string> {
+export function readFileP(path: string, encoding = 'utf8'): Promise<string> {
     return new Promise((resolve, reject) => {
         fs.readFile(path, encoding, (err, fileContents) => {
             if (err) {
@@ -314,14 +317,13 @@ export function writeFileP(filePath: string, data: string): Promise<string> {
  * Make sure that all directories of the given path exist (like mkdir -p).
  */
 export function mkdirs(dirsPath: string) {
-	if (!fs.existsSync(dirsPath)) {
-		mkdirs(path.dirname(dirsPath));
-		fs.mkdirSync(dirsPath);
-	}
+    if (!fs.existsSync(dirsPath)) {
+        mkdirs(path.dirname(dirsPath));
+        fs.mkdirSync(dirsPath);
+    }
 }
 
-//---- globbing support -------------------------------------------------
-
+// ---- globbing support -------------------------------------------------
 export function extendObject<T>(objectCopy: T, object: T): T {
     for (let key in object) {
         if (object.hasOwnProperty(key)) {
@@ -342,7 +344,7 @@ interface IGlobTask {
 }
 
 export function multiGlob(patterns: string[], opts?: any): Promise<string[]> {
-    const globTasks = new Array<IGlobTask>();
+    const globTasks: IGlobTask[] = [];
 
     opts = extendObject({
         cache: Object.create(null),
@@ -358,8 +360,8 @@ export function multiGlob(patterns: string[], opts?: any): Promise<string[]> {
                 return;
             }
 
-            const ignore = patterns.slice(i).filter(isExclude).map(pattern => {
-                return pattern.slice(1);
+            const ignore = patterns.slice(i).filter(isExclude).map(excludePattern => {
+                return excludePattern.slice(1);
             });
 
             globTasks.push({

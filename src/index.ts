@@ -11,7 +11,7 @@ import * as chromeUtils from './chrome/chromeUtils';
 import {BasePathTransformer} from './transformers/basePathTransformer';
 import {UrlPathTransformer} from './transformers/urlPathTransformer';
 import {LineNumberTransformer} from './transformers/lineNumberTransformer';
-import {LazySourceMapTransformer} from './transformers/lazySourceMapTransformer';
+import {BaseSourceMapTransformer} from './transformers/baseSourceMapTransformer';
 
 export * from './debugAdapterInterfaces';
 
@@ -31,7 +31,7 @@ export {
     UrlPathTransformer,
     BasePathTransformer,
     LineNumberTransformer,
-    LazySourceMapTransformer,
+    BaseSourceMapTransformer,
 
     utils,
     logger,

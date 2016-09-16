@@ -22,7 +22,7 @@ import {BaseDebugAdapter} from '../baseDebugAdapter';
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {RemotePathTransformer} from '../transformers/remotePathTransformer';
-import {LazySourceMapTransformer} from '../transformers/lazySourceMapTransformer';
+import {BaseSourceMapTransformer} from '../transformers/baseSourceMapTransformer';
 import {EagerSourceMapTransformer} from '../transformers/eagerSourceMapTransformer';
 
 import * as path from 'path';
@@ -54,14 +54,14 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _chromeConnection: ChromeConnection;
 
     private _lineNumberTransformer: LineNumberTransformer;
-    private _sourceMapTransformer: LazySourceMapTransformer;
+    private _sourceMapTransformer: BaseSourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
     private _hasTerminated: boolean;
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
-    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: LazySourceMapTransformer, pathTransformer?: BasePathTransformer) {
+    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: BaseSourceMapTransformer, pathTransformer?: BasePathTransformer) {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();

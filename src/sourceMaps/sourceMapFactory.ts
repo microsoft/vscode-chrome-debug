@@ -7,6 +7,8 @@ import * as url from 'url';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
+
+/* tslint:disable:no-var-requires */
 const xhr = require('request-light');
 
 import * as sourceMapUtils from './sourceMapUtils';
@@ -103,7 +105,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
     let contentsP: Promise<string>;
     if (utils.isURL(mapPathOrURL)) {
         logger.log(`SourceMaps.loadSourceMapContents: Downloading sourcemap file from ${mapPathOrURL}`);
-        contentsP = utils.getURL(mapPathOrURL).catch(e => {
+        contentsP = downloadSourceMapContents(mapPathOrURL).catch(e => {
             logger.error(`SourceMaps.loadSourceMapContents: Could not download sourcemap from ${mapPathOrURL}`);
             return null;
         });
@@ -143,7 +145,7 @@ function downloadSourceMapContents(sourceMapUri: string): Promise<string> {
 
     return xhr.xhr(options)
         .then(
-            response => this._writeFile(path, response.responseText)
+            response => utils.writeFileP(sourceMapPath, response.responseText)
                 .then(() => response.responseText),
             error => utils.errP(xhr.getErrorStatusDescription(error.status)));
 }
