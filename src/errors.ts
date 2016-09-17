@@ -53,3 +53,11 @@ export function errorFromEvaluate(errMsg: string): DebugProtocol.Message {
         format: errMsg
     };
 }
+
+export function sourceRequestIllegalHandle(): DebugProtocol.Message {
+    return {
+        id: 2027,
+        format: 'sourceRequest error: illegal handle',
+        sendTelemetry: true
+    };
+}

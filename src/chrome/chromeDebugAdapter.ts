@@ -32,6 +32,19 @@ interface IPropCount {
     namedVariables: number;
 }
 
+/**
+ * Represents a reference to a source/script. `contents` is set if there are inlined sources.
+ * Otherwise, scriptId can be used to retrieve the contents from the runtime.
+ */
+export interface ISourceContainer {
+    /** The runtime-side scriptId of this script */
+    scriptId?: Chrome.Debugger.ScriptId;
+    /** The contents of this script, if they are inlined in the sourcemap */
+    contents?: string;
+    /** The authored path to this script (only set if the contents are inlined) */
+    mappedPath?: string;
+}
+
 export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -39,14 +52,16 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
 
     private _clientAttached: boolean;
-    private _variableHandles: Handles<IVariableContainer>;
-    private _breakpointIdHandles: utils.ReverseHandles<string>;
     private _currentStack: Chrome.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
     private _exceptionValueObject: Chrome.Runtime.RemoteObject;
     private _expectingResumedEvent: boolean;
     private _setBreakpointsRequestQ: Promise<any>;
+
+    private _variableHandles: Handles<IVariableContainer>;
+    private _breakpointIdHandles: utils.ReverseHandles<string>;
+    private _sourceHandles: Handles<ISourceContainer>;
 
     private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
@@ -65,13 +80,15 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();
+
         this._variableHandles = new Handles<IVariableContainer>();
         this._breakpointIdHandles = new utils.ReverseHandles<string>();
+        this._sourceHandles = new Handles<ISourceContainer>();
 
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
         this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
-        this._sourceMapTransformer = sourceMapTransformer || new EagerSourceMapTransformer();
+        this._sourceMapTransformer = sourceMapTransformer || new EagerSourceMapTransformer(this._sourceHandles);
         this._pathTransformer = pathTransformer || new RemotePathTransformer();
 
         this.clearEverything();
@@ -352,7 +369,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 if (args.source.path) {
                     targetScriptUrl = args.source.path;
                 } else if (args.source.sourceReference) {
-                    const targetScript = this._scriptsById.get(sourceReferenceToScriptId(args.source.sourceReference));
+                    const handle = this._sourceHandles.get(args.source.sourceReference);
+                    const targetScript = this._scriptsById.get(handle.scriptId);
                     if (targetScript) {
                         targetScriptUrl = targetScript.url;
                     }
@@ -539,13 +557,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                             {
                                 name: path.basename(script.url),
                                 path: script.url,
-                                sourceReference: scriptIdToSourceReference(script.scriptId) // will be 0'd out by PathTransformer if not needed
+                                sourceReference: this._sourceHandles.create({ scriptId: script.scriptId })
                             } :
                             {
                                 // Name should be undefined, work around VS Code bug 20274
                                 name: 'eval: ' + location.scriptId,
                                 path: ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL + location.scriptId,
-                                sourceReference: scriptIdToSourceReference(location.scriptId)
+                                sourceReference: this._sourceHandles.create({ scriptId: location.scriptId })
                             };
 
                     // If the frame doesn't have a function name, it's either an anonymous function
@@ -719,7 +737,21 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public source(args: DebugProtocol.SourceArguments): Promise<ISourceResponseBody> {
-        return this._chromeConnection.debugger_getScriptSource(sourceReferenceToScriptId(args.sourceReference)).then(chromeResponse => {
+        const handle = this._sourceHandles.get(args.sourceReference);
+        if (!handle) {
+            return Promise.reject(errors.sourceRequestIllegalHandle());
+        }
+
+        // Have inlined content?
+        if (handle.contents) {
+            return Promise.resolve({
+                content: handle.contents
+                // mimeType: TODO
+            });
+        }
+
+        // If not, should have scriptId
+        return this._chromeConnection.debugger_getScriptSource(handle.scriptId).then(chromeResponse => {
             return {
                 content: chromeResponse.result.scriptSource,
                 mimeType: 'text/javascript'
@@ -945,12 +977,4 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private shouldIgnoreScript(script: Chrome.Debugger.Script): boolean {
         return script.isContentScript || script.isInternalScript || script.url.startsWith('extensions::') || script.url.startsWith('chrome-extension://');
     }
-}
-
-function scriptIdToSourceReference(scriptId: Chrome.Debugger.ScriptId): number {
-    return parseInt(scriptId, 10);
-}
-
-function sourceReferenceToScriptId(sourceReference: number): Chrome.Debugger.ScriptId {
-    return '' + sourceReference;
 }

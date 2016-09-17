@@ -177,4 +177,9 @@ export class SourceMap {
             };
         }
     }
+
+    public sourceContentFor(authoredSourcePath: string): string {
+        authoredSourcePath = utils.pathToFileURL(authoredSourcePath);
+        return this._smc.sourceContentFor(authoredSourcePath, /*returnNullOnMissing=*/true);
+    }
 }

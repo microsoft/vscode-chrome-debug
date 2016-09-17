@@ -56,6 +56,14 @@ export class SourceMaps {
             null;
     }
 
+    public sourceContentFor(authoredPath: string): string {
+        authoredPath = authoredPath.toLowerCase();
+        return this._authoredPathToSourceMap.has(authoredPath) ?
+            this._authoredPathToSourceMap.get(authoredPath)
+                .sourceContentFor(authoredPath) :
+            null;
+    }
+
     /**
      * Given a new path to a new script file, finds and loads the sourcemap for that file
      */

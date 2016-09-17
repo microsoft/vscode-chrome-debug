@@ -4,12 +4,14 @@
 
 import * as path from 'path';
 import {DebugProtocol} from 'vscode-debugprotocol';
+import {Handles} from 'vscode-debugadapter';
 
 import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
     ISetBreakpointsResponseBody, IStackTraceResponseBody, ISourceMapPathOverrides} from '../debugAdapterInterfaces';
 import {SourceMaps} from '../sourceMaps/sourceMaps';
 import * as utils from '../utils';
 import * as logger from '../logger';
+import {ISourceContainer} from '../chrome/chromeDebugAdapter';
 
 interface IPendingBreakpoint {
     resolve: () => void;
@@ -29,12 +31,17 @@ export const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
  */
 export class BaseSourceMapTransformer {
     protected _sourceMaps: SourceMaps;
+    protected _sourceHandles: Handles<ISourceContainer>;
 
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
     private _authoredPathsToMappedBPLines: Map<string, number[]>;
     private _authoredPathsToMappedBPCols: Map<string, number[]>;
+
+    constructor(sourceHandles: Handles<ISourceContainer>) {
+        this._sourceHandles = sourceHandles;
+    }
 
     public launch(args: ILaunchRequestArgs): void {
         this.init(args);
@@ -63,7 +70,21 @@ export class BaseSourceMapTransformer {
      */
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            if (this._sourceMaps && args.source.path) {
+            if (!this._sourceMaps) {
+                resolve();
+                return;
+            }
+
+            if (args.source.sourceReference) {
+                // If the source contents were inlined, then args.source has no path, but we
+                // stored it in the handle
+                const handle = this._sourceHandles.get(args.source.sourceReference);
+                if (handle.mappedPath) {
+                    args.source.path = handle.mappedPath;
+                }
+            }
+
+            if (args.source.path) {
                 const argsPath = args.source.path;
                 const mappedPath = this._sourceMaps.getGeneratedPathFromAuthoredPath(argsPath);
                 if (mappedPath) {
@@ -119,6 +140,7 @@ export class BaseSourceMapTransformer {
                 this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
                 resolve();
             } else {
+                // No source.path
                 resolve();
             }
         });
@@ -172,13 +194,24 @@ export class BaseSourceMapTransformer {
                     stackFrame.source.name = path.basename(mapped.source);
                     stackFrame.line = mapped.line;
                     stackFrame.column = mapped.column;
-                } else if (utils.existsSync(stackFrame.source.path)) {
-                    // Script could not be mapped, but does exist on disk. Keep it and clear the sourceReference.
-                    stackFrame.source.sourceReference = 0;
                 } else {
-                    // Script could not be mapped and doesn't exist on disk. Clear the path, use sourceReference.
-                    stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
-                    stackFrame.source.path = undefined;
+                    const inlinedSource = mapped && this._sourceMaps.sourceContentFor(mapped.source);
+                    if (mapped && inlinedSource) {
+                        // Clear the path and set the sourceReference - the client will ask for
+                        // the source later and it will be returned from the sourcemap
+                        stackFrame.source.path = undefined;
+                        stackFrame.source.name = path.basename(mapped.source);
+                        stackFrame.source.sourceReference = this._sourceHandles.create({ contents: inlinedSource, mappedPath: mapped.source });
+                        stackFrame.line = mapped.line;
+                        stackFrame.column = mapped.column;
+                    } else if (utils.existsSync(stackFrame.source.path)) {
+                        // Script could not be mapped, but does exist on disk. Keep it and clear the sourceReference.
+                        stackFrame.source.sourceReference = 0;
+                    } else {
+                        // Script could not be mapped and doesn't exist on disk. Clear the path, use sourceReference.
+                        stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
+                        stackFrame.source.path = undefined;
+                    }
                 }
             });
         } else {
