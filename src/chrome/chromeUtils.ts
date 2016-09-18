@@ -160,25 +160,23 @@ export function compareVariableNames(var1: string, var2: string): number {
  * Maybe this can be merged with remoteObjectToValue, they are somewhat similar
  */
 export function remoteObjectToCallArgument(object: Chrome.Runtime.RemoteObject): Chrome.Runtime.CallArgument {
-    if (object) {
-        if (object.type === 'object') {
-            if (object.subtype === 'null') {
-                return { value: null };
-            } else {
-                // It's a non-null object, create a variable reference so the client can ask for its props
-                return { objectId: object.objectId };
-            }
-        } else if (object.type === 'undefined') {
-            return { value: undefined }; // ?
-        } else if (object.type === 'function') {
-            return { objectId: object.objectId };
+    if (object.type === 'object') {
+        if (object.subtype === 'null') {
+            return { value: null };
         } else {
-            // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
-            if (typeof object.value === 'undefined') {
-                return { value: undefined }; // uh
-            } else {
-                return { value: object.value }; // ??
-            }
+            // It's a non-null object, create a variable reference so the client can ask for its props
+            return { objectId: object.objectId };
+        }
+    } else if (object.type === 'undefined') {
+        return { value: undefined }; // ?
+    } else if (object.type === 'function') {
+        return { objectId: object.objectId };
+    } else {
+        // The value is a primitive value, or something that has a description (not object, primitive, or undefined). And force to be string
+        if (typeof object.value === 'undefined') {
+            return { value: undefined }; // uh
+        } else {
+            return { value: object.value }; // ??
         }
     }
 }

@@ -312,8 +312,6 @@ suite('BaseSourceMapTransformer', () => {
 });
 
 class StubSourceMaps {
-    constructor(private generatedCodeDirectory: string) { }
-
     public getGeneratedPathFromAuthoredPath(path: string): string {
         return RUNTIME_PATH;
     }

@@ -50,6 +50,7 @@ export class EagerSourceMapTransformer extends BaseSourceMapTransformer {
                     return this._sourceMaps.processNewSourceMap(generatedScriptPath, uri);
                 } else {
                     logger.log(`SourceMaps: no sourcemap url found in generated script: ${generatedScriptPath}`);
+                    return undefined;
                 }
             })
             .catch(err => {

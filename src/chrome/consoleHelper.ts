@@ -110,9 +110,9 @@ function remoteObjectToString(obj: Chrome.Runtime.RemoteObject): string {
 
             return `${obj.className} {${props}}`;
         }
-    } else {
-        return result.value;
     }
+
+    return result.value;
 }
 
 function arrayRemoteObjToString(obj: Chrome.Runtime.RemoteObject): string {

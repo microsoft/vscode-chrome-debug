@@ -107,6 +107,7 @@ class ResReqWebSocket extends EventEmitter {
             return super.emit.apply(this, arguments);
         } catch (e) {
             logger.error('Error while handling target event: ' + e.stack);
+            return false;
         }
     }
 
