@@ -8,9 +8,6 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as crypto from 'crypto';
 
-/* tslint:disable:no-var-requires */
-const xhr = require('request-light');
-
 import * as sourceMapUtils from './sourceMapUtils';
 import * as utils from '../utils';
 import * as logger from '../logger';
@@ -133,19 +130,14 @@ function downloadSourceMapContents(sourceMapUri: string): Promise<string> {
     const cachePath = path.join(os.tmpdir(), 'com.microsoft.VSCode', 'node-debug2', 'sm-cache');
     const sourceMapPath = path.join(cachePath, hash);
 
-    const exists = fs.existsSync(sourceMapPath);
+    const exists = utils.existsSync(sourceMapPath);
     if (exists) {
         return loadSourceMapContents(sourceMapPath);
     }
 
-    const options = {
-        url: sourceMapUri,
-        followRedirects: 5
-    };
-
-    return xhr.xhr(options)
-        .then(
-            response => utils.writeFileP(sourceMapPath, response.responseText)
-                .then(() => response.responseText),
-            error => utils.errP(xhr.getErrorStatusDescription(error.status)));
+    return utils.getURL(sourceMapUri)
+        .then(responseText => {
+            return utils.writeFileP(sourceMapPath, responseText)
+                .then(() => responseText);
+        });
 }

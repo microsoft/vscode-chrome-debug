@@ -5,7 +5,9 @@
 import * as assert from 'assert';
 import * as mockery from 'mockery';
 import * as path from 'path';
+import {Mock, It, MockBehavior} from 'typemoq';
 
+import * as utils from '../../src/utils';
 import * as testUtils from '../testUtils';
 
 import {getMapForGeneratedPath as _getMapForGeneratedPath} from '../../src/sourceMaps/sourceMapFactory';
@@ -95,11 +97,25 @@ suite('SourceMapFactory', () => {
         });
 
         test('handles a relative path with a generated script url', () => {
-            testUtils.registerMockGetURL('../utils', GENERATED_SCRIPT_URL + '.map', FILEDATA);
+            // mock so it doesn't try to use the cache
+            const utilsMock = Mock.ofInstance(utils, MockBehavior.Strict);
+            utilsMock.callBase = true;
+            mockery.registerMock('../utils', utilsMock.object);
+            utilsMock
+                .setup(x => x.existsSync(It.isAnyString()))
+                .returns(() => false)
+                .verifiable();
+            utilsMock
+                .setup(x => x.writeFileP(It.isAnyString(), It.isAnyString()))
+                .returns(() => Promise.resolve())
+                .verifiable();
+
+            testUtils.registerMockGetURL('../utils', GENERATED_SCRIPT_URL + '.map', FILEDATA, utilsMock);
             setExpectedConstructorArgs(GENERATED_SCRIPT_URL, FILEDATA, WEBROOT);
 
             return getMapForGeneratedPath(GENERATED_SCRIPT_URL, 'script.js.map', WEBROOT).then(sourceMap => {
                 assert(sourceMap);
+                utilsMock.verifyAll();
             });
         });
 

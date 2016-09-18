@@ -2,13 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as http from 'http';
 import * as os from 'os';
 import * as fs from 'fs';
 import * as url from 'url';
 import * as path from 'path';
 import * as glob from 'glob';
 import {Handles} from 'vscode-debugadapter';
+
+/* tslint:disable:no-var-requires */
+const xhr = require('request-light');
 
 import * as logger from './logger';
 
@@ -217,24 +219,17 @@ export function errP(msg: string|Error): Promise<any> {
  * Helper function to GET the contents of a url
  */
 export function getURL(aUrl: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-        http.get(aUrl, response => {
-            let responseData = '';
-            response.on('data', chunk => responseData += chunk);
-            response.on('end', () => {
-                // Sometimes the 'error' event is not fired. Double check here.
-                if (response.statusCode === 200) {
-                    resolve(responseData);
-                } else {
-                    logger.log('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
-                    reject(responseData);
-                }
-            });
-        }).on('error', e => {
-            logger.log('HTTP GET failed: ' + e.toString());
-            reject(e);
+    const options = {
+        url: aUrl,
+        followRedirects: 5
+    };
+
+    return xhr.xhr(options)
+        .catch(e => {
+            const errMsg = xhr.getErrorStatusDescription(e.status) || e.toString();
+            logger.log('HTTP - GET failed with: ' + errMsg);
+            return errP(errMsg);
         });
-    });
 }
 
 /**

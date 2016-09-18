@@ -101,10 +101,13 @@ export function registerMockReadFile(...entries: { absPath: string; data: string
  * Mock utils.getURL to return the specified contents.
  * Note that if you call this twice, the second call will overwrite the first.
  */
-export function registerMockGetURL(utilsRelativePath: string, url: string, contents: string, isError = false): void {
-    const utilsMock = Mock.ofInstance(utils);
-    utilsMock.callBase = true;
-    mockery.registerMock(utilsRelativePath, utilsMock.object);
+export function registerMockGetURL(utilsRelativePath: string, url: string, contents: string, utilsMock?: Mock<typeof utils>, isError = false): void {
+    if (!utilsMock) {
+        utilsMock = Mock.ofInstance(utils);
+        utilsMock.callBase = true;
+        mockery.registerMock(utilsRelativePath, utilsMock.object);
+    }
+
     utilsMock
         .setup(x => x.getURL(It.isValue(url)))
         .returns(() => isError ? Promise.reject(contents) : Promise.resolve(contents));
@@ -113,8 +116,8 @@ export function registerMockGetURL(utilsRelativePath: string, url: string, conte
         .returns(() => true);
 }
 
-export function registerMockGetURLFail(utilsRelativePath: string, url: string, failContents?: string): void {
-    return registerMockGetURL(utilsRelativePath, url, failContents, /*isError=*/true);
+export function registerMockGetURLFail(utilsRelativePath: string, url: string, failContents?: string, utilsMock?: Mock<typeof utils>): void {
+    return registerMockGetURL(utilsRelativePath, url, failContents, utilsMock, /*isError=*/true);
 }
 
 /**

@@ -204,57 +204,6 @@ suite('Utils', () => {
         });
     });
 
-    suite('getUrl', () => {
-        const URL = 'http://testsite.com/testfile';
-        const RESPONSE = 'response';
-
-        function registerMockHTTP(dataResponses: string[], error?: string): void {
-            mockery.registerMock('http', { get: (url, callback) => {
-                assert.equal(url, URL);
-
-                if (error) {
-                    return { on:
-                        (eventName: string, eventCallback: Function) => {
-                            if (eventName === 'error') {
-                                eventCallback(error);
-                            }
-                        }};
-                } else {
-                    callback({
-                        statusCode: 200,
-                        on: (eventName, eventCallback) => {
-                            if (eventName === 'data') {
-                                dataResponses.forEach(eventCallback);
-                            } else if (eventName === 'end') {
-                                setTimeout(eventCallback, 0);
-                            }
-                        }});
-
-                    return { on: () => { }};
-                }
-            }});
-        }
-
-        test('combines chunks', () => {
-            // Create a mock http.get that provides data in two chunks
-            registerMockHTTP(['res', 'ponse']);
-            return getUtils().getURL(URL).then(response => {
-                assert.equal(response, RESPONSE);
-            });
-        });
-
-        test('rejects the promise on an error', () => {
-            registerMockHTTP(undefined, 'fail');
-            return getUtils().getURL(URL).then(
-                response => {
-                    assert.fail('Should not be resolved');
-                },
-                e => {
-                    assert.equal(e, 'fail');
-                });
-        });
-    });
-
     suite('isURL', () => {
         function assertIsURL(url: string): void {
             assert(getUtils().isURL(url));
