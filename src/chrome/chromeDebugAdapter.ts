@@ -8,6 +8,7 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, C
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
     ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody, ISetVariableResponseBody} from '../debugAdapterInterfaces';
+import {IChromeDebugSessionOpts} from './chromeDebugSession';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import {formatConsoleMessage} from './consoleHelper';
@@ -76,7 +77,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
-    public constructor(chromeConnection?: ChromeConnection, lineNumberTransformer?: LineNumberTransformer, sourceMapTransformer?: BaseSourceMapTransformer, pathTransformer?: BasePathTransformer) {
+    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
         super();
 
         this._chromeConnection = chromeConnection || new ChromeConnection();

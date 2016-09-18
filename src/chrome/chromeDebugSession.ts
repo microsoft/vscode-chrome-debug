@@ -6,17 +6,29 @@ import * as os from 'os';
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent, Response} from 'vscode-debugadapter';
 
-import {IDebugAdapter} from '../debugAdapterInterfaces';
-import {ITargetFilter} from './chromeConnection';
+import {ChromeDebugAdapter} from './chromeDebugAdapter';
+import {ITargetFilter, ChromeConnection} from './chromeConnection';
+import {BasePathTransformer} from '../transformers/basePathTransformer';
+import {BaseSourceMapTransformer} from '../transformers/baseSourceMapTransformer';
+import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 
+import {IDebugAdapter} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
 export interface IChromeDebugSessionOpts {
-    adapter: IDebugAdapter;
+    /** The class of the adapter, which is instantiated for each session */
+    adapter: typeof ChromeDebugAdapter;
     extensionName: string;
+
     targetFilter?: ITargetFilter;
     logFilePath?: string;
+
+    // Services
+    chromeConnection?: ChromeConnection;
+    pathTransformer?: BasePathTransformer;
+    sourceMapTransformer?: BaseSourceMapTransformer;
+    lineNumberTransformer?: LineNumberTransformer;
 }
 
 export class ChromeDebugSession extends DebugSession {
@@ -25,11 +37,10 @@ export class ChromeDebugSession extends DebugSession {
 
     /**
      * This needs a bit of explanation -
-     * We call DebugSession.run to create the connection to VS Code, which takes a Class extending DebugSession,
-     * not an instance. That's problematic because a class can't be naturally configured the way an instance
-     * would be. So this factory function dynamically creates a class which has 'opts' in a closure and can
-     * instantiate ChromeDebugSession with it. Otherwise all consumers would need to subclass ChromeDebugSession
-     * in a sort of non-obvious way.
+     * The Session is reinstantiated for each session, but consumers need to configure their instance of
+     * ChromeDebugSession. Consumers should call getSession with their config options, then call
+     * DebugSession.run with the result. Alternatively they could subclass ChromeDebugSession and pass
+     * their options to the super constructor, but I think this is easier to follow.
      */
     public static getSession(opts: IChromeDebugSessionOpts): typeof ChromeDebugSession {
         // class expression!
@@ -49,7 +60,7 @@ export class ChromeDebugSession extends DebugSession {
         super(targetLinesStartAt1, isServer);
 
         this._extensionName = opts.extensionName;
-        this._debugAdapter = opts.adapter;
+        this._debugAdapter = new (<any>opts.adapter)(opts);
         this._debugAdapter.registerEventHandler(this.sendEvent.bind(this));
         this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
 
