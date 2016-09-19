@@ -30,7 +30,7 @@ gulp.task('build', function () {
             .pipe(test1filter)
             .pipe(concat('client with space/test1.js'))
             .pipe(test1filter.restore)
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/' }))
+        .pipe(sourcemaps.write('.', { includeContent: true, sourceRoot: '/' }))
         .pipe(gulp.dest('./wwwroot/out'));
 });
 
