@@ -618,7 +618,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             return Promise.resolve<IVariablesResponseBody>(undefined);
         }
 
-        // TODO create Container for this special  exception scope
+        // TODO create Container for this special exception scope
         // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
         if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
             const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
@@ -744,7 +744,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         if (handle.contents) {
             return Promise.resolve({
                 content: handle.contents
-                // mimeType: TODO
             });
         }
 
@@ -843,7 +842,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         });
     }
 
-    private remoteObjectToVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
+    private remoteObjectToVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify = true): Promise<DebugProtocol.Variable> {
         let value = '';
 
         if (object) {
