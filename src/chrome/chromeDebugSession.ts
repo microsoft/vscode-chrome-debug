@@ -7,7 +7,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugSession, ErrorDestination, OutputEvent, Response} from 'vscode-debugadapter';
 
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
-import {ITargetFilter, ChromeConnection} from './chromeConnection';
+import {ITargetFilter} from './chromeConnection';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {BaseSourceMapTransformer} from '../transformers/baseSourceMapTransformer';
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
@@ -24,11 +24,10 @@ export interface IChromeDebugSessionOpts {
     targetFilter?: ITargetFilter;
     logFilePath?: string;
 
-    // Services
-    chromeConnection?: ChromeConnection;
-    pathTransformer?: BasePathTransformer;
-    sourceMapTransformer?: BaseSourceMapTransformer;
-    lineNumberTransformer?: LineNumberTransformer;
+    // Override services
+    pathTransformer?: typeof BasePathTransformer;
+    sourceMapTransformer?: typeof BaseSourceMapTransformer;
+    lineNumberTransformer?: typeof LineNumberTransformer;
 }
 
 export class ChromeDebugSession extends DebugSession {

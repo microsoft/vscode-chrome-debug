@@ -77,10 +77,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
-    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
+    public constructor({lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
         super();
 
-        this._chromeConnection = chromeConnection || new ChromeConnection();
+        this._chromeConnection = new ChromeConnection();
 
         this._variableHandles = new Handles<IVariableContainer>();
         this._breakpointIdHandles = new utils.ReverseHandles<string>();
@@ -88,9 +88,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
-        this._lineNumberTransformer = lineNumberTransformer || new LineNumberTransformer(/*targetLinesStartAt1=*/false);
-        this._sourceMapTransformer = sourceMapTransformer || new EagerSourceMapTransformer(this._sourceHandles);
-        this._pathTransformer = pathTransformer || new RemotePathTransformer();
+        this._lineNumberTransformer = new (lineNumberTransformer || LineNumberTransformer)(/*targetLinesStartAt1=*/false);
+        this._sourceMapTransformer = new (sourceMapTransformer || EagerSourceMapTransformer)(this._sourceHandles);
+        this._pathTransformer = new (pathTransformer || RemotePathTransformer)();
 
         this.clearEverything();
     }
