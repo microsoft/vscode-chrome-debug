@@ -74,7 +74,7 @@ gulp.task('default', ['build']);
 gulp.task('tslint', () => {
       return gulp.src(lintSources, { base: '.' })
         .pipe(tslint())
-        .pipe(tslint.report('verbose'));
+        .pipe(tslint.report());
 });
 
 function test() {
