@@ -26,7 +26,7 @@ export abstract class BaseVariableContainer implements IVariableContainer {
 
 export class PropertyContainer extends BaseVariableContainer {
     public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
-        return adapter._setPropertyValue(this.objectId, name, value);
+        return adapter.setPropertyValue(this.objectId, name, value);
     }
 }
 
@@ -62,7 +62,7 @@ export class ScopeContainer extends BaseVariableContainer {
     }
 
     public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
-        return adapter._setVariableValue(this._frameId, this._scopeIndex, name, value);
+        return adapter.setVariableValue(this._frameId, this._scopeIndex, name, value);
     }
 }
 

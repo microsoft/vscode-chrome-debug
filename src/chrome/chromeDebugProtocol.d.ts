@@ -185,12 +185,7 @@ export namespace Runtime {
         subtype?: string;
         type: string;
         value?: any;
-        preview?: {
-            type: string;
-            description: string;
-            overflow: boolean;
-            properties: PropertyPreview[];
-        };
+        preview?: ObjectPreview;
     }
 
     export interface PropertyPreview {
@@ -198,6 +193,19 @@ export namespace Runtime {
         type: string;
         subtype?: string;
         value: string;
+    }
+
+    export interface EntryPreview {
+        key?: ObjectPreview;
+        value: ObjectPreview;
+    }
+
+    export interface ObjectPreview {
+        type: string;
+        description: string;
+        overflow: boolean;
+        properties: PropertyPreview[];
+        entries?: EntryPreview[];
     }
 
     export interface EvaluateParams {

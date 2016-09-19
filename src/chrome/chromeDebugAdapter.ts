@@ -658,7 +658,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     public getVariablesForObjectId(objectId: string, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
         if (typeof start === 'number' && typeof count === 'number') {
-            return this.getFilteredVariablesForObjectId(objectId, filter, start, count);
+            return this.getFilteredVariablesForObject(objectId, filter, start, count);
         }
 
         return Promise.all([
@@ -704,7 +704,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         return this.remoteObjectToVariable(propDesc.name, propDesc.value);
     }
 
-    private getFilteredVariablesForObjectId(objectId: string, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
+    private getFilteredVariablesForObject(objectId: string, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
         // No ES6, in case we talk to an old runtime
         const getIndexedVariablesFn = `
             function getIndexedVariables(start, count) {
@@ -716,12 +716,16 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const getNamedVariablesFn = `
             function getNamedVariablesFn(start, count) {
                 var result = [];
-                var ownProps = Object.getOwnProperties(this);
+                var ownProps = Object.getOwnPropertyNames(this);
                 for (var i = start; i < (start + count); i++) result[i] = ownProps[i];
                 return result;
             }`;
 
         const getVarsFn = filter === 'indexed' ? getIndexedVariablesFn : getNamedVariablesFn;
+        return this.getFilteredVariablesForObjectId(objectId, getVarsFn, filter, start, count);
+    }
+
+    private getFilteredVariablesForObjectId(objectId: string, getVarsFn: string, filter: string, start: number, count: number): Promise<DebugProtocol.Variable[]> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, getVarsFn, [{ value: start }, { value: count }], /*silent=*/true).then(evalResponse => {
             if (evalResponse.error) {
                 return Promise.reject(errors.errorFromEvaluate(evalResponse.error.message));
@@ -810,7 +814,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             .then(value => ({ value }));
     }
 
-    public _setVariableValue(frameId: string, scopeIndex: number, name: string, value: string): Promise<string> {
+    public setVariableValue(frameId: string, scopeIndex: number, name: string, value: string): Promise<string> {
         let evalResultObject: Chrome.Runtime.RemoteObject;
         return this._chromeConnection.debugger_evaluateOnCallFrame(frameId, value, undefined, undefined, /*silent=*/true).then(evalResponse => {
             if (evalResponse.error) {
@@ -828,7 +832,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         .then(setVarResponse => ChromeUtils.remoteObjectToValue(evalResultObject).value);
     }
 
-    public _setPropertyValue(objectId: string, propName: string, value: string): Promise<string> {
+    public setPropertyValue(objectId: string, propName: string, value: string): Promise<string> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, `function() { return this["${propName}"] = ${value} }`, undefined, /*silent=*/true).then(response => {
             if (response.error) {
                 return Promise.reject(errors.errorFromEvaluate(response.error.message));
@@ -900,6 +904,12 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             } else {
                 propCountP = this.getArrayNumPropsByEval(object.objectId);
             }
+        } else if (object.subtype === 'set' || object.subtype === 'map') {
+            if (object.preview && !object.preview.overflow) {
+                propCountP = Promise.resolve(this.getCollectionNumPropsByPreview(object));
+            } else {
+                propCountP = this.getCollectionNumPropsByEval(object.objectId);
+            }
         } else {
             if (object.preview && !object.preview.overflow) {
                 propCountP = Promise.resolve(this.getObjectNumPropsByPreview(object));
@@ -920,7 +930,42 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     private getArrayNumPropsByEval(objectId: string): Promise<IPropCount> {
-        const getNumPropsFn = `function() {return [this.length, Object.keys(this).length - this.length ];}`;
+        const getNumPropsFn = `function() { return [this.length, Object.keys(this).length - this.length]; }`;
+        return this.getNumPropsByEval(objectId, getNumPropsFn);
+    }
+
+    private getArrayNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
+        let indexedVariables = 0;
+        let namedVariables = 0;
+        object.preview.properties.forEach(prop => isIndexedPropName(prop.name) ? indexedVariables++ : namedVariables++);
+        return { indexedVariables, namedVariables };
+    }
+
+    private getCollectionNumPropsByEval(objectId: string): Promise<IPropCount> {
+        const getNumPropsFn = `function() { return [0, Object.keys(this).length + 1]; }`; // +1 for [[Entries]];
+        return this.getNumPropsByEval(objectId, getNumPropsFn);
+    }
+
+    private getCollectionNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
+        let indexedVariables = 0;
+        let namedVariables = object.preview.properties.length + 1; // +1 for [[Entries]];
+
+        return { indexedVariables, namedVariables };
+    }
+
+    private getObjectNumPropsByEval(objectId: string): Promise<IPropCount> {
+        // TODO - counting and order?
+        const getNumPropsFn = `function() {
+            function isIndexed(name) { return !isNaN(parseInt(name, 10)); }
+            function isNamed(name) { return isNaN(parseInt(name, 10)); }
+
+            var keys = Object.keys(this);
+            return [keys.filter(isIndexed).length, keys.filter(isNamed).length];
+        }`;
+        return this.getNumPropsByEval(objectId, getNumPropsFn);
+    }
+
+    private getNumPropsByEval(objectId: string, getNumPropsFn: string): Promise<IPropCount> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
             if (response.error) {
                 return Promise.reject(errors.errorFromEvaluate(response.error.message));
@@ -934,34 +979,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 }
 
                 return { indexedVariables: resultProps[0], namedVariables: resultProps[1] };
-            }
-        });
-    }
-
-    private getArrayNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
-        let indexedVariables = 0;
-        let namedVariables = 0;
-        object.preview.properties.forEach(prop => isIndexedPropName(prop.name) ? indexedVariables++ : namedVariables++);
-        return { indexedVariables, namedVariables };
-    }
-
-    private getObjectNumPropsByEval(objectId: string): Promise<IPropCount> {
-        // TODO - counting and order?
-        const getNumPropsFn = `function() {
-            function isIndexed(name) { return !isNaN(parseInt(name, 10)); }
-            function isNamed(name) { return isNaN(parseInt(name, 10)); }
-
-            var keys = Object.keys(this);
-            return [keys.filter(isIndexed).length, keys.filter(isNamed).length];
-        }`;
-        return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
-            if (response.error) {
-                return Promise.reject(errors.errorFromEvaluate(response.error.message));
-            } else if (response.result.exceptionDetails) {
-                const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
-                return Promise.reject(errors.errorFromEvaluate(errMsg));
-            } else {
-                return { indexedVariables: response.result.result.value[0], namedVariables: response.result.result.value[1] };
             }
         });
     }
