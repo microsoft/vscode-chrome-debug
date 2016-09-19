@@ -117,7 +117,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private clearClientContext(): void {
         this._attachMode = false;
         this._clientAttached = false;
-        this._pathTransformer.clearClientContext();
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
@@ -360,8 +359,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
         this._lineNumberTransformer.setBreakpoints(args);
-        return this._sourceMapTransformer.setBreakpoints(args, requestSeq)
-            .then(() => this._pathTransformer.setBreakpoints(args))
+        this._sourceMapTransformer.setBreakpoints(args, requestSeq);
+        return this._pathTransformer.setBreakpoints(args)
             .then(() => {
                 let targetScriptUrl: string;
                 if (args.source.path) {

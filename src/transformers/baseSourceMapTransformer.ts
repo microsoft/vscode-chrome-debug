@@ -13,13 +13,6 @@ import * as utils from '../utils';
 import * as logger from '../logger';
 import {ISourceContainer} from '../chrome/chromeDebugAdapter';
 
-interface IPendingBreakpoint {
-    resolve: () => void;
-    reject: (e: Error) => void;
-    args: ISetBreakpointsArgs;
-    requestSeq: number;
-}
-
 // Can be applied, or not, by consumers
 export const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///*': '${webRoot}/*',
@@ -35,7 +28,6 @@ export class BaseSourceMapTransformer {
 
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
-    private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
     private _authoredPathsToMappedBPLines: Map<string, number[]>;
     private _authoredPathsToMappedBPCols: Map<string, number[]>;
 
@@ -66,84 +58,81 @@ export class BaseSourceMapTransformer {
     }
 
     /**
-     * Apply sourcemapping to the setBreakpoints request path/lines
+     * Apply sourcemapping to the setBreakpoints request path/lines.
+     * Returns true if completed successfully, and setBreakpoint should continue.
      */
-    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (!this._sourceMaps) {
-                resolve();
-                return;
+    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): boolean {
+        if (!this._sourceMaps) {
+            return true;
+        }
+
+        this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
+
+        if (args.source.sourceReference) {
+            // If the source contents were inlined, then args.source has no path, but we
+            // stored it in the handle
+            const handle = this._sourceHandles.get(args.source.sourceReference);
+            if (handle.mappedPath) {
+                args.source.path = handle.mappedPath;
             }
+        }
 
-            if (args.source.sourceReference) {
-                // If the source contents were inlined, then args.source has no path, but we
-                // stored it in the handle
-                const handle = this._sourceHandles.get(args.source.sourceReference);
-                if (handle.mappedPath) {
-                    args.source.path = handle.mappedPath;
-                }
-            }
+        if (args.source.path) {
+            const argsPath = args.source.path;
+            const mappedPath = this._sourceMaps.getGeneratedPathFromAuthoredPath(argsPath);
+            if (mappedPath) {
+                logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
+                args.authoredPath = argsPath;
+                args.source.path = mappedPath;
 
-            if (args.source.path) {
-                const argsPath = args.source.path;
-                const mappedPath = this._sourceMaps.getGeneratedPathFromAuthoredPath(argsPath);
-                if (mappedPath) {
-                    logger.log(`SourceMaps.setBP: Mapped ${argsPath} to ${mappedPath}`);
-                    args.authoredPath = argsPath;
-                    args.source.path = mappedPath;
+                // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
+                const mappedCols = [];
+                const mappedLines = args.lines.map((line, i) => {
+                    const mapped = this._sourceMaps.mapToGenerated(argsPath, line, /*column=*/0);
+                    if (mapped) {
+                        logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line + 1}:1 to ${mappedPath}:${mapped.line + 1}:${mapped.column + 1}`);
+                        mappedCols[i] = mapped.column;
+                        return mapped.line;
+                    } else {
+                        logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line + 1}, column 1`);
+                        mappedCols[i] = 0;
+                        return line;
+                    }
+                });
 
-                    // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
-                    const mappedCols = [];
-                    const mappedLines = args.lines.map((line, i) => {
-                        const mapped = this._sourceMaps.mapToGenerated(argsPath, line, /*column=*/0);
-                        if (mapped) {
-                            logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line + 1}:1 to ${mappedPath}:${mapped.line + 1}:${mapped.column + 1}`);
-                            mappedCols[i] = mapped.column;
-                            return mapped.line;
-                        } else {
-                            logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line + 1}, column 1`);
-                            mappedCols[i] = 0;
-                            return line;
-                        }
-                    });
+                this._authoredPathsToMappedBPLines.set(argsPath, mappedLines);
+                this._authoredPathsToMappedBPCols.set(argsPath, mappedCols);
 
-                    this._authoredPathsToMappedBPLines.set(argsPath, mappedLines);
-                    this._authoredPathsToMappedBPCols.set(argsPath, mappedCols);
+                // Include BPs from other files that map to the same file. Ensure the current file's breakpoints go first
+                args.lines = mappedLines;
+                args.cols = mappedCols;
+                this._sourceMaps.allMappedSources(mappedPath).forEach(sourcePath => {
+                    if (sourcePath === argsPath) {
+                        return;
+                    }
 
-                    // Include BPs from other files that map to the same file. Ensure the current file's breakpoints go first
-                    args.lines = mappedLines;
-                    args.cols = mappedCols;
-                    this._sourceMaps.allMappedSources(mappedPath).forEach(sourcePath => {
-                        if (sourcePath === argsPath) {
-                            return;
-                        }
+                    const sourceBPLines = this._authoredPathsToMappedBPLines.get(sourcePath);
+                    const sourceBPCols = this._authoredPathsToMappedBPCols.get(sourcePath);
 
-                        const sourceBPLines = this._authoredPathsToMappedBPLines.get(sourcePath);
-                        const sourceBPCols = this._authoredPathsToMappedBPCols.get(sourcePath);
-
-                        if (sourceBPLines && sourceBPCols) {
-                            // Don't modify the cached array
-                            args.lines = args.lines.concat(sourceBPLines);
-                            args.cols = args.cols.concat(sourceBPCols);
-                        }
-                    });
-                } else if (this._allRuntimeScriptPaths.has(argsPath)) {
-                    // It's a generated file which is loaded
-                    logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
-                } else {
-                    // Source (or generated) file which is not loaded, need to wait
-                    logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script. It may just not be loaded yet.`);
-                    this._pendingBreakpointsByPath.set(argsPath, { resolve, reject, args, requestSeq });
-                    return;
-                }
-
-                this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
-                resolve();
+                    if (sourceBPLines && sourceBPCols) {
+                        // Don't modify the cached array
+                        args.lines = args.lines.concat(sourceBPLines);
+                        args.cols = args.cols.concat(sourceBPCols);
+                    }
+                });
+            } else if (this._allRuntimeScriptPaths.has(argsPath)) {
+                // It's a generated file which is loaded
+                logger.log(`SourceMaps.setBP: SourceMaps are enabled but ${argsPath} is a runtime script`);
             } else {
-                // No source.path
-                resolve();
+                // Source (or generated) file which is not loaded
+                logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script. It may just not be loaded yet.`);
+                return false;
             }
-        });
+        } else {
+            // No source.path
+        }
+
+        return true;
     }
 
     /**
@@ -228,20 +217,11 @@ export class BaseSourceMapTransformer {
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(pathToGenerated);
 
-            if (!sourceMapURL) {
-                // If a file does not have a source map, check if we've seen any breakpoints
-                // for it anyway and make sure to enable them
-                this.resolvePendingBreakpointsForScript(pathToGenerated);
-                return;
-            }
-
+            // Load the sourcemap for this new script and log its sources
             this._sourceMaps.processNewSourceMap(pathToGenerated, sourceMapURL).then(() => {
                 const sources = this._sourceMaps.allMappedSources(pathToGenerated);
                 if (sources) {
                     logger.log(`SourceMaps.scriptParsed: ${pathToGenerated} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
-                    sources.forEach(sourcePath => {
-                        this.resolvePendingBreakpointsForScript(sourcePath);
-                    });
                 }
             });
         }
@@ -255,22 +235,6 @@ export class BaseSourceMapTransformer {
                 bp.line = mapped.line;
                 bp.column = mapped.column;
             }
-        }
-    }
-
-    /**
-     * Resolve any pending breakpoints for this script
-     */
-    private resolvePendingBreakpointsForScript(scriptUrl: string): void {
-        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
-            logger.log(`SourceMaps.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
-
-            let pendingBreakpoints = this._pendingBreakpointsByPath.get(scriptUrl);
-            this._pendingBreakpointsByPath.delete(scriptUrl);
-
-            // If there's a setBreakpoints request waiting on this script, go through setBreakpoints again
-            this.setBreakpoints(pendingBreakpoints.args, pendingBreakpoints.requestSeq)
-                .then(pendingBreakpoints.resolve, pendingBreakpoints.reject);
         }
     }
 }

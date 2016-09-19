@@ -49,12 +49,11 @@ export class RemotePathTransformer extends BasePathTransformer {
         return localRootP;
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        if (!args.source.path) {
-            return Promise.resolve<void>();
+    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+        if (args.source.path) {
+            args.source.path = this.localToRemote(args.source.path);
         }
 
-        args.source.path = this.localToRemote(args.source.path);
         return super.setBreakpoints(args);
     }
 
