@@ -24,10 +24,6 @@ suite('SourceMapUtils', () => {
         mockery.disable();
     });
 
-    suite('resolveRelativeToFile', () => {
-        // todo
-    });
-
     suite('getComputedSourceRoot()', () => {
         const GEN_PATH = testUtils.pathResolve('/project/webroot/code/script.js');
         const GEN_URL = 'http://localhost:8080/code/script.js';

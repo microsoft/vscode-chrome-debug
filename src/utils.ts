@@ -9,8 +9,7 @@ import * as path from 'path';
 import * as glob from 'glob';
 import {Handles} from 'vscode-debugadapter';
 
-/* tslint:disable:no-var-requires */
-const xhr = require('request-light');
+import * as xhr from 'request-light';
 
 import * as logger from './logger';
 
@@ -219,14 +218,18 @@ export function errP(msg: string|Error): Promise<any> {
  * Helper function to GET the contents of a url
  */
 export function getURL(aUrl: string): Promise<string> {
-    const options = {
+    const options: xhr.XHROptions = {
         url: aUrl,
         followRedirects: 5
     };
 
     return xhr.xhr(options)
+        .then(xhrResponse => xhrResponse.responseText)
         .catch(e => {
-            const errMsg = xhr.getErrorStatusDescription(e.status) || e.toString();
+            const errMsg = typeof e.status === 'number' ?
+                e.status + ' - ' + xhr.getErrorStatusDescription(e.status) :
+                e.toString();
+
             logger.log('HTTP - GET failed with: ' + errMsg);
             return errP(errMsg);
         });

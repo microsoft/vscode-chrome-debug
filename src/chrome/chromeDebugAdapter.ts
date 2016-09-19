@@ -331,8 +331,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         committedBps.push(params.breakpointId);
         this._committedBreakpointsByUrl.set(script.url, committedBps);
 
-        // TODO - Handle bps removed before resolve (can set ID on BP)
-        // and #38
         const bp = <DebugProtocol.Breakpoint>{
             id: this._breakpointIdHandles.lookup(params.breakpointId),
             verified: true,
@@ -361,7 +359,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
-        // const requestedLines = args.lines;
         this._lineNumberTransformer.setBreakpoints(args);
         return this._sourceMapTransformer.setBreakpoints(args, requestSeq)
             .then(() => this._pathTransformer.setBreakpoints(args))
