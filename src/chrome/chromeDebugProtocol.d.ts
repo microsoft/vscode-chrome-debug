@@ -185,6 +185,7 @@ export namespace Runtime {
         subtype?: string;
         type: string;
         value?: any;
+        unserializableValue?: UnserializableValue;
         preview?: ObjectPreview;
     }
 
@@ -242,7 +243,7 @@ export namespace Runtime {
      */
     export interface CallArgument {
         value?: any;
-        unserializableValue?: "Infinity" | "NaN" | "-Infinity" | "-0";
+        unserializableValue?: UnserializableValue;
         objectId?: string;
     }
 
@@ -252,6 +253,8 @@ export namespace Runtime {
             exceptionDetails: any;
         };
     }
+
+    export type UnserializableValue = "Infinity" | "NaN" | "-Infinity" | "-0";
 }
 
 export namespace Page {
