@@ -55,7 +55,7 @@ export function targetUrlToClientPath(webRoot: string, aUrl: string): string {
 
 /**
  * Convert a RemoteObject to a value+variableHandleRef for the client.
- * TODO - Delete after Microsoft/vscode#12019!
+ * TODO - Delete after Microsoft/vscode#12019!!
  */
 export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringify = true): { value: string, variableHandleRef?: string } {
     let value = '';
@@ -87,9 +87,9 @@ export function remoteObjectToValue(object: Chrome.Runtime.RemoteObject, stringi
             if (typeof object.value === 'undefined') {
                 value = object.description;
             } else if (object.type === 'number') {
-                // 3 => "3"
-                // "Infinity" => "Infinity" (not stringified)
-                value = object.value + '';
+                // .value is truncated, so use .description, the full string representation
+                // Should be like '3' or 'Infinity'.
+                value = object.description;
             } else {
                 value = stringify ? JSON.stringify(object.value) : object.value;
             }

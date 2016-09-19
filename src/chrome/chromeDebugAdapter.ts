@@ -865,9 +865,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 if (typeof object.value === 'undefined') {
                     value = object.description;
                 } else if (object.type === 'number') {
-                    // 3 => "3"
-                    // "Infinity" => "Infinity" (not stringified)
-                    value = object.value + '';
+                    // .value is truncated, so use .description, the full string representation
+                    // Should be like '3' or 'Infinity'.
+                    value = object.description;
                 } else {
                     value = stringify ? JSON.stringify(object.value) : object.value;
                 }
@@ -984,7 +984,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     private getObjectNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
-        let namedVariables = object.preview.properties.length;
+        const entriesLength = object.preview.entries ? object.preview.entries.length : 0;
+        let namedVariables = object.preview.properties.length + entriesLength;
         return { indexedVariables: 0, namedVariables };
     }
 
