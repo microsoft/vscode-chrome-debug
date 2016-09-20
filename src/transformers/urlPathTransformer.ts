@@ -61,10 +61,6 @@ export class UrlPathTransformer extends BasePathTransformer {
         });
     }
 
-    public clearClientContext(): void {
-        this._pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
-    }
-
     public clearTargetContext(): void {
         this._clientPathToTargetUrl = new Map<string, string>();
         this._targetUrlToClientPath = new Map<string, string>();

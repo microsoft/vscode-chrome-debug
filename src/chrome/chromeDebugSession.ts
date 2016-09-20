@@ -46,12 +46,12 @@ export class ChromeDebugSession extends DebugSession {
         // class expression!
         return class extends ChromeDebugSession {
             constructor() {
-                super(opts);
+                super(undefined, undefined, opts);
             }
         };
     }
 
-    public constructor(opts?: IChromeDebugSessionOpts) {
+    public constructor(obsolete_debuggerLinesAndColumnsStartAt1?: boolean, obsolete_isServer?: boolean, opts?: IChromeDebugSessionOpts) {
         super();
 
         this._extensionName = opts.extensionName;

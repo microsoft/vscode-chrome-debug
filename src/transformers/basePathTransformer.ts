@@ -22,9 +22,6 @@ export class BasePathTransformer {
         return Promise.resolve<void>();
     }
 
-    public clearClientContext(): void {
-    }
-
     public clearTargetContext(): void {
     }
 

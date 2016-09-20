@@ -92,7 +92,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._sourceMapTransformer = new (sourceMapTransformer || EagerSourceMapTransformer)(this._sourceHandles);
         this._pathTransformer = new (pathTransformer || RemotePathTransformer)();
 
-        this.clearEverything();
+        this.clearTargetContext();
     }
 
     private get paused(): boolean {
@@ -112,12 +112,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._setBreakpointsRequestQ = Promise.resolve<void>();
 
         this._pathTransformer.clearTargetContext();
-    }
-
-    private clearClientContext(): void {
-        this._attachMode = false;
-        this._clientAttached = false;
-        this._pathTransformer.clearClientContext();
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
@@ -194,7 +188,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     /**
      * Chrome is closing, or error'd somehow, stop the debug session
      */
-    public terminateSession(reason: string, restart?: boolean): void {
+    protected terminateSession(reason: string, restart?: boolean): void {
         logger.log('Terminated: ' + reason);
 
         if (!this._hasTerminated) {
@@ -203,16 +197,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 this.sendEvent(new TerminatedEvent(restart));
             }
 
-            this.clearEverything();
-        }
-    }
-
-    public clearEverything(): void {
-        this.clearClientContext();
-        this.clearTargetContext();
-
-        if (this._chromeConnection.isAttached) {
-            this._chromeConnection.close();
+            if (this._chromeConnection.isAttached) {
+                this._chromeConnection.close();
+            }
         }
     }
 
@@ -232,12 +219,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             this._chromeConnection.on('close', () => this.terminateSession('Debug connection closed'));
             this._chromeConnection.on('error', e => this.terminateSession('Debug connection error: ' + e));
 
-            return this._chromeConnection.attach(address, port, targetUrl).then(
-                () => this.sendInitializedEvent(),
-                e => {
-                    this.clearEverything();
-                    return utils.errP(e);
-                });
+            return this._chromeConnection.attach(address, port, targetUrl)
+                .then(() => this.sendInitializedEvent());
         } else {
             return Promise.resolve<void>();
         }
@@ -353,10 +336,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         }
     }
 
-    public disconnect(): Promise<void> {
-        this.clearEverything();
-
-        return Promise.resolve<void>();
+    public disconnect(): void {
+        return this.terminateSession('Got disconnect request');
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
