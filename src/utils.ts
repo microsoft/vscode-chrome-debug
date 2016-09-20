@@ -90,7 +90,7 @@ export function promiseTimeout(p?: Promise<any>, timeoutMs = 1000, timeoutMsg?: 
 
         setTimeout(() => {
             if (p) {
-                reject(timeoutMsg);
+                reject(new Error(timeoutMsg));
             } else {
                 resolve();
             }
