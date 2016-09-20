@@ -45,19 +45,14 @@ export class ChromeDebugSession extends DebugSession {
     public static getSession(opts: IChromeDebugSessionOpts): typeof ChromeDebugSession {
         // class expression!
         return class extends ChromeDebugSession {
-            constructor(
-                targetLinesStartAt1: boolean,
-                isServer = false) {
-                super(targetLinesStartAt1, isServer, opts);
+            constructor() {
+                super(opts);
             }
         };
     }
 
-    public constructor(
-        targetLinesStartAt1: boolean,
-        isServer = false,
-        opts?: IChromeDebugSessionOpts) {
-        super(targetLinesStartAt1, isServer);
+    public constructor(opts?: IChromeDebugSessionOpts) {
+        super();
 
         this._extensionName = opts.extensionName;
         this._debugAdapter = new (<any>opts.adapter)(opts);

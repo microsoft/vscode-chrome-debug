@@ -61,3 +61,11 @@ export function sourceRequestIllegalHandle(): DebugProtocol.Message {
         sendTelemetry: true
     };
 }
+
+export function pathFormat(): DebugProtocol.Message {
+    return {
+        id: 2018,
+        format: 'debug adapter only supports native paths',
+        sendTelemetry: true
+    };
+}

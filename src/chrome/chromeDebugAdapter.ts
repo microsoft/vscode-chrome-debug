@@ -121,6 +121,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
+        if (args.pathFormat !== 'path') {
+            return Promise.reject(errors.pathFormat());
+        }
+
         this._lineNumberTransformer.initialize(args);
 
         // This debug adapter supports two exception breakpoint filters
