@@ -176,11 +176,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             args.diagnosticLogging ?
                 logger.LogLevel.Log :
                 logger.LogLevel.Error;
-        logger.setMinLogLevel(minLogLevel);
 
-        if (!args.webRoot) {
-            logger.log('WARNING: "webRoot" is not set - if resolving sourcemaps fails, please set the "webRoot" property in the launch config.');
-        }
+        logger.setMinLogLevel(minLogLevel);
     }
 
     /**

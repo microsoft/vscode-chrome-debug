@@ -36,7 +36,10 @@ export class SourceMap {
         if (sm.sourcesContent && sm.sourcesContent.length) {
             logger.log(`Warning: SourceMap sources are inlined. This extension ignores inlined sources. If the paths are not correct, sourcemap support won't work.`);
         }
-        logger.log(`SourceMap: webRoot: ${webRoot}`);
+
+        if (webRoot) {
+            logger.log(`SourceMap: webRoot: ${webRoot}`);
+        }
 
         // Absolute path
         const computedSourceRoot = sourceMapUtils.getComputedSourceRoot(sm.sourceRoot, this._generatedPath, webRoot);

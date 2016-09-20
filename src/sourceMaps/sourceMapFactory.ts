@@ -19,7 +19,12 @@ import {ISourceMapPathOverrides} from '../debugAdapterInterfaces';
  * mapPath - a path relative to pathToGenerated.
  */
 export function getMapForGeneratedPath(pathToGenerated: string, mapPath: string, webRoot?: string, sourceMapPathOverrides?: ISourceMapPathOverrides): Promise<SourceMap> {
-    logger.log(`SourceMaps.getMapForGeneratedPath: Finding SourceMap for ${pathToGenerated} by URI: ${mapPath} and webRoot: ${webRoot}`);
+    let msg = `SourceMaps.getMapForGeneratedPath: Finding SourceMap for ${pathToGenerated} by URI: ${mapPath}`;
+    if (webRoot) {
+        msg += ` and webRoot: ${webRoot}`;
+    }
+
+    logger.log(msg);
 
     // For an inlined sourcemap, mapPath is a data URI containing a blob of base64 encoded data, starting
     // with a tag like "data:application/json;charset:utf-8;base64,". The data should start after the last comma.
