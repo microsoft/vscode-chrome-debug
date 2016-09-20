@@ -74,7 +74,7 @@ class ResReqWebSocket extends EventEmitter {
             });
         });
 
-        return <Promise<void>><any>this._wsAttached;
+        return this._wsAttached.then(() => { });
     }
 
     public close(): void {
