@@ -77,10 +77,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
-    public constructor({lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
+    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
         super();
 
-        this._chromeConnection = new ChromeConnection();
+        this._chromeConnection = new (chromeConnection || ChromeConnection)();
 
         this._variableHandles = new Handles<IVariableContainer>();
         this._breakpointIdHandles = new utils.ReverseHandles<string>();

@@ -61,10 +61,10 @@ suite('ChromeDebugAdapter', () => {
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)({
-            chromeConnection: mockChromeConnection.object,
-            lineNumberTransformer: mockLineNumberTransformer.object,
-            sourceMapTransformer: mockSourceMapTransformer.object,
-            pathTransformer: mockPathTransformer.object
+            chromeConnection: () => mockChromeConnection.object,
+            lineNumberTransformer: () => mockLineNumberTransformer.object,
+            sourceMapTransformer: () => mockSourceMapTransformer.object,
+            pathTransformer: () => mockPathTransformer.object
         });
     });
 

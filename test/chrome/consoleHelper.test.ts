@@ -83,7 +83,7 @@ namespace Console {
             url: 'file:///c:/page/script.js',
             executionContextId: 2,
             parameters: params.map(param => {
-                const remoteObj = { type: typeof param, value: param };
+                const remoteObj = { type: typeof param, value: param, description: param };
                 if (param === null) {
                     (<any>remoteObj).subtype = 'null';
                 }

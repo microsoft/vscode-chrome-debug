@@ -77,8 +77,11 @@ function _selectTarget(targets: Chrome.ITarget[], targetUrl?: string): Chrome.IT
 }
 
 function _fixRemoteUrl(remoteAddress: string, target: Chrome.ITarget): Chrome.ITarget {
-    const replaceAddress = '//' + remoteAddress;
-    target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//127.0.0.1', replaceAddress);
-    target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//localhost', replaceAddress);
+    if (target.webSocketDebuggerUrl) {
+        const replaceAddress = '//' + remoteAddress;
+        target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//127.0.0.1', replaceAddress);
+        target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//localhost', replaceAddress);
+    }
+
     return target;
 }
