@@ -5,6 +5,7 @@
 import * as WebSocket from 'ws';
 import {EventEmitter} from 'events';
 
+import * as errors from '../errors';
 import * as utils from '../utils';
 import * as logger from '../logger';
 import * as Chrome from './chromeDebugProtocol';
@@ -177,8 +178,9 @@ export class ChromeConnection {
             .then(() => { });
     }
 
-    private _attach(address: string, port: number, targetUrl?: string, timeout?: number): Promise<void> {
-        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), timeout || ChromeConnection.ATTACH_TIMEOUT, /*intervalDelay=*/200)
+    private _attach(address: string, port: number, targetUrl?: string, timeout = ChromeConnection.ATTACH_TIMEOUT): Promise<void> {
+        return utils.retryAsync(() => this._targetDiscoveryStrategy(address, port, this._targetFilter, targetUrl), timeout, /*intervalDelay=*/200)
+            .catch(err => Promise.reject(errors.runtimeConnectionTimeout(timeout, err.message)))
             .then(wsUrl => this._socket.open(wsUrl));
     }
 

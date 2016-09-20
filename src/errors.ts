@@ -69,3 +69,11 @@ export function pathFormat(): DebugProtocol.Message {
         sendTelemetry: true
     };
 }
+
+export function runtimeConnectionTimeout(timeoutMs: number, errMsg: string): DebugProtocol.Message {
+    return {
+        id: 2010,
+        format: localize('VSND2010', "Cannot connect to runtime process, timeout after {0} ms - (reason: {1}).", '{_timeout}', '{_error}'),
+        variables: { _error: errMsg, _timeout: timeoutMs + '' }
+    };
+}
