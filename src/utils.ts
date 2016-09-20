@@ -266,7 +266,7 @@ export function pathToFileURL(absPath: string): string {
 /**
  * Placeholder localize function
  */
-export function localize(id: string, msg: string, ...args: any[]): string {
+export function localize(idOrInfo: any, msg: string, ...args: any[]): string {
     args.forEach((arg, i) => {
         msg = msg.replace(new RegExp(`\\{${i}\\}`, 'g'), arg);
     });

@@ -57,8 +57,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
     private _exceptionValueObject: Chrome.Runtime.RemoteObject;
-    private _expectingResumedEvent: boolean;
     private _setBreakpointsRequestQ: Promise<any>;
+    private _expectingResumedEvent: boolean;
+    protected _expectingStopReason: string;
 
     private _variableHandles: Handles<IVariableContainer>;
     private _breakpointIdHandles: utils.ReverseHandles<string>;
@@ -268,11 +269,36 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
                 this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
             }
+        } else if (notification.hitBreakpoints && notification.hitBreakpoints.length) {
+            reason = 'breakpoint';
         } else {
-            reason = (notification.hitBreakpoints && notification.hitBreakpoints.length) ? 'breakpoint' : 'step';
+            reason = this._expectingStopReason || 'debugger';
         }
 
-        this.sendEvent(new StoppedEvent(reason, /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+        this._expectingStopReason = undefined;
+        this.sendEvent(new StoppedEvent(this.stopReasonText(reason), /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+    }
+
+    private stopReasonText(reason: string): string {
+        const comment = ['https://github.com/Microsoft/vscode/issues/4568'];
+        switch (reason) {
+            case 'entry':
+                return utils.localize({ key: 'reason.entry', comment }, "entry");
+            case 'exception':
+                return utils.localize({ key: 'reason.exception', comment }, "exception");
+            case 'breakpoint':
+                return utils.localize({ key: 'reason.breakpoint', comment }, "breakpoint");
+            case 'debugger':
+                return utils.localize({ key: 'reason.debugger_statement', comment }, "debugger statement");
+            case 'frame_entry':
+                return utils.localize({ key: 'reason.restart', comment }, "frame entry");
+            case 'step':
+                return utils.localize({ key: 'reason.step', comment }, "step");
+            case 'user_request':
+                return utils.localize({ key: 'reason.user_request', comment }, "user request");
+            default:
+                return reason;
+        }
     }
 
     protected onDebuggerResumed(): void {
@@ -494,24 +520,28 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public next(): Promise<void> {
+        this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
         return this._chromeConnection.debugger_stepOver()
             .then(() => { });
     }
 
     public stepIn(): Promise<void> {
+        this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
         return this._chromeConnection.debugger_stepIn()
             .then(() => { });
     }
 
     public stepOut(): Promise<void> {
+        this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
         return this._chromeConnection.debugger_stepOut()
             .then(() => { });
     }
 
     public pause(): Promise<void> {
+        this._expectingStopReason = 'user_request';
         return this._chromeConnection.debugger_pause()
             .then(() => { });
     }
