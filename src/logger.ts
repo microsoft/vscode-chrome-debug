@@ -55,10 +55,10 @@ export function setMinLogLevel(logLevel: LogLevel): void {
     }
 }
 
-export function init(logCallback: ILogCallback, logFilePath?: string): void {
+export function init(logCallback: ILogCallback, logFilePath?: string, logToConsole?: boolean): void {
     // Re-init, create new global Logger
     _pendingLogQ = [];
-    _logger = new Logger(logCallback, logFilePath);
+    _logger = new Logger(logCallback, logFilePath, logToConsole);
     if (logFilePath) {
         log(`Verbose logs are written to ${logFilePath}`);
     }
@@ -71,11 +71,11 @@ class Logger {
     /** The directory in which to log vscode-chrome-debug.txt */
     private _logFilePath: string;
 
-    /** True when logging is enabled outside of server mode */
     private _minLogLevel: LogLevel;
+    private _logToConsole: boolean;
 
-    /** When not in server mode, the log msg is sent to this callback. */
-    private _diagnosticLogCallback: ILogCallback;
+    /** Log info that meets minLogLevel is sent to this callback. */
+    private _logCallback: ILogCallback;
 
     /** Write steam for log file */
     private _logFileStream: fs.WriteStream;
@@ -94,9 +94,10 @@ class Logger {
         }
     }
 
-    constructor(logCallback: ILogCallback, logFilePath?: string) {
-        this._diagnosticLogCallback = logCallback;
+    constructor(logCallback: ILogCallback, logFilePath?: string, logToConsole?: boolean) {
+        this._logCallback = logCallback;
         this._logFilePath = logFilePath;
+        this._logToConsole = logToConsole;
 
         this.minLogLevel = LogLevel.Error;
     }
@@ -108,6 +109,11 @@ class Logger {
     public log(msg: string, level: LogLevel, forceLog: boolean): void {
         if (level >= this.minLogLevel || forceLog) {
             this.sendLog(msg, level);
+        }
+
+        if (this._logToConsole) {
+            const logFn = level === LogLevel.Error ? console.error : console.log;
+            logFn(msg);
         }
 
         // If an error, prepend with '[Error]'
@@ -124,8 +130,8 @@ class Logger {
         // Truncate long messages, they can hang VS Code
         if (msg.length > 1500) msg = msg.substr(0, 1500) + '[...]';
 
-        if (this._diagnosticLogCallback) {
-            this._diagnosticLogCallback(msg, level);
+        if (this._logCallback) {
+            this._logCallback(msg, level);
         }
     }
 }

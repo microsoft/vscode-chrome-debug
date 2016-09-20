@@ -45,13 +45,13 @@ export class ChromeDebugSession extends DebugSession {
     public static getSession(opts: IChromeDebugSessionOpts): typeof ChromeDebugSession {
         // class expression!
         return class extends ChromeDebugSession {
-            constructor() {
-                super(undefined, undefined, opts);
+            constructor(debuggerLinesAndColumnsStartAt1?: boolean, isServer?: boolean) {
+                super(debuggerLinesAndColumnsStartAt1, isServer, opts);
             }
         };
     }
 
-    public constructor(obsolete_debuggerLinesAndColumnsStartAt1?: boolean, obsolete_isServer?: boolean, opts?: IChromeDebugSessionOpts) {
+    public constructor(debuggerLinesAndColumnsStartAt1?: boolean, isServer?: boolean, opts?: IChromeDebugSessionOpts) {
         super();
 
         this._extensionName = opts.extensionName;
@@ -60,7 +60,7 @@ export class ChromeDebugSession extends DebugSession {
         this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
 
         const logFilePath =  opts.logFilePath;
-        logger.init((msg, level) => this.onLog(msg, level), logFilePath);
+        logger.init((msg, level) => this.onLog(msg, level), logFilePath, isServer);
         logVersionInfo();
 
         process.addListener('unhandledRejection', err => {
