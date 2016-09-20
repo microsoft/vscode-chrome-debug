@@ -37,6 +37,7 @@ function _getTargets(address: string, port: number, targetFilter: ITargetFilter)
             const responseArray = JSON.parse(jsonResponse);
             if (Array.isArray(responseArray)) {
                 return (responseArray as Chrome.ITarget[])
+                    .map(target => _fixRemoteUrl(address, target))
                     // Filter out some targets as specified by the extension
                     .filter(targetFilter);
             }
@@ -73,4 +74,11 @@ function _selectTarget(targets: Chrome.ITarget[], targetUrl?: string): Chrome.IT
     }
 
     return targets[0];
+}
+
+function _fixRemoteUrl(remoteAddress: string, target: Chrome.ITarget): Chrome.ITarget {
+    const replaceAddress = '//' + remoteAddress;
+    target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//127.0.0.1', replaceAddress);
+    target.webSocketDebuggerUrl = target.webSocketDebuggerUrl.replace('//localhost', replaceAddress);
+    return target;
 }
