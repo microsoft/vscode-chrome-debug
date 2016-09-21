@@ -106,7 +106,13 @@ export class ChromeDebugSession extends DebugSession {
 
     private onLog(msg: string, level: logger.LogLevel): void {
         const outputCategory = level === logger.LogLevel.Error ? 'stderr' : undefined;
-        this.sendEvent(new OutputEvent(msg, outputCategory));
+
+        if (level === logger.LogLevel.Verbose) {
+            // Distinguish verbose messages with this prefix - makes the logs much more readable
+            msg = `  ›${msg}`;
+        }
+
+        this.sendEvent(new OutputEvent(msg + '\n', outputCategory));
     }
 
     /**
