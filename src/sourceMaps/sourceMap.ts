@@ -33,10 +33,6 @@ export class SourceMap {
             logger.log('Warning: if you are using gulp-sourcemaps < 2.0 directly or indirectly, you may need to set sourceRoot manually in your build config, if your files are not actually under a directory called /source');
         }
         logger.log(`SourceMap: sources: ${JSON.stringify(sm.sources)}`);
-        if (sm.sourcesContent && sm.sourcesContent.length) {
-            logger.log(`Warning: SourceMap sources are inlined. This extension ignores inlined sources. If the paths are not correct, sourcemap support won't work.`);
-        }
-
         if (webRoot) {
             logger.log(`SourceMap: webRoot: ${webRoot}`);
         }
