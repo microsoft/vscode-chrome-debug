@@ -8,6 +8,7 @@ import {Handles} from 'vscode-debugadapter';
 
 import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs,
     ISetBreakpointsResponseBody, IStackTraceResponseBody} from '../debugAdapterInterfaces';
+import {MappedPosition} from '../sourceMaps/sourceMap';
 import {SourceMaps} from '../sourceMaps/sourceMaps';
 import * as utils from '../utils';
 import * as logger from '../logger';
@@ -32,8 +33,14 @@ export class BaseSourceMapTransformer {
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
     private _authoredPathsToMappedBPs: Map<string, DebugProtocol.SourceBreakpoint[]>;
 
+    protected _preLoad = Promise.resolve<void>();
+
     constructor(sourceHandles: Handles<ISourceContainer>) {
         this._sourceHandles = sourceHandles;
+    }
+
+    public get sourceMaps(): SourceMaps {
+        return this._sourceMaps;
     }
 
     public launch(args: ILaunchRequestArgs): void {
@@ -231,11 +238,23 @@ export class BaseSourceMapTransformer {
         if (this._sourceMaps) {
             const mapped = this._sourceMaps.mapToAuthored(scriptPath, bp.line, bp.column);
             if (mapped) {
-                // Not sending back the path here, since the bp has an ID
+                // No need to send back the path, the bp can only move within its script
                 bp.line = mapped.line;
                 bp.column = mapped.column;
             }
         }
+    }
+
+    public mapToGenerated(authoredPath: string, line: number, column: number): Promise<MappedPosition> {
+        return this._preLoad.then(() => this._sourceMaps.mapToGenerated(authoredPath, line, column));
+    }
+
+    public mapToAuthored(pathToGenerated: string, line: number, column: number): Promise<MappedPosition> {
+        return this._preLoad.then(() => this._sourceMaps.mapToAuthored(pathToGenerated, line, column));
+    }
+
+    public getGeneratedPathFromAuthoredPath(authoredPath: string): Promise<string> {
+        return this._preLoad.then(() => this._sourceMaps.getGeneratedPathFromAuthoredPath(authoredPath));
     }
 
     /**

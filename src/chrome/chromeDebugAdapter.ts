@@ -71,7 +71,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _chromeConnection: ChromeConnection;
 
     private _lineNumberTransformer: LineNumberTransformer;
-    private _sourceMapTransformer: BaseSourceMapTransformer;
+    protected _sourceMapTransformer: BaseSourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
     private _hasTerminated: boolean;
