@@ -18,24 +18,27 @@ import * as utils from '../../src/utils';
 const MODULE_UNDER_TEST = '../../src/transformers/baseSourceMapTransformer';
 
 const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
-const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
-let AUTHORED_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
+const RUNTIME_FILE = 'runtime.js';
+const RUNTIME_PATH = testUtils.pathResolve('/project', RUNTIME_FILE);
+
+// These are fns because the data will be modified by tests
+const AUTHORED_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 1, column: 4 },
         { line: 2, column: 5 },
         { line: 3, column: 6 }
     ];
-let RUNTIME_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
+const RUNTIME_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 2, column: 3 },
         { line: 5, column: 7 },
         { line: 8, column: 11 }
     ];
 
-let AUTHORED_PATH2 = testUtils.pathResolve('/project/authored2.ts');
-let AUTHORED_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
+const AUTHORED_PATH2 = testUtils.pathResolve('/project/authored2.ts');
+const AUTHORED_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 90, column: 5 },
         { line: 105, column: 6 }
     ];
-let RUNTIME_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
+const RUNTIME_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 78, column: 0 },
         { line: 81, column: 1 }
     ];
@@ -310,7 +313,7 @@ suite('BaseSourceMapTransformer', () => {
             const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
             const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
             expected.stackFrames.forEach(stackFrame => {
-                stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
+                stackFrame.source.name =  RUNTIME_FILE
                 stackFrame.source.path = undefined;
             });
 

@@ -571,8 +571,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                                 sourceReference: this._sourceHandles.create({ scriptId: script.scriptId })
                             } :
                             {
-                                // Name should be undefined, work around VS Code bug 20274
-                                name: 'eval: ' + location.scriptId,
+                                name: script && path.basename(script.url),
                                 path: ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL + location.scriptId,
                                 sourceReference: this._sourceHandles.create({ scriptId: location.scriptId })
                             };

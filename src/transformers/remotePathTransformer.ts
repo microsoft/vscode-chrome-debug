@@ -67,8 +67,6 @@ export class RemotePathTransformer extends BasePathTransformer {
                 frame.source.path = this.remoteToLocal(remotePath);
             }
         });
-
-        return super.stackTraceResponse(response);
     }
 
     private shouldMapPaths(remotePath: string): boolean {

@@ -196,7 +196,6 @@ export class BaseSourceMapTransformer {
                         stackFrame.source.sourceReference = 0;
                     } else {
                         // Script could not be mapped and doesn't exist on disk. Clear the path, use sourceReference.
-                        stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
                         stackFrame.source.path = undefined;
                     }
                 }

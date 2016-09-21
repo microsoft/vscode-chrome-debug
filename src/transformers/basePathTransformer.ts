@@ -34,11 +34,5 @@ export class BasePathTransformer {
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
-        // Have a responsibility to clean up the sourceReference here when it's not needed... See #93
-        response.stackFrames.forEach(frame => {
-            if (frame.source.path) {
-                frame.source.sourceReference = 0;
-            }
-        });
     }
 }
