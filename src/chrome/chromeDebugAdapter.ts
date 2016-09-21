@@ -787,9 +787,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         let evalPromise: Promise<any>;
         if (this.paused) {
             const callFrameId = this._currentStack[args.frameId].callFrameId;
-            evalPromise = this._chromeConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression);
+            evalPromise = this._chromeConnection.debugger_evaluateOnCallFrame(callFrameId, args.expression, undefined, undefined, /*silent=*/true);
         } else {
-            evalPromise = this._chromeConnection.runtime_evaluate(args.expression);
+            evalPromise = this._chromeConnection.runtime_evaluate(args.expression, undefined, undefined, undefined, /*silent=*/true);
         }
 
         return evalPromise.then(evalResponse => {

@@ -211,9 +211,10 @@ export namespace Runtime {
 
     export interface EvaluateParams {
         expression: string;
-        objectGroup: string;
-        contextId: number;
-        returnByValue: boolean;
+        objectGroup?: string;
+        contextId?: number;
+        returnByValue?: boolean;
+        silent?: boolean;
     }
 
     export interface EvaluateResponse extends Response {
