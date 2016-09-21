@@ -80,7 +80,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         if (!this.shouldMapPaths(remotePath)) return remotePath;
 
         const relPath = relative(this._remoteRoot, remotePath);
-        let localPath = path.join(this._localRoot, relPath);
+        let localPath = join(this._localRoot, relPath);
 
         localPath = utils.fixDriveLetterAndSlashes(localPath);
         logger.log(`Mapped remoteToLocal: ${remotePath} -> ${localPath}`);
@@ -91,7 +91,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         if (!this.shouldMapPaths(localPath)) return localPath;
 
         const relPath = relative(this._localRoot, localPath);
-        let remotePath = path.join(this._remoteRoot, relPath);
+        let remotePath = join(this._remoteRoot, relPath);
 
         remotePath = utils.fixDriveLetterAndSlashes(remotePath, /*uppercaseDriveLetter=*/true);
         logger.log(`Mapped localToRemote: ${localPath} -> ${remotePath}`);
@@ -106,4 +106,13 @@ function relative(a: string, b: string): string {
     return a.match(/^[A-Za-z]:/) ?
         path.win32.relative(a, b) :
         path.posix.relative(a, b);
+}
+
+/**
+ * Cross-platform path.join
+ */
+function join(a: string, b: string): string {
+    return a.match(/^[A-Za-z]:/) ?
+        path.win32.join(a, b) :
+        path.posix.join(a, b);
 }
