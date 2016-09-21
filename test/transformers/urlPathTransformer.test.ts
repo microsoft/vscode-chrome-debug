@@ -107,15 +107,19 @@ suite('UrlPathTransformer', () => {
     });
 
     suite('stackTraceResponse()', () => {
-        const RUNTIME_LINES = [2, 5, 8];
+        const RUNTIME_LOCATIONS = [
+            { line: 2, column: 3 },
+            { line: 5, column: 6 },
+            { line: 8, column: 9 }
+        ];
 
         test('modifies the source path and clears sourceReference when the file can be mapped', () => {
             chromeUtilsMock
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => CLIENT_PATH).verifiable();
 
-            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
-            const expectedResponse = testUtils.getStackTraceResponseBody(CLIENT_PATH, RUNTIME_LINES);
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(CLIENT_PATH, RUNTIME_LOCATIONS);
 
             transformer.stackTraceResponse(response);
             assert.deepEqual(response, expectedResponse);
@@ -126,8 +130,8 @@ suite('UrlPathTransformer', () => {
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => '').verifiable();
 
-            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
-            const expectedResponse = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
 
             transformer.stackTraceResponse(response);
             assert.deepEqual(response, expectedResponse);

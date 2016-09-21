@@ -42,13 +42,13 @@ export class MockEvent implements DebugProtocol.Event {
     constructor(public event: string, public body?: any) { }
 }
 
-export function getStackTraceResponseBody(aPath: string, lines: number[], sourceReferences: number[] = []): IStackTraceResponseBody {
+export function getStackTraceResponseBody(aPath: string, locations: DebugProtocol.SourceBreakpoint[], sourceReferences: number[] = []): IStackTraceResponseBody {
     return {
-        stackFrames: lines.map((line, i) => ({
+        stackFrames: locations.map((location, i) => ({
             id: i,
             name: 'line ' + i,
-            line,
-            column: 0,
+            line: location.line,
+            column: location.column,
             source: {
                 path: aPath,
                 name: path.basename(aPath),

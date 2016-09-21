@@ -148,6 +148,7 @@ export class BaseSourceMapTransformer {
                         if (mapped) {
                             logger.log(`SourceMaps.setBP: Mapped ${args.source.path}:${bp.line + 1}:${bp.column + 1} to ${mapped.source}:${mapped.line + 1}`);
                             bp.line = mapped.line;
+                            bp.column = mapped.column;
                         } else {
                             logger.log(`SourceMaps.setBP: Can't map ${args.source.path}:${bp.line + 1}:${bp.column + 1}, keeping the line number as-is.`);
                         }
@@ -157,12 +158,6 @@ export class BaseSourceMapTransformer {
                 }
             }
         }
-
-        // Cleanup column, which is passed in here in case it's needed for sourcemaps, but isn't actually
-        // part of the DebugProtocol
-        response.breakpoints.forEach(bp => {
-            delete bp.column;
-        });
     }
 
     /**

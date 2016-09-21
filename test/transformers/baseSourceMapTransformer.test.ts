@@ -19,40 +19,26 @@ const MODULE_UNDER_TEST = '../../src/transformers/baseSourceMapTransformer';
 
 const AUTHORED_PATH = testUtils.pathResolve('/project/authored.ts');
 const RUNTIME_PATH = testUtils.pathResolve('/project/runtime.js');
-let AUTHORED_BPS: DebugProtocol.SourceBreakpoint[];
-let RUNTIME_BPS: DebugProtocol.SourceBreakpoint[];
-let RUNTIME_LINES;
-let RUNTIME_COLS;
-let AUTHORED_LINES;
-
-let AUTHORED_PATH2 = testUtils.pathResolve('/project/authored2.ts');
-let AUTHORED_BPS2: DebugProtocol.SourceBreakpoint[];
-let RUNTIME_BPS2: DebugProtocol.SourceBreakpoint[];
-
-function initTestData(): void {
-    AUTHORED_BPS = [
-        { line: 1 },
-        { line: 2 },
-        { line: 3 }
+let AUTHORED_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
+        { line: 1, column: 4 },
+        { line: 2, column: 5 },
+        { line: 3, column: 6 }
     ];
-    RUNTIME_BPS = [
+let RUNTIME_BPS = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 2, column: 3 },
         { line: 5, column: 7 },
         { line: 8, column: 11 }
     ];
-    RUNTIME_LINES = RUNTIME_BPS.map(bp => bp.line);
-    RUNTIME_COLS = RUNTIME_BPS.map(bp => bp.column);
-    AUTHORED_LINES = AUTHORED_BPS.map(bp => bp.line);
 
-    AUTHORED_BPS2 = [
-        { line: 90 },
-        { line: 105 }
+let AUTHORED_PATH2 = testUtils.pathResolve('/project/authored2.ts');
+let AUTHORED_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
+        { line: 90, column: 5 },
+        { line: 105, column: 6 }
     ];
-    RUNTIME_BPS2 = [
+let RUNTIME_BPS2 = () => <DebugProtocol.SourceBreakpoint[]>[
         { line: 78, column: 0 },
         { line: 81, column: 1 }
     ];
-}
 
 // Not mocked, use for type only
 import {BaseSourceMapTransformer as _BaseSourceMapTransformer} from '../../src/transformers/baseSourceMapTransformer';
@@ -70,8 +56,6 @@ suite('BaseSourceMapTransformer', () => {
 
         // Set up mockery
         mockery.enable({ warnOnReplace: false, useCleanCache: true, warnOnUnregistered: false });
-
-        initTestData();
     });
 
     teardown(() => {
@@ -124,20 +108,20 @@ suite('BaseSourceMapTransformer', () => {
             args.breakpoints.forEach((bp, i) => {
                 mock
                     .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH), It.isValue(bp.line), It.isValue(bp.column || 0)))
-                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS[i].line, column: RUNTIME_BPS[i].column })).verifiable();
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS()[i].line, column: RUNTIME_BPS()[i].column })).verifiable();
             });
             args2.breakpoints.forEach((bp, i) => {
                 mock
                     .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH2), It.isValue(bp.line), It.isValue(bp.column || 0)))
-                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS2[i].line, column: RUNTIME_BPS2[i].column })).verifiable();
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS2()[i].line, column: RUNTIME_BPS2()[i].column })).verifiable();
             });
 
             return mock;
         }
 
         test('modifies the source and lines', () => {
-            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS);
-            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_BPS);
+            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS());
+            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_BPS());
 
             return getTransformer().setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
@@ -145,8 +129,8 @@ suite('BaseSourceMapTransformer', () => {
         });
 
         test(`doesn't do anything when sourcemaps are disabled`, () => {
-            const args = createArgs(RUNTIME_PATH, RUNTIME_BPS);
-            const expected = createArgs(RUNTIME_PATH, RUNTIME_BPS);
+            const args = createArgs(RUNTIME_PATH, RUNTIME_BPS());
+            const expected = createArgs(RUNTIME_PATH, RUNTIME_BPS());
 
             return getTransformer(/*sourceMaps=*/false).setBreakpoints(args, 0).then(() => {
                 assert.deepEqual(args, expected);
@@ -154,8 +138,8 @@ suite('BaseSourceMapTransformer', () => {
         });
 
         test(`if the source can't be mapped, waits until the runtime script is loaded`, () => {
-            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS);
-            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_BPS);
+            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS());
+            const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_BPS());
             const sourceMapURL = 'script.js.map';
 
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
@@ -175,7 +159,7 @@ suite('BaseSourceMapTransformer', () => {
             args.breakpoints.forEach((bp, i) => {
                 mock
                     .setup(x => x.mapToGenerated(It.isValue(AUTHORED_PATH), It.isValue(bp.line), It.isValue(bp.column || 0)))
-                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS[i].line, column: RUNTIME_BPS[i].column })).verifiable();
+                    .returns(() => ({ source: RUNTIME_PATH, line: RUNTIME_BPS()[i].line, column: RUNTIME_BPS()[i].column })).verifiable();
             });
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
@@ -189,9 +173,9 @@ suite('BaseSourceMapTransformer', () => {
         });
 
         test('if the source maps to a merged file, includes the breakpoints in other files that map to the same file', () => {
-            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS);
-            const args2 = createArgs(AUTHORED_PATH2, AUTHORED_BPS2);
-            const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_BPS2.concat(RUNTIME_BPS));
+            const args = createArgs(AUTHORED_PATH, AUTHORED_BPS());
+            const args2 = createArgs(AUTHORED_PATH2, AUTHORED_BPS2());
+            const expected = createExpectedArgs(AUTHORED_PATH2, RUNTIME_PATH, RUNTIME_BPS2().concat(RUNTIME_BPS()));
             const mock = createMergedSourcesMock(args, args2);
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
@@ -217,42 +201,42 @@ suite('BaseSourceMapTransformer', () => {
             }
 
             test('modifies the response source and lines', () => {
-                const response = getResponseBody(RUNTIME_BPS);
-                const expected = getResponseBody(AUTHORED_BPS);
+                const response = getResponseBody(RUNTIME_BPS());
+                const expected = getResponseBody(AUTHORED_BPS());
 
                 const transformer = getTransformer();
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: AUTHORED_PATH },
-                    breakpoints: AUTHORED_BPS
+                    breakpoints: AUTHORED_BPS()
                 }, 0);
                 transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
 
             test(`doesn't do anything when sourcemaps are disabled except remove the column`, () => {
-                const response = getResponseBody(RUNTIME_BPS);
-                const expected = getResponseBody(RUNTIME_BPS);
+                const response = getResponseBody(RUNTIME_BPS());
+                const expected = getResponseBody(RUNTIME_BPS());
 
                 const transformer = getTransformer(/*sourceMaps=*/false);
                 transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: RUNTIME_PATH },
-                    breakpoints: RUNTIME_BPS
+                    breakpoints: RUNTIME_BPS()
                 }, 0);
                 transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
 
             test(`if the source maps to a merged file, filters breakpoint results from other files`, () => {
-                const setBPArgs = createArgs(AUTHORED_PATH, AUTHORED_BPS);
-                const setBPArgs2 = createArgs(AUTHORED_PATH2, AUTHORED_BPS2);
-                const response = getResponseBody(RUNTIME_BPS2.concat(RUNTIME_BPS));
-                const expected = getResponseBody(AUTHORED_BPS2);
+                const setBPArgs = createArgs(AUTHORED_PATH, AUTHORED_BPS());
+                const setBPArgs2 = createArgs(AUTHORED_PATH2, AUTHORED_BPS2());
+                const response = getResponseBody(RUNTIME_BPS2().concat(RUNTIME_BPS()));
+                const expected = getResponseBody(AUTHORED_BPS2());
 
                 const mock = createMergedSourcesMock(setBPArgs, setBPArgs2);
-                RUNTIME_BPS2.forEach((bp, i) => {
+                RUNTIME_BPS2().forEach((bp, i) => {
                     mock
                         .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(bp.line), It.isValue(bp.column)))
-                        .returns(() => ({ source: AUTHORED_PATH2, line: AUTHORED_BPS2[i].line, column: AUTHORED_BPS2[i].column })).verifiable();
+                        .returns(() => ({ source: AUTHORED_PATH2, line: AUTHORED_BPS2()[i].line, column: AUTHORED_BPS2()[i].column })).verifiable();
                 });
 
                 const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
@@ -273,16 +257,16 @@ suite('BaseSourceMapTransformer', () => {
                 .setup(x => x.existsSync(It.isValue(AUTHORED_PATH)))
                 .returns(() => true);
 
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
-            const expected = testUtils.getStackTraceResponseBody(AUTHORED_PATH, AUTHORED_BPS.map(bp => bp.line));
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(AUTHORED_PATH, AUTHORED_BPS());
 
             getTransformer().stackTraceResponse(response);
             assert.deepEqual(response, expected);
         });
 
         test('clears the path when there are no sourcemaps', () => {
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
-            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
             expected.stackFrames.forEach(stackFrame => stackFrame.source.path = undefined); // leave name intact
 
             getTransformer(/*sourceMaps=*/false).stackTraceResponse(response);
@@ -293,7 +277,7 @@ suite('BaseSourceMapTransformer', () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
 
-            RUNTIME_BPS.forEach(bp => {
+            RUNTIME_BPS().forEach(bp => {
                 mock
                     .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(bp.line), It.isValue(bp.column)))
                     .returns(() => null).verifiable();
@@ -302,8 +286,8 @@ suite('BaseSourceMapTransformer', () => {
                 .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
                 .returns(() => true);
 
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
-            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS());
 
             getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true).stackTraceResponse(response);
             assert.deepEqual(response, expected);
@@ -314,17 +298,17 @@ suite('BaseSourceMapTransformer', () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
             mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
 
-            RUNTIME_LINES.forEach(line => {
+            RUNTIME_BPS().forEach(bp => {
                 mock
-                    .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(line), It.isValue(0)))
+                    .setup(x => x.mapToAuthored(It.isValue(RUNTIME_PATH), It.isValue(bp.line), It.isValue(bp.column)))
                     .returns(() => null).verifiable();
             });
             utilsMock
                 .setup(x => x.existsSync(It.isValue(RUNTIME_PATH)))
                 .returns(() => false);
 
-            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
-            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_LINES, [1, 2, 3]);
+            const response = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
+            const expected = testUtils.getStackTraceResponseBody(RUNTIME_PATH, RUNTIME_BPS(), [1, 2, 3]);
             expected.stackFrames.forEach(stackFrame => {
                 stackFrame.source.name = 'eval: ' + stackFrame.source.sourceReference;
                 stackFrame.source.path = undefined;
@@ -347,10 +331,14 @@ class StubSourceMaps {
 	 * line and column are 0 based.
 	 */
     public mapToGenerated(path: string, line: number, column: number): MappedPosition {
-        const index = AUTHORED_LINES.indexOf(line);
-        const mappedLine = RUNTIME_LINES[index];
-        const mappedCol = RUNTIME_COLS[index];
-        return { source: RUNTIME_PATH, line: mappedLine, column: mappedCol };
+        const authored = AUTHORED_BPS();
+        let i: number;
+        for (i = 0; i < authored.length; i++) {
+            if (authored[i].line === line && authored[i].column === column) break;
+        }
+
+        const mapping = RUNTIME_BPS()[i];
+        return { source: RUNTIME_PATH, line: mapping.line, column: mapping.column };
     }
 
 	/*
@@ -358,8 +346,14 @@ class StubSourceMaps {
 	 * line and column are 0 based.
 	 */
     public mapToAuthored(path: string, line: number, column: number): MappedPosition {
-        const mappedLine = AUTHORED_LINES[RUNTIME_LINES.indexOf(line)];
-        return { source: AUTHORED_PATH, line: mappedLine, column: 0 };
+        const runtime = RUNTIME_BPS();
+        let i: number;
+        for (i = 0; i < runtime.length; i++) {
+            if (runtime[i].line === line && runtime[i].column === column) break;
+        }
+
+        const mapping = AUTHORED_BPS()[i];
+        return { source: AUTHORED_PATH, line: mapping.line, column: mapping.column };
     }
 
     public allMappedSources(pathToGenerated: string): string[] {
