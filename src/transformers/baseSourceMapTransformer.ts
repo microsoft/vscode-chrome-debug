@@ -30,8 +30,7 @@ export class BaseSourceMapTransformer {
     private _requestSeqToSetBreakpointsArgs: Map<number, ISetBreakpointsArgs>;
     private _allRuntimeScriptPaths: Set<string>;
     private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
-    private _authoredPathsToMappedBPLines: Map<string, number[]>;
-    private _authoredPathsToMappedBPCols: Map<string, number[]>;
+    private _authoredPathsToMappedBPs: Map<string, DebugProtocol.SourceBreakpoint[]>;
 
     constructor(sourceHandles: Handles<ISourceContainer>) {
         this._sourceHandles = sourceHandles;
@@ -50,8 +49,7 @@ export class BaseSourceMapTransformer {
             this._sourceMaps = new SourceMaps(args.webRoot, args.sourceMapPathOverrides);
             this._requestSeqToSetBreakpointsArgs = new Map<number, ISetBreakpointsArgs>();
             this._allRuntimeScriptPaths = new Set<string>();
-            this._authoredPathsToMappedBPLines = new Map<string, number[]>();
-            this._authoredPathsToMappedBPCols = new Map<string, number[]>();
+            this._authoredPathsToMappedBPs = new Map<string, DebugProtocol.SourceBreakpoint[]>();
         }
     }
 
@@ -86,39 +84,32 @@ export class BaseSourceMapTransformer {
                     args.authoredPath = argsPath;
                     args.source.path = mappedPath;
 
-                    // DebugProtocol doesn't send cols, but they need to be added from sourcemaps
-                    const mappedCols = [];
-                    const mappedLines = args.lines.map((line, i) => {
-                        const mapped = this._sourceMaps.mapToGenerated(argsPath, line, /*column=*/0);
+                    // DebugProtocol doesn't send cols yet, but they need to be added from sourcemaps
+                    args.breakpoints.forEach(bp => {
+                        const { line, column = 0 } = bp;
+                        const mapped = this._sourceMaps.mapToGenerated(argsPath, line, column);
                         if (mapped) {
-                            logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line + 1}:1 to ${mappedPath}:${mapped.line + 1}:${mapped.column + 1}`);
-                            mappedCols[i] = mapped.column;
-                            return mapped.line;
+                            logger.log(`SourceMaps.setBP: Mapped ${argsPath}:${line + 1}:${column + 1} to ${mappedPath}:${mapped.line + 1}:${mapped.column + 1}`);
+                            bp.line = mapped.line;
+                            bp.column = mapped.column;
                         } else {
                             logger.log(`SourceMaps.setBP: Mapped ${argsPath} but not line ${line + 1}, column 1`);
-                            mappedCols[i] = 0;
-                            return line;
+                            bp.column = column; // take 0 default if needed
                         }
                     });
 
-                    this._authoredPathsToMappedBPLines.set(argsPath, mappedLines);
-                    this._authoredPathsToMappedBPCols.set(argsPath, mappedCols);
+                    this._authoredPathsToMappedBPs.set(argsPath, args.breakpoints);
 
                     // Include BPs from other files that map to the same file. Ensure the current file's breakpoints go first
-                    args.lines = mappedLines;
-                    args.cols = mappedCols;
                     this._sourceMaps.allMappedSources(mappedPath).forEach(sourcePath => {
                         if (sourcePath === argsPath) {
                             return;
                         }
 
-                        const sourceBPLines = this._authoredPathsToMappedBPLines.get(sourcePath);
-                        const sourceBPCols = this._authoredPathsToMappedBPCols.get(sourcePath);
-
-                        if (sourceBPLines && sourceBPCols) {
+                        const sourceBPs = this._authoredPathsToMappedBPs.get(sourcePath);
+                        if (sourceBPs) {
                             // Don't modify the cached array
-                            args.lines = args.lines.concat(sourceBPLines);
-                            args.cols = args.cols.concat(sourceBPCols);
+                            args.breakpoints = args.breakpoints.concat(sourceBPs);
                         }
                     });
                 } else if (this._allRuntimeScriptPaths.has(argsPath)) {
@@ -147,11 +138,11 @@ export class BaseSourceMapTransformer {
         if (this._sourceMaps && this._requestSeqToSetBreakpointsArgs.has(requestSeq)) {
             const args = this._requestSeqToSetBreakpointsArgs.get(requestSeq);
             if (args.authoredPath) {
-                const sourceBPLines = this._authoredPathsToMappedBPLines.get(args.authoredPath);
-                if (sourceBPLines) {
+                const sourceBPs = this._authoredPathsToMappedBPs.get(args.authoredPath);
+                if (sourceBPs) {
                     // authoredPath is set, so the file was mapped to source.
                     // Remove breakpoints from files that map to the same file, and map back to source.
-                    response.breakpoints = response.breakpoints.filter((_, i) => i < sourceBPLines.length);
+                    response.breakpoints = response.breakpoints.filter((_, i) => i < sourceBPs.length);
                     response.breakpoints.forEach(bp => {
                         const mapped = this._sourceMaps.mapToAuthored(args.source.path, bp.line, bp.column);
                         if (mapped) {

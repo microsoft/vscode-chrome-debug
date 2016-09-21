@@ -35,7 +35,7 @@ suite('LineNumberTransformer', () => {
         function getArgs(lines: number[]): DebugProtocol.SetBreakpointsArguments {
             return {
                 source: { path: 'test/path' },
-                lines
+                breakpoints: lines.map(line => ({ line }))
             };
         }
 

@@ -22,7 +22,7 @@ export class LineNumberTransformer implements IDebugTransformer  {
     }
 
     public setBreakpoints(args: DebugProtocol.SetBreakpointsArguments): void {
-        args.lines = args.lines.map(line => this.convertClientLineToTarget(line));
+        args.breakpoints.forEach(bp => bp.line = this.convertClientLineToTarget(bp.line));
     }
 
     public setBreakpointsResponse(response: ISetBreakpointsResponseBody): void {

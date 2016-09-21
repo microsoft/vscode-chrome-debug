@@ -137,7 +137,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 }
             ],
             supportsConfigurationDoneRequest: true,
-            supportsSetVariable: true
+            supportsSetVariable: true,
+            supportsConditionalBreakpoints: true
         };
     }
 
@@ -386,7 +387,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                     // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
                     const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
                         .then(() => this.clearAllBreakpoints(targetScriptUrl))
-                        .then(() => this.addBreakpoints(targetScriptUrl, args.lines, args.cols))
+                        .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
                         .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.lines) }));
 
                     const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
@@ -430,19 +431,19 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
      * Responses from setBreakpointByUrl are transformed to look like the response from setBreakpoint, so they can be
      * handled the same.
      */
-    protected addBreakpoints(url: string, lines: number[], cols?: number[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
+    protected addBreakpoints(url: string, breakpoints: DebugProtocol.SourceBreakpoint[]): Promise<Chrome.Debugger.SetBreakpointResponse[]> {
         let responsePs: Promise<Chrome.Debugger.SetBreakpointResponse>[];
         if (url.startsWith(ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL)) {
             // eval script with no real url - use debugger_setBreakpoint
             const scriptId = utils.lstrip(url, ChromeDebugAdapter.PLACEHOLDER_URL_PROTOCOL);
-            responsePs = lines.map((lineNumber, i) => this._chromeConnection.debugger_setBreakpoint({ scriptId, lineNumber, columnNumber: cols ? cols[i] : 0 }));
+            responsePs = breakpoints.map(({ line, column = 0, condition }, i) => this._chromeConnection.debugger_setBreakpoint({ scriptId, lineNumber: line, columnNumber: column }, condition));
         } else {
             // script that has a url - use debugger_setBreakpointByUrl so that Chrome will rebind the breakpoint immediately
             // after refreshing the page. This is the only way to allow hitting breakpoints in code that runs immediately when
             // the page loads.
             const script = this._scriptsByUrl.get(url);
-            responsePs = lines.map((lineNumber, i) => {
-                return this._chromeConnection.debugger_setBreakpointByUrl(url, lineNumber, cols ? cols[i] : 0).then(response => {
+            responsePs = breakpoints.map(({ line, column = 0, condition }, i) => {
+                return this._chromeConnection.debugger_setBreakpointByUrl(url, line, column, condition).then(response => {
                     // Now convert the response to a SetBreakpointResponse so both response types can be handled the same
                     const locations = response.result.locations;
                     return <Chrome.Debugger.SetBreakpointResponse>{
