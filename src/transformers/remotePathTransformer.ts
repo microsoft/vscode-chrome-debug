@@ -7,6 +7,7 @@ import * as fs from 'fs';
 
 import {BasePathTransformer} from './basePathTransformer';
 
+import * as logger from '../logger';
 import * as utils from '../utils';
 import * as errors from '../errors';
 import {ISetBreakpointsArgs, IAttachRequestArgs, IStackTraceResponseBody} from '../debugAdapterInterfaces';
@@ -18,11 +19,10 @@ export class RemotePathTransformer extends BasePathTransformer {
     private _localRoot: string;
     private _remoteRoot: string;
 
-    private get shouldMapPaths(): boolean {
-        return !!this._localRoot && !!this._remoteRoot;
-    }
-
     public attach(args: IAttachRequestArgs): Promise<void> {
+        // Maybe validate that it's absolute, for either windows or unix
+        this._remoteRoot = args.remoteRoot;
+
         // Validate that localRoot is absolute and exists
         let localRootP = Promise.resolve<void>();
         if (args.localRoot) {
@@ -42,9 +42,6 @@ export class RemotePathTransformer extends BasePathTransformer {
                 });
             });
         }
-
-        // Maybe validate that it's absolute, for either windows or unix
-        this._remoteRoot = args.remoteRoot;
 
         return localRootP;
     }
@@ -74,24 +71,39 @@ export class RemotePathTransformer extends BasePathTransformer {
         return super.stackTraceResponse(response);
     }
 
+    private shouldMapPaths(remotePath: string): boolean {
+        // Map paths only if localRoot/remoteRoot are set, and the remote path is absolute on some system
+        return !!this._localRoot && !!this._remoteRoot && (path.posix.isAbsolute(remotePath) || path.win32.isAbsolute(remotePath));
+    }
+
     private remoteToLocal(remotePath: string): string {
-        if (!this.shouldMapPaths) return remotePath;
+        if (!this.shouldMapPaths(remotePath)) return remotePath;
 
-        // need / paths for path.relative, if this platform is posix
-        remotePath = utils.forceForwardSlashes(remotePath);
+        const relPath = relative(this._remoteRoot, remotePath);
+        let localPath = path.join(this._localRoot, relPath);
 
-        const relPath = path.relative(this._remoteRoot, remotePath);
-        const localPath = path.join(this._localRoot, relPath);
-
-        return utils.fixDriveLetterAndSlashes(localPath);
+        localPath = utils.fixDriveLetterAndSlashes(localPath);
+        logger.log(`Mapped remoteToLocal: ${remotePath} -> ${localPath}`);
+        return localPath;
     }
 
     private localToRemote(localPath: string): string {
-        if (!this.shouldMapPaths) return localPath;
+        if (!this.shouldMapPaths(localPath)) return localPath;
 
-        const relPath = path.relative(this._localRoot, localPath);
-        const remotePath = path.join(this._remoteRoot, relPath);
+        const relPath = relative(this._localRoot, localPath);
+        let remotePath = path.join(this._remoteRoot, relPath);
 
-        return utils.fixDriveLetterAndSlashes(remotePath);
+        remotePath = utils.fixDriveLetterAndSlashes(remotePath, /*uppercaseDriveLetter=*/true);
+        logger.log(`Mapped localToRemote: ${localPath} -> ${remotePath}`);
+        return remotePath;
     }
+}
+
+/**
+ * Cross-platform path.relative
+ */
+function relative(a: string, b: string): string {
+    return a.match(/^[A-Za-z]:/) ?
+        path.win32.relative(a, b) :
+        path.posix.relative(a, b);
 }

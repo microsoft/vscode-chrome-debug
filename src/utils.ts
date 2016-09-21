@@ -168,7 +168,7 @@ export function forceForwardSlashes(aUrl: string): string {
 /**
  * Ensure lower case drive letter and \ on Windows
  */
-export function fixDriveLetterAndSlashes(aPath: string): string {
+export function fixDriveLetterAndSlashes(aPath: string, uppercaseDriveLetter = false): string {
     if (aPath.match(/file:\/\/\/[A-Za-z]:/)) {
         const prefixLen = 'file:///'.length;
         aPath =
@@ -176,9 +176,10 @@ export function fixDriveLetterAndSlashes(aPath: string): string {
             aPath[prefixLen].toLowerCase() +
             aPath.substr(prefixLen + 1).replace(/\//g, path.sep);
     } else if (aPath.match(/^[A-Za-z]:/)) {
-        // If this is Windows and the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
-        aPath = aPath[0].toLowerCase() + aPath.substr(1);
-        aPath = aPath.replace(/\//g, path.sep);
+        // If the path starts with a drive letter, ensure lowercase. VS Code uses a lowercase drive letter
+        const driveLetter = uppercaseDriveLetter ? aPath[0].toUpperCase() : aPath[0].toLowerCase();
+        aPath = driveLetter + aPath.substr(1);
+        aPath = aPath.replace(/\//g, '\\');
     }
 
     return aPath;
