@@ -9,12 +9,6 @@ import * as utils from '../utils';
 import * as logger from '../logger';
 import * as ChromeUtils from '../chrome/chromeUtils';
 
-interface IPendingBreakpoint {
-    resolve: () => void;
-    reject: (e: Error) => void;
-    args: ISetBreakpointsArgs;
-}
-
 /**
  * Converts a local path from Code to a path on the target.
  */
@@ -22,7 +16,6 @@ export class UrlPathTransformer extends BasePathTransformer {
     private _webRoot: string;
     private _clientPathToTargetUrl = new Map<string, string>();
     private _targetUrlToClientPath = new Map<string, string>();
-    private _pendingBreakpointsByPath = new Map<string, IPendingBreakpoint>();
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
         this._webRoot = args.webRoot;
@@ -34,31 +27,28 @@ export class UrlPathTransformer extends BasePathTransformer {
         return super.attach(args);
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            if (!args.source.path) {
-                resolve();
-                return;
-            }
+    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+        if (!args.source.path) {
+            // sourceReference script, nothing to do
+            return true;
+        }
 
-            if (utils.isURL(args.source.path)) {
-                // already a url, use as-is
-                logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
-                resolve();
-                return;
-            }
+        if (utils.isURL(args.source.path)) {
+            // already a url, use as-is
+            logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
+            return true;
+        }
 
-            const path = utils.canonicalizeUrl(args.source.path);
-            if (this._clientPathToTargetUrl.has(path)) {
-                args.source.path = this._clientPathToTargetUrl.get(path);
-                logger.log(`Paths.setBP: Resolved ${path} to ${args.source.path}`);
-                resolve();
-            } else {
-                logger.log(`Paths.setBP: No target url cached for client path: ${path}, waiting for target script to be loaded.`);
-                args.source.path = path;
-                this._pendingBreakpointsByPath.set(args.source.path, { resolve, reject, args });
-            }
-        });
+        const path = utils.canonicalizeUrl(args.source.path);
+        if (this._clientPathToTargetUrl.has(path)) {
+            args.source.path = this._clientPathToTargetUrl.get(path);
+            logger.log(`Paths.setBP: Resolved ${path} to ${args.source.path}`);
+            return true;
+        } else {
+            logger.log(`Paths.setBP: No target url cached yet for client path: ${path}.`);
+            args.source.path = path;
+            return false;
+        }
     }
 
     public clearTargetContext(): void {
@@ -80,13 +70,6 @@ export class UrlPathTransformer extends BasePathTransformer {
             this._targetUrlToClientPath.set(scriptUrl, clientPath);
 
             scriptUrl = clientPath;
-        }
-
-        if (this._pendingBreakpointsByPath.has(scriptUrl)) {
-            logger.log(`Paths.scriptParsed: Resolving pending breakpoints for ${scriptUrl}`);
-            const pendingBreakpoint = this._pendingBreakpointsByPath.get(scriptUrl);
-            this._pendingBreakpointsByPath.delete(scriptUrl);
-            this.setBreakpoints(pendingBreakpoint.args).then(pendingBreakpoint.resolve, pendingBreakpoint.reject);
         }
 
         return scriptUrl;

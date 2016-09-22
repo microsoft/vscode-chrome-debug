@@ -369,41 +369,58 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
         this._lineNumberTransformer.setBreakpoints(args);
-        return this._sourceMapTransformer.setBreakpoints(args, requestSeq)
-            .then(() => this._pathTransformer.setBreakpoints(args))
-            .then(() => {
-                let targetScriptUrl: string;
-                if (args.source.path) {
-                    targetScriptUrl = args.source.path;
-                } else if (args.source.sourceReference) {
-                    const handle = this._sourceHandles.get(args.source.sourceReference);
-                    const targetScript = this._scriptsById.get(handle.scriptId);
-                    if (targetScript) {
-                        targetScriptUrl = targetScript.url;
-                    }
-                }
+        let canSetBp = this._sourceMapTransformer.setBreakpoints(args, requestSeq);
+        if (!canSetBp) return Promise.resolve(this.unverifiedBpResponse(args, utils.localize('sourcemapping.fail.message', "Breakpoint ignored because generated code not found (source map problem?).")));
 
-                if (targetScriptUrl) {
-                    // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-                    const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                        .then(() => this.clearAllBreakpoints(targetScriptUrl))
-                        .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
-                        .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.breakpoints) }));
+        canSetBp = this._pathTransformer.setBreakpoints(args);
+        if (!canSetBp) return Promise.resolve(this.unverifiedBpResponse(args));
 
-                    const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+        let targetScriptUrl: string;
+        if (args.source.path) {
+            targetScriptUrl = args.source.path;
+        } else if (args.source.sourceReference) {
+            const handle = this._sourceHandles.get(args.source.sourceReference);
+            const targetScript = this._scriptsById.get(handle.scriptId);
+            if (targetScript) {
+                targetScriptUrl = targetScript.url;
+            }
+        }
 
-                    // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
-                    // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
-                    this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
-                    return setBreakpointsPTimeout.then(body => {
-                        this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
-                        this._lineNumberTransformer.setBreakpointsResponse(body);
-                        return body;
-                    });
-                } else {
-                    return utils.errP(`Can't find script for breakpoint request`);
-                }
+        if (targetScriptUrl) {
+            // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
+            const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
+                .then(() => this.clearAllBreakpoints(targetScriptUrl))
+                .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
+                .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.breakpoints) }));
+
+            const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+
+            // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
+            // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
+            this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
+            return setBreakpointsPTimeout.then(body => {
+                this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
+                this._lineNumberTransformer.setBreakpointsResponse(body);
+                return body;
             });
+        } else {
+            return utils.errP(`Can't find script for breakpoint request`);
+        }
+    }
+
+    private unverifiedBpResponse(args: ISetBreakpointsArgs, message?: string): ISetBreakpointsResponseBody {
+        const breakpoints = args.breakpoints.map(bp => {
+            return <DebugProtocol.Breakpoint>{
+                verified: false,
+                line: bp.line,
+                column: bp.column,
+                message
+            };
+        });
+
+        const response = { breakpoints };
+        this._lineNumberTransformer.setBreakpointsResponse(response);
+        return response;
     }
 
     public setFunctionBreakpoints(): Promise<any> {
