@@ -2,7 +2,6 @@
 src/
 test/
 out/test
-!out/test/testUtils.js
 typings/
 
 .travis.yml

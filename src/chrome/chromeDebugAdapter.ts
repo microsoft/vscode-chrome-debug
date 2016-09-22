@@ -78,6 +78,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
+    private _currentStep = Promise.resolve<void>();
+
     public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
         super();
 
@@ -277,7 +279,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         }
 
         this._expectingStopReason = undefined;
-        this.sendEvent(new StoppedEvent(this.stopReasonText(reason), /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+
+        // Enforce that the stopped event is not fired until we've send the response to the step that induced it.
+        // Also with a timeout just to ensure things keep moving
+        const sendStoppedEvent = () =>
+            this.sendEvent(new StoppedEvent(this.stopReasonText(reason), /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+        utils.promiseTimeout(this._currentStep, /*timeoutMs=*/300)
+            .then(sendStoppedEvent, sendStoppedEvent);
     }
 
     private stopReasonText(reason: string): string {
@@ -533,34 +541,34 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     public continue(): Promise<void> {
         this._expectingResumedEvent = true;
-        return this._chromeConnection.debugger_resume()
+        return this._currentStep = this._chromeConnection.debugger_resume()
             .then(() => { });
     }
 
     public next(): Promise<void> {
         this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
-        return this._chromeConnection.debugger_stepOver()
+        return this._currentStep = this._chromeConnection.debugger_stepOver()
             .then(() => { });
     }
 
     public stepIn(): Promise<void> {
         this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
-        return this._chromeConnection.debugger_stepIn()
+        return this._currentStep = this._chromeConnection.debugger_stepIn()
             .then(() => { });
     }
 
     public stepOut(): Promise<void> {
         this._expectingStopReason = 'step';
         this._expectingResumedEvent = true;
-        return this._chromeConnection.debugger_stepOut()
+        return this._currentStep = this._chromeConnection.debugger_stepOut()
             .then(() => { });
     }
 
     public pause(): Promise<void> {
         this._expectingStopReason = 'user_request';
-        return this._chromeConnection.debugger_pause()
+        return this._currentStep = this._chromeConnection.debugger_pause()
             .then(() => { });
     }
 
