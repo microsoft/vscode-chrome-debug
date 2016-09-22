@@ -11,6 +11,7 @@ import {Mock, It, MockBehavior} from 'typemoq';
 import * as path from 'path';
 import * as mockery from 'mockery';
 import * as fs from 'fs';
+import * as assert from 'assert';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -128,4 +129,8 @@ export function assertPromiseRejected(promise: Promise<any>): Promise<any> {
     return promise.then(
         result => { throw new Error('Promise was expected to be rejected, but was resolved with ' + result); },
         () => { /* as expected */ });
+}
+
+export function assertFail(msg: string): void {
+    assert(false, msg);
 }

@@ -83,7 +83,7 @@ suite('ChromeDebugAdapter', () => {
                 if (event.event === 'initialized') {
                     initializedFired = true;
                 } else {
-                    assert.fail('An unexpected event was fired');
+                    testUtils.assertFail('An unexpected event was fired');
                 }
             });
 
@@ -98,11 +98,11 @@ suite('ChromeDebugAdapter', () => {
                 .returns(() => utils.errP('Testing attach failed'));
 
             chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
-                assert.fail('Not expecting any event in this scenario');
+                testUtils.assertFail('Not expecting any event in this scenario');
             });
 
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(
-                () => assert.fail('Expecting promise to be rejected'),
+                () => testUtils.assertFail('Expecting promise to be rejected'),
                 e => { /* Expecting promise to be rejected */ });
         });
     });
@@ -300,7 +300,7 @@ suite('ChromeDebugAdapter', () => {
                     outputEventFired = true;
                     assert.equal(event.body.text, testLog);
                 } else {
-                    assert.fail('An unexpected event was fired');
+                    testUtils.assertFail('An unexpected event was fired');
                 }
             });
 
@@ -350,7 +350,7 @@ suite('ChromeDebugAdapter', () => {
         test('ignores internal scripts', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
                 chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
-                    assert.fail('No event should be fired: ' + event.event);
+                    testUtils.assertFail('No event should be fired: ' + event.event);
                 });
 
                 emitScriptParsed(/*url=*/'', undefined, { isInternalScript: true });

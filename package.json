@@ -20,6 +20,15 @@
     "ws": "^1.1.1"
   },
   "devDependencies": {
+    "@types/es6-collections": "^0.5.29",
+    "@types/es6-promise": "0.0.32",
+    "@types/glob": "^5.0.30",
+    "@types/minimatch": "^2.0.29",
+    "@types/mocha": "^2.2.32",
+    "@types/mockery": "^1.4.29",
+    "@types/node": "^6.0.40",
+    "@types/source-map": "^0.1.27",
+    "@types/ws": "0.0.32",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-debug": "^2.1.2",
@@ -36,7 +45,7 @@
     "tslint-eslint-rules": "^1.5.0",
     "tslint-microsoft-contrib": "^2.0.10",
     "typemoq": "^0.3.3",
-    "typescript": "^2.0.0",
+    "typescript": "^2.0.2",
     "typings": "^1.0.4"
   },
   "scripts": {
