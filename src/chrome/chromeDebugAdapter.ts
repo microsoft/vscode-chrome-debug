@@ -404,7 +404,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 return body;
             });
         } else {
-            return utils.errP(`Can't find script for breakpoint request`);
+            return Promise.resolve(this.unverifiedBpResponse(args, utils.localize('bp.fail.noscript', `Can't find script for breakpoint request`)));
         }
     }
 
