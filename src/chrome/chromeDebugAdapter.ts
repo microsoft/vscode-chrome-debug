@@ -117,7 +117,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._pathTransformer.clearTargetContext();
     }
 
-    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilites {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         if (args.pathFormat !== 'path') {
             return Promise.reject(errors.pathFormat());
         }
