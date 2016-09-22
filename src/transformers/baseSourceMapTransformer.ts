@@ -65,7 +65,6 @@ export class BaseSourceMapTransformer {
             return true;
         }
 
-        this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
         if (args.source.sourceReference) {
             // If the source contents were inlined, then args.source has no path, but we
             // stored it in the handle
@@ -123,6 +122,7 @@ export class BaseSourceMapTransformer {
             // No source.path
         }
 
+        this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
         return true;
     }
 
