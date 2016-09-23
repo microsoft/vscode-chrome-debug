@@ -63,7 +63,11 @@ export class RemotePathTransformer extends BasePathTransformer {
         response.stackFrames.forEach(frame => {
             const remotePath = frame.source.path;
             if (remotePath) {
-                frame.source.path = this.remoteToLocal(remotePath);
+                const localPath = this.remoteToLocal(remotePath);
+                if (utils.existsSync(localPath)) {
+                    frame.source.path = localPath;
+                    frame.source.sourceReference = undefined;
+                }
             }
         });
     }
