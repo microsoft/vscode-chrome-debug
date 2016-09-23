@@ -28,8 +28,8 @@
             //     "program": "${workspaceRoot}/../vscode-chrome-debug/out/src/chromeDebug.js"
             // },
             "osx": {
-                "cwd": "${workspaceRoot}/../vscode-node-cdp-debug",
-                "program": "${workspaceRoot}/../vscode-node-cdp-debug/out/src/nodeDebug.js"
+                "cwd": "${workspaceRoot}/../vscode-node-debug2",
+                "program": "${workspaceRoot}/../vscode-node-debug2/out/src/nodeDebug.js"
             },
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
