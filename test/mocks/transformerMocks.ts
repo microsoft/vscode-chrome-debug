@@ -17,6 +17,9 @@ export function getMockSourceMapTransformer(): Mock<BaseSourceMapTransformer> {
     mock.setup(m => m.setBreakpoints(It.isAny(), It.isAny()))
         .returns(() => true);
 
+    mock.setup(m => m.getGeneratedPathFromAuthoredPath(It.isAnyString()))
+        .returns(somePath => Promise.resolve(somePath));
+
     return mock;
 }
 
@@ -24,6 +27,9 @@ export function getMockPathTransformer(): Mock<UrlPathTransformer> {
     const mock = Mock.ofType(UrlPathTransformer);
     mock.setup(m => m.setBreakpoints(It.isAny()))
         .returns(() => true);
+
+    mock.setup(m => m.getTargetPathFromClientPath(It.isAnyString()))
+            .returns(somePath => somePath);
 
     return mock;
 }

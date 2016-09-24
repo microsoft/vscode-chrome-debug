@@ -15,7 +15,7 @@
         // Replace the paths below with the paths to your own project.
         {
             "name": "launch as server",
-            "type": "node",
+            "type": "node2",
             "request": "launch",
 
             // These paths are only valid for my particular setup! You need to replace them with your own.
@@ -32,7 +32,7 @@
                 "program": "${workspaceRoot}/../vscode-node-debug2/out/src/nodeDebug.js"
             },
             "stopOnEntry": false,
-            "args": [ "--server=4712" ],
+            "args": [ "--server=4711" ],
             "sourceMaps": true,
             "outDir": "${workspaceRoot}/out"
         }

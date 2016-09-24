@@ -198,19 +198,23 @@ export class BaseSourceMapTransformer {
         }
     }
 
-    public scriptParsed(pathToGenerated: string, sourceMapURL: string): void {
+    public scriptParsed(pathToGenerated: string, sourceMapURL: string): Promise<string[]> {
         if (this._sourceMaps) {
             this._allRuntimeScriptPaths.add(pathToGenerated);
 
-            if (!sourceMapURL) return;
+            if (!sourceMapURL) return Promise.resolve();
 
             // Load the sourcemap for this new script and log its sources
-            this._sourceMaps.processNewSourceMap(pathToGenerated, sourceMapURL).then(() => {
+            return this._sourceMaps.processNewSourceMap(pathToGenerated, sourceMapURL).then(() => {
                 const sources = this._sourceMaps.allMappedSources(pathToGenerated);
                 if (sources) {
                     logger.log(`SourceMaps.scriptParsed: ${pathToGenerated} was just loaded and has mapped sources: ${JSON.stringify(sources) }`);
                 }
+
+                return sources;
             });
+        } else {
+            return Promise.resolve();
         }
     }
 
@@ -234,6 +238,11 @@ export class BaseSourceMapTransformer {
     }
 
     public getGeneratedPathFromAuthoredPath(authoredPath: string): Promise<string> {
-        return this._preLoad.then(() => this._sourceMaps.getGeneratedPathFromAuthoredPath(authoredPath));
+        if (!this._sourceMaps) return Promise.resolve(authoredPath);
+        return this._preLoad.then(() => {
+            // Find the generated path, or check whether this script is actually a runtime path - if so, return that
+            return this._sourceMaps.getGeneratedPathFromAuthoredPath(authoredPath) ||
+                (this._allRuntimeScriptPaths.has(authoredPath) ? authoredPath : null);
+        });
     }
 }

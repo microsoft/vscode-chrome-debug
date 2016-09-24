@@ -40,8 +40,9 @@ export class UrlPathTransformer extends BasePathTransformer {
         }
 
         const path = utils.canonicalizeUrl(args.source.path);
-        if (this._clientPathToTargetUrl.has(path)) {
-            args.source.path = this._clientPathToTargetUrl.get(path);
+        const url = this.getTargetPathFromClientPath(path);
+        if (url) {
+            args.source.path = url;
             logger.log(`Paths.setBP: Resolved ${path} to ${args.source.path}`);
             return true;
         } else {
@@ -80,8 +81,7 @@ export class UrlPathTransformer extends BasePathTransformer {
             if (frame.source.path) {
                 // Try to resolve the url to a path in the workspace. If it's not in the workspace,
                 // just use the script.url as-is. It will be resolved or cleared by the SourceMapTransformer.
-                const clientPath = this._targetUrlToClientPath.has(frame.source.path) ?
-                    this._targetUrlToClientPath.get(frame.source.path) :
+                const clientPath = this.getClientPathFromTargetPath(frame.source.path) ||
                     ChromeUtils.targetUrlToClientPath(this._webRoot, frame.source.path);
 
                 // Incoming stackFrames have sourceReference and path set. If the path was resolved to a file in the workspace,
@@ -92,5 +92,13 @@ export class UrlPathTransformer extends BasePathTransformer {
                 }
             }
         });
+    }
+
+    public getTargetPathFromClientPath(clientPath: string): string {
+        return this._clientPathToTargetUrl.get(utils.canonicalizeUrl(clientPath));
+    }
+
+    public getClientPathFromTargetPath(targetPath: string): string {
+        return this._targetUrlToClientPath.get(utils.canonicalizeUrl(targetPath));
     }
 }

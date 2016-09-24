@@ -35,4 +35,12 @@ export class BasePathTransformer {
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
     }
+
+    public getTargetPathFromClientPath(clientPath: string): string {
+        return clientPath;
+    }
+
+    public getClientPathFromTargetPath(targetPath: string): string {
+        return targetPath;
+    }
 }

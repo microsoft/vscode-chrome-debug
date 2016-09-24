@@ -46,6 +46,11 @@ export interface ISourceContainer {
     mappedPath?: string;
 }
 
+interface IPendingBreakpoint {
+    args: ISetBreakpointsArgs;
+    ids: number[];
+}
+
 export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
@@ -67,6 +72,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     private _scriptsById: Map<Chrome.Debugger.ScriptId, Chrome.Debugger.Script>;
     private _scriptsByUrl: Map<string, Chrome.Debugger.Script>;
+    private _pendingBreakpointsByUrl: Map<string, IPendingBreakpoint>;
 
     protected _chromeConnection: ChromeConnection;
 
@@ -79,6 +85,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     protected _attachMode: boolean;
 
     private _currentStep = Promise.resolve<void>();
+    private _nextUnboundBreakpointId = 0;
 
     public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
         super();
@@ -88,6 +95,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._variableHandles = new Handles<IVariableContainer>();
         this._breakpointIdHandles = new utils.ReverseHandles<string>();
         this._sourceHandles = new Handles<ISourceContainer>();
+        this._pendingBreakpointsByUrl = new Map<string, IPendingBreakpoint>();
 
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
@@ -336,7 +344,24 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this._scriptsByUrl.set(script.url, script);
 
         const mappedUrl = this._pathTransformer.scriptParsed(script.url);
-        this._sourceMapTransformer.scriptParsed(mappedUrl, script.sourceMapURL);
+        this._sourceMapTransformer.scriptParsed(mappedUrl, script.sourceMapURL).then(sources => {
+            if (sources) {
+                sources.forEach(source => {
+                    if (this._pendingBreakpointsByUrl.has(source)) {
+                        this.resolvePendingBreakpoints(this._pendingBreakpointsByUrl.get(source));
+                    }
+                });
+            }
+        });
+    }
+
+    private resolvePendingBreakpoints(pendingBP: IPendingBreakpoint): void {
+        this.setBreakpoints(pendingBP.args, 0).then(response => {
+            response.breakpoints.forEach((bp, i) => {
+                bp.id = pendingBP.ids[i];
+                this.sendEvent(new BreakpointEvent('new', bp));
+            });
+        });
     }
 
     protected onBreakpointResolved(params: Chrome.Debugger.BreakpointResolvedParams): void {
@@ -376,44 +401,62 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
-        this._lineNumberTransformer.setBreakpoints(args);
-        let canSetBp = this._sourceMapTransformer.setBreakpoints(args, requestSeq);
-        if (!canSetBp) return Promise.resolve(this.unverifiedBpResponse(args, utils.localize('sourcemapping.fail.message', "Breakpoint ignored because generated code not found (source map problem?).")));
+        return this.validateBreakpointsPath(args)
+            .then(() => {
+                this._lineNumberTransformer.setBreakpoints(args);
+                this._sourceMapTransformer.setBreakpoints(args, requestSeq);
+                this._pathTransformer.setBreakpoints(args);
 
-        canSetBp = this._pathTransformer.setBreakpoints(args);
-        if (!canSetBp) return Promise.resolve(this.unverifiedBpResponse(args));
+                let targetScriptUrl: string;
+                if (args.source.path) {
+                    targetScriptUrl = args.source.path;
+                } else if (args.source.sourceReference) {
+                    const handle = this._sourceHandles.get(args.source.sourceReference);
+                    const targetScript = this._scriptsById.get(handle.scriptId);
+                    if (targetScript) {
+                        targetScriptUrl = targetScript.url;
+                    }
+                }
 
-        let targetScriptUrl: string;
-        if (args.source.path) {
-            targetScriptUrl = args.source.path;
-        } else if (args.source.sourceReference) {
-            const handle = this._sourceHandles.get(args.source.sourceReference);
-            const targetScript = this._scriptsById.get(handle.scriptId);
-            if (targetScript) {
-                targetScriptUrl = targetScript.url;
+                if (targetScriptUrl) {
+                    // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
+                    const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
+                        .then(() => this.clearAllBreakpoints(targetScriptUrl))
+                        .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
+                        .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.breakpoints) }));
+
+                    const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+
+                    // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
+                    // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
+                    this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
+                    return setBreakpointsPTimeout.then(body => {
+                        this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
+                        this._lineNumberTransformer.setBreakpointsResponse(body);
+                        return body;
+                    });
+                } else {
+                    return Promise.resolve(this.unverifiedBpResponse(args, utils.localize('bp.fail.noscript', `Can't find script for breakpoint request`)));
+                }
+            },
+            e => this.unverifiedBpResponse(args, e.message));
+    }
+
+    private validateBreakpointsPath(args: ISetBreakpointsArgs): Promise<void> {
+        if (!args.source.path) return Promise.resolve<void>();
+
+        return this._sourceMapTransformer.getGeneratedPathFromAuthoredPath(args.source.path).then(mappedPath => {
+            if (!mappedPath) {
+                return utils.errP(utils.localize('sourcemapping.fail.message', "Breakpoint ignored because generated code not found (source map problem?)."));
             }
-        }
 
-        if (targetScriptUrl) {
-            // DebugProtocol sends all current breakpoints for the script. Clear all scripts for the breakpoint then add all of them
-            const setBreakpointsPFailOnError = this._setBreakpointsRequestQ
-                .then(() => this.clearAllBreakpoints(targetScriptUrl))
-                .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
-                .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.breakpoints) }));
+            const targetPath = this._pathTransformer.getTargetPathFromClientPath(mappedPath);
+            if (!targetPath) {
+                return Promise.reject(undefined);
+            }
 
-            const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
-
-            // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
-            // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
-            this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
-            return setBreakpointsPTimeout.then(body => {
-                this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
-                this._lineNumberTransformer.setBreakpointsResponse(body);
-                return body;
-            });
-        } else {
-            return Promise.resolve(this.unverifiedBpResponse(args, utils.localize('bp.fail.noscript', `Can't find script for breakpoint request`)));
-        }
+            return undefined;
+        });
     }
 
     private unverifiedBpResponse(args: ISetBreakpointsArgs, message?: string): ISetBreakpointsResponseBody {
@@ -422,13 +465,17 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 verified: false,
                 line: bp.line,
                 column: bp.column,
-                message
+                message,
+                id: this._breakpointIdHandles.create(this._nextUnboundBreakpointId++ + '')
             };
         });
 
-        const response = { breakpoints };
-        this._lineNumberTransformer.setBreakpointsResponse(response);
-        return response;
+        if (args.source.path) {
+            const ids = breakpoints.map(bp => bp.id);
+            this._pendingBreakpointsByUrl.set(args.source.path, { args, ids });
+        }
+
+        return { breakpoints };
     }
 
     public setFunctionBreakpoints(): Promise<any> {

@@ -111,7 +111,7 @@ suite('ChromeDebugAdapter', () => {
         const BP_ID = 'bpId';
         const FILE_NAME = 'file:///a.js';
         const SCRIPT_ID = '1';
-        function expectSetBreakpoint(breakpoints: DebugProtocol.SourceBreakpoint[], url: string, scriptId = SCRIPT_ID): void {
+        function expectSetBreakpoint(breakpoints: DebugProtocol.SourceBreakpoint[], url?: string, scriptId = SCRIPT_ID): void {
             breakpoints.forEach((bp, i) => {
                 const { line: lineNumber, column: columnNumber, condition } = bp;
 
@@ -161,6 +161,9 @@ suite('ChromeDebugAdapter', () => {
         }
 
         function emitScriptParsed(url = FILE_NAME, scriptId = SCRIPT_ID): void {
+            mockSourceMapTransformer.setup(m => m.scriptParsed(It.isValue(undefined), It.isValue(undefined)))
+                .returns(() => Promise.resolve([]));
+
             mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId, url });
         }
 
@@ -282,7 +285,7 @@ suite('ChromeDebugAdapter', () => {
             const breakpoints: DebugProtocol.SourceBreakpoint[] = [
                 { line: 5, column: 6 }
             ];
-            expectSetBreakpoint(breakpoints, '');
+            expectSetBreakpoint(breakpoints);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed(/*url=*/'', SCRIPT_ID))
@@ -337,10 +340,13 @@ suite('ChromeDebugAdapter', () => {
             let scriptParsedFired = false;
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
                 mockPathTransformer.setup(m => m.scriptParsed(It.isAnyString()))
-                    .callback(url => {
+                    .returns(url => {
                         scriptParsedFired = true;
                         assert(!!url); // Should be called with some default url
+                        return url;
                     });
+                mockSourceMapTransformer.setup(m => m.scriptParsed(It.isAny(), It.isValue(undefined)))
+                    .returns(() => Promise.resolve([]));
 
                 emitScriptParsed(/*url=*/'');
                 assert(scriptParsedFired);
