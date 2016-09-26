@@ -974,6 +974,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     public createObjectVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
+        let value = object.description;
         let propCountP: Promise<IPropCount>;
         if (object.subtype === 'array' || object.subtype === 'typedarray') {
             if (object.preview && !object.preview.overflow) {
@@ -988,10 +989,16 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 propCountP = this.getCollectionNumPropsByEval(object.objectId);
             }
         } else {
+            if (object.subtype === 'error') {
+                // The Error's description contains the whole stack which is not a nice description.
+                // Up to the first newline is just the error name/message.
+                const firstNewlineIdx = object.description.indexOf('\n');
+                if (firstNewlineIdx >= 0) value = object.description.substr(0, firstNewlineIdx);
+            }
+
             propCountP = Promise.resolve({ });
         }
 
-        const value = object.description;
         const variablesReference = this._variableHandles.create(new PropertyContainer(object.objectId));
         return propCountP.then(({ indexedVariables, namedVariables }) => (<DebugProtocol.Variable>{
             name,
