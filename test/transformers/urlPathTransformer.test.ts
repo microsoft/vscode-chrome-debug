@@ -60,31 +60,30 @@ suite('UrlPathTransformer', () => {
                 .returns(() => CLIENT_PATH).verifiable();
 
             transformer.scriptParsed(TARGET_URL);
-            return transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
-                assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
-            });
+            assert(transformer.setBreakpoints(<any>SET_BP_ARGS));
+            assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
         });
 
-        test(`doesn't resolve until it can map the client script to the target script`, () => {
+        // #106
+        test.skip(`doesn't resolve until it can map the client script to the target script`, () => {
             chromeUtilsMock
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => CLIENT_PATH).verifiable();
 
-            const setBreakpointsP = transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
-                // If this assert doesn't fail, we know that it resolved at the right time because otherwise it would have no
-                // way to produce args with the right url
-                assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
-            });
+            // const setBreakpointsP = transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
+            //     // If this assert doesn't fail, we know that it resolved at the right time because otherwise it would have no
+            //     // way to produce args with the right url
+            //     assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
+            // });
 
-            transformer.scriptParsed(TARGET_URL);
-            return setBreakpointsP;
+            // transformer.scriptParsed(TARGET_URL);
+            // return setBreakpointsP;
         });
 
         test(`uses path as-is when it's a URL`, () => {
             const args = <any>{ source: { path: TARGET_URL } };
-            return transformer.setBreakpoints(args).then(() => {
-                assert.deepEqual(args, EXPECTED_SET_BP_ARGS);
-            });
+            assert(transformer.setBreakpoints(args));
+            assert.deepEqual(args, EXPECTED_SET_BP_ARGS);
         });
     });
 
@@ -107,15 +106,19 @@ suite('UrlPathTransformer', () => {
     });
 
     suite('stackTraceResponse()', () => {
-        const RUNTIME_LINES = [2, 5, 8];
+        const RUNTIME_LOCATIONS = [
+            { line: 2, column: 3 },
+            { line: 5, column: 6 },
+            { line: 8, column: 9 }
+        ];
 
         test('modifies the source path and clears sourceReference when the file can be mapped', () => {
             chromeUtilsMock
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => CLIENT_PATH).verifiable();
 
-            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
-            const expectedResponse = testUtils.getStackTraceResponseBody(CLIENT_PATH, RUNTIME_LINES);
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(CLIENT_PATH, RUNTIME_LOCATIONS);
 
             transformer.stackTraceResponse(response);
             assert.deepEqual(response, expectedResponse);
@@ -126,8 +129,8 @@ suite('UrlPathTransformer', () => {
                 .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
                 .returns(() => '').verifiable();
 
-            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
-            const expectedResponse = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LINES, [1, 2, 3]);
+            const response = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
+            const expectedResponse = testUtils.getStackTraceResponseBody(TARGET_URL, RUNTIME_LOCATIONS, [1, 2, 3]);
 
             transformer.stackTraceResponse(response);
             assert.deepEqual(response, expectedResponse);

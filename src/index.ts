@@ -18,8 +18,6 @@ export * from './debugAdapterInterfaces';
 import * as utils from './utils';
 import * as logger from './logger';
 
-import * as testUtils from '../test/testUtils';
-
 export {
     ChromeConnection,
     ChromeDebugAdapter,
@@ -34,7 +32,5 @@ export {
     BaseSourceMapTransformer,
 
     utils,
-    logger,
-
-    testUtils
+    logger
 }

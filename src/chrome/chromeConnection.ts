@@ -208,8 +208,8 @@ export class ChromeConnection {
         return this.sendMessage('Debugger.setBreakpoint', <Chrome.Debugger.SetBreakpointParams>{ location, condition });
     }
 
-    public debugger_setBreakpointByUrl(url: string, lineNumber: number, columnNumber: number): Promise<Chrome.Debugger.SetBreakpointByUrlResponse> {
-        return this.sendMessage('Debugger.setBreakpointByUrl', <Chrome.Debugger.SetBreakpointByUrlParams>{ url, lineNumber, columnNumber });
+    public debugger_setBreakpointByUrl(url: string, lineNumber: number, columnNumber: number, condition?: string): Promise<Chrome.Debugger.SetBreakpointByUrlResponse> {
+        return this.sendMessage('Debugger.setBreakpointByUrl', <Chrome.Debugger.SetBreakpointByUrlParams>{ url, lineNumber, columnNumber, condition });
     }
 
     public debugger_removeBreakpoint(breakpointId: string): Promise<Chrome.Response> {
@@ -257,7 +257,7 @@ export class ChromeConnection {
     }
 
     public runtime_evaluate(expression: string, objectGroup?: string, contextId = 1, returnByValue = false, silent?: boolean): Promise<Chrome.Runtime.EvaluateResponse> {
-        return this.sendMessage('Runtime.evaluate', <Chrome.Runtime.EvaluateParams>{ expression, objectGroup, contextId, silent });
+        return this.sendMessage('Runtime.evaluate', <Chrome.Runtime.EvaluateParams>{ expression, objectGroup, contextId, returnByValue, silent });
     }
 
     public runtime_callFunctionOn(objectId: string, functionDeclaration: string, args?: Chrome.Runtime.CallArgument[], silent?: boolean, returnByValue?: boolean,

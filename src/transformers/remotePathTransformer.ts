@@ -46,17 +46,16 @@ export class RemotePathTransformer extends BasePathTransformer {
         return localRootP;
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        if (!args.source.path) {
-            return Promise.resolve<void>();
+    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+        if (args.source.path) {
+            args.source.path = this.getTargetPathFromClientPath(args.source.path);
         }
 
-        args.source.path = this.localToRemote(args.source.path);
         return super.setBreakpoints(args);
     }
 
     public scriptParsed(scriptPath: string): string {
-        scriptPath = this.remoteToLocal(scriptPath);
+        scriptPath = this.getClientPathFromTargetPath(scriptPath);
         return super.scriptParsed(scriptPath);
     }
 
@@ -64,11 +63,13 @@ export class RemotePathTransformer extends BasePathTransformer {
         response.stackFrames.forEach(frame => {
             const remotePath = frame.source.path;
             if (remotePath) {
-                frame.source.path = this.remoteToLocal(remotePath);
+                const localPath = this.getClientPathFromTargetPath(remotePath);
+                if (utils.existsSync(localPath)) {
+                    frame.source.path = localPath;
+                    frame.source.sourceReference = undefined;
+                }
             }
         });
-
-        return super.stackTraceResponse(response);
     }
 
     private shouldMapPaths(remotePath: string): boolean {
@@ -76,7 +77,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         return !!this._localRoot && !!this._remoteRoot && (path.posix.isAbsolute(remotePath) || path.win32.isAbsolute(remotePath));
     }
 
-    private remoteToLocal(remotePath: string): string {
+    public getClientPathFromTargetPath(remotePath: string): string {
         if (!this.shouldMapPaths(remotePath)) return remotePath;
 
         const relPath = relative(this._remoteRoot, remotePath);
@@ -87,7 +88,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         return localPath;
     }
 
-    private localToRemote(localPath: string): string {
+    public getTargetPathFromClientPath(localPath: string): string {
         if (!this.shouldMapPaths(localPath)) return localPath;
 
         const relPath = relative(this._localRoot, localPath);

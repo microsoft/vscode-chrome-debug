@@ -17,8 +17,8 @@ const plumber = require('gulp-plumber');
 
 const sources = [
     'src',
+    'node_modules/@types',
     'test',
-    'typings',
 ].map(tsFolder => tsFolder + '/**/*.ts');
 
 // tsBuildSources needs to explicitly exclude testData because it's built and copied separately.
@@ -27,8 +27,7 @@ const tsBuildSources = sources.slice();
 tsBuildSources.push('!' + testDataDir + '**');
 
 const libs = [
-    'src',
-    'typings'
+    'src'
 ].map(libFolder => libFolder + '/**/*.d.ts');
 
 const lintSources = [

@@ -16,7 +16,7 @@ export type ISourceMapPathOverrides = { [pattern: string]: string };
 export interface CommonRequestArgs {
     webRoot?: string;
     outDir?: string;
-    outDirs?: string[];
+    outFiles?: string[];
     sourceMaps?: boolean;
     diagnosticLogging?: boolean;
     verboseDiagnosticLogging?: boolean;
@@ -98,7 +98,7 @@ export interface IDebugAdapter {
     // From DebugSession
     shutdown(): void;
 
-    initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilites>;
+    initialize(args: DebugProtocol.InitializeRequestArguments, requestSeq?: number): PromiseOrNot<DebugProtocol.Capabilities>;
     launch(args: ILaunchRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     attach(args: IAttachRequestArgs, requestSeq?: number): PromiseOrNot<void>;
     disconnect(): PromiseOrNot<void>;

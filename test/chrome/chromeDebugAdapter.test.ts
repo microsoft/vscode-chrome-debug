@@ -83,7 +83,7 @@ suite('ChromeDebugAdapter', () => {
                 if (event.event === 'initialized') {
                     initializedFired = true;
                 } else {
-                    assert.fail('An unexpected event was fired');
+                    testUtils.assertFail('An unexpected event was fired');
                 }
             });
 
@@ -98,11 +98,11 @@ suite('ChromeDebugAdapter', () => {
                 .returns(() => utils.errP('Testing attach failed'));
 
             chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
-                assert.fail('Not expecting any event in this scenario');
+                testUtils.assertFail('Not expecting any event in this scenario');
             });
 
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(
-                () => assert.fail('Expecting promise to be rejected'),
+                () => testUtils.assertFail('Expecting promise to be rejected'),
                 e => { /* Expecting promise to be rejected */ });
         });
     });
@@ -111,19 +111,19 @@ suite('ChromeDebugAdapter', () => {
         const BP_ID = 'bpId';
         const FILE_NAME = 'file:///a.js';
         const SCRIPT_ID = '1';
-        function expectSetBreakpoint(lines: number[], cols: number[], url: string, scriptId = SCRIPT_ID): void {
-            lines.forEach((lineNumber, i) => {
-                const columnNumber = cols[i];
+        function expectSetBreakpoint(breakpoints: DebugProtocol.SourceBreakpoint[], url?: string, scriptId = SCRIPT_ID): void {
+            breakpoints.forEach((bp, i) => {
+                const { line: lineNumber, column: columnNumber, condition } = bp;
 
                 if (url) {
                     mockChromeConnection
-                        .setup(x => x.debugger_setBreakpointByUrl(url, lineNumber, columnNumber))
+                        .setup(x => x.debugger_setBreakpointByUrl(url, lineNumber, columnNumber, condition))
                         .returns(location => Promise.resolve(
                             <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } }))
                         .verifiable();
                 } else {
                     mockChromeConnection
-                        .setup(x => x.debugger_setBreakpoint(It.isAny()))
+                        .setup(x => x.debugger_setBreakpoint(It.isAny(), condition))
                         .returns(location => Promise.resolve(
                             <Chrome.Debugger.SetBreakpointResponse>{ id: 0, result: { breakpointId: BP_ID + i, actualLocation: { scriptId, lineNumber, columnNumber } } }))
                         .verifiable();
@@ -140,99 +140,110 @@ suite('ChromeDebugAdapter', () => {
             });
         }
 
-        function makeExpectedResponse(lines: number[], cols?: number[]): ISetBreakpointsResponseBody {
-            const breakpoints = lines.map((line, i) => ({
-                line,
-                column: cols ? cols[i] : 0,
+        function makeExpectedResponse(breakpoints: DebugProtocol.SourceBreakpoint[]): ISetBreakpointsResponseBody {
+            const resultBps = breakpoints.map((bp, i) => ({
+                line: bp.line,
+                column: bp.column || 0,
                 verified: true
             }));
 
-            return { breakpoints };
+            return { breakpoints: resultBps };
         }
 
-        function assertExpectedResponse(response: ISetBreakpointsResponseBody, lines: number[], cols?: number[]): void {
+        function assertExpectedResponse(response: ISetBreakpointsResponseBody, breakpoints: DebugProtocol.SourceBreakpoint[]): void {
             // Assert that each bp has some id, then remove, because we don't know or care what it is
             response.breakpoints.forEach(bp => {
                 assert(typeof bp.id === 'number');
                 delete bp.id;
             });
 
-            assert.deepEqual(response, makeExpectedResponse(lines, cols));
+            assert.deepEqual(response, makeExpectedResponse(breakpoints));
         }
 
         function emitScriptParsed(url = FILE_NAME, scriptId = SCRIPT_ID): void {
+            mockSourceMapTransformer.setup(m => m.scriptParsed(It.isValue(undefined), It.isValue(undefined)))
+                .returns(() => Promise.resolve([]));
+
             mockEventEmitter.emit('Debugger.scriptParsed', <Chrome.Debugger.Script>{ scriptId, url });
         }
 
         test('When setting one breakpoint, returns the correct result', () => {
-            const lines = [5];
-            const cols = [6];
-            expectSetBreakpoint(lines, cols, FILE_NAME);
+            const breakpoints: DebugProtocol.SourceBreakpoint[] = [
+                { line: 5, column: 6 }
+            ];
+            expectSetBreakpoint(breakpoints, FILE_NAME);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0))
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
 
         test('When setting multiple breakpoints, returns the correct result', () => {
-            const lines = [14, 200, 151];
-            const cols = [33, 16, 1];
-            expectSetBreakpoint(lines, cols, FILE_NAME);
+            const breakpoints = [
+                { line: 14, column: 33 },
+                { line: 200, column: 16 },
+                { line: 151, column: 1 }
+            ];
+            expectSetBreakpoint(breakpoints, FILE_NAME);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints}, 0))
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
 
         test('The adapter clears all previous breakpoints in a script before setting the new ones', () => {
-            const lines = [14, 200];
-            const cols = [33, 16];
-            expectSetBreakpoint(lines, cols, FILE_NAME);
+            const breakpoints = [
+                { line: 14, column: 33 },
+                { line: 200, column: 16 }
+            ];
+            expectSetBreakpoint(breakpoints, FILE_NAME);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0))
                 .then(response => {
-                    lines.push(321);
-                    cols.push(123);
+                    breakpoints.push({ line: 321, column: 123 });
 
                     expectRemoveBreakpoint([0, 1]);
-                    expectSetBreakpoint(lines, cols, FILE_NAME);
+                    expectSetBreakpoint(breakpoints, FILE_NAME);
 
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0);
                 })
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
 
         test('The adapter handles removing a breakpoint', () => {
-            const lines = [14, 200];
-            const cols = [33, 16];
-            expectSetBreakpoint(lines, cols, FILE_NAME);
+            const breakpoints = [
+                { line: 14, column: 33 },
+                { line: 200, column: 16 }
+            ];
+            expectSetBreakpoint(breakpoints, FILE_NAME);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints}, 0))
                 .then(response => {
-                    lines.shift();
-                    cols.shift();
+                    breakpoints.shift();
 
                     expectRemoveBreakpoint([0, 1]);
-                    expectSetBreakpoint(lines, cols, FILE_NAME);
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
+                    expectSetBreakpoint(breakpoints, FILE_NAME);
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints}, 0);
                 })
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
 
         test('After a page refresh, clears the newly resolved breakpoints before adding new ones', () => {
-            const lines = [14, 200];
-            const cols = [33, 16];
-            expectSetBreakpoint(lines, cols, FILE_NAME);
+            const breakpoints = [
+                { line: 14, column: 33 },
+                { line: 200, column: 16 }
+            ];
+            expectSetBreakpoint(breakpoints, FILE_NAME);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0))
                 .then(response => {
                     expectRemoveBreakpoint([2, 3]);
                     mockEventEmitter.emit('Debugger.globalObjectCleared');
@@ -240,45 +251,46 @@ suite('ChromeDebugAdapter', () => {
                     mockEventEmitter.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 2, location: { scriptId: 'afterRefreshScriptId' } });
                     mockEventEmitter.emit('Debugger.breakpointResolved', <Chrome.Debugger.BreakpointResolvedParams>{ breakpointId: BP_ID + 3, location: { scriptId: 'afterRefreshScriptId' } });
 
-                    lines.push(321);
-                    cols.push(123);
-                    expectSetBreakpoint(lines, cols, FILE_NAME, 'afterRefreshScriptId');
-                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0);
+                    breakpoints.push({ line: 321, column: 123 });
+                    expectSetBreakpoint(breakpoints, FILE_NAME, 'afterRefreshScriptId');
+                    return chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0);
                 })
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
 
         test('returns the actual location specified by the runtime', () => {
-            const lines = [5];
-            const cols = [6];
+            const breakpoints: DebugProtocol.SourceBreakpoint[] = [
+                { line: 5, column: 6 }
+            ];
 
             // Set up the mock to return a different location
             const location: Chrome.Debugger.Location = {
-                scriptId: SCRIPT_ID, lineNumber: lines[0] + 10, columnNumber: cols[0] + 10 };
+                scriptId: SCRIPT_ID, lineNumber: breakpoints[0].line + 10, columnNumber: breakpoints[0].column + 10 };
             const expectedResponse: ISetBreakpointsResponseBody = {
                 breakpoints: [{ line: location.lineNumber, column: location.columnNumber, verified: true, id: 1000 }]};
 
             mockChromeConnection
-                .setup(x => x.debugger_setBreakpointByUrl(FILE_NAME, lines[0], cols[0]))
+                .setup(x => x.debugger_setBreakpointByUrl(FILE_NAME, breakpoints[0].line, breakpoints[0].column, undefined))
                 .returns(() => Promise.resolve(
                     <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID, locations: [location] } }))
                 .verifiable();
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed())
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, lines, cols }, 0))
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: FILE_NAME }, breakpoints }, 0))
                 .then(response => assert.deepEqual(response, expectedResponse));
         });
 
         test('setting breakpoints in a sourcemapped eval script handles the placeholder url', () => {
-            const lines = [5];
-            const cols = [6];
-            expectSetBreakpoint(lines, cols, '');
+            const breakpoints: DebugProtocol.SourceBreakpoint[] = [
+                { line: 5, column: 6 }
+            ];
+            expectSetBreakpoint(breakpoints);
 
             return chromeDebugAdapter.attach(ATTACH_ARGS)
                 .then(() => emitScriptParsed(/*url=*/'', SCRIPT_ID))
-                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, lines, cols }, 0))
-                .then(response => assertExpectedResponse(response, lines, cols));
+                .then(() => chromeDebugAdapter.setBreakpoints({ source: { path: 'debugadapter://' + SCRIPT_ID }, breakpoints }, 0))
+                .then(response => assertExpectedResponse(response, breakpoints));
         });
     });
 
@@ -291,7 +303,7 @@ suite('ChromeDebugAdapter', () => {
                     outputEventFired = true;
                     assert.equal(event.body.text, testLog);
                 } else {
-                    assert.fail('An unexpected event was fired');
+                    testUtils.assertFail('An unexpected event was fired');
                 }
             });
 
@@ -328,10 +340,13 @@ suite('ChromeDebugAdapter', () => {
             let scriptParsedFired = false;
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
                 mockPathTransformer.setup(m => m.scriptParsed(It.isAnyString()))
-                    .callback(url => {
+                    .returns(url => {
                         scriptParsedFired = true;
                         assert(!!url); // Should be called with some default url
+                        return url;
                     });
+                mockSourceMapTransformer.setup(m => m.scriptParsed(It.isAny(), It.isValue(undefined)))
+                    .returns(() => Promise.resolve([]));
 
                 emitScriptParsed(/*url=*/'');
                 assert(scriptParsedFired);
@@ -341,7 +356,7 @@ suite('ChromeDebugAdapter', () => {
         test('ignores internal scripts', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
                 chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
-                    assert.fail('No event should be fired: ' + event.event);
+                    testUtils.assertFail('No event should be fired: ' + event.event);
                 });
 
                 emitScriptParsed(/*url=*/'', undefined, { isInternalScript: true });

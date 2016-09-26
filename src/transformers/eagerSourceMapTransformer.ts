@@ -16,13 +16,12 @@ import * as logger from '../logger';
  */
 export class EagerSourceMapTransformer extends BaseSourceMapTransformer {
     private static SOURCE_MAPPING_MATCHER = new RegExp('^//[#@] ?sourceMappingURL=(.+)$');
-    private _preLoad: Promise<void>;
 
     protected init(args: ILaunchRequestArgs | IAttachRequestArgs): void {
         super.init(args);
         if (args.sourceMaps) {
-            const generatedCodeGlobs = args.outDirs ?
-                args.outDirs :
+            const generatedCodeGlobs = args.outFiles ?
+                args.outFiles :
                 args.outDir ?
                     [path.join(args.outDir, '**/*.js')] :
                     [];

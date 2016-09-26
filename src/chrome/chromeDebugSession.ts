@@ -65,7 +65,7 @@ export class ChromeDebugSession extends DebugSession {
 
         process.addListener('unhandledRejection', err => {
             // err is a DebugProtocol.Message or Error
-            const errMsg = err.format ? JSON.stringify(err) : err.toString();
+            const errMsg = err.stack ? err.stack : JSON.stringify(err);
             logger.error(`******** Error in DebugAdapter - Unhandled promise rejection: ${errMsg}`);
         });
     }

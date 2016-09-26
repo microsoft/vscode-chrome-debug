@@ -18,8 +18,8 @@ export class BasePathTransformer {
         return Promise.resolve<void>();
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): Promise<void> {
-        return Promise.resolve<void>();
+    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+        return true;
     }
 
     public clearTargetContext(): void {
@@ -34,11 +34,13 @@ export class BasePathTransformer {
     }
 
     public stackTraceResponse(response: IStackTraceResponseBody): void {
-        // Have a responsibility to clean up the sourceReference here when it's not needed... See #93
-        response.stackFrames.forEach(frame => {
-            if (frame.source.path) {
-                frame.source.sourceReference = 0;
-            }
-        });
+    }
+
+    public getTargetPathFromClientPath(clientPath: string): string {
+        return clientPath;
+    }
+
+    public getClientPathFromTargetPath(targetPath: string): string {
+        return targetPath;
     }
 }

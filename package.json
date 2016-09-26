@@ -1,7 +1,7 @@
 {
   "name": "vscode-chrome-debug-core",
   "displayName": "vscode-chrome-debug-core",
-  "version": "0.1.19",
+  "version": "1.0.6",
   "description": "A library for building VS Code debug adapters for targets that support the Chrome Remote Debug Protocol",
   "repository": {
     "type": "git",
@@ -15,11 +15,20 @@
     "glob": "^7.0.6",
     "request-light": "^0.1.0",
     "source-map": "^0.5.6",
-    "vscode-debugadapter": "^1.12.0",
-    "vscode-debugprotocol": "^1.12.0",
+    "vscode-debugadapter": "^1.13.0",
+    "vscode-debugprotocol": "^1.13.0",
     "ws": "^1.1.1"
   },
   "devDependencies": {
+    "@types/es6-collections": "^0.5.29",
+    "@types/es6-promise": "0.0.32",
+    "@types/glob": "^5.0.30",
+    "@types/minimatch": "^2.0.29",
+    "@types/mocha": "^2.2.32",
+    "@types/mockery": "^1.4.29",
+    "@types/node": "^6.0.40",
+    "@types/source-map": "^0.1.27",
+    "@types/ws": "0.0.32",
     "del": "^2.2.2",
     "gulp": "^3.9.1",
     "gulp-debug": "^2.1.2",
@@ -36,11 +45,9 @@
     "tslint-eslint-rules": "^1.5.0",
     "tslint-microsoft-contrib": "^2.0.10",
     "typemoq": "^0.3.3",
-    "typescript": "^2.0.0",
-    "typings": "^1.0.4"
+    "typescript": "^2.0.2"
   },
   "scripts": {
-    "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/",
-    "postinstall": "typings install"
+    "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"
   }
 }

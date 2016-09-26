@@ -96,7 +96,7 @@ suite('Utils', () => {
     suite('promiseTimeout()', () => {
         test('when given a promise it fails if the promise never resolves', () => {
             return getUtils().promiseTimeout(new Promise(() => { }), 5).then(
-                () => assert.fail('This promise should fail'),
+                () => testUtils.assertFail('This promise should fail'),
                 e => { }
             );
         });
@@ -106,14 +106,14 @@ suite('Utils', () => {
                 result => {
                     assert.equal(result, 'test');
                 },
-                e => assert.fail('This promise should pass')
+                e => testUtils.assertFail('This promise should pass')
             );
         });
 
         test('when not given a promise it resolves', () => {
             return getUtils().promiseTimeout(null, 5).then(
                 null,
-                () => assert.fail('This promise should pass')
+                () => testUtils.assertFail('This promise should pass')
             );
         });
     });
@@ -125,14 +125,14 @@ suite('Utils', () => {
                     assert.equal(result, 'pass');
                 },
                 e => {
-                    assert.fail('This should have passed');
+                    testUtils.assertFail('This should have passed');
                 });
         });
 
         test('when the function fails, it rejects', () => {
             return getUtils().retryAsync(() => getUtils().errP('fail'), /*timeoutMs=*/5)
                 .then(
-                    () => assert.fail('This promise should fail'),
+                    () => testUtils.assertFail('This promise should fail'),
                     e => assert.equal(e.message, 'fail'));
         });
     });

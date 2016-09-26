@@ -11,6 +11,7 @@ import {Mock, It, MockBehavior} from 'typemoq';
 import * as path from 'path';
 import * as mockery from 'mockery';
 import * as fs from 'fs';
+import * as assert from 'assert';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -42,13 +43,13 @@ export class MockEvent implements DebugProtocol.Event {
     constructor(public event: string, public body?: any) { }
 }
 
-export function getStackTraceResponseBody(aPath: string, lines: number[], sourceReferences: number[] = []): IStackTraceResponseBody {
+export function getStackTraceResponseBody(aPath: string, locations: DebugProtocol.SourceBreakpoint[], sourceReferences: number[] = []): IStackTraceResponseBody {
     return {
-        stackFrames: lines.map((line, i) => ({
+        stackFrames: locations.map((location, i) => ({
             id: i,
             name: 'line ' + i,
-            line,
-            column: 0,
+            line: location.line,
+            column: location.column,
             source: {
                 path: aPath,
                 name: path.basename(aPath),
@@ -128,4 +129,8 @@ export function assertPromiseRejected(promise: Promise<any>): Promise<any> {
     return promise.then(
         result => { throw new Error('Promise was expected to be rejected, but was resolved with ' + result); },
         () => { /* as expected */ });
+}
+
+export function assertFail(msg: string): void {
+    assert(false, msg);
 }

@@ -114,13 +114,13 @@ export class SourceMap {
         const lookupArgs = {
             line,
             column,
-            bias: SourceMapConsumer.LEAST_UPPER_BOUND
+            bias: (<any>SourceMapConsumer).LEAST_UPPER_BOUND
         };
 
         let position = this._smc.originalPositionFor(lookupArgs);
         if (!position.source) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
-            lookupArgs.bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
+            lookupArgs.bias = (<any>SourceMapConsumer).GREATEST_LOWER_BOUND;
             position = this._smc.originalPositionFor(lookupArgs);
         }
 
@@ -156,13 +156,13 @@ export class SourceMap {
             line,
             column,
             source,
-            bias: SourceMapConsumer.LEAST_UPPER_BOUND
+            bias: (<any>SourceMapConsumer).LEAST_UPPER_BOUND
         };
 
         let position = this._smc.generatedPositionFor(lookupArgs);
         if (position.line === null) {
             // If it can't find a match, it returns a mapping with null props. Try looking the other direction.
-            lookupArgs.bias = SourceMapConsumer.GREATEST_LOWER_BOUND;
+            lookupArgs.bias = (<any>SourceMapConsumer).GREATEST_LOWER_BOUND;
             position = this._smc.generatedPositionFor(lookupArgs);
         }
 
@@ -179,6 +179,6 @@ export class SourceMap {
 
     public sourceContentFor(authoredSourcePath: string): string {
         authoredSourcePath = utils.pathToFileURL(authoredSourcePath);
-        return this._smc.sourceContentFor(authoredSourcePath, /*returnNullOnMissing=*/true);
+        return (<any>this._smc).sourceContentFor(authoredSourcePath, /*returnNullOnMissing=*/true);
     }
 }
