@@ -773,12 +773,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
             return Promise.all(variables);
         }).then(variables => {
-            // After retrieving all props, apply the filter
-            if (filter === 'indexed' || filter === 'named') {
-                const keepIndexed = filter === 'indexed';
-                variables = variables.filter(variable => keepIndexed === isIndexedPropName(variable.name));
-            }
-
             // Sort all variables properly
             return variables.sort((var1, var2) => ChromeUtils.compareVariableNames(var1.name, var2.name));
         });
@@ -995,11 +989,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 propCountP = this.getCollectionNumPropsByEval(object.objectId);
             }
         } else {
-            if (object.preview && !object.preview.overflow) {
-                propCountP = Promise.resolve(this.getObjectNumPropsByPreview(object));
-            } else {
-                propCountP = this.getObjectNumPropsByEval(object.objectId);
-            }
+            propCountP = Promise.resolve({ });
         }
 
         const value = object.description;
@@ -1037,18 +1027,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         return { indexedVariables, namedVariables };
     }
 
-    private getObjectNumPropsByEval(objectId: string): Promise<IPropCount> {
-        // TODO - counting and order?
-        const getNumPropsFn = `function() {
-            function isIndexed(name) { return !isNaN(parseInt(name, 10)); }
-            function isNamed(name) { return isNaN(parseInt(name, 10)); }
-
-            var keys = Object.keys(this);
-            return [keys.filter(isIndexed).length, keys.filter(isNamed).length];
-        }`;
-        return this.getNumPropsByEval(objectId, getNumPropsFn);
-    }
-
     private getNumPropsByEval(objectId: string, getNumPropsFn: string): Promise<IPropCount> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
             if (response.error) {
@@ -1065,12 +1043,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 return { indexedVariables: resultProps[0], namedVariables: resultProps[1] };
             }
         });
-    }
-
-    private getObjectNumPropsByPreview(object: Chrome.Runtime.RemoteObject): IPropCount {
-        const entriesLength = object.preview.entries ? object.preview.entries.length : 0;
-        let namedVariables = object.preview.properties.length + entriesLength;
-        return { indexedVariables: 0, namedVariables };
     }
 
     private shouldIgnoreScript(script: Chrome.Debugger.Script): boolean {
