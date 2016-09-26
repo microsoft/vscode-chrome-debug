@@ -116,7 +116,7 @@ function loadSourceMapContents(mapPathOrURL: string): Promise<string> {
             logger.log(`SourceMaps.loadSourceMapContents: Reading local sourcemap file from ${mapPathOrURL}`);
             fs.readFile(mapPathOrURL, (err, data) => {
                 if (err) {
-                    logger.error(`SourceMaps.loadSourceMapContents: Could not read sourcemap from ${mapPathOrURL}`);
+                    logger.log(`SourceMaps.loadSourceMapContents: Could not read sourcemap file - ` + err.message);
                     resolve(null);
                 } else {
                     resolve(data);
