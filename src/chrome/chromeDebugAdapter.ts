@@ -756,18 +756,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 }
             });
 
-            // Convert Chrome prop descriptors to DebugProtocol vars, filtering non-indexed props if needed
+            // Convert Chrome prop descriptors to DebugProtocol vars
             const variables: Promise<DebugProtocol.Variable>[] = [];
-            propsByName.forEach(propDesc => {
-                if (filter !== 'indexed' || isIndexedPropName(propDesc.name)) {
-                    variables.push(this.propertyDescriptorToVariable(propDesc, objectId));
-                }
-            });
-            internalPropsByName.forEach(internalProp => {
-                if (filter !== 'indexed' || isIndexedPropName(internalProp.name)) {
-                    variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp)));
-                }
-            });
+            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, objectId)));
+            internalPropsByName.forEach(internalProp => variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp))));
 
             return Promise.all(variables);
         }).then(variables => {
@@ -809,7 +801,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(evalResponse.result.exceptionDetails);
                 return Promise.reject(errors.errorFromEvaluate(errMsg));
             } else {
-                return this.getVariablesForObjectId(evalResponse.result.result.objectId, filter);
+                // The eval was successful and returned a reference to the array object. Get the props, then filter
+                // out everything except the index names.
+                return this.getVariablesForObjectId(evalResponse.result.result.objectId, filter)
+                    .then(variables => variables.filter(variable => isIndexedPropName(variable.name)));
             }
         });
     }
