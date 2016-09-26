@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {StoppedEvent, InitializedEvent, TerminatedEvent, OutputEvent, Handles, ContinuedEvent, BreakpointEvent} from 'vscode-debugadapter';
+import {StoppedEvent, InitializedEvent, TerminatedEvent, Handles, ContinuedEvent, BreakpointEvent} from 'vscode-debugadapter';
 
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
@@ -11,7 +11,6 @@ import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IS
 import {IChromeDebugSessionOpts} from './chromeDebugSession';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
-import {formatConsoleMessage} from './consoleHelper';
 import * as Chrome from './chromeDebugProtocol';
 import {PropertyContainer, ScopeContainer, IVariableContainer, isIndexedPropName} from './variables';
 
@@ -388,12 +387,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     protected onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
-        const formattedMessage = formatConsoleMessage(params.message);
-        if (formattedMessage) {
-            this.sendEvent(new OutputEvent(
-                formattedMessage.text + '\n',
-                formattedMessage.isError ? 'stderr' : 'stdout'));
-        }
+        // Consumers can implement this if they want to
     }
 
     public disconnect(): void {
