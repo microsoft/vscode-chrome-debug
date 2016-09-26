@@ -478,10 +478,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         return { breakpoints };
     }
 
-    public setFunctionBreakpoints(): Promise<any> {
-        return Promise.resolve<void>();
-    }
-
     private clearAllBreakpoints(url: string): Promise<void> {
         if (!this._committedBreakpointsByUrl.has(url)) {
             return Promise.resolve<void>();
