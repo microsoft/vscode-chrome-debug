@@ -925,7 +925,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         if (object) {
             if (object.type === 'object') {
-                if (object.subtype === 'null') {
+                if (object.subtype === 'internal#location') {
+                    // Could format this nicely later, see #110
+                    value = 'internal#location';
+                } else if (object.subtype === 'null') {
                     value = 'null';
                 } else {
                     return this.createObjectVariable(name, object);
@@ -967,7 +970,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 object.description;
         }
 
-        return { name, value, variablesReference: 0 };
+        return { name, value, variablesReference: this._variableHandles.create(new PropertyContainer(object.objectId)) };
     }
 
     public createObjectVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
