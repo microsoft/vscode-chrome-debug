@@ -756,10 +756,18 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 }
             });
 
-            // Convert Chrome prop descriptors to DebugProtocol vars
+            // Convert Chrome prop descriptors to DebugProtocol vars, filtering non-indexed props if needed
             const variables: Promise<DebugProtocol.Variable>[] = [];
-            propsByName.forEach(propDesc => variables.push(this.propertyDescriptorToVariable(propDesc, objectId)));
-            internalPropsByName.forEach(internalProp => variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp))));
+            propsByName.forEach(propDesc => {
+                if (filter !== 'indexed' || isIndexedPropName(propDesc.name)) {
+                    variables.push(this.propertyDescriptorToVariable(propDesc, objectId));
+                }
+            });
+            internalPropsByName.forEach(internalProp => {
+                if (filter !== 'indexed' || isIndexedPropName(internalProp.name)) {
+                    variables.push(Promise.resolve(this.internalPropertyDescriptorToVariable(internalProp)));
+                }
+            });
 
             return Promise.all(variables);
         }).then(variables => {
