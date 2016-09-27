@@ -14,27 +14,25 @@ const mocha = require('gulp-mocha');
 const sources = [
     'src',
     'test',
-    'typings/main',
-    'typings/globals'
+    'node_modules/@types',
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
 const lintSources = [
     'src'
 ].map(function(tsFolder) { return tsFolder + '/**/*.ts'; });
 
-const projectConfig = {
-    noImplicitAny: false,
-    target: 'ES5',
-    module: 'commonjs',
-    declaration: true,
-    typescript: typescript
-};
 
+function computeSourceRoot(file) {
+    // No idea why gulp-sourcemaps insists that 'sources' should be relative to out/, this is probably going to break some day
+    return path.relative(path.dirname(file.path), path.join(__dirname, 'out'));
+}
+
+const tsProject = ts.createProject('tsconfig.json', { typescript });
 gulp.task('build', function () {
 	return gulp.src(sources, { base: '.' })
         .pipe(sourcemaps.init())
-        .pipe(ts(projectConfig)).js
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: 'file:///' + __dirname }))
+        .pipe(tsProject()).js
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: computeSourceRoot }))
         .pipe(gulp.dest('out'));
 });
 
