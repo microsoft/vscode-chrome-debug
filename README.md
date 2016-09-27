@@ -96,13 +96,15 @@ An example `launch.json` config.
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "sourceMaps": true
+            "sourceMaps": true,
+            "url": "<url of the open browser tab, you wanna connect to"
         },
         {
             "name": "Attach to url with files served from ./out",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
+            "url": "<url of the open browser tab, you wanna connect to",
             "webRoot": "${workspaceRoot}/out"
         }
     ]
