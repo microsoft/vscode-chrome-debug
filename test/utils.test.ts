@@ -5,7 +5,7 @@
 import * as mockery from 'mockery';
 import * as assert from 'assert';
 
-import {testUtils} from 'vscode-chrome-debug-core';
+import * as testUtils from './testUtils';
 
 /** Utils without mocks - use for type only */
 import * as _Utils from '../src/utils';
@@ -20,7 +20,6 @@ suite('Utils', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
-        testUtils.registerWin32Mocks();
         mockery.registerMock('fs', { statSync: () => { } });
     });
 

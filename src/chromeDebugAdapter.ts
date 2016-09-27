@@ -60,18 +60,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         });
     }
 
-    public disconnect(): Promise<void> {
+    public disconnect(): void {
         if (this._chromeProc) {
             this._chromeProc.kill('SIGINT');
             this._chromeProc = null;
         }
 
         return super.disconnect();
-    }
-
-    public clearEverything(): void {
-        this._chromeProc = null;
-
-        super.clearEverything();
     }
 }

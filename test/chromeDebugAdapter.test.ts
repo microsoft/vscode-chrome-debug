@@ -3,13 +3,14 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-
-import {ChromeConnection, testUtils} from 'vscode-chrome-debug-core';
+import {ChromeConnection} from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
 import * as assert from 'assert';
 import {Mock, MockBehavior, It} from 'typemoq';
+
+import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
 import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../src/chromeDebugAdapter';
@@ -26,7 +27,6 @@ suite('ChromeDebugAdapter', () => {
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
-        testUtils.registerWin32Mocks();
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
         mockEventEmitter = new EventEmitter();
@@ -42,7 +42,8 @@ suite('ChromeDebugAdapter', () => {
             .returns(() => false);
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
-        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)(mockChromeConnection.object);
+        const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
+        chromeDebugAdapter = new cDAClass({ chromeConnection: () => mockChromeConnection.object } as any);
     });
 
     teardown(() => {
