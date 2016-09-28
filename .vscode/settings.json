@@ -5,8 +5,7 @@
         ".git": true,
         "bin": true,
         "node_modules": false,
-        "ThirdPartyNotices.txt": true,
-        "vscode-chrome-debug.txt": true
+        "ThirdPartyNotices.txt": true
     },
     "search.exclude": {
         ".git": true,
