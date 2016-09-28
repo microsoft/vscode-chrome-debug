@@ -55,6 +55,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
+    private static SET_BREAKPOINTS_TIMEOUT = 3000;
 
     private _clientAttached: boolean;
     private _currentStack: Chrome.Debugger.CallFrame[];
@@ -419,7 +420,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                         .then(() => this.addBreakpoints(targetScriptUrl, args.breakpoints))
                         .then(responses => ({ breakpoints: this.chromeBreakpointResponsesToODPBreakpoints(targetScriptUrl, responses, args.breakpoints) }));
 
-                    const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, /*timeoutMs*/2000, 'Set breakpoints request timed out');
+                    const setBreakpointsPTimeout = utils.promiseTimeout(setBreakpointsPFailOnError, ChromeDebugAdapter.SET_BREAKPOINTS_TIMEOUT, 'Set breakpoints request timed out');
 
                     // Do just one setBreakpointsRequest at a time to avoid interleaving breakpoint removed/breakpoint added requests to Chrome.
                     // Swallow errors in the promise queue chain so it doesn't get blocked, but return the failing promise for error handling.
