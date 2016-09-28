@@ -208,8 +208,8 @@ export class ChromeConnection {
         return this.sendMessage('Debugger.setBreakpoint', <Chrome.Debugger.SetBreakpointParams>{ location, condition });
     }
 
-    public debugger_setBreakpointByUrl(url: string, lineNumber: number, columnNumber: number, condition?: string): Promise<Chrome.Debugger.SetBreakpointByUrlResponse> {
-        return this.sendMessage('Debugger.setBreakpointByUrl', <Chrome.Debugger.SetBreakpointByUrlParams>{ url, lineNumber, columnNumber, condition });
+    public debugger_setBreakpointByUrlRegex(urlRegex: string, lineNumber: number, columnNumber: number, condition?: string): Promise<Chrome.Debugger.SetBreakpointByUrlResponse> {
+        return this.sendMessage('Debugger.setBreakpointByUrl', <Chrome.Debugger.SetBreakpointByUrlParams>{ urlRegex, lineNumber, columnNumber, condition });
     }
 
     public debugger_removeBreakpoint(breakpointId: string): Promise<Chrome.Response> {

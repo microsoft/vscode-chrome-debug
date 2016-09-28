@@ -393,7 +393,7 @@ export function multiGlob(patterns: string[], opts?: any): Promise<string[]> {
         }
 
         let array = [];
-        set.forEach(v => array.push(v));
+        set.forEach(v => array.push(fixDriveLetterAndSlashes(v)));
         return array;
     });
 }
@@ -411,4 +411,20 @@ export class ReverseHandles<T> extends Handles<T> {
     public lookup(value: T): number {
         return this._reverseMap.get(value);
     }
+}
+
+/**
+ * Return a regex for the given path to set a breakpoint on
+ */
+export function pathToRegex(aPath: string): string {
+    aPath = aPath.replace(/([/\\.?*()^${}|[\]])/g, '\\$1');
+
+    if (aPath.match(/^[a-zA-Z]:/)) {
+        const driveLetter = aPath.charAt(0);
+        const u = driveLetter.toUpperCase();
+        const l = driveLetter.toLowerCase();
+        aPath = `[${u}${l}]${aPath.substr(1)}`;
+    }
+
+    return aPath;
 }

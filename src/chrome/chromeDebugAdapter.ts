@@ -504,8 +504,9 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             // after refreshing the page. This is the only way to allow hitting breakpoints in code that runs immediately when
             // the page loads.
             const script = this._scriptsByUrl.get(url);
+            const urlRegex = utils.pathToRegex(url);
             responsePs = breakpoints.map(({ line, column = 0, condition }, i) => {
-                return this._chromeConnection.debugger_setBreakpointByUrl(url, line, column, condition).then(response => {
+                return this._chromeConnection.debugger_setBreakpointByUrlRegex(urlRegex, line, column, condition).then(response => {
                     // Now convert the response to a SetBreakpointResponse so both response types can be handled the same
                     const locations = response.result.locations;
                     return <Chrome.Debugger.SetBreakpointResponse>{

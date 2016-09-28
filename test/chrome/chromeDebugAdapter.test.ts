@@ -117,7 +117,7 @@ suite('ChromeDebugAdapter', () => {
 
                 if (url) {
                     mockChromeConnection
-                        .setup(x => x.debugger_setBreakpointByUrl(url, lineNumber, columnNumber, condition))
+                        .setup(x => x.debugger_setBreakpointByUrlRegex(utils.pathToRegex(url), lineNumber, columnNumber, condition))
                         .returns(location => Promise.resolve(
                             <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID + i, locations: [{ scriptId, lineNumber, columnNumber }] } }))
                         .verifiable();
@@ -269,8 +269,9 @@ suite('ChromeDebugAdapter', () => {
             const expectedResponse: ISetBreakpointsResponseBody = {
                 breakpoints: [{ line: location.lineNumber, column: location.columnNumber, verified: true, id: 1000 }]};
 
+            const expectedRegex = utils.pathToRegex(FILE_NAME);
             mockChromeConnection
-                .setup(x => x.debugger_setBreakpointByUrl(FILE_NAME, breakpoints[0].line, breakpoints[0].column, undefined))
+                .setup(x => x.debugger_setBreakpointByUrlRegex(expectedRegex, breakpoints[0].line, breakpoints[0].column, undefined))
                 .returns(() => Promise.resolve(
                     <Chrome.Debugger.SetBreakpointByUrlResponse>{ id: 0, result: { breakpointId: BP_ID, locations: [location] } }))
                 .verifiable();
