@@ -802,7 +802,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(evalResponse.result.exceptionDetails);
                 return Promise.reject(errors.errorFromEvaluate(errMsg));
             } else {
-                return this.getVariablesForObjectId(evalResponse.result.result.objectId, filter);
+                // The eval was successful and returned a reference to the array object. Get the props, then filter
+                // out everything except the index names.
+                return this.getVariablesForObjectId(evalResponse.result.result.objectId, filter)
+                    .then(variables => variables.filter(variable => isIndexedPropName(variable.name)));
             }
         });
     }

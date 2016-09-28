@@ -50,7 +50,7 @@ gulp.task('build', () => {
 		tsResult.dts
             .pipe(gulp.dest('lib')),
 		tsResult.js
-            .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: computeSourceRoot }))
+            .pipe(sourcemaps.write('.', { includeContent: true, sourceRoot: computeSourceRoot }))
             .pipe(gulp.dest('out')),
         gulp.src(libs, { base: '.' })
             .pipe(gulp.dest('lib')),
