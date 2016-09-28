@@ -675,8 +675,10 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const currentFrame = this._currentStack[args.frameId];
         const scopes = currentFrame.scopeChain.map((scope: Chrome.Debugger.Scope, i: number) => {
             // The first scope should include 'this'. Keep the RemoteObject reference for use by the variables request
-            const thisObj = i === 0 ? currentFrame['this'] : undefined;
-            const variablesReference = this._variableHandles.create(new ScopeContainer(currentFrame.callFrameId, i, scope.object.objectId, thisObj));
+            const thisObj = i === 0 && currentFrame.this;
+            const returnValue = i === 0 && currentFrame.returnValue;
+            const variablesReference = this._variableHandles.create(
+                new ScopeContainer(currentFrame.callFrameId, i, scope.object.objectId, thisObj, returnValue));
 
             return <DebugProtocol.Scope>{
                 name: scope.type.substr(0, 1).toUpperCase() + scope.type.substr(1), // Take Chrome's scope, uppercase the first letter
@@ -919,7 +921,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         });
     }
 
-    private remoteObjectToVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify = true): Promise<DebugProtocol.Variable> {
+    public remoteObjectToVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify = true): Promise<DebugProtocol.Variable> {
         let value = '';
 
         if (object) {

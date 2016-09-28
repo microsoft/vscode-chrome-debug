@@ -41,7 +41,8 @@ export namespace Debugger {
         functionName: string;
         location: Location;
         scopeChain: Scope[];
-        this: any;
+        this: Runtime.RemoteObject;
+        returnValue?: Runtime.RemoteObject;
     }
 
     export interface Scope {

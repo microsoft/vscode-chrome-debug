@@ -31,14 +31,15 @@ export class PropertyContainer extends BaseVariableContainer {
 }
 
 export class ScopeContainer extends BaseVariableContainer {
-    public thisObj: Chrome.Runtime.RemoteObject;
-
+    private _thisObj: Chrome.Runtime.RemoteObject;
+    private _returnValue: Chrome.Runtime.RemoteObject;
     private _frameId: string;
     private _scopeIndex: number;
 
-    public constructor(frameId: string, scopeIndex: number, objectId: string, thisObj?: Chrome.Runtime.RemoteObject) {
+    public constructor(frameId: string, scopeIndex: number, objectId: string, thisObj?: Chrome.Runtime.RemoteObject, returnValue?: Chrome.Runtime.RemoteObject) {
         super(objectId);
-        this.thisObj = thisObj;
+        this._thisObj = thisObj;
+        this._returnValue = returnValue;
         this._frameId = frameId;
         this._scopeIndex = scopeIndex;
     }
@@ -49,20 +50,31 @@ export class ScopeContainer extends BaseVariableContainer {
     public expand(adapter: ChromeDebugAdapter, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
         // No filtering in scopes right now
         return super.expand(adapter, 'all', start, count).then(variables => {
-            if (this.thisObj) {
+            if (this._thisObj) {
                 // If this is a scope that should have the 'this', prop, insert it at the top of the list
-                return adapter.propertyDescriptorToVariable(<any>{ name: 'this', value: this.thisObj }).then(thisObjVar => {
-                    variables.unshift(thisObjVar);
-                    return variables;
-                });
-            } else {
-                return variables;
+                return this.insertRemoteObject(adapter, variables, 'this', this._thisObj);
             }
+
+            return variables;
+
+        }).then(variables => {
+            if (this._returnValue) {
+                return this.insertRemoteObject(adapter, variables, 'Return value', this._returnValue);
+            }
+
+            return variables;
         });
     }
 
     public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
         return adapter.setVariableValue(this._frameId, this._scopeIndex, name, value);
+    }
+
+    private insertRemoteObject(adapter: ChromeDebugAdapter, variables: DebugProtocol.Variable[], name: string, obj: Chrome.Runtime.RemoteObject): Promise<DebugProtocol.Variable[]> {
+        return adapter.remoteObjectToVariable(name, obj).then(variable => {
+            variables.unshift(variable);
+            return variables;
+        });
     }
 }
 
