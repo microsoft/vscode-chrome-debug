@@ -41,7 +41,7 @@
     "mockery": "^1.7.0",
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
-    "typescript": "^1.8.7"
+    "typescript": "^2.0.3"
   },
   "scripts": {
     "test": "gulp test"
