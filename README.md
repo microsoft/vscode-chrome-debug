@@ -68,7 +68,7 @@ Two example `launch.json` configs. You must specify either `file` or `url` to la
 }
 ```
 
-If you want to use Chrome from a different directory, you can also set the "runtimeExecutable" field with a path to the Chrome app.
+If you want to use a different installation of Chrome, you can also set the "runtimeExecutable" field with a path to the Chrome app.
 
 ### Attach
 You must launch Chrome with remote debugging enabled in order for the extension to attach to it.
@@ -157,7 +157,7 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * This extension ignores sources that are inlined in the sourcemap - you may have a setup that works in Chrome Dev Tools, but not this extension, because the paths are incorrect, but Chrome Dev Tools are reading the inlined source content.
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
-* If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
+* If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
 * File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`.
 
 ===
