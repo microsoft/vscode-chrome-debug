@@ -95,10 +95,10 @@ export class UrlPathTransformer extends BasePathTransformer {
     }
 
     public getTargetPathFromClientPath(clientPath: string): string {
-        return this._clientPathToTargetUrl.get(utils.canonicalizeUrl(clientPath));
+        return this._clientPathToTargetUrl.get(utils.canonicalizeUrl(clientPath)) || clientPath;
     }
 
     public getClientPathFromTargetPath(targetPath: string): string {
-        return this._targetUrlToClientPath.get(utils.canonicalizeUrl(targetPath));
+        return this._targetUrlToClientPath.get(utils.canonicalizeUrl(targetPath)) || targetPath;
     }
 }
