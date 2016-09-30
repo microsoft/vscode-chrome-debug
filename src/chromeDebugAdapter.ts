@@ -2,16 +2,22 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
 
-import {ILaunchRequestArgs} from './chromeDebugInterfaces';
+import {ILaunchRequestArgs, IAttachRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
+
+const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
+    'webpack:///*': '${webRoot}/*',
+    'meteor://💻app/*': '${webRoot}/*'
+};
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromeProc: ChildProcess;
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        args.sourceMapPathOverrides = args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides;
         return super.launch(args).then(() => {
             // Check exists?
             const chromePath = args.runtimeExecutable || utils.getBrowserPath();
@@ -58,6 +64,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             return this.doAttach(port, launchUrl, args.address);
         });
+    }
+
+    public attach(args: IAttachRequestArgs): Promise<void> {
+        args.sourceMapPathOverrides = args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides;
+        return super.attach(args);
     }
 
     public disconnect(): void {

@@ -13,3 +13,6 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs {
     address?: string;
     port?: number;
 }
+
+export interface IAttachRequestArgs extends Core.IAttachRequestArgs {
+}
