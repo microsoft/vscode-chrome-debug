@@ -966,7 +966,12 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
                 object.description;
         }
 
-        return { name, value, variablesReference: this._variableHandles.create(new PropertyContainer(object.objectId)) };
+        return <DebugProtocol.Variable>{
+            name,
+            value,
+            variablesReference: this._variableHandles.create(new PropertyContainer(object.objectId)),
+            type: value
+        };
     }
 
     public createObjectVariable(name: string, object: Chrome.Runtime.RemoteObject, stringify?: boolean): Promise<DebugProtocol.Variable> {
@@ -1005,6 +1010,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         return propCountP.then(({ indexedVariables, namedVariables }) => (<DebugProtocol.Variable>{
             name,
             value,
+            type: value,
             variablesReference,
             indexedVariables,
             namedVariables
