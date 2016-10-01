@@ -7,8 +7,8 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent, Handles, ContinuedEvent
 
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
-    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody, ISetVariableResponseBody} from '../debugAdapterInterfaces';
-import {IChromeDebugSessionOpts} from './chromeDebugSession';
+    ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody, ISetVariableResponseBody, IDebugAdapter} from '../debugAdapterInterfaces';
+import {IChromeDebugSessionOpts, ChromeDebugSession} from './chromeDebugSession';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import * as Chrome from './chromeDebugProtocol';
@@ -18,7 +18,6 @@ import {formatConsoleMessage} from './consoleHelper';
 import * as errors from '../errors';
 import * as utils from '../utils';
 import * as logger from '../logger';
-import {BaseDebugAdapter} from '../baseDebugAdapter';
 
 import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
@@ -51,12 +50,13 @@ interface IPendingBreakpoint {
     ids: number[];
 }
 
-export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
+export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
     private static SET_BREAKPOINTS_TIMEOUT = 3000;
 
+    protected _session: ChromeDebugSession;
     private _clientAttached: boolean;
     private _currentStack: Chrome.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
@@ -87,9 +87,8 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private _currentStep = Promise.resolve<void>();
     private _nextUnboundBreakpointId = 0;
 
-    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts) {
-        super();
-
+    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts, session: ChromeDebugSession) {
+        this._session = session;
         this._chromeConnection = new (chromeConnection || ChromeConnection)();
 
         this._variableHandles = new Handles<IVariableContainer>();
@@ -206,7 +205,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         if (!this._hasTerminated) {
             this._hasTerminated = true;
             if (this._clientAttached) {
-                this.sendEvent(new TerminatedEvent(restart));
+                this._session.sendEvent(new TerminatedEvent(restart));
             }
 
             if (this._chromeConnection.isAttached) {
@@ -243,7 +242,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
      * to send it at a later time of their choosing.
      */
     protected sendInitializedEvent(): void {
-        this.sendEvent(new InitializedEvent());
+        this._session.sendEvent(new InitializedEvent());
     }
 
     /**
@@ -276,7 +275,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         // Enforce that the stopped event is not fired until we've send the response to the step that induced it.
         // Also with a timeout just to ensure things keep moving
         const sendStoppedEvent = () =>
-            this.sendEvent(new StoppedEvent(this.stopReasonText(reason), /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
+            this._session.sendEvent(new StoppedEvent(this.stopReasonText(reason), /*threadId=*/ChromeDebugAdapter.THREAD_ID, exceptionText));
         utils.promiseTimeout(this._currentStep, /*timeoutMs=*/300)
             .then(sendStoppedEvent, sendStoppedEvent);
     }
@@ -309,7 +308,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
         if (!this._expectingResumedEvent) {
             let resumedEvent = new ContinuedEvent(ChromeDebugAdapter.THREAD_ID);
-            this.sendEvent(resumedEvent);
+            this._session.sendEvent(resumedEvent);
         } else {
             this._expectingResumedEvent = false;
         }
@@ -344,7 +343,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         this.setBreakpoints(pendingBP.args, 0).then(response => {
             response.breakpoints.forEach((bp, i) => {
                 bp.id = pendingBP.ids[i];
-                this.sendEvent(new BreakpointEvent('new', bp));
+                this._session.sendEvent(new BreakpointEvent('new', bp));
             });
         });
     }
@@ -369,13 +368,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const scriptPath = this._pathTransformer.breakpointResolved(bp, script.url);
         this._sourceMapTransformer.breakpointResolved(bp, scriptPath);
         this._lineNumberTransformer.breakpointResolved(bp);
-        this.sendEvent(new BreakpointEvent('new', bp));
+        this._session.sendEvent(new BreakpointEvent('new', bp));
     }
 
     protected onConsoleMessage(params: Chrome.Console.MessageAddedParams): void {
         const formattedMessage = formatConsoleMessage(params.message);
         if (formattedMessage) {
-            this.sendEvent(new OutputEvent(
+            this._session.sendEvent(new OutputEvent(
                 formattedMessage.text + '\n',
                 formattedMessage.isError ? 'stderr' : 'stdout'));
         }

@@ -36,6 +36,7 @@ suite('ChromeDebugAdapter', () => {
     let mockPathTransformer: Mock<UrlPathTransformer>;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;
+    let sendEventHandler: (e: DebugProtocol.Event) => void;
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
@@ -65,10 +66,14 @@ suite('ChromeDebugAdapter', () => {
             lineNumberTransformer: () => mockLineNumberTransformer.object,
             sourceMapTransformer: () => mockSourceMapTransformer.object,
             pathTransformer: () => mockPathTransformer.object
+        },
+        {
+            sendEvent: e => sendEventHandler && sendEventHandler(e)
         });
     });
 
     teardown(() => {
+        sendEventHandler = undefined;
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
@@ -79,13 +84,13 @@ suite('ChromeDebugAdapter', () => {
         test('if successful, an initialized event is fired', () => {
             let initializedFired = false;
 
-            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+            sendEventHandler = (event: DebugProtocol.Event) => {
                 if (event.event === 'initialized') {
                     initializedFired = true;
                 } else {
                     testUtils.assertFail('An unexpected event was fired');
                 }
-            });
+            };
 
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
                 assert(initializedFired, 'Attach completed without firing the initialized event');
@@ -97,9 +102,9 @@ suite('ChromeDebugAdapter', () => {
                 .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber()))
                 .returns(() => utils.errP('Testing attach failed'));
 
-            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+            sendEventHandler = (event: DebugProtocol.Event) => {
                 testUtils.assertFail('Not expecting any event in this scenario');
-            });
+            };
 
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(
                 () => testUtils.assertFail('Expecting promise to be rejected'),
@@ -299,14 +304,14 @@ suite('ChromeDebugAdapter', () => {
         test('Fires an output event when a console message is added', () => {
             const testLog = 'Hello, world!';
             let outputEventFired = false;
-            chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+            sendEventHandler = (event: DebugProtocol.Event) => {
                 if (event.event === 'output') {
                     outputEventFired = true;
                     assert.equal(event.body.text, testLog);
                 } else {
                     testUtils.assertFail('An unexpected event was fired');
                 }
-            });
+            };
 
             mockEventEmitter.emit('Console.onMessageAdded', {
                 message: {
@@ -356,9 +361,9 @@ suite('ChromeDebugAdapter', () => {
 
         test('ignores internal scripts', () => {
             return chromeDebugAdapter.attach(ATTACH_ARGS).then(() => {
-                chromeDebugAdapter.registerEventHandler((event: DebugProtocol.Event) => {
+                sendEventHandler = (event: DebugProtocol.Event) => {
                     testUtils.assertFail('No event should be fired: ' + event.event);
-                });
+                };
 
                 emitScriptParsed(/*url=*/'', undefined, { isInternalScript: true });
             });

@@ -92,9 +92,6 @@ declare type PromiseOrNot<T> = T | Promise<T>;
  * DebugProtocol.Message object, which will be sent to sendErrorResponse.
  */
 export interface IDebugAdapter {
-    registerEventHandler(eventHandler: (event: DebugProtocol.Event) => void): void;
-    registerRequestHandler(eventHandler: (command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void) => void): void;
-
     // From DebugSession
     shutdown(): void;
 

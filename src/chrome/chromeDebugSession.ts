@@ -55,9 +55,7 @@ export class ChromeDebugSession extends DebugSession {
         super();
 
         this._extensionName = opts.extensionName;
-        this._debugAdapter = new (<any>opts.adapter)(opts);
-        this._debugAdapter.registerEventHandler(this.sendEvent.bind(this));
-        this._debugAdapter.registerRequestHandler(this.sendRequest.bind(this));
+        this._debugAdapter = new (<any>opts.adapter)(opts, this);
 
         const logFilePath =  opts.logFilePath;
         logger.init((msg, level) => this.onLog(msg, level), logFilePath, isServer);
