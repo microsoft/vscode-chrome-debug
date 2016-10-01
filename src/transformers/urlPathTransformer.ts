@@ -65,6 +65,10 @@ export class UrlPathTransformer extends BasePathTransformer {
             if (!scriptUrl.startsWith('debugadapter://')) {
                 logger.log(`Paths.scriptParsed: could not resolve ${scriptUrl} to a file under webRoot: ${this._webRoot}. It may be external or served directly from the server's memory (and that's OK).`);
             }
+
+            // We couldn't resolve it to a local path, so we'll work with it in URL terms
+            this._clientPathToTargetUrl.set(scriptUrl, scriptUrl);
+            this._targetUrlToClientPath.set(scriptUrl, scriptUrl);
         } else {
             logger.log(`Paths.scriptParsed: resolved ${scriptUrl} to ${clientPath}. webRoot: ${this._webRoot}`);
             this._clientPathToTargetUrl.set(clientPath, scriptUrl);

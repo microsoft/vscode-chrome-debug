@@ -64,20 +64,10 @@ suite('UrlPathTransformer', () => {
             assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
         });
 
-        // #106
-        test.skip(`doesn't resolve until it can map the client script to the target script`, () => {
-            chromeUtilsMock
-                .setup(x => x.targetUrlToClientPath(It.isValue(undefined), It.isValue(TARGET_URL)))
-                .returns(() => CLIENT_PATH).verifiable();
-
-            // const setBreakpointsP = transformer.setBreakpoints(<any>SET_BP_ARGS).then(() => {
-            //     // If this assert doesn't fail, we know that it resolved at the right time because otherwise it would have no
-            //     // way to produce args with the right url
-            //     assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
-            // });
-
-            // transformer.scriptParsed(TARGET_URL);
-            // return setBreakpointsP;
+        test(`doesn't modify the args when it can't map the client script to the target script`, () => {
+            const origArgs = JSON.parse(JSON.stringify(SET_BP_ARGS));
+            transformer.setBreakpoints(<any>SET_BP_ARGS);
+            assert.deepEqual(SET_BP_ARGS, origArgs);
         });
 
         test(`uses path as-is when it's a URL`, () => {
