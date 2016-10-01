@@ -10,7 +10,7 @@ import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import {ITargetFilter, ChromeConnection} from './chromeConnection';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {BaseSourceMapTransformer} from '../transformers/baseSourceMapTransformer';
-import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
+import {LineColTransformer} from '../transformers/lineNumberTransformer';
 
 import {IDebugAdapter} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
@@ -28,7 +28,7 @@ export interface IChromeDebugSessionOpts {
     chromeConnection?: typeof ChromeConnection;
     pathTransformer?: typeof BasePathTransformer;
     sourceMapTransformer?: typeof BaseSourceMapTransformer;
-    lineNumberTransformer?: typeof LineNumberTransformer;
+    lineColTransformer?: typeof LineColTransformer;
 }
 
 export class ChromeDebugSession extends DebugSession {

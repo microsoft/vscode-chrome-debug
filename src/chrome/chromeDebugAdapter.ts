@@ -19,7 +19,7 @@ import * as errors from '../errors';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
-import {LineNumberTransformer} from '../transformers/lineNumberTransformer';
+import {LineColTransformer} from '../transformers/lineNumberTransformer';
 import {BasePathTransformer} from '../transformers/basePathTransformer';
 import {RemotePathTransformer} from '../transformers/remotePathTransformer';
 import {BaseSourceMapTransformer} from '../transformers/baseSourceMapTransformer';
@@ -76,7 +76,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
     protected _chromeConnection: ChromeConnection;
 
-    private _lineNumberTransformer: LineNumberTransformer;
+    private _lineNumberTransformer: LineColTransformer;
     protected _sourceMapTransformer: BaseSourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
@@ -87,7 +87,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private _currentStep = Promise.resolve<void>();
     private _nextUnboundBreakpointId = 0;
 
-    public constructor({chromeConnection, lineNumberTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts, session: ChromeDebugSession) {
+    public constructor({chromeConnection, lineColTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts, session: ChromeDebugSession) {
         this._session = session;
         this._chromeConnection = new (chromeConnection || ChromeConnection)();
 
@@ -98,7 +98,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
-        this._lineNumberTransformer = new (lineNumberTransformer || LineNumberTransformer)(/*targetLinesStartAt1=*/false);
+        this._lineNumberTransformer = new (lineColTransformer || LineColTransformer)(this._session);
         this._sourceMapTransformer = new (sourceMapTransformer || EagerSourceMapTransformer)(this._sourceHandles);
         this._pathTransformer = new (pathTransformer || RemotePathTransformer)();
 
@@ -129,7 +129,13 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
             return Promise.reject(errors.pathFormat());
         }
 
-        this._lineNumberTransformer.initialize(args);
+        // because session bypasses dispatchRequest
+        if (typeof args.linesStartAt1 === 'boolean') {
+            (<any>this)._clientLinesStartAt1 = args.linesStartAt1;
+        }
+        if (typeof args.columnsStartAt1 === 'boolean') {
+            (<any>this)._clientColumnsStartAt1 = args.columnsStartAt1;
+        }
 
         // This debug adapter supports two exception breakpoint filters
         return {
