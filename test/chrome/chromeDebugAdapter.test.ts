@@ -9,7 +9,6 @@ import {getMockLineNumberTransformer, getMockPathTransformer, getMockSourceMapTr
 import {ISetBreakpointsResponseBody} from '../../src/debugAdapterInterfaces';
 import * as Chrome from '../../src/chrome/chromeDebugProtocol';
 import {ChromeConnection} from '../../src/chrome/chromeConnection';
-import {IChromeDebugSessionOpts} from '../../src/chrome/chromeDebugSession';
 
 import {LineColTransformer} from '../../src/transformers/lineNumberTransformer';
 import {BaseSourceMapTransformer} from '../../src/transformers/baseSourceMapTransformer';
@@ -62,7 +61,7 @@ suite('ChromeDebugAdapter', () => {
         mockPathTransformer = getMockPathTransformer();
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
-        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)(<IChromeDebugSessionOpts>{
+        chromeDebugAdapter = new (require(MODULE_UNDER_TEST).ChromeDebugAdapter)({
             chromeConnection: () => mockChromeConnection.object,
             lineColTransformer: () => mockLineNumberTransformer.object,
             sourceMapTransformer: () => mockSourceMapTransformer.object,

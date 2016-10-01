@@ -8,7 +8,7 @@ import {StoppedEvent, InitializedEvent, TerminatedEvent, Handles, ContinuedEvent
 import {ILaunchRequestArgs, ISetBreakpointsArgs, ISetBreakpointsResponseBody, IStackTraceResponseBody,
     IAttachRequestArgs, IScopesResponseBody, IVariablesResponseBody,
     ISourceResponseBody, IThreadsResponseBody, IEvaluateResponseBody, ISetVariableResponseBody, IDebugAdapter} from '../debugAdapterInterfaces';
-import {IChromeDebugSessionOpts, ChromeDebugSession} from './chromeDebugSession';
+import {IChromeDebugAdapterOpts, ChromeDebugSession} from './chromeDebugSession';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import * as Chrome from './chromeDebugProtocol';
@@ -87,7 +87,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private _currentStep = Promise.resolve<void>();
     private _nextUnboundBreakpointId = 0;
 
-    public constructor({chromeConnection, lineColTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugSessionOpts, session: ChromeDebugSession) {
+    public constructor({chromeConnection, lineColTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugAdapterOpts, session: ChromeDebugSession) {
         this._session = session;
         this._chromeConnection = new (chromeConnection || ChromeConnection)();
 

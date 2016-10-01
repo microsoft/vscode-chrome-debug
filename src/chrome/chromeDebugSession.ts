@@ -16,11 +16,7 @@ import {IDebugAdapter} from '../debugAdapterInterfaces';
 import * as utils from '../utils';
 import * as logger from '../logger';
 
-export interface IChromeDebugSessionOpts {
-    /** The class of the adapter, which is instantiated for each session */
-    adapter: typeof ChromeDebugAdapter;
-    extensionName: string;
-
+export interface IChromeDebugAdapterOpts {
     targetFilter?: ITargetFilter;
     logFilePath?: string;
 
@@ -29,6 +25,12 @@ export interface IChromeDebugSessionOpts {
     pathTransformer?: typeof BasePathTransformer;
     sourceMapTransformer?: typeof BaseSourceMapTransformer;
     lineColTransformer?: typeof LineColTransformer;
+}
+
+export interface IChromeDebugSessionOpts extends IChromeDebugAdapterOpts {
+    /** The class of the adapter, which is instantiated for each session */
+    adapter: typeof ChromeDebugAdapter;
+    extensionName: string;
 }
 
 export class ChromeDebugSession extends DebugSession {
