@@ -12,7 +12,7 @@ import {IChromeDebugSessionOpts} from './chromeDebugSession';
 import {ChromeConnection} from './chromeConnection';
 import * as ChromeUtils from './chromeUtils';
 import * as Chrome from './chromeDebugProtocol';
-import {PropertyContainer, ScopeContainer, IVariableContainer, isIndexedPropName} from './variables';
+import {PropertyContainer, ScopeContainer, IVariableContainer, ExceptionContainer, isIndexedPropName} from './variables';
 
 import {formatConsoleMessage} from './consoleHelper';
 import * as errors from '../errors';
@@ -54,7 +54,6 @@ interface IPendingBreakpoint {
 export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private static THREAD_ID = 1;
     private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
-    private static EXCEPTION_VALUE_ID = 'EXCEPTION_VALUE_ID';
     private static PLACEHOLDER_URL_PROTOCOL = 'debugadapter://';
     private static SET_BREAKPOINTS_TIMEOUT = 3000;
 
@@ -62,7 +61,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     private _currentStack: Chrome.Debugger.CallFrame[];
     private _committedBreakpointsByUrl: Map<string, Chrome.Debugger.BreakpointId[]>;
     private _overlayHelper: utils.DebounceHelper;
-    private _exceptionValueObject: Chrome.Runtime.RemoteObject;
+    private _exception: Chrome.Runtime.RemoteObject;
     private _setBreakpointsRequestQ: Promise<any>;
     private _expectingResumedEvent: boolean;
     protected _expectingStopReason: string;
@@ -255,6 +254,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
     }
 
     protected onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
+        this._exception = undefined;
         this._overlayHelper.doAndCancel(() => this._chromeConnection.page_setOverlayMessage(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
@@ -264,23 +264,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         let exceptionText: string;
         if (notification.reason === 'exception') {
             reason = 'exception';
-            if (notification.data && this._currentStack.length) {
-                // Insert a scope to wrap the exception object. exceptionText is unused by Code at the moment.
-                let scopeObject: Chrome.Runtime.RemoteObject;
-
-                if (notification.data.objectId) {
-                    // If the remote object is an object (probably an Error), treat the object like a scope.
-                    exceptionText = notification.data.description;
-                    scopeObject = notification.data;
-                } else {
-                    // If it's a value, use a special flag and save the value for later.
-                    exceptionText = notification.data.value;
-                    scopeObject = <any>{ objectId: ChromeDebugAdapter.EXCEPTION_VALUE_ID };
-                    this._exceptionValueObject = notification.data;
-                }
-
-                this._currentStack[0].scopeChain.unshift({ type: 'Exception', object: scopeObject });
-            }
+            this._exception = notification.data;
         } else if (notification.hitBreakpoints && notification.hitBreakpoints.length) {
             reason = 'breakpoint';
         } else {
@@ -453,7 +437,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
             const targetPath = this._pathTransformer.getTargetPathFromClientPath(mappedPath);
             if (!targetPath) {
-                return Promise.reject(undefined);
+                return utils.errP('Breakpoint ignored because target path not found');
             }
 
             return undefined;
@@ -693,6 +677,13 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
             };
         });
 
+        if (this._exception) {
+            scopes.unshift(<DebugProtocol.Scope>{
+                name: utils.localize('scope.exception', "Exception"),
+                variablesReference: this._variableHandles.create(ExceptionContainer.create(currentFrame.callFrameId, this._exception))
+            });
+        }
+
         return { scopes };
     }
 
@@ -700,14 +691,6 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         const handle = this._variableHandles.get(args.variablesReference);
         if (!handle) {
             return Promise.resolve<IVariablesResponseBody>(undefined);
-        }
-
-        // TODO create Container for this special exception scope
-        // If this is the special marker for an exception value, create a fake property descriptor so the usual route can be used
-        if (handle.objectId === ChromeDebugAdapter.EXCEPTION_VALUE_ID) {
-            const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'exception', value: this._exceptionValueObject };
-            return this.propertyDescriptorToVariable(excValuePropDescriptor)
-                .then(variable => ({ variables: [variable]}));
         }
 
         return handle.expand(this, args.filter, args.start, args.count).then(variables => {

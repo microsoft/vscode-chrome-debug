@@ -4,6 +4,7 @@
 
 import * as DebugProtocol from 'vscode-debugadapter';
 
+import * as utils from '../utils';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import * as Chrome from './chromeDebugProtocol.d';
 
@@ -34,14 +35,14 @@ export class ScopeContainer extends BaseVariableContainer {
     private _thisObj: Chrome.Runtime.RemoteObject;
     private _returnValue: Chrome.Runtime.RemoteObject;
     private _frameId: string;
-    private _scopeIndex: number;
+    private _origScopeIndex: number;
 
-    public constructor(frameId: string, scopeIndex: number, objectId: string, thisObj?: Chrome.Runtime.RemoteObject, returnValue?: Chrome.Runtime.RemoteObject) {
+    public constructor(frameId: string, origScopeIndex: number, objectId: string, thisObj?: Chrome.Runtime.RemoteObject, returnValue?: Chrome.Runtime.RemoteObject) {
         super(objectId);
         this._thisObj = thisObj;
         this._returnValue = returnValue;
         this._frameId = frameId;
-        this._scopeIndex = scopeIndex;
+        this._origScopeIndex = origScopeIndex;
     }
 
     /**
@@ -67,7 +68,7 @@ export class ScopeContainer extends BaseVariableContainer {
     }
 
     public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
-        return adapter.setVariableValue(this._frameId, this._scopeIndex, name, value);
+        return adapter.setVariableValue(this._frameId, this._origScopeIndex, name, value);
     }
 
     private insertRemoteObject(adapter: ChromeDebugAdapter, variables: DebugProtocol.Variable[], name: string, obj: Chrome.Runtime.RemoteObject): Promise<DebugProtocol.Variable[]> {
@@ -75,6 +76,46 @@ export class ScopeContainer extends BaseVariableContainer {
             variables.unshift(variable);
             return variables;
         });
+    }
+}
+
+export class ExceptionContainer extends ScopeContainer {
+    protected _exception: Chrome.Runtime.RemoteObject;
+
+    protected constructor(frameId: string, objectId: string, exception: Chrome.Runtime.RemoteObject) {
+        super(frameId, undefined, exception.objectId);
+        this._exception = exception;
+    }
+
+    /**
+     * Expand the exception as if it were a Scope
+     */
+    public static create(frameId: string, exception: Chrome.Runtime.RemoteObject): ExceptionContainer {
+        return exception.objectId ?
+            new ExceptionContainer(frameId, exception.objectId, exception) :
+            new ExceptionValueContainer(frameId, exception);
+    }
+
+    public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
+        return utils.errP('Editing exception properties is not allowed...');
+    }
+}
+
+/**
+ * For when a value is thrown instead of an object
+ */
+export class ExceptionValueContainer extends ExceptionContainer {
+    public constructor(frameId: string, exception: Chrome.Runtime.RemoteObject) {
+        super(frameId, 'EXCEPTION_ID', exception);
+    }
+
+    /**
+     * Make up a fake 'Exception' property to hold the thrown value, displayed under the Exception Scope
+     */
+    public expand(adapter: ChromeDebugAdapter, filter?: string, start?: number, count?: number): Promise<DebugProtocol.Variable[]> {
+        const excValuePropDescriptor: Chrome.Runtime.PropertyDescriptor = <any>{ name: 'Exception', value: this._exception };
+        return adapter.propertyDescriptorToVariable(excValuePropDescriptor)
+            .then(variable => [variable]);
     }
 }
 
