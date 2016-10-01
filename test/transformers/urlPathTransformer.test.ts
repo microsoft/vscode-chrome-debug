@@ -60,7 +60,7 @@ suite('UrlPathTransformer', () => {
                 .returns(() => CLIENT_PATH).verifiable();
 
             transformer.scriptParsed(TARGET_URL);
-            assert(transformer.setBreakpoints(<any>SET_BP_ARGS));
+            transformer.setBreakpoints(<any>SET_BP_ARGS);
             assert.deepEqual(SET_BP_ARGS, EXPECTED_SET_BP_ARGS);
         });
 
@@ -72,7 +72,7 @@ suite('UrlPathTransformer', () => {
 
         test(`uses path as-is when it's a URL`, () => {
             const args = <any>{ source: { path: TARGET_URL } };
-            assert(transformer.setBreakpoints(args));
+            transformer.setBreakpoints(args);
             assert.deepEqual(args, EXPECTED_SET_BP_ARGS);
         });
     });

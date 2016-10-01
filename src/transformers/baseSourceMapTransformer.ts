@@ -60,9 +60,9 @@ export class BaseSourceMapTransformer {
      * Apply sourcemapping to the setBreakpoints request path/lines.
      * Returns true if completed successfully, and setBreakpoint should continue.
      */
-    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): boolean {
+    public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): void {
         if (!this._sourceMaps) {
-            return true;
+            return;
         }
 
         if (args.source.sourceReference) {
@@ -116,14 +116,14 @@ export class BaseSourceMapTransformer {
             } else {
                 // Source (or generated) file which is not loaded, need to wait
                 logger.log(`SourceMaps.setBP: ${argsPath} can't be resolved to a loaded script. It may just not be loaded yet.`);
-                return false;
+                return;
             }
         } else {
             // No source.path
         }
 
         this._requestSeqToSetBreakpointsArgs.set(requestSeq, JSON.parse(JSON.stringify(args)));
-        return true;
+        return;
     }
 
     /**

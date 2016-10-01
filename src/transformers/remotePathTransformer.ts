@@ -46,7 +46,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         return localRootP;
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+    public setBreakpoints(args: ISetBreakpointsArgs): void {
         if (args.source.path) {
             args.source.path = this.getTargetPathFromClientPath(args.source.path);
         }

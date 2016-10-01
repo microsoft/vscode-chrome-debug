@@ -29,16 +29,16 @@ export class UrlPathTransformer extends BasePathTransformer {
         return super.attach(args);
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
+    public setBreakpoints(args: ISetBreakpointsArgs): void {
         if (!args.source.path) {
             // sourceReference script, nothing to do
-            return true;
+            return;
         }
 
         if (utils.isURL(args.source.path)) {
             // already a url, use as-is
             logger.log(`Paths.setBP: ${args.source.path} is already a URL`);
-            return true;
+            return;
         }
 
         const path = utils.canonicalizeUrl(args.source.path);
@@ -46,11 +46,11 @@ export class UrlPathTransformer extends BasePathTransformer {
         if (url) {
             args.source.path = url;
             logger.log(`Paths.setBP: Resolved ${path} to ${args.source.path}`);
-            return true;
+            return;
         } else {
             logger.log(`Paths.setBP: No target url cached yet for client path: ${path}.`);
             args.source.path = path;
-            return false;
+            return;
         }
     }
 

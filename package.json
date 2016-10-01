@@ -45,7 +45,7 @@
     "tslint-eslint-rules": "^1.5.0",
     "tslint-microsoft-contrib": "^2.0.10",
     "typemoq": "^0.3.3",
-    "typescript": "^2.0.2"
+    "typescript": "^2.0.3"
   },
   "scripts": {
     "test": "node ./node_modules/mocha/bin/mocha --recursive -u tdd ./out/test/"

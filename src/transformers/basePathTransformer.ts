@@ -18,8 +18,7 @@ export class BasePathTransformer {
         return Promise.resolve<void>();
     }
 
-    public setBreakpoints(args: ISetBreakpointsArgs): boolean {
-        return true;
+    public setBreakpoints(args: ISetBreakpointsArgs): void {
     }
 
     public clearTargetContext(): void {

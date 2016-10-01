@@ -126,7 +126,7 @@ suite('BaseSourceMapTransformer', () => {
             const args = createArgs(AUTHORED_PATH, AUTHORED_BPS());
             const expected = createExpectedArgs(AUTHORED_PATH, RUNTIME_PATH, RUNTIME_BPS());
 
-            assert(getTransformer().setBreakpoints(args, 0));
+            getTransformer().setBreakpoints(args, 0);
             assert.deepEqual(args, expected);
         });
 
@@ -134,7 +134,7 @@ suite('BaseSourceMapTransformer', () => {
             const args = createArgs(RUNTIME_PATH, RUNTIME_BPS());
             const expected = createArgs(RUNTIME_PATH, RUNTIME_BPS());
 
-            assert(getTransformer(/*sourceMaps=*/false).setBreakpoints(args, 0));
+            getTransformer(/*sourceMaps=*/false).setBreakpoints(args, 0);
             assert.deepEqual(args, expected);
         });
 
@@ -165,7 +165,7 @@ suite('BaseSourceMapTransformer', () => {
             });
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
-            assert(!transformer.setBreakpoints(args, /*requestSeq=*/0));
+            transformer.setBreakpoints(args, /*requestSeq=*/0);
             assert.deepEqual(args, expected);
             mock.verifyAll();
 
@@ -180,8 +180,8 @@ suite('BaseSourceMapTransformer', () => {
             const mock = createMergedSourcesMock(args, args2);
 
             const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
-            assert(transformer.setBreakpoints(args, 0));
-            assert(transformer.setBreakpoints(args2, 1));
+            transformer.setBreakpoints(args, 0);
+            transformer.setBreakpoints(args2, 1);
 
             assert.deepEqual(args2, expected);
             mock.verifyAll();
@@ -205,10 +205,10 @@ suite('BaseSourceMapTransformer', () => {
                 const expected = getResponseBody(AUTHORED_BPS());
 
                 const transformer = getTransformer();
-                assert(transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
+                transformer.setBreakpoints(<DebugProtocol.SetBreakpointsArguments>{
                     source: { path: AUTHORED_PATH },
                     breakpoints: AUTHORED_BPS()
-                }, 0));
+                }, 0);
                 transformer.setBreakpointsResponse(response, 0);
                 assert.deepEqual(response, expected);
             });
@@ -240,8 +240,8 @@ suite('BaseSourceMapTransformer', () => {
                 });
 
                 const transformer = getTransformer(/*sourceMaps=*/true, /*suppressDefaultMock=*/true);
-                assert(transformer.setBreakpoints(setBPArgs, /*requestSeq=*/0));
-                assert(transformer.setBreakpoints(setBPArgs2, /*requestSeq=*/1));
+                transformer.setBreakpoints(setBPArgs, /*requestSeq=*/0);
+                transformer.setBreakpoints(setBPArgs2, /*requestSeq=*/1);
                 transformer.setBreakpointsResponse(response, /*requestSeq=*/1);
 
                 assert.deepEqual(response, expected);
