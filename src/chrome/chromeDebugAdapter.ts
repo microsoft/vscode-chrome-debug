@@ -700,6 +700,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
 
     public propertyDescriptorToVariable(propDesc: Chrome.Runtime.PropertyDescriptor, owningObjectId?: string): Promise<DebugProtocol.Variable> {
         if (propDesc.get) {
+            // Getter
             const grabGetterValue = 'function remoteFunction(propName) { return this[propName]; }';
             return this._chromeConnection.runtime_callFunctionOn(owningObjectId, grabGetterValue, [{ value: propDesc.name }]).then(response => {
                 if (response.error) {
@@ -984,6 +985,12 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
                 // Up to the first newline is just the error name/message.
                 const firstNewlineIdx = object.description.indexOf('\n');
                 if (firstNewlineIdx >= 0) value = object.description.substr(0, firstNewlineIdx);
+            } else if (object.subtype === 'promise' && object.preview) {
+                const promiseStatus = object.preview.properties.filter(prop => prop.name === '[[PromiseStatus]]')[0];
+                if (promiseStatus) value = object.description + ' { ' + promiseStatus.value + ' }';
+            } else if (object.subtype === 'generator' && object.preview) {
+                const generatorStatus = object.preview.properties.filter(prop => prop.name === '[[GeneratorStatus]]')[0];
+                if (generatorStatus) value = object.description + ' { ' + generatorStatus.value + ' }';
             }
 
             propCountP = Promise.resolve({ });
