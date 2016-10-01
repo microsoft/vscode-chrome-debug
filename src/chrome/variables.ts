@@ -4,7 +4,6 @@
 
 import * as DebugProtocol from 'vscode-debugadapter';
 
-import * as utils from '../utils';
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 import * as Chrome from './chromeDebugProtocol.d';
 
@@ -79,25 +78,21 @@ export class ScopeContainer extends BaseVariableContainer {
     }
 }
 
-export class ExceptionContainer extends ScopeContainer {
+export class ExceptionContainer extends PropertyContainer {
     protected _exception: Chrome.Runtime.RemoteObject;
 
-    protected constructor(frameId: string, objectId: string, exception: Chrome.Runtime.RemoteObject) {
-        super(frameId, undefined, exception.objectId);
+    protected constructor(objectId: string, exception: Chrome.Runtime.RemoteObject) {
+        super(exception.objectId);
         this._exception = exception;
     }
 
     /**
      * Expand the exception as if it were a Scope
      */
-    public static create(frameId: string, exception: Chrome.Runtime.RemoteObject): ExceptionContainer {
+    public static create(exception: Chrome.Runtime.RemoteObject): ExceptionContainer {
         return exception.objectId ?
-            new ExceptionContainer(frameId, exception.objectId, exception) :
-            new ExceptionValueContainer(frameId, exception);
-    }
-
-    public setValue(adapter: ChromeDebugAdapter, name: string, value: string): Promise<string> {
-        return utils.errP('Editing exception properties is not allowed...');
+            new ExceptionContainer(exception.objectId, exception) :
+            new ExceptionValueContainer(exception);
     }
 }
 
@@ -105,8 +100,8 @@ export class ExceptionContainer extends ScopeContainer {
  * For when a value is thrown instead of an object
  */
 export class ExceptionValueContainer extends ExceptionContainer {
-    public constructor(frameId: string, exception: Chrome.Runtime.RemoteObject) {
-        super(frameId, 'EXCEPTION_ID', exception);
+    public constructor(exception: Chrome.Runtime.RemoteObject) {
+        super('EXCEPTION_ID', exception);
     }
 
     /**

@@ -680,7 +680,7 @@ export abstract class ChromeDebugAdapter extends BaseDebugAdapter {
         if (this._exception) {
             scopes.unshift(<DebugProtocol.Scope>{
                 name: utils.localize('scope.exception', "Exception"),
-                variablesReference: this._variableHandles.create(ExceptionContainer.create(currentFrame.callFrameId, this._exception))
+                variablesReference: this._variableHandles.create(ExceptionContainer.create(this._exception))
             });
         }
 
