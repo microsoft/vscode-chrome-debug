@@ -260,7 +260,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
     protected onDebuggerPaused(notification: Chrome.Debugger.PausedParams): void {
         this._exception = undefined;
-        this._overlayHelper.doAndCancel(() => this._chromeConnection.page_setOverlayMessage(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
+        this._overlayHelper.doAndCancel(() => this._chromeConnection.page_configureOverlay(ChromeDebugAdapter.PAGE_PAUSE_MESSAGE));
         this._currentStack = notification.callFrames;
 
         // We can tell when we've broken on an exception. Otherwise if hitBreakpoints is set, assume we hit a
@@ -309,7 +309,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     protected onDebuggerResumed(): void {
-        this._overlayHelper.wait(() => this._chromeConnection.page_clearOverlayMessage());
+        this._overlayHelper.wait(() => this._chromeConnection.page_configureOverlay(undefined));
         this._currentStack = null;
 
         if (!this._expectingResumedEvent) {

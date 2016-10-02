@@ -273,12 +273,8 @@ export class ChromeConnection {
         return this.sendMessage('Runtime.run');
     }
 
-    public page_setOverlayMessage(message: string): Promise<Chrome.Response> {
-        return this.sendMessage('Page.setOverlayMessage', { message });
-    }
-
-    public page_clearOverlayMessage(): Promise<Chrome.Response> {
-        return this.sendMessage('Page.setOverlayMessage');
+    public page_configureOverlay(message: string): Promise<Chrome.Response> {
+        return this.sendMessage('Page.configureOverlay', { message });
     }
 
     public emulation_clearDeviceMetricsOverride(): Promise<Chrome.Response> {
