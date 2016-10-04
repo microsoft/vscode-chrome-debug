@@ -36,7 +36,7 @@ export class EagerSourceMapTransformer extends BaseSourceMapTransformer {
                     })
                     .then(() => { });
             } else {
-                this._preLoad = Promise.resolve<void>();
+                this._preLoad = Promise.resolve();
             }
         }
     }

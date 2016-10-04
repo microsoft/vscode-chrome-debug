@@ -11,11 +11,11 @@ import {ISetBreakpointsArgs, ILaunchRequestArgs, IAttachRequestArgs, IStackTrace
  */
 export class BasePathTransformer {
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        return Promise.resolve<void>();
+        return Promise.resolve();
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
-        return Promise.resolve<void>();
+        return Promise.resolve();
     }
 
     public setBreakpoints(args: ISetBreakpointsArgs): void {

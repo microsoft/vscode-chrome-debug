@@ -76,7 +76,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
     protected _chromeConnection: ChromeConnection;
 
-    private _lineNumberTransformer: LineColTransformer;
+    private _lineColTransformer: LineColTransformer;
     protected _sourceMapTransformer: BaseSourceMapTransformer;
     private _pathTransformer: BasePathTransformer;
 
@@ -84,7 +84,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     protected _inShutdown: boolean;
     protected _attachMode: boolean;
 
-    private _currentStep = Promise.resolve<void>();
+    private _currentStep = Promise.resolve();
     private _nextUnboundBreakpointId = 0;
 
     public constructor({chromeConnection, lineColTransformer, sourceMapTransformer, pathTransformer }: IChromeDebugAdapterOpts, session: ChromeDebugSession) {
@@ -98,7 +98,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
 
-        this._lineNumberTransformer = new (lineColTransformer || LineColTransformer)(this._session);
+        this._lineColTransformer = new (lineColTransformer || LineColTransformer)(this._session);
         this._sourceMapTransformer = new (sourceMapTransformer || EagerSourceMapTransformer)(this._sourceHandles);
         this._pathTransformer = new (pathTransformer || RemotePathTransformer)();
 
@@ -119,7 +119,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         this._scriptsByUrl = new Map<string, Chrome.Debugger.Script>();
 
         this._committedBreakpointsByUrl = new Map<string, Chrome.Debugger.BreakpointId[]>();
-        this._setBreakpointsRequestQ = Promise.resolve<void>();
+        this._setBreakpointsRequestQ = Promise.resolve();
 
         this._pathTransformer.clearTargetContext();
     }
@@ -158,7 +158,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     public configurationDone(): Promise<void> {
-        return Promise.resolve<void>();
+        return Promise.resolve();
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
@@ -167,7 +167,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
         this.setupLogging(args);
 
-        return Promise.resolve<void>();
+        return Promise.resolve();
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
@@ -239,7 +239,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
             return this._chromeConnection.attach(address, port, targetUrl)
                 .then(() => this.sendInitializedEvent());
         } else {
-            return Promise.resolve<void>();
+            return Promise.resolve();
         }
     }
 
@@ -373,7 +373,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         };
         const scriptPath = this._pathTransformer.breakpointResolved(bp, script.url);
         this._sourceMapTransformer.breakpointResolved(bp, scriptPath);
-        this._lineNumberTransformer.breakpointResolved(bp);
+        this._lineColTransformer.breakpointResolved(bp);
         this._session.sendEvent(new BreakpointEvent('new', bp));
     }
 
@@ -393,7 +393,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     public setBreakpoints(args: ISetBreakpointsArgs, requestSeq: number): Promise<ISetBreakpointsResponseBody> {
         return this.validateBreakpointsPath(args)
             .then(() => {
-                this._lineNumberTransformer.setBreakpoints(args);
+                this._lineColTransformer.setBreakpoints(args);
                 this._sourceMapTransformer.setBreakpoints(args, requestSeq);
                 this._pathTransformer.setBreakpoints(args);
 
@@ -422,7 +422,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
                     this._setBreakpointsRequestQ = setBreakpointsPTimeout.catch(() => undefined);
                     return setBreakpointsPTimeout.then(body => {
                         this._sourceMapTransformer.setBreakpointsResponse(body, requestSeq);
-                        this._lineNumberTransformer.setBreakpointsResponse(body);
+                        this._lineColTransformer.setBreakpointsResponse(body);
                         return body;
                     });
                 } else {
@@ -433,7 +433,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     }
 
     private validateBreakpointsPath(args: ISetBreakpointsArgs): Promise<void> {
-        if (!args.source.path) return Promise.resolve<void>();
+        if (!args.source.path) return Promise.resolve();
 
         return this._sourceMapTransformer.getGeneratedPathFromAuthoredPath(args.source.path).then(mappedPath => {
             if (!mappedPath) {
@@ -470,7 +470,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
 
     private clearAllBreakpoints(url: string): Promise<void> {
         if (!this._committedBreakpointsByUrl.has(url)) {
-            return Promise.resolve<void>();
+            return Promise.resolve();
         }
 
         // Remove breakpoints one at a time. Seems like it would be ok to send the removes all at once,
@@ -479,7 +479,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         // does not break there.
         return this._committedBreakpointsByUrl.get(url).reduce((p, bpId) => {
             return p.then(() => this._chromeConnection.debugger_removeBreakpoint(bpId)).then(() => { });
-        }, Promise.resolve<void>()).then(() => {
+        }, Promise.resolve()).then(() => {
             this._committedBreakpointsByUrl.set(url, null);
         });
     }
@@ -661,7 +661,7 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
         const stackTraceResponse = { stackFrames };
         this._pathTransformer.stackTraceResponse(stackTraceResponse);
         this._sourceMapTransformer.stackTraceResponse(stackTraceResponse);
-        this._lineNumberTransformer.stackTraceResponse(stackTraceResponse);
+        this._lineColTransformer.stackTraceResponse(stackTraceResponse);
 
         return stackTraceResponse;
     }
@@ -905,10 +905,10 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     public setPropertyValue(objectId: string, propName: string, value: string): Promise<string> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, `function() { return this["${propName}"] = ${value} }`, undefined, /*silent=*/true).then(response => {
             if (response.error) {
-                return Promise.reject(errors.errorFromEvaluate(response.error.message));
+                return Promise.reject<string>(errors.errorFromEvaluate(response.error.message));
             } else if (response.result.exceptionDetails) {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
-                return Promise.reject(errors.errorFromEvaluate(errMsg));
+                return Promise.reject<string>(errors.errorFromEvaluate(errMsg));
             } else {
                 // Temporary, Microsoft/vscode#12019
                 return ChromeUtils.remoteObjectToValue(response.result.result).value;
@@ -1044,14 +1044,14 @@ export abstract class ChromeDebugAdapter implements IDebugAdapter {
     private getNumPropsByEval(objectId: string, getNumPropsFn: string): Promise<IPropCount> {
         return this._chromeConnection.runtime_callFunctionOn(objectId, getNumPropsFn, undefined, /*silent=*/true, /*returnByValue=*/true).then(response => {
             if (response.error) {
-                return Promise.reject(errors.errorFromEvaluate(response.error.message));
+                return Promise.reject<IPropCount>(errors.errorFromEvaluate(response.error.message));
             } else if (response.result.exceptionDetails) {
                 const errMsg = ChromeUtils.errorMessageFromExceptionDetails(response.result.exceptionDetails);
-                return Promise.reject(errors.errorFromEvaluate(errMsg));
+                return Promise.reject<IPropCount>(errors.errorFromEvaluate(errMsg));
             } else {
                 const resultProps = response.result.result.value;
                 if (resultProps.length !== 2) {
-                    return Promise.reject(errors.errorFromEvaluate("Did not get expected props, got " + JSON.stringify(resultProps)));
+                    return Promise.reject<IPropCount>(errors.errorFromEvaluate("Did not get expected props, got " + JSON.stringify(resultProps)));
                 }
 
                 return { indexedVariables: resultProps[0], namedVariables: resultProps[1] };

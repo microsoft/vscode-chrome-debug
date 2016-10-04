@@ -25,7 +25,7 @@ export class BaseSourceMapTransformer {
     private _allRuntimeScriptPaths: Set<string>;
     private _authoredPathsToMappedBPs: Map<string, DebugProtocol.SourceBreakpoint[]>;
 
-    protected _preLoad = Promise.resolve<void>();
+    protected _preLoad = Promise.resolve();
 
     constructor(sourceHandles: Handles<ISourceContainer>) {
         this._sourceHandles = sourceHandles;

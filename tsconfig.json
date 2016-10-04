@@ -3,7 +3,7 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "noImplicitAny": false,
-        "target": "ES5",
+        "target": "ES6",
         "sourceMap": true,
         "outDir": "out",
         "declaration": true,

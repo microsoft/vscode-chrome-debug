@@ -20,8 +20,6 @@
     "ws": "^1.1.1"
   },
   "devDependencies": {
-    "@types/es6-collections": "^0.5.29",
-    "@types/es6-promise": "0.0.32",
     "@types/glob": "^5.0.30",
     "@types/minimatch": "^2.0.29",
     "@types/mocha": "^2.2.32",

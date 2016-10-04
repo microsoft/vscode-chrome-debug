@@ -24,7 +24,7 @@ export class RemotePathTransformer extends BasePathTransformer {
         this._remoteRoot = args.remoteRoot;
 
         // Validate that localRoot is absolute and exists
-        let localRootP = Promise.resolve<void>();
+        let localRootP = Promise.resolve();
         if (args.localRoot) {
             const localRoot = args.localRoot;
             if (!path.isAbsolute(localRoot)) {
