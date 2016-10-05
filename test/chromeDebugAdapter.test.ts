@@ -25,8 +25,6 @@ class MockChromeDebugSession {
 
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    const ATTACH_ARGS = { port: 9222 };
-
     let mockChromeConnection: Mock<ChromeConnection>;
     let mockEventEmitter: EventEmitter;
 

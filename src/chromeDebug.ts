@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugSession, logger, ChromeConnection, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
+import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
 import * as path from 'path';
 
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
@@ -14,13 +14,13 @@ const targetFilter = target => target && (!target.type || target.type === 'page'
 // Cast because DebugSession is declared twice - in this repo's vscode-debugadapter, and that of -core... TODO
 ChromeDebugSession.run(ChromeDebugSession.getSession(
     {
-        logFilePath: path.resolve(__dirname, '../../vscode-chrome-debug.txt'), // non-.txt file types can't be uploaded to github
         adapter: ChromeDebugAdapter,
         extensionName: EXTENSION_NAME,
+        logFilePath: path.resolve(__dirname, '../../vscode-chrome-debug.txt'), // non-.txt file types can't be uploaded to github
         targetFilter,
 
         pathTransformer: UrlPathTransformer,
-        sourceMapTransformer: BaseSourceMapTransformer
+        sourceMapTransformer: BaseSourceMapTransformer,
     }));
 
 /* tslint:disable:no-var-requires */

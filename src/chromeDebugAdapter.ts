@@ -10,7 +10,7 @@ import * as utils from './utils';
 
 const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///*': '${webRoot}/*',
-    'meteor://💻app/*': '${webRoot}/*'
+    'meteor://💻app/*': '${webRoot}/*',
 };
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
@@ -53,7 +53,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
             this._chromeProc = spawn(chromePath, chromeArgs, {
                 detached: true,
-                stdio: ['ignore']
+                stdio: ['ignore'],
             });
             this._chromeProc.unref();
             this._chromeProc.on('error', (err) => {
