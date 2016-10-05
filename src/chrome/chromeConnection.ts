@@ -274,7 +274,7 @@ export class ChromeConnection {
     }
 
     public page_configureOverlay(message: string): Promise<Chrome.Response> {
-        return this.sendMessage('Page.configureOverlay', { message });
+        return this.sendMessage('Page.setOverlayMessage', { message });
     }
 
     public emulation_clearDeviceMetricsOverride(): Promise<Chrome.Response> {
