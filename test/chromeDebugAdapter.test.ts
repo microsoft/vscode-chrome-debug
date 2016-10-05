@@ -15,6 +15,14 @@ import * as testUtils from './testUtils';
 /** Not mocked - use for type only */
 import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../src/chromeDebugAdapter';
 
+class MockChromeDebugSession {
+    public sendEvent(event: DebugProtocol.Event): void {
+    }
+
+    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+    }
+}
+
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
     const ATTACH_ARGS = { port: 9222 };
@@ -36,14 +44,14 @@ suite('ChromeDebugAdapter', () => {
             .callback((eventName: string, handler: (msg: any) => void) => mockEventEmitter.on(eventName, handler));
         mockChromeConnection
             .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isValue(undefined)))
-            .returns(() => Promise.resolve<void>());
+            .returns(() => Promise.resolve());
         mockChromeConnection
             .setup(x => x.isAttached)
             .returns(() => false);
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
-        chromeDebugAdapter = new cDAClass({ chromeConnection: () => mockChromeConnection.object } as any);
+        chromeDebugAdapter = new cDAClass({ chromeConnection: function() { return mockChromeConnection.object; } } as any, new MockChromeDebugSession() as any);
     });
 
     teardown(() => {
@@ -75,7 +83,7 @@ suite('ChromeDebugAdapter', () => {
 
             mockChromeConnection
                 .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
-                .returns(() => Promise.resolve<void>())
+                .returns(() => Promise.resolve())
                 .verifiable();
 
             return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })

@@ -5,9 +5,7 @@ node_js:
 
 before_script:
   - npm install -g gulp
-  - npm install -g typings
 
 script:
     - gulp build
     - npm test
-    - gulp tslint
