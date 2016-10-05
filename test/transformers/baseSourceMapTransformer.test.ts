@@ -98,7 +98,7 @@ suite('BaseSourceMapTransformer', () => {
 
         function createMergedSourcesMock(args: ISetBreakpointsArgs, args2: ISetBreakpointsArgs): Mock<SourceMaps> {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: function() { return mock.object; } });
             mock
                 .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => RUNTIME_PATH).verifiable();
@@ -145,7 +145,7 @@ suite('BaseSourceMapTransformer', () => {
             const sourceMapURL = 'script.js.map';
 
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: function() { return mock.object; } });
             mock
                 .setup(x => x.getGeneratedPathFromAuthoredPath(It.isValue(AUTHORED_PATH)))
                 .returns(() => null).verifiable();
@@ -274,7 +274,7 @@ suite('BaseSourceMapTransformer', () => {
 
         test(`keeps the path when the file can't be sourcemapped if it's on disk`, () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: function() { return mock.object; } });
 
             RUNTIME_BPS().forEach(bp => {
                 mock
@@ -295,7 +295,7 @@ suite('BaseSourceMapTransformer', () => {
 
         test(`clears the path and name when it can't be sourcemapped and doesn't exist on disk`, () => {
             const mock = Mock.ofType(SourceMaps, MockBehavior.Strict);
-            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: () => mock.object });
+            mockery.registerMock('../sourceMaps/sourceMaps', { SourceMaps: function() { return mock.object; } });
 
             RUNTIME_BPS().forEach(bp => {
                 mock
