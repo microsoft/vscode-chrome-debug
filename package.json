@@ -54,7 +54,8 @@
           "languageIds": [
             "javascript",
             "typescriptreact",
-            "javascriptreact"
+            "javascriptreact",
+            "fsharp"
           ]
         },
         "program": "./out/src/chromeDebug.js",
