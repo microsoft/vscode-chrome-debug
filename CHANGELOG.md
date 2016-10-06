@@ -1,3 +1,8 @@
+## 1.1.0
+* Changed the way that targets are queried for, hoping to fix [#237](https://github.com/Microsoft/vscode-chrome-debug/issues/237)
+* Enable breakpoints for fsharp - [#243](https://github.com/Microsoft/vscode-chrome-debug/pull/243) - Thanks @octref
+* Fix -core links in changelog - [#239](https://github.com/Microsoft/vscode-chrome-debug/pull/239) - Thanks @marvinhagemeister
+
 ## 1.0.0 - Largest update ever!
 * Evaluate getters in the variables pane - [Microsoft/vscode-chrome-debug-core#77](https://github.com/Microsoft/vscode-chrome-debug-core/issues/77)
 * Paging chunks of large arrays - [Microsoft/vscode-chrome-debug-core#4](https://github.com/Microsoft/vscode-chrome-debug-core/issues/4)
