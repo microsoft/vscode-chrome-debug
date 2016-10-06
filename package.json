@@ -46,18 +46,16 @@
     "test": "gulp test"
   },
   "contributes": {
+    "breakpoints": [
+      { "language": "javascript" },
+      { "language": "typescriptreact" },
+      { "language": "javascriptreact" },
+      { "language": "fsharp" }
+    ],
     "debuggers": [
       {
         "type": "chrome",
         "label": "Chrome",
-        "enableBreakpointsFor": {
-          "languageIds": [
-            "javascript",
-            "typescriptreact",
-            "javascriptreact",
-            "fsharp"
-          ]
-        },
         "program": "./out/src/chromeDebug.js",
         "runtime": "node",
         "initialConfigurations": [
