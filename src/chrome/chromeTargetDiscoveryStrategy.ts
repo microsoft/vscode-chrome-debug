@@ -32,7 +32,7 @@ export const getChromeTargetWebSocketURL: ITargetDiscoveryStrategy = (address: s
 function _getTargets(address: string, port: number, targetFilter: ITargetFilter): Promise<Chrome.ITarget[]> {
     const url = `http://${address}:${port}/json`;
     logger.log(`Discovering targets via ${url}`);
-    return utils.getURL(url).then(jsonResponse => {
+    return utils.httpGet(url).then(jsonResponse => {
         try {
             const responseArray = JSON.parse(jsonResponse);
             if (Array.isArray(responseArray)) {

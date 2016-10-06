@@ -8,6 +8,7 @@ import * as url from 'url';
 import * as path from 'path';
 import * as glob from 'glob';
 import {Handles} from 'vscode-debugadapter';
+import * as http from 'http';
 
 import * as xhr from 'request-light';
 
@@ -234,6 +235,27 @@ export function getURL(aUrl: string): Promise<string> {
             logger.log('HTTP - GET failed with: ' + errMsg);
             return errP(errMsg);
         });
+}
+
+export function httpGet(aUrl: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        http.get(aUrl, response => {
+            let responseData = '';
+            response.on('data', chunk => responseData += chunk);
+            response.on('end', () => {
+                // Sometimes the 'error' event is not fired. Double check here.
+                if (response.statusCode === 200) {
+                    resolve(responseData);
+                } else {
+                    logger.log('HTTP GET failed with: ' + response.statusCode.toString() + ' ' + response.statusMessage.toString());
+                    reject(responseData);
+                }
+            });
+        }).on('error', e => {
+            logger.log('HTTP GET failed: ' + e.toString());
+            reject(e);
+        });
+    });
 }
 
 /**
