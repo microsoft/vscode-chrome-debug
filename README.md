@@ -10,7 +10,7 @@
 <h4 align="center">Debug your JavaScript code running in Google Chrome from VS Code.</h4>
 
 <p align="center">
-  <a href="https://travis-ci.com/Microsoft/vscode-chrome-debug"><img src="https://api.travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master" alt="Travis"></a>
+  <a href="https://travis-ci.org/Microsoft/vscode-chrome-debug"><img src="https://api.travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master" alt="Travis"></a>
   <a href="https://github.com/microsoft/vscode-chrome-debug/releases"><img src="https://img.shields.io/github/release/Microsoft/vscode-chrome-debug.svg" alt="Release"></a>
     <a href="https://gitter.im/Microsoft/vscode-chrome-debug?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/Microsoft/vscode-chrome-debug.svg" alt="Release"></a>
 
