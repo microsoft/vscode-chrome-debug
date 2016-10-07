@@ -7,3 +7,4 @@ vscode-chrome-debug.txt
 typings/
 .browse.VC.db
 testapp/.vscode/chrome
+npm-debug.log
