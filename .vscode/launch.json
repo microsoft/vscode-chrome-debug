@@ -18,9 +18,11 @@
             "type": "node",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run-script", "test"
+            ],
             "stopOnEntry": false,
-            "args": [ "test" ],
             "sourceMaps": true,
             "outDir": "${workspaceRoot}/out"
         }
