@@ -1,3 +1,9 @@
+## 1.2.0
+* Change the way that sourcemaps are downloaded, hoping to fix [#251](https://github.com/Microsoft/vscode-chrome-debug/issues/251)
+* Fix breakpoints being moved around after refreshing the page - [#250](https://github.com/Microsoft/vscode-chrome-debug/issues/250)
+* Fix global eval sometimes failing, and incorrect error handling - [#244](https://github.com/Microsoft/vscode-chrome-debug/issues/244)
+* Fix error with sourcemaps for eval scripts - [#256](https://github.com/Microsoft/vscode-chrome-debug/issues/256)
+
 ## 1.1.0
 * Changed the way that targets are queried for, hoping to fix [#237](https://github.com/Microsoft/vscode-chrome-debug/issues/237)
 * Enable breakpoints for fsharp - [#243](https://github.com/Microsoft/vscode-chrome-debug/pull/243) - Thanks @octref

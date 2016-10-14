@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "author": {
@@ -21,7 +21,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "2.0.2",
+    "vscode-chrome-debug-core": "2.0.3",
     "vscode-debugadapter": "^1.12.0",
     "vscode-debugprotocol": "^1.12.0"
   },
@@ -30,6 +30,7 @@
     "@types/mockery": "^1.4.29",
     "@types/node": "^6.0.41",
     "@types/source-map": "^0.1.27",
+    "gulp": "^3.9.1",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
     "tslint": "^3.15.1",
@@ -40,14 +41,23 @@
     "test": "mocha -u tdd -c 'out/test/**/*.test.js'",
     "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
     "build": "tsc",
-    "watch": "tsc -w"
+    "watch": "tsc -w",
+    "vscode:prepublish": "gulp verify-no-linked-modules"
   },
   "contributes": {
     "breakpoints": [
-      { "language": "javascript" },
-      { "language": "typescriptreact" },
-      { "language": "javascriptreact" },
-      { "language": "fsharp" }
+      {
+        "language": "javascript"
+      },
+      {
+        "language": "typescriptreact"
+      },
+      {
+        "language": "javascriptreact"
+      },
+      {
+        "language": "fsharp"
+      }
     ],
     "debuggers": [
       {
