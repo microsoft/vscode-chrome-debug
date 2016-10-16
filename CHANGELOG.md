@@ -1,3 +1,6 @@
+## 1.2.1
+* Disable caching downloaded sourcemaps, hoping to fix [#247](https://github.com/Microsoft/vscode-chrome-debug/issues/247)
+
 ## 1.2.0
 * Change the way that sourcemaps are downloaded, hoping to fix [#251](https://github.com/Microsoft/vscode-chrome-debug/issues/251)
 * Fix breakpoints being moved around after refreshing the page - [#250](https://github.com/Microsoft/vscode-chrome-debug/issues/250)
