@@ -1,3 +1,6 @@
+## 1.2.2
+* Fix occasional error that can cause breakpoints to not bind
+
 ## 1.2.1
 * Disable caching downloaded sourcemaps, hoping to fix [#247](https://github.com/Microsoft/vscode-chrome-debug/issues/247)
 
