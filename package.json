@@ -30,6 +30,7 @@
     "@types/mockery": "^1.4.29",
     "@types/node": "^6.0.41",
     "@types/source-map": "^0.1.27",
+    "chrome-remote-debug-protocol": "^1.2.20161007",
     "gulp": "^3.9.1",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",

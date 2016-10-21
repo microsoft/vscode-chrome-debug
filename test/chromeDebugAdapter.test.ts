@@ -10,6 +10,7 @@ import {EventEmitter} from 'events';
 import * as assert from 'assert';
 import {Mock, MockBehavior, It} from 'typemoq';
 
+import {getMockChromeConnectionApi, IMockChromeConnectionAPI} from './debugProtocolMocks';
 import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
@@ -27,6 +28,7 @@ const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
     let mockChromeConnection: Mock<ChromeConnection>;
     let mockEventEmitter: EventEmitter;
+    let mockChrome: IMockChromeConnectionAPI;
 
     let chromeDebugAdapter: _ChromeDebugAdapter;
 
@@ -35,17 +37,21 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockEventEmitter = new EventEmitter();
         mockChromeConnection = Mock.ofType(ChromeConnection, MockBehavior.Strict);
+        mockChrome = getMockChromeConnectionApi();
+        mockEventEmitter = mockChrome.mockEventEmitter;
         mockChromeConnection
-            .setup(x => x.on(It.isAnyString(), It.isAny()))
-            .callback((eventName: string, handler: (msg: any) => void) => mockEventEmitter.on(eventName, handler));
+            .setup(x => x.api)
+            .returns(() => mockChrome.apiObjects);
         mockChromeConnection
             .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isValue(undefined)))
             .returns(() => Promise.resolve());
         mockChromeConnection
             .setup(x => x.isAttached)
             .returns(() => false);
+        mockChromeConnection
+            .setup(x => x.run())
+            .returns(() => Promise.resolve());
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
