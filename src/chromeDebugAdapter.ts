@@ -4,6 +4,8 @@
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
+import Crdp from 'chrome-remote-debug-protocol';
+import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ILaunchRequestArgs, IAttachRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
@@ -14,7 +16,15 @@ const DefaultWebsourceMapPathOverrides: ISourceMapPathOverrides = {
 };
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
+    private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
+
     private _chromeProc: ChildProcess;
+    private _overlayHelper: utils.DebounceHelper;
+
+    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
+        this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
+        return super.initialize(args);
+    }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
         args.sourceMapPathOverrides = args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides;
@@ -64,6 +74,16 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             return this.doAttach(port, launchUrl, args.address);
         });
+    }
+
+    protected onPaused(notification: Crdp.Debugger.PausedEvent): void {
+        this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }));
+        super.onPaused(notification);
+    }
+
+    protected onResumed(): void {
+        this._overlayHelper.wait(() => this.chrome.Page.configureOverlay({ }));
+        super.onResumed();
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
