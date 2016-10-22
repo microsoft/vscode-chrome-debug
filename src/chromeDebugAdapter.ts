@@ -76,6 +76,21 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         });
     }
 
+    public attach(args: IAttachRequestArgs): Promise<void> {
+        args.sourceMapPathOverrides = args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides;
+        return super.attach(args);
+    }
+
+    protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number): Promise<void> {
+        return super.doAttach(port, targetUrl, address, timeout).then(() => {
+            // Don't return this promise, a failure shouldn't fail attach
+            this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
+                .then(
+                    evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
+                    err => logger.log('Getting userAgent failed: ' + err.message));
+        });
+    }
+
     protected onPaused(notification: Crdp.Debugger.PausedEvent): void {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }));
         super.onPaused(notification);
@@ -84,11 +99,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     protected onResumed(): void {
         this._overlayHelper.wait(() => this.chrome.Page.configureOverlay({ }));
         super.onResumed();
-    }
-
-    public attach(args: IAttachRequestArgs): Promise<void> {
-        args.sourceMapPathOverrides = args.sourceMapPathOverrides || DefaultWebsourceMapPathOverrides;
-        return super.attach(args);
     }
 
     public disconnect(): void {
