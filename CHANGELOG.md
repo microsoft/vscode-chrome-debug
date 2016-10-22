@@ -1,3 +1,12 @@
+## 2.0.0
+* New feature - set `"smartStep": true` to automatically step over code that doesn't have a sourcemapping - [Microsoft/vscode-chrome-debug-core#34](https://github.com/Microsoft/vscode-chrome-debug-core/issues/34)
+* Switch to new log API to fix [#245](https://github.com/Microsoft/vscode-chrome-debug/issues/245)
+* Invalid watches say "not available" instead of showing an error - [Microsoft/vscode-node-debug2#31](https://github.com/Microsoft/vscode-node-debug2/issues/31)
+* Completions are shown when typing in the console - [Microsoft/vscode-chrome-debug-core#87](https://github.com/Microsoft/vscode-chrome-debug-core/issues/87)
+* Variables tree is not jarringly redrawn between steps - [Microsoft/vscode-node-debug2#30](https://github.com/Microsoft/vscode-node-debug2/issues/30)
+* Target userAgent is logged under 'diagnosticLogging'
+* And a few large non-feature engineering changs
+
 ## 1.2.2
 * Fix occasional error that can cause breakpoints to not bind
 
