@@ -52,6 +52,8 @@ suite('ChromeDebugAdapter', () => {
         mockChromeConnection
             .setup(x => x.run())
             .returns(() => Promise.resolve());
+        mockChromeConnection
+            .setup(x => x.onClose(It.isAny()));
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
@@ -89,6 +91,10 @@ suite('ChromeDebugAdapter', () => {
                 .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
                 .returns(() => Promise.resolve())
                 .verifiable();
+
+            mockChrome.Runtime
+                .setup(x => x.evaluate(It.isAny()))
+                .returns(() => Promise.resolve({ result: { value: '123' }}));
 
             return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
                 .then(() => assert(spawnCalled));
