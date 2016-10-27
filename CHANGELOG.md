@@ -1,3 +1,7 @@
+## 2.1.0
+* Object previews - see the first several properties of an object or array inline, without having to expand it - [Microsoft/vscode-chrome-debug-core#120](https://github.com/Microsoft/vscode-chrome-debug-core/issues/120)
+* Fix debugging with file:/// paths on windows - [#264](https://github.com/Microsoft/vscode-node-debug2/issues/264)
+
 ## 2.0.0
 * New feature - set `"smartStep": true` to automatically step over code that doesn't have a sourcemapping - [Microsoft/vscode-chrome-debug-core#34](https://github.com/Microsoft/vscode-chrome-debug-core/issues/34)
 * Switch to new log API to fix [#245](https://github.com/Microsoft/vscode-chrome-debug/issues/245)
