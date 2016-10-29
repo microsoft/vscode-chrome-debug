@@ -1,3 +1,7 @@
+## 2.1.1
+* Fix setting breakpoints before startup in scripts that don't have sourcemaps - [Microsoft/vscode-chrome-debug-core#121](https://github.com/Microsoft/vscode-chrome-debug-core/issues/121)
+* Fix a certain format of sourceMappingUrl - [#269](https://github.com/Microsoft/vscode-chrome-debug/issues/269)
+
 ## 2.1.0
 * Object previews - see the first several properties of an object or array inline, without having to expand it - [Microsoft/vscode-chrome-debug-core#120](https://github.com/Microsoft/vscode-chrome-debug-core/issues/120)
 * Fix debugging with file:/// paths on windows - [#264](https://github.com/Microsoft/vscode-node-debug2/issues/264)
