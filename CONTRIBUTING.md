@@ -1,19 +1,8 @@
 ## Development setup
 I welcome any quality bugfixes or contributions!
 
-To avoid a conflict, delete the installed extension at `~/.vscode/extensions/msjsdiag.debugger-for-chrome`.
-
-### Windows
-* In `C:/Users/<username>/.vscode/extensions/`, `git clone` this repository
-
-### OS X/Linux
-* `git clone` this repository
-* Run `ln -s <path to repo> ~/.vscode/extensions/vscode-chrome-debug`
-* You could clone it to the extensions directory if you want, but working with hidden folders in OS X can be a pain.
-
-### Then...
-* `cd` to the folder you just cloned
-* Run `npm install -g gulp` and `npm install`
+* Clone this repo
+* Run `npm install -g gulp` and `npm install` in '/vscode-chrome-debug'
     * You may see an error if `bufferutil` or `utf-8-validate` fail to build. These native modules required by `ws` are optional and the adapter should work fine without them.
 * Run `gulp build`
 
