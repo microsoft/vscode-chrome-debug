@@ -1,3 +1,10 @@
+## 2.1.3
+* Error handling for invalid messages from Chrome, to avoid crashing - [#274](https://github.com/Microsoft/vscode-chrome-debug/issues/274)
+* Fix potential issue with sourcemap path handling on Windows
+
+## 2.1.2
+* Revert an earlier change to the filtering logic, which only worked for vscode 1.7+, and caused some objects to not be expandable - [#273](https://github.com/Microsoft/vscode-chrome-debug/issues/273)
+
 ## 2.1.1
 * Fix setting breakpoints before startup in scripts that don't have sourcemaps - [Microsoft/vscode-chrome-debug-core#121](https://github.com/Microsoft/vscode-chrome-debug-core/issues/121)
 * Fix a certain format of sourceMappingUrl - [#269](https://github.com/Microsoft/vscode-chrome-debug/issues/269)

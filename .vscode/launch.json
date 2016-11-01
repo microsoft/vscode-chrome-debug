@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "launch as server",
-            "type": "node",
+            "type": "node2",
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/out/src/chromeDebug.js",
