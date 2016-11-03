@@ -23,6 +23,6 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         sourceMapTransformer: BaseSourceMapTransformer,
     }));
 
-/* tslint:disable:no-var-requires */
-logger.log(EXTENSION_NAME + ': ' + require('../../package.json').version);
-/* tslint:enable:no-var-requires */
+// Injected by webpack
+declare const VERSION: string;
+logger.log(EXTENSION_NAME + ': ' + VERSION);

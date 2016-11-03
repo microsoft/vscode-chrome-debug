@@ -1,12 +1,13 @@
 {
     "version": "0.1.0",
+    // "debugServer": "4712",
     "configurations": [
         {
             "name": "launch as server",
             "type": "node2",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/out/src/chromeDebug.js",
+            "program": "${workspaceRoot}/out/bundle.js",
             "runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
@@ -15,12 +16,14 @@
         },
         {
             "name": "test",
-            "type": "node",
+            "type": "node2",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run-script", "test"
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+				"--colors",
+				"out/test/**.test.js"
             ],
             "stopOnEntry": false,
             "sourceMaps": true,

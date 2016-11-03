@@ -5,12 +5,6 @@
         "removeComments": false,
         "target": "ES6",
         "sourceMap": true,
-        "outDir": "out"
-    },
-    "exclude": [
-        "node_modules",
-        "!node_modules/@types",
-        "testapp/",
-        "test/"
-    ]
+        "outDir": "../out"
+    }
 }

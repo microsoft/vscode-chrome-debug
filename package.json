@@ -19,7 +19,6 @@
   "categories": [
     "Debuggers"
   ],
-  "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.4.1",
@@ -32,18 +31,22 @@
     "@types/node": "^6.0.41",
     "@types/source-map": "^0.1.27",
     "chrome-remote-debug-protocol": "^1.2.20161007",
+    "glob": "^7.1.1",
     "gulp": "^3.9.1",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
+    "ts-loader": "^1.0.0",
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
-    "typescript": "^2.0.3"
+    "typescript": "^2.0.3",
+    "webpack": "^1.13.3",
+    "webpack-fail-plugin": "^1.0.5"
   },
   "scripts": {
+    "build": "webpack -w",
+    "build:test": "tsc -p test/tsconfig.json -w",
     "test": "mocha -u tdd -c 'out/test/**/*.test.js'",
     "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
-    "build": "tsc",
-    "watch": "tsc -w",
     "vscode:prepublish": "gulp verify-no-linked-modules"
   },
   "contributes": {
@@ -65,8 +68,9 @@
       {
         "type": "chrome",
         "label": "Chrome",
-        "program": "./out/src/chromeDebug.js",
+        "program": "./out/bundle.js",
         "runtime": "node",
+        "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "initialConfigurations": [
           {
             "name": "Launch Chrome against localhost, with sourcemaps",
