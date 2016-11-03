@@ -45,7 +45,7 @@ When your launch config is set up, you can debug your project! Pick a launch con
 The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
 ### Launch
-Two example `launch.json` configs. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path relative to the workspace (the folder open in Code). It's used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/users/me/project/app.js"), so be careful that it's set correctly.
+Two example `launch.json` configs with `"request": "launch"`. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path using `${workspaceRoot}` (the folder open in Code). `webRoot` is used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/Users/me/project/app.js"), so be careful that it's set correctly.
 ```json
 {
     "version": "0.1.0",
@@ -71,7 +71,7 @@ Two example `launch.json` configs. You must specify either `file` or `url` to la
 If you want to use a different installation of Chrome, you can also set the "runtimeExecutable" field with a path to the Chrome app.
 
 ### Attach
-You must launch Chrome with remote debugging enabled in order for the extension to attach to it.
+With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it.
 
 __Windows__
 * Right click the Chrome shortcut, and select properties
@@ -97,14 +97,14 @@ An example `launch.json` config.
             "request": "attach",
             "port": 9222,
             "sourceMaps": true,
-            "url": "<url of the open browser tab, you wanna connect to"
+            "url": "<url of the open browser tab to connect to>"
         },
         {
             "name": "Attach to url with files served from ./out",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "url": "<url of the open browser tab, you wanna connect to",
+            "url": "<url of the open browser tab to connect to>",
             "webRoot": "${workspaceRoot}/out"
         }
     ]
@@ -132,7 +132,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
     "meteor://💻app/*": "${webRoot}/*" // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
 }
 ```
-If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `diagnosticLogging` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
+If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `diagnosticLogging`/`verboseDiagnosticLogging` options to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
 
 ## Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
@@ -159,6 +159,29 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
 * File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome-<version>/vscode-chrome-debug.txt`.
+
+### The `.scripts` command
+This feature is extremely useful for understanding how the extension maps files in your workspace to files running in Chrome. You can enter `.scripts` in the debug console to see a listing of all scripts loaded in the runtime, their sourcemap information, and how they are mapped to files on disk. The format is like this:
+
+```
+› <The exact URL for a script, reported by Chrome> (<The local path that has been inferred for this script, using webRoot, if applicable>)
+    - <The exact source path from the sourcemap> (<The local path inferred for the source, using sourceMapPathOverrides, or webRoot, etc, if applicable>)
+```
+
+Example:
+```
+.scripts
+› eval://43
+› http://localhost:8080/index.html (/Users/me/project/wwwroot/index.html)
+› http://localhost:8080/out/test1.js (/Users/me/project/wwwroot/out/test1.js)
+    - /src/test1a.ts (/Users/me/project/wwwroot/src/test1a.ts)
+    - /src/test1b.ts (/Users/me/project/wwwroot/src/test1b.ts)
+    - /src/test1c.ts (/Users/me/project/wwwroot/src/test1c.ts)
+› http://localhost:8080/out/test2.js (/Users/me/project/wwwroot/out/test2.js)
+    - /src/test2.ts (/Users/me/project/wwwroot/src/test2.ts)
+```
+
+If you are wondering what a script is, for example, that 'eval' script, you can also use `.scripts` to get its contents: `.scripts eval://43`.
 
 ===
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
