@@ -1,3 +1,9 @@
+## 2.2.0
+* Implement the `.scripts` command in the debug console to print all the scripts loaded in Chrome, their sourcemap details, and inferred local paths, to make it easier to debug a project's debug config. See the README for more details.
+* Make the "Add watch" context menu item work much more robustly.
+* Fix "Console logs missing in pre-Chrome 54" [#265](https://github.com/Microsoft/vscode-chrome-debug/issues/265)
+* Fix "sourceMapPathOverrides matching doesn't work when sourceRoot does not end in /" - [Microsoft/vscode-chrome-debug-core](https://github.com/microsoft/vscode-chrome-debug-core/issues/78)
+
 ## 2.1.3
 * Error handling for invalid messages from Chrome, to avoid crashing - [#274](https://github.com/Microsoft/vscode-chrome-debug/issues/274)
 * Fix potential issue with sourcemap path handling on Windows

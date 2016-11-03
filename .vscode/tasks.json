@@ -7,7 +7,7 @@
     "tasks": [
         {
             "taskName": "watch",
-            "args": ["run", "build"],
+            "args": ["run", "watch"],
             "isBuildCommand": true,
             "isWatching": true
         }
