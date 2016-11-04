@@ -11,7 +11,8 @@ import {ILaunchRequestArgs, IAttachRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
-    'webpack:///*': '${webRoot}/*',
+    'webpack:///./*': '${webRoot}/*',
+    'webpack:///*': '*',
     'meteor://💻app/*': '${webRoot}/*',
 };
 
