@@ -12,7 +12,7 @@
       "check-space"
     ],
     "curly": false,
-    "forin": true,
+    "forin": false,
     "indent": [
       true,
       "spaces"

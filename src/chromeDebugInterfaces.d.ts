@@ -12,6 +12,7 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs {
     stopOnEntry?: boolean;
     address?: string;
     port?: number;
+    userDataDir?: string;
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs {

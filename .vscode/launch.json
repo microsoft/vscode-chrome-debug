@@ -1,8 +1,8 @@
 {
     "version": "0.1.0",
-    // "debugServer": "4712",
     "configurations": [
         {
+            "debugServer": 4712,
             "name": "launch as server",
             "type": "node2",
             "request": "launch",
