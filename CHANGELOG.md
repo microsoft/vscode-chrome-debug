@@ -1,3 +1,9 @@
+## 2.2.1
+* Add the 'experimentalLibraryCode' launch option (see README).
+* Log unhandled exceptions for [#276](https://github.com/Microsoft/vscode-chrome-debug/issues/276)
+* Tweak in-box webpack configs to fit default configs that I've seen.
+* Fix "Breakpoints can go to wrong lines when set in merged files on startup" [#277](https://github.com/Microsoft/vscode-chrome-debug/issues/277)
+
 ## 2.2.0
 * Implement the `.scripts` command in the debug console to print all the scripts loaded in Chrome, their sourcemap details, and inferred local paths, to make it easier to debug a project's debug config. See the README for more details.
 * Make the "Add watch" context menu item work much more robustly.
