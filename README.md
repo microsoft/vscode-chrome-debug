@@ -78,7 +78,7 @@ __Windows__
 * In the "target" field, append `--remote-debugging-port=9222`
 * Or in a command prompt, execute `<path to chrome>/chrome.exe --remote-debugging-port=9222`
 
-__OS X__
+__macOS__
 * In a terminal, execute `/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222`
 
 __Linux__
