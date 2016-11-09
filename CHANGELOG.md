@@ -1,3 +1,8 @@
+## 2.2.2
+* Handle another format of Console.MessageAdded - [#276](https://github.com/Microsoft/vscode-chrome-debug/issues/276)
+* Fix "Pending breakpoints resolved after refreshing the page sometimes don't bind correctly" - [#279](https://github.com/Microsoft/vscode-chrome-debug/issues/279)
+* Strip %c color specifiers - [#282](https://github.com/Microsoft/vscode-chrome-debug/issues/282)
+
 ## 2.2.1
 * Add the 'experimentalLibraryCode' launch option (see README).
 * Log unhandled exceptions for [#276](https://github.com/Microsoft/vscode-chrome-debug/issues/276)
