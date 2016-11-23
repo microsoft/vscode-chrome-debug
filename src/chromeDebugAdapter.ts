@@ -26,6 +26,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
         const capabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
+        capabilities.supportsCompletionsRequest = true;
 
         return capabilities;
     }
