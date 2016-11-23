@@ -24,7 +24,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
-        return super.initialize(args);
+        const capabilities = super.initialize(args);
+        capabilities.supportsRestartRequest = true;
+
+        return capabilities;
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
@@ -92,6 +95,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         });
     }
 
+    protected runConnection(): Promise<void>[] {
+        return [...super.runConnection(), this.chrome.Page.enable()];
+    }
+
     protected onPaused(notification: Crdp.Debugger.PausedEvent): void {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
         super.onPaused(notification);
@@ -109,6 +116,13 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         return super.disconnect();
+    }
+
+    /**
+     * Opt-in event called when the 'reload' button in the debug widget is pressed
+     */
+    public restart(): Promise<void> {
+        return this.chrome.Page.reload({ ignoreCache: true });
     }
 }
 
