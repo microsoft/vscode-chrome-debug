@@ -22,8 +22,8 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.6.3",
-    "vscode-debugadapter": "^1.14.0",
-    "vscode-debugprotocol": "^1.14.0"
+    "vscode-debugadapter": "^1.15.0-pre.4",
+    "vscode-debugprotocol": "^1.15.0-pre.4"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",
