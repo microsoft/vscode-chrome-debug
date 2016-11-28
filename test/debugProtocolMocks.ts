@@ -34,6 +34,7 @@ function getDebuggerStubs(mockEventEmitter) {
         removeBreakpoint() { },
         enable() { },
         evaluateOnCallFrame() { },
+        setBlackboxPatterns() { },
 
         onPaused(handler) { mockEventEmitter.on('Debugger.paused', handler); },
         onResumed(handler) { mockEventEmitter.on('Debugger.resumed', handler); },
