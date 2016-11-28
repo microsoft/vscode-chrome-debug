@@ -1,4 +1,7 @@
-## 2.3
+## 2.3.1
+* Fix crash when refreshing the page in some cases - [#297](https://github.com/Microsoft/vscode-chrome-debug/issues/297)
+
+## 2.3.0
 * The restart button will now refresh the page instead of relaunching Chrome (works in Insiders, or VS Code 1.8) - [#91](https://github.com/Microsoft/vscode-chrome-debug-core/issues/91)
 * The `experimentalLibraryCode` setting is now called `experimentalSkipFiles`
 * The `experimentalSkipFiles` setting now takes a glob pattern instead of a regex - [#127](https://github.com/Microsoft/vscode-chrome-debug-core/issues/127)
