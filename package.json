@@ -166,9 +166,9 @@
                 "description": "Automatically step through generated code that cannot be mapped back to the original source.",
                 "default": true
               },
-              "experimentalLibraryCode": {
+              "experimentalSkipFiles": {
                 "type": "array",
-                "description": "An array of file or folder names, or path regexes, to skip when debugging.",
+                "description": "An array of file or folder names, or path globs, to skip when debugging.",
                 "default": []
               }
             }
