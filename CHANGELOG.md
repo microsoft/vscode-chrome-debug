@@ -1,3 +1,6 @@
+## 2.3.2
+* Fix console.log regression in 2.3.1
+
 ## 2.3.1
 * Fix crash when refreshing the page in some cases - [#297](https://github.com/Microsoft/vscode-chrome-debug/issues/297)
 
