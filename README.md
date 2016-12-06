@@ -145,7 +145,7 @@ This debugger also enables you to refresh your target by simply hitting the `res
 
 ```
 {
-   "key": "ctrl+r",
+    "key": "ctrl+r",
     "command": "workbench.action.debug.restart",
     "when": "inDebugMode"
 }
