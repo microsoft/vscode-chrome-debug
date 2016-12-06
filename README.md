@@ -140,6 +140,18 @@ If you set `sourceMapPathOverrides` in your launch config, that will override th
   * The name of a folder, under which to skip all scripts (like `node_modules`)
   * A path glob, to skip all scripts that match (like `node_modules/react/*.min.js`)
 
+## Page refreshing
+This debugger also enables you to refresh your target by simply hitting the `restart` button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut by using the following key mapping:
+
+```
+{
+   "key": "ctrl+r",
+    "command": "workbench.action.debug.restart",
+    "when": "inDebugMode"
+}
+```
+Read more here https://github.com/Microsoft/vscode-chrome-debug-core/issues/91#issuecomment-265027348
+
 ## Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
 ```
