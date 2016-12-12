@@ -94,7 +94,7 @@ suite('ChromeDebugAdapter', () => {
 
             mockChrome.Runtime
                 .setup(x => x.evaluate(It.isAny()))
-                .returns(() => Promise.resolve({ result: { value: '123' }}));
+                .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
 
             return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
                 .then(() => assert(spawnCalled));
