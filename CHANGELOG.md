@@ -1,3 +1,7 @@
+## 2.4.0
+* Change `experimentalSkipFiles` name to `skipFiles`, as this feature is shipping with the Node debugger in 1.8.
+* Fix issues with hover by correctly applying sourcemaps to scope locations - [#141](https://github.com/Microsoft/vscode-chrome-debug-core/issues/141)
+
 ## 2.3.2
 * Fix console.log regression in 2.3.1
 
