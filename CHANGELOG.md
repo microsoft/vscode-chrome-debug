@@ -1,3 +1,6 @@
+## 2.4.1
+* Fix hover not working when using sourcemaps, and scripts are not on disk - [#309](https://github.com/Microsoft/vscode-chrome-debug/issues/309)
+
 ## 2.4.0
 * Change `experimentalSkipFiles` name to `skipFiles`, as this feature is shipping with the Node debugger in 1.8.
 * Fix issues with hover by correctly applying sourcemaps to scope locations - [#141](https://github.com/Microsoft/vscode-chrome-debug-core/issues/141)
