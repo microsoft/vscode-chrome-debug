@@ -66,7 +66,7 @@ function log(e: DebugProtocol.OutputEvent) {
 function patchLaunchArgFns(): void {
     function patchLaunchArgs(launchArgs) {
         launchArgs.verboseDiagnosticLogging = true;
-        launchArgs.userDataDir = `/tmp/chrome-${Math.random()}/`;
+        // launchArgs.userDataDir = `/tmp/chrome-${Math.random()}/`;
         launchArgs.runtimeExecutable = 'chromium-browser';
     }
 
