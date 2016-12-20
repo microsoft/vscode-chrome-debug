@@ -15,17 +15,15 @@ module.exports = {
         src: './src/chromeDebug.ts'
     },
     devtool: 'source-map',
+    resolve: {
+        extensions: ['.ts']
+    },
     output: {
         filename: 'out/bundle.js'
     },
-    resolve: {
-        // Add '.ts' and '.tsx' as a resolvable extension.
-        extensions: ['', '.webpack.js', '.web.js', '.ts', '.tsx', '.js']
-    },
     module: {
-        loaders: [
-            // all files with a '.ts' or '.tsx' extension will be handled by 'ts-loader'
-            { test: /\.tsx?$/, loader: 'ts-loader' }
+        rules: [
+            { test: /\.ts$/, exclude: /node_modules/, loader: 'ts-loader' },
         ]
     },
     externals: nodeModules,
@@ -39,7 +37,5 @@ module.exports = {
     target: 'node',
     node: {
         __dirname: false
-    },
-    libraryTarget: 'commonjs',
-    library: 'library'
+    }
 };

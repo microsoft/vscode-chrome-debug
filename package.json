@@ -14,7 +14,7 @@
   "publisher": "msjsdiag",
   "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
   "engines": {
-    "vscode": "^1.6.0"
+    "vscode": "^1.8.0"
   },
   "categories": [
     "Debuggers"
@@ -22,8 +22,8 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.8.2",
-    "vscode-debugadapter": "^1.15.0-pre.4",
-    "vscode-debugprotocol": "^1.15.0-pre.4"
+    "vscode-debugadapter": "^1.15.0",
+    "vscode-debugprotocol": "^1.15.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.32",
@@ -39,7 +39,7 @@
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
     "typescript": "^2.0.3",
-    "webpack": "^1.13.3",
+    "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
   "scripts": {
