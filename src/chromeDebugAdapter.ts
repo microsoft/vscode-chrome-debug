@@ -31,6 +31,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        coreUtils.getURL('http://localhost:9222/json').then(result => console.log(result), err => console.log('fail ' + err.message))
         return super.launch(args).then(() => {
             // Check exists?
             const chromePath = args.runtimeExecutable || utils.getBrowserPath();
