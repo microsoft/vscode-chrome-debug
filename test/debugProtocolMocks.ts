@@ -50,7 +50,8 @@ function getRuntimeStubs(mockEventEmitter) {
         evaluate() { },
 
         onConsoleAPICalled(handler) { mockEventEmitter.on('Runtime.consoleAPICalled', handler); },
-        onExecutionContextsCleared(handler) { mockEventEmitter.on('Runtime.executionContextsCleared', handler); }
+        onExecutionContextsCleared(handler) { mockEventEmitter.on('Runtime.executionContextsCleared', handler); },
+        onExceptionThrown(handler) { mockEventEmitter.on('Runtime.onExceptionThrown', handler); }
     };
 }
 
