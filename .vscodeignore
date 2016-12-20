@@ -4,6 +4,7 @@
 lib/**
 typings/**
 testapp/**
+testdata/**
 test/**
 *.vsix
 gulpfile.js

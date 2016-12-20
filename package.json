@@ -39,6 +39,7 @@
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
     "typescript": "^2.0.3",
+    "vscode-debugadapter-testsupport": "^1.15.0",
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
@@ -47,7 +48,7 @@
     "build:test": "tsc -p test/tsconfig.json",
     "watch": "webpack -w",
     "watch:test": "tsc -p test/tsconfig.json -w",
-    "test": "mocha -u tdd -c 'out/test/**/*.test.js'",
+    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js ./out/test/**/*.test.js",
     "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
     "vscode:prepublish": "gulp verify-no-linked-modules"
   },

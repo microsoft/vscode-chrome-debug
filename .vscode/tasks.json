@@ -10,6 +10,11 @@
             "args": ["run", "watch"],
             "isBuildCommand": true,
             "isWatching": true
+        },
+        {
+            "taskName": "watch:test",
+            "args": ["run", "watch:test"],
+            "isWatching": true
         }
     ]
 }

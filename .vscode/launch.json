@@ -2,7 +2,7 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "debugServer": 4712,
+            // "debugServer": 4712,
             "name": "launch as server",
             "type": "node2",
             "request": "launch",
@@ -12,9 +12,10 @@
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
         },
         {
+            // "debugServer": 4712,
             "name": "test",
             "type": "node2",
             "request": "launch",
@@ -23,11 +24,10 @@
             "args": [
                 "-u", "tdd",
 				"--colors",
-				"out/test/**.test.js"
+				"out/test/**/*.test.js"
             ],
-            "stopOnEntry": false,
             "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
         }
     ]
 }

@@ -6,5 +6,9 @@
         "target": "ES6",
         "sourceMap": true,
         "outDir": "../out"
-    }
+    },
+    "include": [
+        "../src/**/*.ts",
+        "./**/*.ts"
+    ]
 }

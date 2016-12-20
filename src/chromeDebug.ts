@@ -11,7 +11,8 @@ const EXTENSION_NAME = 'debugger-for-chrome';
 const targetFilter = target => target && (!target.type || target.type === 'page');
 
 // Injected by webpack
-declare const VERSION: string;
+declare let VERSION: string;
+let versionWithDefault = typeof VERSION === 'undefined' ? 'unspecified' : VERSION; // Not built with webpack for tests
 
 // non-.txt file types can't be uploaded to github
 // also note that __dirname here is ...out/
@@ -30,4 +31,4 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         sourceMapTransformer: BaseSourceMapTransformer,
     }));
 
-logger.log(EXTENSION_NAME + ': ' + VERSION);
+logger.log(EXTENSION_NAME + ': ' + versionWithDefault);
