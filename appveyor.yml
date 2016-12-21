@@ -1,0 +1,10 @@
+environment:
+    - nodejs_version: 7.0
+
+build_script:
+  - npm install
+  - npm run build
+  - npm run build:test
+
+test_script:
+  - npm test
