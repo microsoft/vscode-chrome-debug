@@ -67,8 +67,8 @@ function patchLaunchArgFns(): void {
     function patchLaunchArgs(launchArgs) {
         launchArgs.verboseDiagnosticLogging = true;
         // launchArgs.userDataDir = `/tmp/chrome-${Math.random()}/`;
-        launchArgs.runtimeExecutable = 'chromium-browser';
-        launchArgs.address = 'localhost';
+        // launchArgs.runtimeExecutable = 'chromium-browser';
+        // launchArgs.address = 'localhost';
     }
 
     const origLaunch = dc.launch;
