@@ -1,5 +1,5 @@
 environment:
-    - nodejs_version: 7.0
+    nodejs_version: 7.0
 
 build_script:
   - npm install
