@@ -47,7 +47,7 @@
     "build:test": "tsc -p test/tsconfig.json",
     "watch": "webpack -w",
     "watch:test": "tsc -p test/tsconfig.json -w",
-    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js ./out/test/",
+    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js ./out/test/int/",
     "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
     "vscode:prepublish": "gulp verify-no-linked-modules"
   },
