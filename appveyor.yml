@@ -1,8 +1,11 @@
 environment:
     nodejs_version: 7.0
 
-build_script:
+install:
+  - ps: Install-Product node $env:nodejs_version
   - npm install
+
+build_script:
   - npm run build
   - npm run build:test
 
