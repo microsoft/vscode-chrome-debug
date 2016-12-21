@@ -66,12 +66,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
             this._chromeProc = spawn(chromePath, chromeArgs);
-            this._chromeProc.stdout.on('data', data => {
-                console.log('stdout: ' + data.toString());
-            });
-            this._chromeProc.stderr.on('data', data => {
-                console.log('stderr: ' + data.toString());
-            });
             this._chromeProc.unref();
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
