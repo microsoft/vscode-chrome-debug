@@ -18,7 +18,7 @@ let dc: DebugClient;
 
 let unhandledAdapterErrors: string[];
 const origTest = test;
-const checkLogTest = (expectation: string, assertion?: ActionFunction, testFn: Function = origTest): Mocha.ITest => {
+const checkLogTest = (expectation: string, assertion?: any, testFn: Function = origTest): Mocha.ITest => {
     // Hack to always check logs after a test runs, can simplify after this issue:
     // https://github.com/mochajs/mocha/issues/1635
     if (!assertion) {
