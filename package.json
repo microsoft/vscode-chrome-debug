@@ -40,8 +40,7 @@
     "typemoq": "^0.3.3",
     "typescript": "^2.0.3",
     "vscode-debugadapter-testsupport": "^1.15.0",
-    "webpack": "^2.2.0-rc.1",
-    "webpack-fail-plugin": "^1.0.5"
+    "webpack": "^2.2.0-rc.1"
   },
   "scripts": {
     "build": "webpack",

@@ -28,7 +28,6 @@ module.exports = {
     },
     externals: nodeModules,
     plugins: [
-        require('webpack-fail-plugin'),
         new webpack.DefinePlugin({
             VERSION: `"${require('./package.json').version}"`,
             ROOT_DIR: `"${__dirname}"`
