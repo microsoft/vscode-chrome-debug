@@ -19,24 +19,29 @@ let dc: DebugClient;
 
 let unhandledAdapterErrors: string[];
 const origTest = test;
-const checkLogTest = (expectation: string, testCallback?: any, testFn: Function = origTest): Mocha.ITest => {
+const checkLogTest = (title: string, testCallback?: any, testFn: Function = origTest): Mocha.ITest => {
     // Hack to always check logs after a test runs, can simplify after this issue:
     // https://github.com/mochajs/mocha/issues/1635
     if (!testCallback) {
-        return origTest(expectation, testCallback);
+        return origTest(title, testCallback);
     }
 
     function runTest(): Promise<any> {
         return new Promise((resolve, reject) => {
-            const maybeP = testCallback(resolve);
+            const optionalCallback = e => {
+                if (e) reject(e)
+                else resolve();
+            };
+
+            const maybeP = testCallback(optionalCallback);
             if (maybeP && maybeP.then) {
                 maybeP.then(resolve, reject);
             }
         });
     }
 
-    return testFn(expectation, done => {
-        runTest()
+    return testFn(title, () => {
+        return runTest()
             .then(() => {
                 // If any unhandled errors were logged, then ensure the test fails
                 if (unhandledAdapterErrors.length) {
@@ -44,8 +49,7 @@ const checkLogTest = (expectation: string, testCallback?: any, testFn: Function 
                         JSON.stringify(unhandledAdapterErrors);
                     throw new Error(errStr);
                 }
-            })
-            .then(done, done)
+            });
     });
 };
 (<Mocha.ITestDefinition>checkLogTest).only = (expectation, assertion) => checkLogTest(expectation, assertion, origTest.only);
