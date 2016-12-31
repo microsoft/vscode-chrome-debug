@@ -5,6 +5,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
+const {createServer} = require('http-server');
 
 import {DebugClient} from 'vscode-debugadapter-testsupport';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -45,8 +46,8 @@ suite('Chrome Debug Adapter etc', () => {
     });
 
     suite('launch', () => {
-        test('should stop on debugger statement', () => {
-            const testProjectRoot = `${path.join(DATA_ROOT, 'intervalDebugger')}`;
+        test('should stop on debugger statement in file:///', () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
             const launchFile = path.join(testProjectRoot, 'index.html');
             const breakFile = path.join(testProjectRoot, 'app.js');
             const DEBUGGER_LINE = 2;
@@ -56,6 +57,22 @@ suite('Chrome Debug Adapter etc', () => {
                 dc.launch({ file: launchFile }),
                 dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
             ]);
+        });
+
+        test('should stop on debugger statement in http://localhost', () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
+            const breakFile = path.join(testProjectRoot, 'app.js');
+            const DEBUGGER_LINE = 2;
+
+            const server = createServer({ root: testProjectRoot })
+                .listen(7890);
+
+            return Promise.all([
+                dc.configurationSequence(),
+                dc.launch({ url: 'http://localhost:7890' }),
+                dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
+            ])
+            .then(() => server.close());
         });
     });
 });

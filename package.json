@@ -34,6 +34,7 @@
     "chrome-remote-debug-protocol": "^1.2.20161007",
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
+    "http-server": "^0.9.0",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
     "tmp": "0.0.31",
