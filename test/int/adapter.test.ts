@@ -9,7 +9,7 @@ import * as path from 'path';
 import {DebugClient} from 'vscode-debugadapter-testsupport';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import * as testUtils from './testUtils';
+import * as testUtils from './intTestUtils';
 import * as testSetup from './testSetup';
 
 const DATA_ROOT = testSetup.DATA_ROOT;

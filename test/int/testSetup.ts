@@ -5,6 +5,7 @@
 
 import * as os from 'os';
 import * as path from 'path';
+import * as tmp from 'tmp';
 
 import {DebugProtocol} from 'vscode-debugprotocol';
 import {DebugClient} from 'vscode-debugadapter-testsupport';
@@ -66,8 +67,8 @@ function log(e: DebugProtocol.OutputEvent) {
 function patchLaunchArgFns(): void {
     function patchLaunchArgs(launchArgs) {
         launchArgs.verboseDiagnosticLogging = true;
-        launchArgs.userDataDir = `/tmp/chrome-${Math.random()}/`;
-        launchArgs.runtimeExecutable = 'chromium-browser';
+        const tmpDir = tmp.dirSync({ prefix: 'chrome-' });
+        launchArgs.userDataDir = tmpDir.name;
     }
 
     const origLaunch = dc.launch;
