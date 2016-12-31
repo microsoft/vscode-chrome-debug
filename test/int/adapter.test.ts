@@ -8,13 +8,11 @@ import * as path from 'path';
 const {createServer} = require('http-server');
 
 import {DebugClient} from 'vscode-debugadapter-testsupport';
-import {DebugProtocol} from 'vscode-debugprotocol';
 
 import * as testUtils from './intTestUtils';
 import * as testSetup from './testSetup';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
-const THREAD_ID = testUtils.THREAD_ID;
 
 suite('Chrome Debug Adapter etc', () => {
     let dc: DebugClient;
@@ -49,7 +47,7 @@ suite('Chrome Debug Adapter etc', () => {
         test('should stop on debugger statement in file:///', () => {
             const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
             const launchFile = path.join(testProjectRoot, 'index.html');
-            const breakFile = path.join(testProjectRoot, 'app.js');
+            const breakFile = path.join(testProjectRoot, 'out/app.js');
             const DEBUGGER_LINE = 2;
 
             return Promise.all([
@@ -61,18 +59,23 @@ suite('Chrome Debug Adapter etc', () => {
 
         test('should stop on debugger statement in http://localhost', () => {
             const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
-            const breakFile = path.join(testProjectRoot, 'app.js');
+            const breakFile = path.join(testProjectRoot, 'out/app.js');
             const DEBUGGER_LINE = 2;
 
-            const server = createServer({ root: testProjectRoot })
-                .listen(7890);
+            const server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
             return Promise.all([
                 dc.configurationSequence(),
-                dc.launch({ url: 'http://localhost:7890' }),
+                dc.launch({ url: 'http://localhost:7890', webRoot: testProjectRoot }),
                 dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
             ])
-            .then(() => server.close());
+            .then(
+                () => server.close(),
+                e => {
+                    server.close();
+                    throw e;
+                });
         });
     });
 });

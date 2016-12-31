@@ -24,7 +24,8 @@
             "args": [
                 "-u", "tdd",
 				"--colors",
-				"out/test/**/*.test.js"
+				"out/test/**/*.test.js",
+                "--timeout", "1800000"
             ],
             "sourceMaps": true,
             "outFiles": ["${workspaceRoot}/out/**/*.js"]
