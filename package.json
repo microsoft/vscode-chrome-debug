@@ -26,7 +26,7 @@
     "vscode-debugprotocol": "^1.15.0"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.32",
+    "@types/mocha": "^2.2.35",
     "@types/mockery": "^1.4.29",
     "@types/node": "^6.0.41",
     "@types/source-map": "^0.1.27",
