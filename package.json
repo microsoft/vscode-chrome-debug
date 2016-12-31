@@ -53,7 +53,7 @@
     "watch:test": "tsc -p test/tsconfig.json -w",
     "test": "mocha --timeout 20000 -s 2000 -u tdd --colors './out/test/*.test.js'",
     "intTest": "mocha --timeout 20000 -s 2000 -u tdd --colors --reporter out/test/int/loggingReporter.js './out/test/int/*.test.js'",
-    "lint": "tslint -t verbose 'src/**/*.ts' 'test/**/*.ts'",
+    "lint": "tslint -t verbose 'src/**/*.ts'",
     "vscode:prepublish": "gulp verify-no-linked-modules"
   },
   "contributes": {
