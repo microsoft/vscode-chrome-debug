@@ -51,17 +51,17 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Launch localhost with sourcemaps",
+            "name": "Launch localhost",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "webRoot": "${workspaceRoot}/app/files",
-            "sourceMaps": true
+            "webRoot": "${workspaceRoot}/app/files"
         },
         {
-            "name": "Launch index.html (without sourcemaps)",
+            "name": "Launch index.html (disable sourcemaps)",
             "type": "chrome",
             "request": "launch",
+            "sourceMaps": false,
             "file": "${workspaceRoot}/index.html"
         },
     ]
@@ -92,11 +92,10 @@ An example `launch.json` config.
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Attach with sourcemaps",
+            "name": "Attach",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "sourceMaps": true,
             "url": "<url of the open browser tab to connect to>"
         },
         {
@@ -124,6 +123,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `runtimeArgs`: Optional arguments passed to the runtime executable
 * `userDataDir`: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
 * `url`: Required for a 'launch' config. For an attach config, the debugger will search for a tab that has that URL. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
+* `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
 * `sourceMapPathOverrides`: A mapping of source paths from the sourcemap, to the locations of these sources on disk. Useful when the sourcemap isn't accurate or can't be fixed in the build process. The left hand side of the mapping is a pattern that can contain a wildcard, and will be tested against the `sourceRoot` + `sources` entry in the source map. If it matches, the source file will be resolved to the path on the right hand side, which should be an absolute path to the source file on disk.
  A couple mappings are applied by default, corresponding to the default configs for Webpack and Meteor -
 ```
