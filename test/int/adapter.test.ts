@@ -44,7 +44,7 @@ suite('Chrome Debug Adapter etc', () => {
     });
 
     suite('launch', () => {
-        test('should stop on debugger statement in file:///', () => {
+        test('should stop on debugger statement in file:///, sourcemaps disabled', () => {
             const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
             const launchFile = path.join(testProjectRoot, 'index.html');
             const breakFile = path.join(testProjectRoot, 'out/app.js');
@@ -52,14 +52,14 @@ suite('Chrome Debug Adapter etc', () => {
 
             return Promise.all([
                 dc.configurationSequence(),
-                dc.launch({ file: launchFile }),
+                dc.launch({ file: launchFile, sourceMaps: false }),
                 dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
             ]);
         });
 
         test('should stop on debugger statement in http://localhost', () => {
             const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
-            const breakFile = path.join(testProjectRoot, 'out/app.js');
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
 
             const server = createServer({ root: testProjectRoot });
