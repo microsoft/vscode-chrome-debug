@@ -1,3 +1,8 @@
+## 2.4.2
+* Enable `sourceMaps` by default. You no longer need to set `"sourceMaps": true` in your launch config, but can set it to false to disable loading sourcemaps - [#134](https://github.com/Microsoft/vscode-chrome-debug-core/issues/134)
+* Fix boolean properties showing as strings - [#312](https://github.com/Microsoft/vscode-chrome-debug/issues/312)
+* Fix unhandled exceptions not being logged to the console - [#130](https://github.com/Microsoft/vscode-chrome-debug-core/issues/130)
+
 ## 2.4.1
 * Fix hover not working when using sourcemaps, and scripts are not on disk - [#309](https://github.com/Microsoft/vscode-chrome-debug/issues/309)
 

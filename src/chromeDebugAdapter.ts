@@ -83,7 +83,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return super.attach(args);
     }
 
-    protected commonArgs(args: ICommonRequestArgs): void {
+    public commonArgs(args: ICommonRequestArgs): void {
         args.sourceMaps = typeof args.sourceMaps === 'undefined' || args.sourceMaps;
         args.sourceMapPathOverrides = getSourceMapPathOverrides(args.webRoot, args.sourceMapPathOverrides);
         args.skipFileRegExps = ['^chrome-extension:.*'];
