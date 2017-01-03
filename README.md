@@ -124,16 +124,6 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `userDataDir`: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
 * `url`: Required for a 'launch' config. For an attach config, the debugger will search for a tab that has that URL. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
-* `sourceMapPathOverrides`: A mapping of source paths from the sourcemap, to the locations of these sources on disk. Useful when the sourcemap isn't accurate or can't be fixed in the build process. The left hand side of the mapping is a pattern that can contain a wildcard, and will be tested against the `sourceRoot` + `sources` entry in the source map. If it matches, the source file will be resolved to the path on the right hand side, which should be an absolute path to the source file on disk.
- A couple mappings are applied by default, corresponding to the default configs for Webpack and Meteor -
-```
-"sourceMapPathOverrides": {
-    "webpack:///./*":   "${webRoot}/*", // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js"
-    "webpack:///*":     "*",            // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
-    "meteor://💻app/*": "${webRoot}/*"  // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
-}
-```
-If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `diagnosticLogging`/`verboseDiagnosticLogging` options to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
 
 ## Skip files / Blackboxing / Ignore files 
 You can use the `skipFiles` property to ignore/blackbox specific files while debugging. For example, if you set `"skipFiles": ["jquery.js"]`, then you will skip any file named 'jquery.js' when stepping through your code. You also won't break on exceptions thrown from 'jquery.js'. This works the same as "blackboxing scripts" in Chrome DevTools. 
@@ -155,7 +145,22 @@ This debugger also enables you to refresh your target by simply hitting the `res
 ```
 Read more here https://github.com/Microsoft/vscode-chrome-debug-core/issues/91#issuecomment-265027348
 
-## Ionic/gulp-sourcemaps note
+## Sourcemaps
+The debugger relies heavly on sourcemaps, but sometimes the sourcemaps aren't generated properly and overrides are needed. In the config we support `sourceMapPathOverrides`. A mapping of source paths from the sourcemap, to the locations of these sources on disk. Useful when the sourcemap isn't accurate or can't be fixed in the build process. 
+
+The left hand side of the mapping is a pattern that can contain a wildcard, and will be tested against the `sourceRoot` + `sources` entry in the source map. If it matches, the source file will be resolved to the path on the right hand side, which should be an absolute path to the source file on disk.
+
+ A couple mappings are applied by default, corresponding to the default configs for Webpack and Meteor -
+```
+"sourceMapPathOverrides": {
+    "webpack:///./*":   "${webRoot}/*", // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js"
+    "webpack:///*":     "*",            // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
+    "meteor://💻app/*": "${webRoot}/*"  // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
+}
+```
+If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `diagnosticLogging`/`verboseDiagnosticLogging` options to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
+
+### Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
 ```
 "sourceMapPathOverrides": {
