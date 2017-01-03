@@ -40,7 +40,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             // Start with remote debugging enabled
             const port = args.port || 9222;
-            const chromeArgs: string[] = ['--remote-debugging-port=' + port];
+            const chromeArgs: string[] = [];
+
+            if (!args.noDebug) {
+                chromeArgs.push('--remote-debugging-port=' + port);
+            }
 
             // Also start with extra stuff disabled
             chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
@@ -75,7 +79,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 this.terminateSession(errMsg);
             });
 
-            return this.doAttach(port, launchUrl, args.address);
+            return args.noDebug ? undefined :
+                this.doAttach(port, launchUrl, args.address);
         });
     }
 
