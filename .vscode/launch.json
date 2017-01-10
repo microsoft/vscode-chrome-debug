@@ -25,10 +25,22 @@
                 "-u", "tdd",
 				"--colors",
 				"out/test/**/*.test.js",
+                "--reporter", "out/test/int/loggingReporter.js",
                 "--timeout", "1800000"
             ],
             "sourceMaps": true,
             "outFiles": ["${workspaceRoot}/out/**/*.js"]
-        }
+        },
+        {
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}"
+			],
+			"sourceMaps": true,
+			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
+		}
     ]
 }

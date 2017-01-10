@@ -1,0 +1,20 @@
+{
+  "name": "testdata-calls-between-merged-files",
+  "version": "1.0.0",
+  "description": "Test project for vscode-node-debug2 using gulp",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "build": "gulp build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^6.0.41",
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-filter": "^4.0.0",
+    "gulp-sourcemaps": "^1.9.1",
+    "gulp-typescript": "^3.1.4",
+    "typescript": "^2.1.4"
+  }
+}

@@ -5,7 +5,8 @@
         "removeComments": false,
         "target": "ES6",
         "sourceMap": true,
-        "outDir": "out"
+        "outDir": "out",
+        "noImplicitThis": true
     },
     "exclude": [
         "node_modules",

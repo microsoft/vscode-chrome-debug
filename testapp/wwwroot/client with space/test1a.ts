@@ -43,7 +43,7 @@ newlines`;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
     xyz++;                     xyz++;
 
-    anotherFn();
+    anotherFn(fn);
     fn();
 
     throwCaught();
