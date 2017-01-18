@@ -96,7 +96,10 @@ An example `launch.json` config.
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "url": "<url of the open browser tab to connect to>"
+            "url": "<url of the open browser tab to connect to>",
+            "pathMapping": {
+              "/": "${workspaceRoot}"
+            }
         },
         {
             "name": "Attach to url with files served from ./out",
@@ -104,7 +107,9 @@ An example `launch.json` config.
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "webRoot": "${workspaceRoot}/out"
+            "pathMapping": {
+              "/": "${workspaceRoot}"
+            }
         }
     ]
 }
