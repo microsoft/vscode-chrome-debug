@@ -248,15 +248,15 @@
     "menus": {
       "debug/callstack/context": [
         {
-          "command": "extension.chrome-debug.addFrameToSkipFiles",
+          "command": "extension.chrome-debug.toggleSkippingFile",
           "group": "navigation"
         }
       ]
     },
     "commands": [
       {
-        "command": "extension.chrome-debug.addFrameToSkipFiles",
-        "title": "Toggle skipping active file"
+        "command": "extension.chrome-debug.toggleSkippingFile",
+        "title": "Toggle skipping this file"
       }
     ]
   }

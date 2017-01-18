@@ -7,13 +7,13 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 export function activate(context: vscode.ExtensionContext) {
-    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.addFrameToSkipFiles', addFrameToSkipFiles));
+    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
 }
 
 export function deactivate() {
 }
 
-function addFrameToSkipFiles(path: string): void {
+function toggleSkippingFile(path: string): void {
     if (!path) {
         const activeEditor = vscode.window.activeTextEditor;
         path = activeEditor && activeEditor.document.fileName;
