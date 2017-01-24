@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as vscode from 'vscode';
+import * as Core from 'vscode-chrome-debug-core';
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
@@ -17,5 +18,6 @@ function toggleSkippingFile(path: string): void {
         path = activeEditor && activeEditor.document.fileName;
     }
 
-    vscode.commands.executeCommand('workbench.customDebugRequest', 'toggleSkipFileStatus', { path });
+    const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
+    vscode.commands.executeCommand('workbench.customDebugRequest', 'toggleSkipFileStatus', args);
 }
