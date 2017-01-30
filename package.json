@@ -93,18 +93,14 @@
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080",
-            "pathMapping": {
-              "/": "${workspaceRoot}"
-            }
+            "webRoot": "${workspaceRoot}"
           },
           {
             "name": "Attach to Chrome",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
-            "pathMapping": {
-              "/": "${workspaceRoot}"
-            }
+            "webRoot": "${workspaceRoot}"
           }
         ],
         "configurationAttributes": {
@@ -133,13 +129,13 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
-                "description": "Map url (key) to a local folder (value)",
-                "default": {}
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "default": { "/": "${workspaceRoot}" }
               },
               "runtimeExecutable": {
                 "type": [
@@ -231,12 +227,12 @@
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
-                "description": "Map url (key) to a local folder (value)",
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
                 "default": {}
               },
               "sourceMapPathOverrides": {
