@@ -3,6 +3,6 @@ function f() {
 }
 setInterval(function () {
     callbackCaller1(f);
-}, 0);
+}, 1000);
 
 //# sourceMappingURL=sourceA.js.map

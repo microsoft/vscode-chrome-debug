@@ -4,4 +4,4 @@ function f() {
 
 setInterval(() => {
     callbackCaller1(f);
-}, 0);
+}, 1000);

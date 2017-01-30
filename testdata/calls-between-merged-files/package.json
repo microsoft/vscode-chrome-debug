@@ -5,7 +5,8 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "build": "gulp build"
+    "build": "gulp build",
+    "serve": "http-server -p 7890 ."
   },
   "dependencies": {},
   "devDependencies": {
@@ -15,6 +16,7 @@
     "gulp-filter": "^4.0.0",
     "gulp-sourcemaps": "^1.9.1",
     "gulp-typescript": "^3.1.4",
+    "http-server": "^0.9.0",
     "typescript": "^2.1.4"
   }
 }

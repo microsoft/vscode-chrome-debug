@@ -5,12 +5,15 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "debugServer": 4712,
             "name": "Launch Program",
-            "type": "node2",
+            "type": "chrome",
             "request": "launch",
-            "program": "${workspaceRoot}/out/bundle.js",
-            "cwd": "${workspaceRoot}",
-            "outFiles": [],
+            "url": "http://localhost:7890",
+            "webRoot": "${workspaceRoot}",
+            "skipFiles": [
+                "b.js"
+            ],
             "sourceMaps": true
         }
     ]
