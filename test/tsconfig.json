@@ -5,6 +5,7 @@
         "removeComments": false,
         "target": "ES6",
         "sourceMap": true,
+        "noImplicitThis": true,
         "outDir": "../out"
     },
     "include": [

@@ -74,7 +74,7 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const skipFiles = ['sourceB.js'];
             const bpLineA = 5;
-            await dc.hitBreakpoint({ url, sourceMaps: false, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA, verified: false });
+            await testUtils.hitBreakpoint(dc, { url, sourceMaps: false, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
 
             // Step in, verify B sources are skipped
             await dc.stepInRequest({ threadId: THREAD_ID });
@@ -101,14 +101,19 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const bpLineA = 6;
             const skipFiles = ['b.js'];
-            await dc.hitBreakpoint({ url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA, verified: false });
+            await testUtils.hitBreakpoint(dc, { url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
             await Promise.all([
                 dc.stepInRequest({ threadId: THREAD_ID }),
                 dc.waitForEvent('stopped')
             ]);
 
             // Un-skip b2 and refresh the page
-            await dc.send('toggleSkipFileStatus', { path: sourceB2 });
+            await Promise.all([
+                // Wait for extra pause event sent after toggling skip status
+                dc.waitForEvent('stopped'),
+                dc.send('toggleSkipFileStatus', { path: sourceB2 })
+            ]);
+
             await Promise.all([
                 dc.send('restart'),
                 dc.assertStoppedLocation('breakpoint', { path: sourceA, line: bpLineA })
