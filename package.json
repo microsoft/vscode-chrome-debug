@@ -129,7 +129,7 @@
               "url": {
                 "type": "string",
                 "description": "A url to open in the browser",
-                "default": "http://mysite.com/index.html"
+                "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
@@ -227,7 +227,7 @@
               "url": {
                 "type": "string",
                 "description": "Will search for a tab with this EXACT url and attach to it, if found",
-                "default": "http://mysite.com/index.html"
+                "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
