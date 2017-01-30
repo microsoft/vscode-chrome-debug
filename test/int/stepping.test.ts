@@ -23,7 +23,12 @@ suite('Stepping', () => {
             .then(_dc => dc = _dc);
     });
 
+    let server: any;
     teardown(() => {
+        if (server) {
+            server.close();
+        }
+
         return testSetup.teardown();
     });
 
@@ -33,7 +38,7 @@ suite('Stepping', () => {
             const sourceA = path.join(testProjectRoot, 'sourceA.ts');
             const sourceB2 = path.join(testProjectRoot, 'sourceB2.ts');
 
-            const server = createServer({ root: testProjectRoot });
+            server = createServer({ root: testProjectRoot });
             server.listen(7890);
 
             const url = 'http://localhost:7890/index.html';
@@ -61,7 +66,7 @@ suite('Stepping', () => {
             const sourceA = path.join(testProjectRoot, 'out/sourceA.js');
             const sourceB = path.join(testProjectRoot, 'out/sourceB.js');
 
-            const server = createServer({ root: testProjectRoot });
+            server = createServer({ root: testProjectRoot });
             server.listen(7890);
 
             const url = 'http://localhost:7890/index.html';
@@ -88,7 +93,7 @@ suite('Stepping', () => {
             const sourceA = path.join(testProjectRoot, 'sourceA.ts');
             const sourceB2 = path.join(testProjectRoot, 'sourceB2.ts');
 
-            const server = createServer({ root: testProjectRoot });
+            server = createServer({ root: testProjectRoot });
             server.listen(7890);
 
             const url = 'http://localhost:7890/index.html';
