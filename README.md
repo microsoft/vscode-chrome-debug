@@ -71,7 +71,7 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
 If you want to use a different installation of Chrome, you can also set the "runtimeExecutable" field with a path to the Chrome app.
 
 ### Attach
-With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it.
+With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it. Here's how to do that:
 
 __Windows__
 * Right click the Chrome shortcut, and select properties
@@ -86,7 +86,7 @@ __Linux__
 
 Launch Chrome and navigate to your page.
 
-An example `launch.json` config.
+An example `launch.json` file for an "attach" config.
 ```json
 {
     "version": "0.1.0",
@@ -97,9 +97,7 @@ An example `launch.json` config.
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "pathMapping": {
-              "/": "${workspaceRoot}"
-            }
+            "webRoot": "${workspaceRoot}"
         },
         {
             "name": "Attach to url with files served from ./out",
@@ -107,9 +105,7 @@ An example `launch.json` config.
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "pathMapping": {
-              "/": "${workspaceRoot}"
-            }
+            "webRoot": "${workspaceRoot}"
         }
     ]
 }
@@ -129,6 +125,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `userDataDir`: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
 * `url`: Required for a 'launch' config. For an attach config, the debugger will search for a tab that has that URL. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
+* `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceRoot}"` is just shorthand for a pathMapping like `{ "/": "${workspaceRoot}" }`.
 
 ## Skip files / Blackboxing / Ignore files
 You can use the `skipFiles` property to ignore/blackbox specific files while debugging. For example, if you set `"skipFiles": ["jquery.js"]`, then you will skip any file named 'jquery.js' when stepping through your code. You also won't break on exceptions thrown from 'jquery.js'. This works the same as "blackboxing scripts" in Chrome DevTools.
