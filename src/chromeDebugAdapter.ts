@@ -110,9 +110,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return [...super.runConnection(), this.chrome.Page.enable()];
     }
 
-    protected onPaused(notification: Crdp.Debugger.PausedEvent): void {
+    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: string): void {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
-        super.onPaused(notification);
+        super.onPaused(notification, expectingStopReason);
     }
 
     protected onResumed(): void {
