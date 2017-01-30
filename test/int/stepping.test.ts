@@ -102,15 +102,23 @@ suite('Stepping', () => {
             const bpLineA = 6;
             const skipFiles = ['b.js'];
             await dc.hitBreakpoint({ url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA, verified: false });
+            await Promise.all([
+                dc.stepInRequest({ threadId: THREAD_ID }),
+                dc.waitForEvent('stopped')
+            ]);
 
             // Un-skip b2 and refresh the page
             await dc.send('toggleSkipFileStatus', { path: sourceB2 });
-            await dc.send('restart');
+            await Promise.all([
+                dc.send('restart'),
+                dc.assertStoppedLocation('breakpoint', { path: sourceA, line: bpLineA })
+            ]);
 
             // Persisted bp should be hit. Step in, and assert we stepped through B1 into B2
-            await dc.assertStoppedLocation('breakpoint', { path: sourceA, line: bpLineA });
-            await dc.stepInRequest({ threadId: THREAD_ID });
-            await dc.assertStoppedLocation('step', { path: sourceB2, line: 2 });
+            await Promise.all([
+                dc.stepInRequest({ threadId: THREAD_ID }),
+                dc.assertStoppedLocation('step', { path: sourceB2, line: 2 })
+            ]);
         });
     });
 });
