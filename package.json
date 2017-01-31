@@ -90,19 +90,44 @@
         "languages": ["javascript", "typescript", "javascriptreact", "typescriptreact"],
         "initialConfigurations": [
           {
-            "name": "Launch Chrome against localhost",
             "type": "chrome",
             "request": "launch",
+            "name": "Launch Chrome against localhost",
             "url": "http://localhost:8080",
             "webRoot": "${workspaceRoot}"
           },
           {
-            "name": "Attach to Chrome",
             "type": "chrome",
             "request": "attach",
+            "name": "Attach to Chrome",
             "port": 9222,
             "webRoot": "${workspaceRoot}"
           }
+        ],
+        "configurationSnippets": [
+          {
+						"label": "Chrome: Launch",
+						"description": "Launch Chrome to debug a URL",
+						"body": {
+							"type": "chrome",
+							"request": "launch",
+							"name": "${2:Launch Chrome}",
+							"url": "http://localhost:8080",
+							"webRoot": "^\"\\${workspaceRoot}\""
+            }
+          },
+          {
+						"label": "Chrome: Launch with userDataDir",
+						"description": "Launch Chrome with a separate userDataDir, useful when another instance of Chrome is already running",
+						"body": {
+							"type": "chrome",
+							"request": "launch",
+							"name": "${2:Launch Chrome}",
+							"url": "http://localhost:8080",
+							"webRoot": "^\"\\${workspaceRoot}\"",
+              "userDataDir": "^\"\\${workspaceRoot}/.vscode/chrome\""
+						}
+					}
         ],
         "configurationAttributes": {
           "launch": {
