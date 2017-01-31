@@ -7,6 +7,7 @@
 * Show skip frame status in callstack. With VS Code 1.9, skipped frames will be grayed out. - [Microsoft/vscode-chrome-debug-core#150](https://github.com/Microsoft/vscode-chrome-debug-core/issues/150)
 * Add configurationSnippets for common launch config scenarios - [#336](https://github.com/Microsoft/vscode-chrome-debug/issues/336)
 * Use correct sourcemaps after the page reloads - [#152](https://github.com/Microsoft/vscode-chrome-debug/issues/152)
+* And even more bugfixes that I won't enumerate
 
 ## 2.4.2
 * Enable `sourceMaps` by default. You no longer need to set `"sourceMaps": true` in your launch config, but can set it to false to disable loading sourcemaps - [#134](https://github.com/Microsoft/vscode-chrome-debug-core/issues/134)
