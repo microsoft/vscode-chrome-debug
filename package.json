@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "2.4.3",
+  "version": "2.5.0",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "author": {
@@ -22,7 +22,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode": "^1.0.3",
-    "vscode-chrome-debug-core": "3.11.7",
+    "vscode-chrome-debug-core": "3.12.2",
     "vscode-debugadapter": "^1.16.0-pre.1",
     "vscode-debugprotocol": "^1.16.0-pre.1"
   },
@@ -48,10 +48,6 @@
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
-  "main": "./out/src/extension",
-  "activationEvents": [
-    "onCommand:extension.chrome-debug.addFrameToSkipFiles"
-  ],
   "scripts": {
     "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
     "build:debugadapter": "webpack",
@@ -279,20 +275,6 @@
             }
           }
         }
-      }
-    ],
-    "menus": {
-      "debug/callstack/context": [
-        {
-          "command": "extension.chrome-debug.toggleSkippingFile",
-          "group": "navigation"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "extension.chrome-debug.toggleSkippingFile",
-        "title": "Toggle skipping this file"
       }
     ]
   }

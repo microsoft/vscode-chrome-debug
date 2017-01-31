@@ -1,3 +1,13 @@
+## 2.5.0
+* Resolving sourcemaps from https, thanks to a PR from [kanongil](https://github.com/kanongil) - [Microsoft/vscode-chrome-debug-core#151](https://github.com/Microsoft/vscode-chrome-debug-core/pull/151)
+* Add the 'pathMapping' property to handle cases when 'webRoot' is not enough to map URLs to local paths, thanks to a PR from [llgcode](https://github.com/llgcode) - [Microsoft/vscode-chrome-debug-core#147](https://github.com/Microsoft/vscode-chrome-debug-core/pull/147)
+* Implemented dynamic 'skipFiles' support, which you will also see in the `node2` debug adapter. Right click on a stack frame to skip it. VS Code 1.9+ only. [Microsoft/vscode-chrome-debug-core#129](https://github.com/Microsoft/vscode-chrome-debug-core/issues/129)
+* Log expandable objects in the console, instead of just static string representations of objects - [Microsoft/vscode-chrome-debug-core#145](https://github.com/Microsoft/vscode-chrome-debug-core/issues/145)
+* 'step in' with a watch sometimes opens empty editor and crashes adapter - [Microsoft/vscode-chrome-debug-core#148](https://github.com/Microsoft/vscode-chrome-debug-core/issues/148)
+* Show skip frame status in callstack. With VS Code 1.9, skipped frames will be grayed out. - [Microsoft/vscode-chrome-debug-core#150](https://github.com/Microsoft/vscode-chrome-debug-core/issues/150)
+* Add configurationSnippets for common launch config scenarios - [#336](https://github.com/Microsoft/vscode-chrome-debug/issues/336)
+* Use correct sourcemaps after the page reloads - [#152](https://github.com/Microsoft/vscode-chrome-debug/issues/152)
+
 ## 2.4.2
 * Enable `sourceMaps` by default. You no longer need to set `"sourceMaps": true` in your launch config, but can set it to false to disable loading sourcemaps - [#134](https://github.com/Microsoft/vscode-chrome-debug-core/issues/134)
 * Fix boolean properties showing as strings - [#312](https://github.com/Microsoft/vscode-chrome-debug/issues/312)
