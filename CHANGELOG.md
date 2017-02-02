@@ -1,3 +1,6 @@
+## 2.5.1
+* Just removing the 'languages' entry in package.json to work around a VS Code 1.9 issue - [#348](https://github.com/Microsoft/vscode-chrome-debug/issues/348)
+
 ## 2.5.0
 * Resolving sourcemaps from https, thanks to a PR from [kanongil](https://github.com/kanongil) - [Microsoft/vscode-chrome-debug-core#151](https://github.com/Microsoft/vscode-chrome-debug-core/pull/151)
 * Add the 'pathMapping' property to handle cases when 'webRoot' is not enough to map URLs to local paths, thanks to a PR from [llgcode](https://github.com/llgcode) - [Microsoft/vscode-chrome-debug-core#147](https://github.com/Microsoft/vscode-chrome-debug-core/pull/147)
