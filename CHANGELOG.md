@@ -1,3 +1,7 @@
+## 2.5.2
+* Fix watches being broken while stepping - [Microsoft/vscode-chrome-debug-core#166](https://github.com/Microsoft/vscode-chrome-debug-core/issues/166)
+* Fix error "Error processing 'stackTrace': TypeError: Cannot read property 'scriptId' of undefined" - [Microsoft/vscode-chrome-debug-core#167](https://github.com/Microsoft/vscode-chrome-debug-core/issues/167)
+
 ## 2.5.1
 * Just removing the 'languages' entry in package.json to work around a VS Code 1.9 issue - [#348](https://github.com/Microsoft/vscode-chrome-debug/issues/348)
 
