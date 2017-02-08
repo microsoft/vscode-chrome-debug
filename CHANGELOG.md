@@ -1,3 +1,6 @@
+## 2.5.3
+* Fix "Cannot read property 'line' of null", breakpoints not working - [#353](https://github.com/Microsoft/vscode-chrome-debug/issues/353)
+
 ## 2.5.2
 * Fix watches being broken while stepping - [Microsoft/vscode-chrome-debug-core#166](https://github.com/Microsoft/vscode-chrome-debug-core/issues/166)
 * Fix error "Error processing 'stackTrace': TypeError: Cannot read property 'scriptId' of undefined" - [Microsoft/vscode-chrome-debug-core#167](https://github.com/Microsoft/vscode-chrome-debug-core/issues/167)
