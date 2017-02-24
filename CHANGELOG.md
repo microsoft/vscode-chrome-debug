@@ -1,3 +1,8 @@
+## 2.5.4
+* pathMapping doesn't work on attaching to existing tab, thanks for the PR from [llgcode](https://github.com/llgcode) - [Microsoft/vscode#175](https://github.com/Microsoft/vscode-chrome-debug-core/issues/175)
+* Disabled column BPs for VS Code 1.10, since they aren't supported yet.
+* Don't show TypeError for watch when not at a BP - [Microsoft/vscode#173](https://github.com/Microsoft/vscode-chrome-debug-core/issues/173)
+
 ## 2.5.3
 * Fix "Cannot read property 'line' of null", breakpoints not working - [#353](https://github.com/Microsoft/vscode-chrome-debug/issues/353)
 
