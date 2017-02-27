@@ -1,3 +1,6 @@
+## 2.5.5
+* Fix "Cannot find context with specified id" error spam - [#264](https://github.com/Microsoft/vscode-chrome-debug/issues/364)
+
 ## 2.5.4
 * pathMapping doesn't work on attaching to existing tab, thanks for the PR from [llgcode](https://github.com/llgcode) - [Microsoft/vscode#175](https://github.com/Microsoft/vscode-chrome-debug-core/issues/175)
 * Disabled column BPs for VS Code 1.10, since they aren't supported yet.
