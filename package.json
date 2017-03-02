@@ -210,6 +210,11 @@
                 "type": "array",
                 "description": "An array of file or folder names, or path globs, to skip when debugging.",
                 "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
               }
             }
           },
@@ -272,6 +277,11 @@
                 "type": "array",
                 "description": "An array of file or folder names, or path globs, to skip when debugging.",
                 "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
               }
             }
           }

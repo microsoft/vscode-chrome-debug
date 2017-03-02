@@ -80,7 +80,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl, args.address);
+                this.doAttach(port, launchUrl, args.address, args.timeout);
         });
     }
 
