@@ -23,8 +23,8 @@
   "dependencies": {
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core": "3.12.9",
-    "vscode-debugadapter": "^1.16.0-pre.1",
-    "vscode-debugprotocol": "^1.16.0-pre.1"
+    "vscode-debugadapter": "^1.18.0-pre.0",
+    "vscode-debugprotocol": "^1.17.0-pre.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
@@ -101,28 +101,28 @@
         ],
         "configurationSnippets": [
           {
-						"label": "Chrome: Launch",
-						"description": "Launch Chrome to debug a URL",
-						"body": {
-							"type": "chrome",
-							"request": "launch",
-							"name": "${2:Launch Chrome}",
-							"url": "http://localhost:8080",
-							"webRoot": "^\"\\${workspaceRoot}\""
+            "label": "Chrome: Launch",
+            "description": "Launch Chrome to debug a URL",
+            "body": {
+              "type": "chrome",
+              "request": "launch",
+              "name": "${2:Launch Chrome}",
+              "url": "http://localhost:8080",
+              "webRoot": "^\"\\${workspaceRoot}\""
             }
           },
           {
-						"label": "Chrome: Launch with userDataDir",
-						"description": "Launch Chrome with a separate userDataDir, useful when another instance of Chrome is already running",
-						"body": {
-							"type": "chrome",
-							"request": "launch",
-							"name": "${2:Launch Chrome}",
-							"url": "http://localhost:8080",
-							"webRoot": "^\"\\${workspaceRoot}\"",
+            "label": "Chrome: Launch with userDataDir",
+            "description": "Launch Chrome with a separate userDataDir, useful when another instance of Chrome is already running",
+            "body": {
+              "type": "chrome",
+              "request": "launch",
+              "name": "${2:Launch Chrome}",
+              "url": "http://localhost:8080",
+              "webRoot": "^\"\\${workspaceRoot}\"",
               "userDataDir": "^\"\\${workspaceRoot}/.vscode/chrome\""
-						}
-					}
+            }
+          }
         ],
         "configurationAttributes": {
           "launch": {
@@ -156,7 +156,9 @@
               "pathMapping": {
                 "type": "object",
                 "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
-                "default": { "/": "${workspaceRoot}" }
+                "default": {
+                  "/": "${workspaceRoot}"
+                }
               },
               "runtimeExecutable": {
                 "type": [

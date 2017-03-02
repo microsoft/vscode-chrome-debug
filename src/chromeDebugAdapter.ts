@@ -112,7 +112,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected runConnection(): Promise<void>[] {
-        return [...super.runConnection(), this.chrome.Page.enable()];
+        return [
+            ...super.runConnection(),
+            this.chrome.Page.enable()
+        ];
     }
 
     protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: string): void {
@@ -126,10 +129,13 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public disconnect(): void {
-        if (this._chromeProc) {
+        if (this._chromeProc && !this._hasTerminated) {
+            // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
+            // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             this._chromeProc.kill('SIGINT');
-            this._chromeProc = null;
         }
+
+        this._chromeProc = null;
 
         return super.disconnect();
     }
