@@ -84,6 +84,8 @@ __macOS__
 __Linux__
 * In a terminal, launch `google-chrome --remote-debugging-port=9222`
 
+If you have another instance of Chrome running and don't want to restart it, you can run the new instance under a separate user profile with the  `--user-data-dir` option. Example: `--user-data-dir=~/.chrome-debug`. This is the same as using the `userDataDir` option in a launch-type config.
+
 Launch Chrome and navigate to your page.
 
 An example `launch.json` file for an "attach" config.
