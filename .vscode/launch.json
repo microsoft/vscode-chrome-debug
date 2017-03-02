@@ -4,7 +4,8 @@
         {
             // "debugServer": 4712,
             "name": "launch as server",
-            "type": "node2",
+            "type": "node",
+            "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/out/bundle.js",
@@ -17,7 +18,8 @@
         {
             // "debugServer": 4712,
             "name": "test",
-            "type": "node2",
+            "type": "node",
+            "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
