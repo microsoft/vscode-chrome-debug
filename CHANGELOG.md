@@ -1,3 +1,12 @@
+## 2.6.0
+* When opening Chrome Devtools, Chrome will no longer crash. The debugger will still detach (only one debugger can be attached at a time) but you should be able to switch back and forth.
+* The timeout when launching or attaching to Chrome is now configurable. It's 10s by default. - [#346](https://github.com/Microsoft/vscode-chrome-debug/issues/346)
+* Fix setting BPs in source that's inlined in a sourcemap - [Microsoft/vscode-chrome-debug-core#180](https://github.com/Microsoft/vscode-chrome-debug-core/issues/180)
+* Fix breakpoints shifting in some situations where they shouldn't, when Chrome returns a BP location that can't be sourcemapped - [Microsoft-node-debug2#90](https://github.com/Microsoft/vscode-node-debug2/issues/90)
+* Add a pause reason for promise rejection - [Microsoft-node-debug2#46](https://github.com/Microsoft/vscode-node-debug2/issues/46)
+* Show exception text in the new exception widget in VS Code 1.10 - [Microsoft/vscode-chrome-debug-core#181](https://github.com/Microsoft/vscode-chrome-debug-core/issues/181)
+* `diagnosticLogging` and `verboseDiagnosticLogging` are now deprecated in favor of the `trace` option. `"trace": true` will write all logs to a file, and write the path to the file in the debug console. `"trace": "verbose"` will write all logs to the debug console, and to the file.
+
 ## 2.5.5
 * Fix "Cannot find context with specified id" error spam - [#264](https://github.com/Microsoft/vscode-chrome-debug/issues/364)
 

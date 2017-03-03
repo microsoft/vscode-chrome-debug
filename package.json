@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "2.5.5",
+  "version": "2.6.0",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "author": {
@@ -22,7 +22,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode": "^1.0.3",
-    "vscode-chrome-debug-core": "3.12.10",
+    "vscode-chrome-debug-core": "3.13.1",
     "vscode-debugadapter": "^1.18.0-pre.0",
     "vscode-debugprotocol": "^1.17.0-pre.2"
   },
@@ -184,12 +184,26 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "userDataDir": {
                 "type": "string",
@@ -241,12 +255,26 @@
               "diagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
                 "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
-                "default": true
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "url": {
                 "type": "string",
