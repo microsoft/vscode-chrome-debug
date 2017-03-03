@@ -99,7 +99,7 @@ suite('ChromeDebugAdapter', () => {
             require('fs').statSync = () => true;
 
             mockChromeConnection
-                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString()))
+                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString(), It.isValue(undefined)))
                 .returns(() => Promise.resolve())
                 .verifiable();
 
