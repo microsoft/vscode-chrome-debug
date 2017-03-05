@@ -121,7 +121,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 
 
 ### Other optional launch config fields
-* `diagnosticLogging`: When true, the adapter logs its own diagnostic info to the console, _and_ to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub.
+* `trace`: When true, the adapter logs its own diagnostic info to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub. If you set it to "verbose", it will also log to the console.
 * `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * `runtimeArgs`: Optional arguments passed to the runtime executable
 * `userDataDir`: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
@@ -162,7 +162,7 @@ A few mappings are applied by default, corresponding to the default configs for 
     "meteor://💻app/*": "${webRoot}/*"  // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
 }
 ```
-If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `diagnosticLogging`/`verboseDiagnosticLogging` options to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
+If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `trace` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
 
 ### Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
@@ -188,7 +188,7 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * Check the console for warnings that this extension prints in some cases when it can't attach
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
-* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "diagnosticLogging" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome-<version>/vscode-chrome-debug.txt`.
+* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "trace" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome-<version>/vscode-chrome-debug.txt`.
 
 ### The `.scripts` command
 This feature is extremely useful for understanding how the extension maps files in your workspace to files running in Chrome. You can enter `.scripts` in the debug console to see a listing of all scripts loaded in the runtime, their sourcemap information, and how they are mapped to files on disk. The format is like this:
