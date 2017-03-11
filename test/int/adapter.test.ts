@@ -7,15 +7,14 @@ import * as assert from 'assert';
 import * as path from 'path';
 const {createServer} = require('http-server');
 
-import {DebugClient} from 'vscode-debugadapter-testsupport';
+import {ExtendedDebugClient} from 'vscode-chrome-debug-core-testsupport';
 
-import * as testUtils from './intTestUtils';
 import * as testSetup from './testSetup';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
 suite('Chrome Debug Adapter etc', () => {
-    let dc: DebugClient;
+    let dc: ExtendedDebugClient;
     setup(() => {
         return testSetup.setup()
             .then(_dc => dc = _dc);

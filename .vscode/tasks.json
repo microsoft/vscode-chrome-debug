@@ -9,12 +9,12 @@
             "taskName": "watch",
             "args": ["run", "watch"],
             "isBuildCommand": true,
-            "isWatching": true
+            "isBackground": true
         },
         {
             "taskName": "watch:test",
             "args": ["run", "watch:test"],
-            "isWatching": true
+            "isBackground": true
         }
     ]
 }
