@@ -1,3 +1,12 @@
 .DS_Store
+.browse.VC.db
+vscode-chrome-debug.txt
+npm-debug.log
+*.vsix
+
+lib/
 node_modules/
-out/
+/out/
+typings/
+testapp/.vscode/chrome
+testapp/**/out/

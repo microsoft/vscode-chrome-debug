@@ -2,23 +2,47 @@
     "version": "0.1.0",
     "configurations": [
         {
+            // "debugServer": 4712,
             "name": "launch as server",
             "type": "node",
-            "program": "./out/webkit/webKitDebug.js",
-			"runtimeArgs": ["--harmony"],
+            "protocol": "inspector",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "program": "${workspaceRoot}/out/bundle.js",
+            "runtimeArgs": ["--harmony"],
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             "sourceMaps": true,
-            "outDir": "out"
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
         },
         {
+            // "debugServer": 4712,
             "name": "test",
             "type": "node",
-            "program": "./node_modules/gulp/bin/gulp.js",
-            "stopOnEntry": false,
-            "args": [ "test" ],
+            "protocol": "inspector",
+            "request": "launch",
+            "cwd": "${workspaceRoot}",
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+				"--colors",
+				"out/test/**/*.test.js",
+                "--reporter", "out/test/int/loggingReporter.js",
+                "--timeout", "1800000"
+            ],
             "sourceMaps": true,
-            "outDir": "out"
-        }
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+        },
+        {
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}"
+			],
+			"sourceMaps": true,
+			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
+		}
     ]
 }

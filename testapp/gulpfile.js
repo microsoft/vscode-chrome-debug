@@ -2,32 +2,35 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-var gulp = require('gulp');
-var path = require('path');
-var ts = require('gulp-typescript');
-var log = require('gulp-util').log;
-var typescript = require('typescript');
-var sourcemaps = require('gulp-sourcemaps');
-var browserSync = require('browser-sync');
+const gulp = require('gulp');
+const path = require('path');
+const ts = require('gulp-typescript');
+const log = require('gulp-util').log;
+const typescript = require('typescript');
+const sourcemaps = require('gulp-sourcemaps');
+const browserSync = require('browser-sync');
+const concat = require('gulp-concat');
+const filter = require('gulp-filter');
 
-var sources = [
-    'wwwroot/client'
+const sources = [
+    'wwwroot/client with space'
 ].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
 
-var projectConfig = {
-    target: 'ES6',
-    typescript: typescript
-};
-
+const tsProject = ts.createProject('tsconfig.json', { typescript });
 gulp.task('build', function () {
+    const test1filter = filter(['**/test1*'], { restore: true});
+
     return gulp.src(sources, { base: 'wwwroot' })
         .pipe(sourcemaps.init())
-        .pipe(ts(projectConfig))
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '/' }))
+        .pipe(ts(tsProject))
+            .pipe(test1filter)
+            .pipe(concat('client with space/test1.js'))
+            .pipe(test1filter.restore)
+        .pipe(sourcemaps.write('.', { includeContent: true, sourceRoot: '/' }))
         .pipe(gulp.dest('./wwwroot/out'));
 });
 
-gulp.task('serve', ['build'], function (done) {
+function serve(done) {
     browserSync({
         online: false,
         open: false,
@@ -36,13 +39,16 @@ gulp.task('serve', ['build'], function (done) {
             baseDir: ['./wwwroot']
         }
     }, done);
-});
+}
+
+gulp.task('serve', serve);
+gulp.task('buildAndServe', ['build'], serve);
 
 gulp.task('bs-reload', ['build'], function() {
     browserSync.reload();
 });
 
-gulp.task('watch', ['serve'], function (cb) {
+gulp.task('watch', ['build', 'serve'], function (cb) {
     log('Watching build sources...');
     gulp.watch(sources, ['build', 'bs-reload']);
 });

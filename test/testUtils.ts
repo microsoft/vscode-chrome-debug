@@ -2,8 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as sinon from 'sinon';
-import * as mockery from 'mockery';
+import * as path from 'path';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -13,7 +12,7 @@ export function removeUnhandledRejectionListener(): void {
     process.removeListener('unhandledRejection', unhandledRejectionListener);
 }
 
-function unhandledRejectionListener(reason, p) {
+function unhandledRejectionListener(reason: any, p: Promise<any>) {
     console.log('*');
     console.log('**');
     console.log('***');
@@ -28,52 +27,16 @@ function unhandledRejectionListener(reason, p) {
     console.log('*');
 }
 
-export class MockEvent implements DebugProtocol.Event {
-    public seq = 0;
-    public type = 'event';
-
-    constructor(public event: string, public body?: any) { }
-}
-
 /**
- * Calls sinon.mock and patches its 'expects' method to not expect that the mock base object
- * already has an implementation of the expected method.
+ * path.resolve + fixing the drive letter to match what VS Code does. Basically tests can use this when they
+ * want to force a path to native slashes and the correct letter case, but maybe can't use un-mocked utils.
  */
-export function getSinonMock(mockBase = {}): Sinon.SinonMock {
-    const m = sinon.mock(mockBase);
+export function pathResolve(...segments: string[]): string {
+    let aPath = path.resolve.apply(null, segments);
 
-    // Add a default implementation of every expected method so sinon doesn't complain if it doesn't exist.
-    const originalMExpects = m.expects.bind(m);
-    m.expects = methodName => {
-        if (!mockBase[methodName]) {
-            mockBase[methodName] = () => Promise.resolve();
-        }
-
-        return originalMExpects(methodName);
-    };
-
-    return m;
-}
-
-export function createRegisteredSinonMock(requireName: string, mockInstance = {}, name?: string, asConstructor = true): Sinon.SinonMock {
-    const mock = getSinonMock(mockInstance);
-    const mockContainer = {};
-    if (asConstructor) {
-        mockContainer[name] = () => mockInstance;
-    } else {
-        mockContainer[name] = mockInstance;
+    if (aPath.match(/^[A-Za-z]:/)) {
+        aPath = aPath[0].toLowerCase() + aPath.substr(1);
     }
 
-    mockery.registerMock(requireName, mockContainer);
-
-    return mock;
-}
-
-/**
- * Return a base Utilities mock that has Logger.log stubbed out
- */
-export function getDefaultUtilitiesMock(): any {
-    return {
-        Logger: { log: () => { } }
-    };
+    return aPath;
 }

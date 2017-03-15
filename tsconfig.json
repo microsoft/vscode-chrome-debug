@@ -3,12 +3,16 @@
         "module": "commonjs",
         "noImplicitAny": false,
         "removeComments": false,
-        "target": "ES5",
+        "target": "ES6",
         "sourceMap": true,
-        "outDir": "out"
+        "outDir": "out",
+        "noImplicitThis": true
     },
     "exclude": [
         "node_modules",
-        "testapp/node_modules"
+        "!node_modules/@types",
+        "testapp/",
+        "testdata/",
+        "test/"
     ]
 }

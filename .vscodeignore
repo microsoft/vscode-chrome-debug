@@ -1,17 +1,27 @@
 **/*.ts
 **/*.map
 .vscode/**
+lib/**
 typings/**
 testapp/**
+testdata/**
 test/**
 *.vsix
 gulpfile.js
 tsconfig.json
 tsd.json
 tslint.json
+vscode-chrome-debug.txt
+webpack.config.js
 
+out/src/**
 out/test/**
 
-node_modules/ws/node_modules/bufferutil/**
-node_modules/ws/node_modules/utf-8-validate/**
 node_modules/.bin/**
+node_modules/bufferutil/**
+node_modules/utf-8-validate/**
+node_modules/vscode-chrome-debug-core/node_modules/ws/node_modules/bufferutil/**
+node_modules/vscode-chrome-debug-core/node_modules/ws/node_modules/utf-8-validate/**
+
+node_modules/vscode-chrome-debug-core/out/test/**
+node_modules/vscode-chrome-debug-core/typings/**

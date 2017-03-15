@@ -1,0 +1,10 @@
+language: node_js
+
+node_js:
+  - "7.0"
+
+script:
+    - npm run build
+    - npm run build:test
+    - npm test
+    - npm run lint
