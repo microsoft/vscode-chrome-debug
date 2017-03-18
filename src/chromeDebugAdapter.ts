@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ICommonRequestArgs} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ICommonRequestArgs, stoppedEvent} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -118,7 +118,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         ];
     }
 
-    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: string): void {
+    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: stoppedEvent.ReasonType): void {
         this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
         super.onPaused(notification, expectingStopReason);
     }
