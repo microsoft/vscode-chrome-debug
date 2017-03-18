@@ -125,7 +125,8 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * `runtimeArgs`: Optional arguments passed to the runtime executable
 * `userDataDir`: Can be set to a temp directory, then Chrome will use that directory as the user profile directory. If Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. If you don't want to close the original instance, you can set this property and the new instance will correctly be in remote debugging mode.
-* `url`: Required for a 'launch' config. For an attach config, the debugger will search for a tab that has that URL. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
+* `url`: On a 'launch' config, it will launch Chrome at this URL.
+* `urlFilter`: On an 'attach' config, or a 'launch' config with no 'url' set, search for a page with this url and attach to it. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
 * `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceRoot}"` is just shorthand for a pathMapping like `{ "/": "${workspaceRoot}" }`.
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.

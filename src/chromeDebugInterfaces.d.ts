@@ -6,6 +6,7 @@ import * as Core from 'vscode-chrome-debug-core';
 
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
     disableNetworkCache?: boolean;
+    urlFilter?: string;
 }
 
 export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequestArgs {

@@ -235,6 +235,11 @@
                 "type": "boolean",
                 "description": "Controls whether to skip the network cache for each request",
                 "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
               }
             }
           },
@@ -321,6 +326,11 @@
                 "type": "boolean",
                 "description": "Controls whether to skip the network cache for each request",
                 "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
               }
             }
           }

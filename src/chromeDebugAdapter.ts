@@ -80,11 +80,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             });
 
             return args.noDebug ? undefined :
-                this.doAttach(port, launchUrl, args.address, args.timeout);
+                this.doAttach(port, launchUrl || args.urlFilter, args.address, args.timeout);
         });
     }
 
     public attach(args: IAttachRequestArgs): Promise<void> {
+        if (args.urlFilter) {
+            args.url = args.urlFilter;
+        }
+
         return super.attach(args);
     }
 
