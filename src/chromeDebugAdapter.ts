@@ -109,7 +109,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
                     err => logger.log('Getting userAgent failed: ' + err.message))
                 .then(() => {
-                    this.chrome.Network.setCacheDisabled({ cacheDisabled: (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache })
+                    const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled });
                 });
         });
     }
