@@ -44,7 +44,7 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const bpLineA = 6;
             const skipFiles = ['b.js'];
-            await ts.debugClient.hitBreakpoint(dc, { url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA, verified: false });
+            await ts.debugClient.hitBreakpoint(dc, { url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
 
             // Step in, verify B sources are skipped
             await dc.stepInRequest();

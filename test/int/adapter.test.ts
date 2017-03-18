@@ -52,7 +52,7 @@ suite('Chrome Debug Adapter etc', () => {
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch({ file: launchFile, sourceMaps: false }),
-                dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
+                dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
             ]);
         });
 
@@ -67,7 +67,7 @@ suite('Chrome Debug Adapter etc', () => {
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch({ url: 'http://localhost:7890', webRoot: testProjectRoot }),
-                dc.assertStoppedLocation('debugger statement', { path: breakFile, line: DEBUGGER_LINE } )
+                dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
             ])
             .then(
                 () => server.close(),
