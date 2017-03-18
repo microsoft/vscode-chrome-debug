@@ -5,7 +5,7 @@
 // Copied from -core because I don't want to include test stuff in the npm package
 
 import {EventEmitter} from 'events';
-import {Mock} from 'typemoq';
+import {Mock, It} from 'typemoq';
 import Crdp from 'chrome-remote-debug-protocol';
 
 export interface IMockChromeConnectionAPI {
@@ -45,6 +45,13 @@ function getDebuggerStubs(mockEventEmitter) {
     };
 }
 
+function getNetworkStubs() {
+    return {
+        enable() { },
+        setCacheDisabled() { }
+    };
+}
+
 function getRuntimeStubs(mockEventEmitter) {
     return {
         enable() { },
@@ -71,28 +78,34 @@ function getPageStubs() {
 export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     const mockEventEmitter = new EventEmitter();
 
-    let mockConsole = Mock.ofInstance<Crdp.ConsoleClient>(<any>getConsoleStubs());
+    const mockConsole = Mock.ofInstance<Crdp.ConsoleClient>(<any>getConsoleStubs());
     mockConsole.callBase = true;
     mockConsole
         .setup(x => x.enable())
         .returns(() => Promise.resolve());
 
-    let mockDebugger = Mock.ofInstance<Crdp.DebuggerClient>(<any>getDebuggerStubs(mockEventEmitter));
+    const mockDebugger = Mock.ofInstance<Crdp.DebuggerClient>(<any>getDebuggerStubs(mockEventEmitter));
     mockDebugger.callBase = true;
     mockDebugger
         .setup(x => x.enable())
         .returns(() => Promise.resolve());
 
-    let mockRuntime = Mock.ofInstance<Crdp.RuntimeClient>(<any>getRuntimeStubs(mockEventEmitter));
+    const mockNetwork = Mock.ofInstance<Crdp.NetworkClient>(<any>getNetworkStubs());
+    mockNetwork.callBase = true;
+    mockNetwork
+        .setup(x => x.enable(It.isAny()))
+        .returns(() => Promise.resolve());
+
+    const mockRuntime = Mock.ofInstance<Crdp.RuntimeClient>(<any>getRuntimeStubs(mockEventEmitter));
     mockRuntime.callBase = true;
     mockRuntime
         .setup(x => x.enable())
         .returns(() => Promise.resolve());
 
-    let mockInspector = Mock.ofInstance<Crdp.InspectorClient>(<any>getInspectorStubs(mockEventEmitter));
+    const mockInspector = Mock.ofInstance<Crdp.InspectorClient>(<any>getInspectorStubs(mockEventEmitter));
     mockInspector.callBase = true;
 
-    let mockPage = Mock.ofInstance<Crdp.PageClient>(<any>getPageStubs());
+    const mockPage = Mock.ofInstance<Crdp.PageClient>(<any>getPageStubs());
 
     const chromeConnectionAPI: Crdp.CrdpClient = <any>{
         Console: mockConsole.object,
