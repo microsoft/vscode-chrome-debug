@@ -158,9 +158,10 @@ The left hand side of the mapping is a pattern that can contain a wildcard, and 
 A few mappings are applied by default, corresponding to the default configs for Webpack and Meteor -
 ```
 "sourceMapPathOverrides": {
-    "webpack:///./*":   "${webRoot}/*", // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js"
-    "webpack:///*":     "*",            // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
-    "meteor://💻app/*": "${webRoot}/*"  // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
+    "webpack:///./*":   "${webRoot}/*",                    // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js",
+    "webpack:///./~/*": "${workspaceRoot}/node_modules/*", // Example: "webpack:///./~/querystring/index.js" -> "/Users/me/project/node_modules/querystring/index.js"
+    "webpack:///*":     "*",                               // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
+    "meteor://💻app/*": "${webRoot}/*"                    // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
 }
 ```
 If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `trace` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
