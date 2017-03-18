@@ -23,8 +23,8 @@
   "dependencies": {
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core": "3.14.2",
-    "vscode-debugadapter": "^1.18.0-pre.0",
-    "vscode-debugprotocol": "^1.17.0-pre.2"
+    "vscode-debugadapter": "^1.18.0-pre.4",
+    "vscode-debugprotocol": "^1.18.0-pre.2"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",

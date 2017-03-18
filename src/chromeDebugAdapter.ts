@@ -2,12 +2,12 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ICommonRequestArgs, stoppedEvent} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ILaunchRequestArgs, IAttachRequestArgs} from './chromeDebugInterfaces';
+import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
@@ -107,14 +107,18 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
                 .then(
                     evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
-                    err => logger.log('Getting userAgent failed: ' + err.message));
+                    err => logger.log('Getting userAgent failed: ' + err.message))
+                .then(() => {
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled: (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache })
+                });
         });
     }
 
     protected runConnection(): Promise<void>[] {
         return [
             ...super.runConnection(),
-            this.chrome.Page.enable()
+            this.chrome.Page.enable(),
+            this.chrome.Network.enable({})
         ];
     }
 
