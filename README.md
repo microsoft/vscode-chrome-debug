@@ -129,6 +129,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
 * `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceRoot}"` is just shorthand for a pathMapping like `{ "/": "${workspaceRoot}" }`.
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.
+* `disableNetworkCache`: If true, the network cache will be disabled.
 
 ## Skip files / Blackboxing / Ignore files
 You can use the `skipFiles` property to ignore/blackbox specific files while debugging. For example, if you set `"skipFiles": ["jquery.js"]`, then you will skip any file named 'jquery.js' when stepping through your code. You also won't break on exceptions thrown from 'jquery.js'. This works the same as "blackboxing scripts" in Chrome DevTools.
