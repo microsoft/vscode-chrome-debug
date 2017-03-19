@@ -15,6 +15,7 @@ export interface IMockChromeConnectionAPI {
     Debugger: Mock<Crdp.DebuggerClient>;
     Runtime: Mock<Crdp.RuntimeClient>;
     Inspector: Mock<Crdp.InspectorClient>;
+    Network: Mock<Crdp.NetworkClient>;
     Page: Mock<Crdp.PageClient>;
 
     mockEventEmitter: EventEmitter;
@@ -112,6 +113,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
         Debugger: mockDebugger.object,
         Runtime: mockRuntime.object,
         Inspector: mockInspector.object,
+        Network: mockNetwork.object,
         Page: mockPage.object
     };
 
@@ -122,6 +124,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
         Debugger: mockDebugger,
         Runtime: mockRuntime,
         Inspector: mockInspector,
+        Network: mockNetwork,
         Page: mockPage,
 
         mockEventEmitter
