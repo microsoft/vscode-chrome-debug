@@ -2,6 +2,10 @@ const globalCode = 'page loaded';
 console.log(globalCode);
 
 function locals() {
+    setTimeout(() => {
+        let x = 1;
+    }, 1000);
+
     const manyPropsObj: any = { prop2: 'abc', prop1: 'def' };
     for (let i=0; i<=100; i++) manyPropsObj[i] = Math.random();
 

@@ -7,20 +7,20 @@
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080/index.html",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
+            // "file": "${workspaceRoot}/wwwroot/index.html",
+            // "diagnosticLogging": true,
             "webRoot": "${workspaceRoot}/wwwroot",
+            "showAsyncStacks": true,
+            "disableNetworkCache": true,
+            "trace": true,
             "userDataDir": "${workspaceRoot}/.vscode/chrome"
         },
         {
             "name": "attach to chrome",
             "type": "chrome",
-            "port": 9222,
+            "port": 9223,
             "request": "attach",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot",
-            "url": "http://localhost:8080*"
+            "webRoot": "${workspaceRoot}/wwwroot"
         }
     ]
 }

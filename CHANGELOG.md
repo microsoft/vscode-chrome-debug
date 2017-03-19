@@ -1,3 +1,11 @@
+## 2.7.0
+* Implement `disableNetworkCache` option - [#358](https://github.com/Microsoft/vscode-chrome-debug/issues/358)
+* If you are using VS Code 1.11, set the undocumented property `showAyncStacks` to see async callstacks.
+* Implement `urlFilter` to give 'launch' configs a way to select which page to attach to, e.g. for Electron apps with multiple BrowserWindows - [#382](https://github.com/Microsoft/vscode-chrome-debug/issues/382)
+* Nicer error messages when a source map fails to parse - thanks to [nojvek](https://github.com/nojvek) for the PR! - [Microsoft/vscode-chrome-debug-core#188](https://github.com/Microsoft/vscode-chrome-debug-core/issues/188)
+* Fix code that prevents the extension from incorrectly attaching to a Chrome extension
+* Fix crash when 'url' is not specified in an 'attach'-type config
+
 ## 2.6.0
 * When opening Chrome Devtools, Chrome will no longer crash. The debugger will still detach (only one debugger can be attached at a time) but you should be able to switch back and forth.
 * The timeout when launching or attaching to Chrome is now configurable. It's 10s by default. - [#346](https://github.com/Microsoft/vscode-chrome-debug/issues/346)
