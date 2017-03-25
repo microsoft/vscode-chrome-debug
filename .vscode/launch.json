@@ -9,10 +9,10 @@
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "program": "${workspaceRoot}/out/bundle.js",
-            "runtimeArgs": ["--harmony"],
+            // "runtimeExecutable": "/Users/roblou/.nvm/versions/node/v6.5.0/bin/node",
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
-            "sourceMaps": true,
+            // "trace": "verbose",
             "outFiles": ["${workspaceRoot}/out/**/*.js"]
         },
         {
@@ -30,7 +30,6 @@
                 "--reporter", "out/test/int/loggingReporter.js",
                 "--timeout", "1800000"
             ],
-            "sourceMaps": true,
             "outFiles": ["${workspaceRoot}/out/**/*.js"]
         },
         {
@@ -41,7 +40,6 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
-			"sourceMaps": true,
 			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
 		}
     ]

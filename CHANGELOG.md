@@ -1,3 +1,11 @@
+## 2.7.1
+* Support source mapping of stack traces in the Debug Console - thanks to [nojvek](https://github.com/nojvek) for the PR! - [Microsoft/vscode-chrome-debug-core#190](https://github.com/Microsoft/vscode-chrome-debug-core/issues/190)
+* Show error callstack in new Exception widget when pausing on an exception (sourcemapped, thanks to the above)
+* Fix BPs sometimes removed when editing while debugging - [Microsoft/vscode#22492](https://github.com/microsoft/vscode/issues/22492)
+* Fix some errors when stepping quickly - [Microsoft/vscode#22855](https://github.com/microsoft/vscode/issues/22855)
+* Show "Chrome" instead of "Thread 1" as thread name when debugging multiple things at once
+* Fix crash when debugging with async callstacks and sourcemaps disabled
+
 ## 2.7.0
 * Implement `disableNetworkCache` option - [#358](https://github.com/Microsoft/vscode-chrome-debug/issues/358)
 * If you are using VS Code 1.11, set the undocumented property `showAyncStacks` to see async callstacks.
