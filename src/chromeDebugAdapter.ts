@@ -132,6 +132,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         super.onPaused(notification, expectingStopReason);
     }
 
+    protected threadName(): string {
+        return 'Chrome';
+    }
+
     protected onResumed(): void {
         this._overlayHelper.wait(() => this.chrome.Page.configureOverlay({ }).catch(() => { }));
         super.onResumed();
