@@ -365,6 +365,14 @@
         "command": "extension.chrome-debug.toggleSkippingFile",
         "title": "Toggle Skipping This File"
       }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.node-debug.pickLoadedScript",
+        "key": "ctrl+f4",
+        "mac": "cmd+f4",
+        "when": "debugType == 'chrome'"
+      }
     ]
   }
 }
