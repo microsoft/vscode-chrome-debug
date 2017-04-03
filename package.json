@@ -49,6 +49,10 @@
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
+  "main": "./out/src/extension",
+  "activationEvents": [
+    "onCommand:extension.chrome-debug.toggleSkippingFile"
+  ],
   "scripts": {
     "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
     "build:debugadapter": "webpack",
@@ -335,6 +339,21 @@
             }
           }
         }
+      }
+    ],
+    "menus": {
+      "debug/callstack/context": [
+        {
+          "command": "extension.chrome-debug.toggleSkippingFile",
+          "group": "navigation",
+          "when": "inDebugMode && debugType == 'chrome'"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.chrome-debug.toggleSkippingFile",
+        "title": "Toggle Skipping This File"
       }
     ]
   }
