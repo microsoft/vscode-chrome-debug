@@ -244,6 +244,11 @@
                 "type": "string",
                 "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
                 "default": ""
+              },
+              "showAsyncStacks": {
+                "type": "boolean",
+                "description": "Show the async calls that led to the current call stack",
+                "default": true
               }
             }
           },
@@ -335,6 +340,11 @@
                 "type": "string",
                 "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
                 "default": ""
+              },
+              "showAsyncStacks": {
+                "type": "boolean",
+                "description": "Show the async calls that led to the current call stack",
+                "default": true
               }
             }
           }
