@@ -1,3 +1,10 @@
+## 2.7.2
+* Fix "pathMapping key must end in '/'" - thanks to [@mlewand](https://github.com/mlewand) for the PR! - [#393](https://github.com/Microsoft/vscode-chrome-debug/issues/393)
+* Add "Toggle skipping this file" context menu option to callstack - [Microsoft/vscode-chrome-debug-core#172](https://github.com/Microsoft/vscode-chrome-debug-core/issues/172)
+* Document "showAsyncStacks" launch config option (VS Code 1.11 recommended)
+* Don't repeat exception description in exception info widget - [Microsoft/vscode-chrome-debug-core#192](https://github.com/Microsoft/vscode-chrome-debug-core/issues/192)
+* Fix error in async stacks when no sourcemaps are present
+
 ## 2.7.1
 * Support source mapping of stack traces in the Debug Console - thanks to [nojvek](https://github.com/nojvek) for the PR! - [Microsoft/vscode-chrome-debug-core#190](https://github.com/Microsoft/vscode-chrome-debug-core/issues/190)
 * Show error callstack in new Exception widget when pausing on an exception (sourcemapped, thanks to the above)
@@ -8,7 +15,7 @@
 
 ## 2.7.0
 * Implement `disableNetworkCache` option - [#358](https://github.com/Microsoft/vscode-chrome-debug/issues/358)
-* If you are using VS Code 1.11, set the undocumented property `showAyncStacks` to see async callstacks.
+* If you are using VS Code 1.11, set the undocumented property `showAsyncStacks` to see async callstacks.
 * Implement `urlFilter` to give 'launch' configs a way to select which page to attach to, e.g. for Electron apps with multiple BrowserWindows - [#382](https://github.com/Microsoft/vscode-chrome-debug/issues/382)
 * Nicer error messages when a source map fails to parse - thanks to [nojvek](https://github.com/nojvek) for the PR! - [Microsoft/vscode-chrome-debug-core#188](https://github.com/Microsoft/vscode-chrome-debug-core/issues/188)
 * Fix code that prevents the extension from incorrectly attaching to a Chrome extension
