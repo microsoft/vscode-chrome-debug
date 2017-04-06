@@ -1,3 +1,9 @@
+## 2.7.3
+* Fix missing variables and error "Cannot read property 'length' of undefined" - [Microsoft/vscode-chrome-debug-core#195](https://github.com/Microsoft/vscode-chrome-debug-core/issues/195)
+* Fix sourcemapping issue when throwing non-Error
+* Fix exception messages in the console missing a trailing newline
+* Exception sourcemapping should also map non-sourcemapped scripts to file on disk
+
 ## 2.7.2
 * Fix "pathMapping key must end in '/'" - thanks to [@mlewand](https://github.com/mlewand) for the PR! - [#393](https://github.com/Microsoft/vscode-chrome-debug/issues/393)
 * Add "Toggle skipping this file" context menu option to callstack - [Microsoft/vscode-chrome-debug-core#172](https://github.com/Microsoft/vscode-chrome-debug-core/issues/172)
