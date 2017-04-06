@@ -21,7 +21,6 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode": "^1.0.3",
     "vscode-chrome-debug-core": "3.14.13",
     "vscode-debugadapter": "^1.18.0-pre.5"
   },
@@ -43,6 +42,7 @@
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
     "typescript": "^2.2.1",
+    "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.14.3",
     "vscode-debugadapter-testsupport": "^1.15.0",
     "vscode-debugprotocol": "^1.18.0-pre.2",
