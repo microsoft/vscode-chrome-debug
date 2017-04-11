@@ -2,6 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as os from 'os';
+import * as path from 'path';
+
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
@@ -50,6 +53,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
             if (args.runtimeArgs) {
                 chromeArgs.push(...args.runtimeArgs);
+            }
+
+            if (typeof args.userDataDir === 'undefined') {
+                args.userDataDir = path.join(os.tmpdir(), `vscode-chrome-debug-userdatadir_${port}`);
             }
 
             if (args.userDataDir) {

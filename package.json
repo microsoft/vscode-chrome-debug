@@ -115,18 +115,6 @@
               "url": "http://localhost:8080",
               "webRoot": "^\"\\${workspaceRoot}\""
             }
-          },
-          {
-            "label": "Chrome: Launch with userDataDir",
-            "description": "Launch Chrome with a separate userDataDir, useful when another instance of Chrome is already running",
-            "body": {
-              "type": "chrome",
-              "request": "launch",
-              "name": "${2:Launch Chrome}",
-              "url": "http://localhost:8080",
-              "webRoot": "^\"\\${workspaceRoot}\"",
-              "userDataDir": "^\"\\${workspaceRoot}/.vscode/chrome\""
-            }
           }
         ],
         "configurationAttributes": {
@@ -211,8 +199,8 @@
                 "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "userDataDir": {
-                "type": "string",
-                "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
+                "type": ["string", "boolean"],
+                "description": "By default, Chrome is launched with a separate user profile in a temp folder. Use this option to override it. Set to false to launch with your default user profile.",
                 "default": ""
               },
               "sourceMapPathOverrides": {
