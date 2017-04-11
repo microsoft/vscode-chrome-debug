@@ -12,8 +12,7 @@
             "webRoot": "${workspaceRoot}/wwwroot",
             "showAsyncStacks": true,
             "disableNetworkCache": true,
-            "trace": true,
-            "userDataDir": "${workspaceRoot}/.vscode/chrome"
+            "trace": true
         },
         {
             "name": "attach to chrome",

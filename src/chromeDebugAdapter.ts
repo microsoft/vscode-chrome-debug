@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
-import {spawn, ChildProcess} from 'child_process';
+import {spawn, fork, ChildProcess} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
@@ -74,12 +74,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-            this._chromeProc = spawn(chromePath, chromeArgs, {
-                detached: true,
-                stdio: ['ignore'],
-            });
-            this._chromeProc.unref();
+            this._chromeProc = spawnChrome(chromePath, chromeArgs);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
                 logger.error(errMsg);
@@ -195,4 +190,34 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
     }
 
     return resolvedOverrides;
+}
+
+function spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
+    if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
+        const spawnChromePath = path.resolve(__dirname, 'src/chromeSpawnHelper.js');
+        logger.log('Spawning chromeSpawnHelper.js');
+        const chromeProc = spawn(process.execPath, [spawnChromePath, chromePath, ...chromeArgs]);
+        chromeProc.on('error', (err) => {
+            const errMsg = 'chromeSpawnHelper error: ' + err;
+            logger.error(errMsg);
+        });
+
+        chromeProc.stderr.on('data', data => {
+            logger.error('[chromeSpawnHelper] ' + data.toString());
+        });
+
+        chromeProc.stdout.on('data', data => {
+            logger.log('[chromeSpawnHelper] ' + data.toString());
+        });
+
+        return chromeProc;
+    } else {
+        logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+        const chromeProc = spawn(chromePath, chromeArgs, {
+            detached: true,
+            stdio: ['ignore'],
+        });
+        chromeProc.unref();
+        return chromeProc;
+    }
 }
