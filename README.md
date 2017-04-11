@@ -55,7 +55,7 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "webRoot": "${workspaceRoot}/app/files"
+            "webRoot": "${workspaceRoot}/wwwroot"
         },
         {
             "name": "Launch index.html (disable sourcemaps)",
@@ -69,6 +69,8 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
 ```
 
 If you want to use a different installation of Chrome, you can also set the "runtimeExecutable" field with a path to the Chrome app.
+
+> Chrome user profile note: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder, (unless you are using the "runtimeExecutable" field). Use the `userDataDir` launch config field to override or disable this.
 
 ### Attach
 With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it. Here's how to do that:
