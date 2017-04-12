@@ -54,12 +54,14 @@
     "onCommand:extension.chrome-debug.toggleSkippingFile"
   ],
   "scripts": {
-    "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\"",
+    "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\" \"npm run build:outOfBundle\"",
     "build:debugadapter": "webpack",
     "build:test": "tsc -p test/tsconfig.json",
-    "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\"",
+    "build:outOfBundle": "tsc -p outOfBundle/tsconfig.json",
+    "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\" \"npm run watch:outOfBundle\"",
     "watch:debugadapter": "webpack -w",
     "watch:test": "tsc -p test/tsconfig.json -w",
+    "watch:outOfBundle": "tsc -p outOfBundle/tsconfig.json -w",
     "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
     "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/*.test.js",
     "lint": "tslint -t verbose \"src/**/*.ts\"",

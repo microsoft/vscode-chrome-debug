@@ -195,7 +195,7 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
 
 function spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
     if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
-        const spawnChromePath = path.resolve(__dirname, 'src/chromeSpawnHelper.js');
+        const spawnChromePath = path.join(__dirname, 'chromeSpawnHelper.js');
         logger.log('Spawning chromeSpawnHelper.js');
         const chromeProc = spawn(process.execPath, [spawnChromePath, chromePath, ...chromeArgs]);
         chromeProc.on('error', (err) => {
