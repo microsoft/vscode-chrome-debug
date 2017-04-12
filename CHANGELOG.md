@@ -1,3 +1,9 @@
+## 3.0.0
+* Enable userDataDir by default - [#210](https://github.com/microsoft/vscode-chrome-debug/issues/210)
+* Keep Chrome open when launching chrome devtools (now also on Windows) - [#116](https://github.com/microsoft/vscode-chrome-debug/issues/116)
+* Error while debugging: Unable to open 'undefined': File not found (/undefined) - [Microsoft/vscode-chrome-debug-core#189](https://github.com/Microsoft/vscode-chrome-debug-core/issues/189)
+* Show empty property names as "" - [Microsoft/vscode#24143](https://github.com/Microsoft/vscode/issues/24143)
+
 ## 2.7.3
 * Fix missing variables and error "Cannot read property 'length' of undefined" - [Microsoft/vscode-chrome-debug-core#195](https://github.com/Microsoft/vscode-chrome-debug-core/issues/195)
 * Fix sourcemapping issue when throwing non-Error

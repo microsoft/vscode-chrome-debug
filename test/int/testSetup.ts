@@ -15,7 +15,10 @@ const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
 function patchLaunchArgs(launchArgs: any): void {
     launchArgs.trace = 'verbose';
-    const tmpDir = tmp.dirSync({ prefix: 'chrome-' });
+    launchArgs.disableNetworkCache = true;
+
+    // Start with a clean userDataDir for each test run
+    const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
     launchArgs.userDataDir = tmpDir.name;
 }
 
