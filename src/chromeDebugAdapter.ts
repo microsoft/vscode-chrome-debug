@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
-import {spawn, ChildProcess} from 'child_process';
+import {spawn, ChildProcess, fork, exec} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
@@ -24,6 +24,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
+    private _chromePID: number;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -75,7 +76,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            this._chromeProc = spawnChrome(chromePath, chromeArgs);
+            this._chromeProc = this.spawnChrome(chromePath, chromeArgs);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
                 logger.error(errMsg);
@@ -148,7 +149,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         if (this._chromeProc && !this._hasTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
-            this._chromeProc.kill('SIGINT');
+            if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
+                const taskkillCmd = `taskkill /F /T /PID ${this._chromePID}`;
+                logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
+                exec(taskkillCmd, (err, stdout, stderr) => { });
+            } else {
+                logger.log('Killing Chrome process');
+                this._chromeProc.kill('SIGINT');
+            }
         }
 
         this._chromeProc = null;
@@ -161,6 +169,43 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
      */
     public restart(): Promise<void> {
         return this.chrome.Page.reload({ ignoreCache: true });
+    }
+
+    private spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
+        if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
+            const spawnChromePath = path.join(__dirname, 'chromeSpawnHelper.js');
+            const chromeProc = fork(spawnChromePath, [chromePath, ...chromeArgs], { execArgv: [], silent: true });
+            chromeProc.unref();
+
+            chromeProc.on('message', data => {
+                const pidStr = data.toString();
+                logger.log('got chrome PID: ' + pidStr);
+                this._chromePID = parseInt(pidStr, 10);
+            });
+
+            chromeProc.on('error', (err) => {
+                const errMsg = 'chromeSpawnHelper error: ' + err;
+                logger.error(errMsg);
+            });
+
+            chromeProc.stderr.on('data', data => {
+                logger.error('[chromeSpawnHelper] ' + data.toString());
+            });
+
+            chromeProc.stdout.on('data', data => {
+                logger.log('[chromeSpawnHelper] ' + data.toString());
+            });
+
+            return chromeProc;
+        } else {
+            logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+            const chromeProc = spawn(chromePath, chromeArgs, {
+                detached: true,
+                stdio: ['ignore'],
+            });
+            chromeProc.unref();
+            return chromeProc;
+        }
     }
 }
 
@@ -191,34 +236,4 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
     }
 
     return resolvedOverrides;
-}
-
-function spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
-    if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
-        const spawnChromePath = path.join(__dirname, 'chromeSpawnHelper.js');
-        logger.log('Spawning chromeSpawnHelper.js');
-        const chromeProc = spawn(process.execPath, [spawnChromePath, chromePath, ...chromeArgs]);
-        chromeProc.on('error', (err) => {
-            const errMsg = 'chromeSpawnHelper error: ' + err;
-            logger.error(errMsg);
-        });
-
-        chromeProc.stderr.on('data', data => {
-            logger.error('[chromeSpawnHelper] ' + data.toString());
-        });
-
-        chromeProc.stdout.on('data', data => {
-            logger.log('[chromeSpawnHelper] ' + data.toString());
-        });
-
-        return chromeProc;
-    } else {
-        logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-        const chromeProc = spawn(chromePath, chromeArgs, {
-            detached: true,
-            stdio: ['ignore'],
-        });
-        chromeProc.unref();
-        return chromeProc;
-    }
 }

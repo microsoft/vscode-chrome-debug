@@ -9,11 +9,9 @@ const chromeArgs = process.argv.slice(3);
 
 console.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
 const chromeProc = cp.spawn(chromePath, chromeArgs, {
-    stdio: ['ignore']
+    stdio: 'ignore',
+    detached: true
 });
 
 chromeProc.unref();
-chromeProc.on('error', (err) => {
-    const errMsg = 'Chrome error: ' + err;
-    console.log(errMsg);
-});
+process.send(chromeProc.pid);
