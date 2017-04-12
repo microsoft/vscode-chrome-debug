@@ -158,7 +158,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 // Run synchronously because this process may be killed before exec() would run
                 const taskkillCmd = `taskkill /F /T /PID ${this._chromePID}`;
                 logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
-                execSync(taskkillCmd);
+                try {
+                    execSync(taskkillCmd);
+                } catch (e) {
+                    // Can fail if Chrome was already open, and the process with _chromePID is gone.
+                    // Or if it already shut down for some reason.
+                }
             } else {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');
