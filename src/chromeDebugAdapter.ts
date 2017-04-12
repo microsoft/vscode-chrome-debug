@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
-import {spawn, ChildProcess, fork, exec} from 'child_process';
+import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import Crdp from 'chrome-remote-debug-protocol';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
@@ -146,13 +146,19 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public disconnect(): void {
-        if (this._chromeProc && !this._hasTerminated) {
+        const hadTerminated = this._hasTerminated;
+
+        // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
+        super.disconnect();
+
+        if (this._chromeProc && !hadTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
+                // Run synchronously because this process may be killed before exec() would run
                 const taskkillCmd = `taskkill /F /T /PID ${this._chromePID}`;
                 logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
-                exec(taskkillCmd, (err, stdout, stderr) => { });
+                execSync(taskkillCmd);
             } else {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');
@@ -160,8 +166,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         this._chromeProc = null;
-
-        return super.disconnect();
     }
 
     /**
@@ -173,8 +177,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     private spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
-            const spawnChromePath = path.join(__dirname, 'chromeSpawnHelper.js');
-            const chromeProc = fork(spawnChromePath, [chromePath, ...chromeArgs], { execArgv: [], silent: true });
+            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], { execArgv: [], silent: true });
             chromeProc.unref();
 
             chromeProc.on('message', data => {
@@ -236,4 +239,13 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
     }
 
     return resolvedOverrides;
+}
+
+function getChromeSpawnHelperPath(): string {
+    if (path.basename(__dirname) === 'src') {
+        // For tests
+        return path.join(__dirname, '../chromeSpawnHelper.js');
+    } else {
+        return path.join(__dirname, 'chromeSpawnHelper.js');
+    }
 }
