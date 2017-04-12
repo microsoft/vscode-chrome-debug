@@ -44,7 +44,7 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const bpLineA = 6;
             const skipFiles = ['b.js'];
-            await ts.debugClient.hitBreakpoint(dc, { url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
+            await dc.hitBreakpointUnverified({ url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
 
             // Step in, verify B sources are skipped
             await dc.stepInRequest();
@@ -72,7 +72,7 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const skipFiles = ['sourceB.js'];
             const bpLineA = 5;
-            await ts.debugClient.hitBreakpoint(dc, { url, sourceMaps: false, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
+            await dc.hitBreakpointUnverified({ url, sourceMaps: false, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
 
             // Step in, verify B sources are skipped
             await dc.stepInRequest();
@@ -99,7 +99,7 @@ suite('Stepping', () => {
             // Skip the full B generated script via launch config
             const bpLineA = 6;
             const skipFiles = ['b.js'];
-            await ts.debugClient.hitBreakpoint(dc, { url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
+            await dc.hitBreakpointUnverified({ url, skipFiles, webRoot: testProjectRoot }, { path: sourceA, line: bpLineA });
             await Promise.all([
                 dc.stepInRequest(),
                 dc.waitForEvent('stopped')

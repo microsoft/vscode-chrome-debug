@@ -43,7 +43,7 @@
     "typemoq": "^0.3.3",
     "typescript": "^2.2.1",
     "vscode": "^1.0.3",
-    "vscode-chrome-debug-core-testsupport": "^3.14.3",
+    "vscode-chrome-debug-core-testsupport": "^3.14.4",
     "vscode-debugadapter-testsupport": "^1.15.0",
     "vscode-debugprotocol": "^1.18.0-pre.2",
     "webpack": "^2.2.0-rc.1",
