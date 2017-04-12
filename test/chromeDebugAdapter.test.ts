@@ -69,34 +69,41 @@ suite('ChromeDebugAdapter', () => {
 
     suite('launch()', () => {
         let originalFork: any;
+        let originalSpawn: any;
         let originalStatSync: any;
 
         teardown(() => {
             // Hacky mock cleanup
-            require('child_process').spawn = originalFork;
+            require('child_process').fork = originalFork;
             require('fs').statSync = originalStatSync;
         })
 
         test('launches with minimal correct args', () => {
-            let forkCalled = false;
+            let spawnCalled = false;
             function fork(chromeSpawnHelperPath: string, [chromePath, ...args]: string[]): any {
                 // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
                 assert(chromeSpawnHelperPath.indexOf('chromeSpawnHelper.js') >= 0);
+                return spawn(chromePath, args);
+            }
+
+            function spawn(chromePath: string, args: string[]): any {
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
                 assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
                 assert(args.indexOf('abc') >= 0);
                 assert(args.indexOf('def') >= 0);
-                forkCalled = true;
+                spawnCalled = true;
 
                 const stdio = { on: () => { } };
                 return { on: () => { }, unref: () => { }, stdout: stdio, stderr: stdio };
             }
 
-            // Mock fork for chrome process, and 'fs' for finding chrome.exe.
+            // Mock fork/spawn for chrome process, and 'fs' for finding chrome.exe.
             // These are mocked as empty above - note that it's too late for mockery here.
             originalFork = require('child_process').fork;
+            originalSpawn = require('child_process').spawn;
             require('child_process').fork = fork;
+            require('child_process').spawn = spawn;
             originalStatSync = require('fs').statSync;
             require('fs').statSync = () => true;
 
@@ -110,7 +117,7 @@ suite('ChromeDebugAdapter', () => {
                 .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
 
             return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
-                .then(() => assert(forkCalled));
+                .then(() => assert(spawnCalled));
         });
     });
 
