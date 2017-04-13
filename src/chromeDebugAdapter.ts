@@ -76,7 +76,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            this._chromeProc = this.spawnChrome(chromePath, chromeArgs);
+            this._chromeProc = this.spawnChrome(chromePath, chromeArgs, !!args.runtimeExecutable);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
                 logger.error(errMsg);
@@ -180,8 +180,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return this.chrome.Page.reload({ ignoreCache: true });
     }
 
-    private spawnChrome(chromePath: string, chromeArgs: string[]): ChildProcess {
-        if (coreUtils.getPlatform() === coreUtils.Platform.Windows) {
+    private spawnChrome(chromePath: string, chromeArgs: string[], usingRuntimeExecutable: boolean): ChildProcess {
+        if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], { execArgv: [], silent: true });
             chromeProc.unref();
 
