@@ -14,7 +14,7 @@ import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chro
 import * as utils from './utils';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
-    "webpack:///./~/*": "${webRoot}/node_modules/*",
+    'webpack:///./~/*': '${webRoot}/node_modules/*',
     'webpack:///./*': '${webRoot}/*',
     'webpack:///*': '*',
     'meteor://💻app/*': '${webRoot}/*',
