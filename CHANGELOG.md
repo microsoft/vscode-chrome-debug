@@ -1,3 +1,7 @@
+## 3.0.1
+* Fix "Windows - Electron app fails to start after upgrading to 3.0.0" [#407](https://github.com/Microsoft/vscode-chrome-debug/issues/407)
+  * On Windows, the code to prevent Chrome from closing when opening Chrome Devtools [#116](https://github.com/microsoft/vscode-chrome-debug/issues/116) is now not enabled when specifying a runtimeExecutable, until I find a better solution.
+
 ## 3.0.0
 * Enable userDataDir by default - [#210](https://github.com/microsoft/vscode-chrome-debug/issues/210)
 * Keep Chrome open when launching chrome devtools (now also on Windows) - [#116](https://github.com/microsoft/vscode-chrome-debug/issues/116)
