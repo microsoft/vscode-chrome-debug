@@ -7,7 +7,7 @@ import * as path from 'path';
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
-import Crdp from 'chrome-remote-debug-protocol';
+import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';

@@ -30,7 +30,7 @@
                 "-u", "tdd",
 				"--colors",
 				"out/test/**/*.test.js",
-                "--reporter", "out/test/int/loggingReporter.js",
+                "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "--timeout", "1800000"
             ],
             "outFiles": ["${workspaceRoot}/out/**/*.js"]

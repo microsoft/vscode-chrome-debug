@@ -30,7 +30,6 @@
     "@types/node": "^6.0.41",
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
-    "chrome-remote-debug-protocol": "^1.2.20161007",
     "concurrently": "^3.1.0",
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
@@ -43,8 +42,8 @@
     "typemoq": "^0.3.3",
     "typescript": "^2.2.1",
     "vscode": "^1.0.3",
-    "vscode-chrome-debug-core-testsupport": "^3.14.4",
-    "vscode-debugadapter-testsupport": "^1.15.0",
+    "vscode-chrome-debug-core-testsupport": "^3.14.5",
+    "vscode-debugadapter-testsupport": "^1.18.1",
     "vscode-debugprotocol": "^1.18.0-pre.2",
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"

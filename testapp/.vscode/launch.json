@@ -7,17 +7,16 @@
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080/index.html",
-            // "file": "${workspaceRoot}/wwwroot/index.html",
-            // "diagnosticLogging": true,
+            "port": 9223,
             "webRoot": "${workspaceRoot}/wwwroot",
             "showAsyncStacks": true,
-            "disableNetworkCache": true,
-            "trace": true
+            "disableNetworkCache": true
         },
         {
+            "debugServer": 4712,
             "name": "attach to chrome",
             "type": "chrome",
-            "port": 9223,
+            "port": 9222,
             "request": "attach",
             "webRoot": "${workspaceRoot}/wwwroot"
         }

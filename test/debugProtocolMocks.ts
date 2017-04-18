@@ -6,7 +6,7 @@
 
 import {EventEmitter} from 'events';
 import {Mock, It} from 'typemoq';
-import Crdp from 'chrome-remote-debug-protocol';
+import {Crdp} from 'vscode-chrome-debug-core';
 
 export interface IMockChromeConnectionAPI {
     apiObjects: Crdp.CrdpClient;

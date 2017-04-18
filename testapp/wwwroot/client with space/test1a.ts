@@ -45,7 +45,7 @@ newlines`;
     var str = 'hello';
     var xyz = 1;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
-    xyz++;                     xyz++;
+    xyz++;                xyz++;          xyz++;
 
     anotherFn(fn);
     fn();
