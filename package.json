@@ -21,8 +21,8 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "3.14.18",
-    "vscode-debugadapter": "1.18.0-pre.5"
+    "vscode-chrome-debug-core": "3.15.0",
+    "vscode-debugadapter": "1.19.0-pre.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
@@ -50,6 +50,7 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
+    "onCommand:extension.chrome-debug.startSession",
     "onCommand:extension.chrome-debug.toggleSkippingFile"
   ],
   "scripts": {
@@ -90,6 +91,7 @@
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "languages": [ "javascript", "typescript", "javascriptreact", "typescriptreact" ],
+        "startSessionCommand": "extension.chrome-debug.startSession",
         "initialConfigurations": [
           {
             "type": "chrome",

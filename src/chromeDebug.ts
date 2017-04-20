@@ -4,11 +4,11 @@
 
 import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
 import * as path from 'path';
+import {targetFilter} from './utils';
 
 import {ChromeDebugAdapter} from './chromeDebugAdapter';
 
 const EXTENSION_NAME = 'debugger-for-chrome';
-const targetFilter = target => target && (!target.type || target.type === 'page');
 
 // Injected by webpack
 declare let VERSION: string;

@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import {DebugProtocol} from 'vscode-debugprotocol';
-import {ChromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import {chromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
 import {EventEmitter} from 'events';
@@ -26,7 +26,7 @@ class MockChromeDebugSession {
 
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    let mockChromeConnection: Mock<ChromeConnection>;
+    let mockChromeConnection: Mock<chromeConnection.ChromeConnection>;
     let mockEventEmitter: EventEmitter;
     let mockChrome: IMockChromeConnectionAPI;
 
@@ -37,7 +37,7 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(ChromeConnection, MockBehavior.Strict);
+        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict);
         mockChrome = getMockChromeConnectionApi();
         mockEventEmitter = mockChrome.mockEventEmitter;
         mockChromeConnection
