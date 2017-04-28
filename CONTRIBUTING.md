@@ -1,19 +1,8 @@
 ## Development setup
 I welcome any quality bugfixes or contributions!
 
-To avoid a conflict, delete the installed extension at `~/.vscode/extensions/msjsdiag.debugger-for-chrome`.
-
-### Windows
-* In `C:/Users/<username>/.vscode/extensions/`, `git clone` this repository
-
-### OS X/Linux
-* `git clone` this repository
-* Run `ln -s <path to repo> ~/.vscode/extensions/vscode-chrome-debug`
-* You could clone it to the extensions directory if you want, but working with hidden folders in OS X can be a pain.
-
-### Then...
-* `cd` to the folder you just cloned
-* Run `npm install -g gulp` and `npm install`
+* Clone this repo
+* Run `npm install -g gulp` and `npm install` in '/vscode-chrome-debug'
     * You may see an error if `bufferutil` or `utf-8-validate` fail to build. These native modules required by `ws` are optional and the adapter should work fine without them.
 * Run `gulp build`
 
@@ -29,6 +18,11 @@ There is a set of mocha tests which can be run with `gulp test` or with the `tes
 See the project under testapp/ for a bunch of test scenarios crammed onto one page.
 
 ## Naming
-Client: VS Code
-Target: The debuggee, which implements the Chrome Debug Protocol
-Server-mode: In the normal use-case, the extension does not run in server-mode. For debugging, you can run it as a debug server - see the 'Debugging' section above.
+* "Client": VS Code
+* "Target": The debuggee, which implements the Chrome Debug Protocol
+* "Server-mode": In the normal use-case, the extension does not run in server-mode. For debugging, you can run it as a debug server - see the 'Debugging' section above.
+
+## Issue tags
+* "Bug": Something that should work is broken
+* "Enhancement": AKA feature request - adds new functionality
+* "Task": Something that needs to be done that doesn't really fix anything or add major functionality. Tests, engineering, documentation, etc.

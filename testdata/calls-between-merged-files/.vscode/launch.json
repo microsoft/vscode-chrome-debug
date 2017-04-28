@@ -1,0 +1,20 @@
+{
+    // Use IntelliSense to find out which attributes exist for node debugging
+    // Use hover for the description of the existing attributes
+    // For further information visit https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "debugServer": 4712,
+            "name": "Launch Program",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:7890",
+            "webRoot": "${workspaceRoot}",
+            "skipFiles": [
+                "b.js"
+            ],
+            "sourceMaps": true
+        }
+    ]
+}

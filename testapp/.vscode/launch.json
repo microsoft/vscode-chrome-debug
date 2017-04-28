@@ -1,34 +1,24 @@
 {
     "version": "0.1.0",
-    "debugServer": "4712",
     "configurations": [
         {
+            "debugServer": 4712,
             "name": "test chrome",
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080/index.html",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "port": 9223,
+            "webRoot": "${workspaceRoot}/wwwroot",
+            "showAsyncStacks": true,
+            "disableNetworkCache": true
         },
         {
-            "name": "launch for file",
-            "type": "chrome",
-            "request": "launch",
-            "file": "${workspaceRoot}/wwwroot/index.html",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot"
-        },
-        {
+            "debugServer": 4712,
             "name": "attach to chrome",
             "type": "chrome",
             "port": 9222,
             "request": "attach",
-            "sourceMaps": true,
-            "diagnosticLogging": true,
-            "webRoot": "${workspaceRoot}/wwwroot",
-            "url": "http://localhost:8080"
+            "webRoot": "${workspaceRoot}/wwwroot"
         }
     ]
 }

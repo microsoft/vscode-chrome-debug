@@ -4,6 +4,7 @@
 lib/**
 typings/**
 testapp/**
+testdata/**
 test/**
 *.vsix
 gulpfile.js
@@ -11,7 +12,9 @@ tsconfig.json
 tsd.json
 tslint.json
 vscode-chrome-debug.txt
+webpack.config.js
 
+out/src/**
 out/test/**
 
 node_modules/.bin/**

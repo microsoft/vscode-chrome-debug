@@ -2,27 +2,48 @@
     "version": "0.1.0",
     "configurations": [
         {
+            // "debugServer": 4712,
             "name": "launch as server",
             "type": "node",
+            "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/out/src/chromeDebug.js",
-			"runtimeArgs": ["--harmony"],
+            "runtimeArgs": [
+                "--preserve-symlinks"
+            ],
+            "program": "${workspaceRoot}/out/bundle.js",
+            // "runtimeExecutable": "/Users/roblou/.nvm/versions/node/v6.5.0/bin/node",
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
-            "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
+            // "trace": "verbose",
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
         },
         {
+            // "debugServer": 4712,
             "name": "test",
             "type": "node",
+            "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/node_modules/gulp/bin/gulp.js",
-            "stopOnEntry": false,
-            "args": [ "test" ],
-            "sourceMaps": true,
-            "outDir": "${workspaceRoot}/out"
-        }
+            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+				"--colors",
+				"out/test/**/*.test.js",
+                "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
+                "--timeout", "1800000"
+            ],
+            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+        },
+        {
+			"name": "Run Extension",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceRoot}"
+			],
+			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
+		}
     ]
 }

@@ -1,9 +1,12 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "0.4.1",
+  "version": "3.0.1",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
+  "author": {
+    "name": "Microsoft Corporation"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Microsoft/vscode-chrome-debug"
@@ -11,66 +14,111 @@
   "publisher": "msjsdiag",
   "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
   "engines": {
-    "vscode": "*"
+    "vscode": "^1.8.0"
   },
   "categories": [
     "Debuggers"
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "0.1.0"
+    "vscode-chrome-debug-core": "3.15.0",
+    "vscode-debugadapter": "1.19.0-pre.0"
   },
   "devDependencies": {
+    "@types/mocha": "^2.2.35",
+    "@types/mockery": "^1.4.29",
+    "@types/node": "^6.0.41",
+    "@types/source-map": "^0.1.27",
+    "@types/tmp": "0.0.32",
+    "concurrently": "^3.1.0",
+    "glob": "^7.1.1",
     "gulp": "^3.9.1",
-    "gulp-sourcemaps": "^1.5.2",
-    "gulp-tslint": "^3.3.1",
-    "gulp-typescript": "^2.12.1",
-    "gulp-util": "^3.0.5",
-    "tslint": "^2.5.1",
-    "typescript": "^1.8.9",
-    "typings": "^0.7.12"
+    "http-server": "^0.9.0",
+    "mocha": "^3.0.2",
+    "mockery": "^1.7.0",
+    "tmp": "0.0.31",
+    "ts-loader": "^1.0.0",
+    "tslint": "^3.15.1",
+    "typemoq": "^0.3.3",
+    "typescript": "^2.2.1",
+    "vscode": "^1.0.3",
+    "vscode-chrome-debug-core-testsupport": "^3.14.5",
+    "vscode-debugadapter-testsupport": "^1.18.1",
+    "vscode-debugprotocol": "^1.18.0-pre.2",
+    "webpack": "^2.2.0-rc.1",
+    "webpack-fail-plugin": "^1.0.5"
   },
+  "main": "./out/src/extension",
+  "activationEvents": [
+    "onCommand:extension.chrome-debug.startSession",
+    "onCommand:extension.chrome-debug.toggleSkippingFile"
+  ],
   "scripts": {
-    "postinstall": "typings install"
+    "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\" \"npm run build:outOfBundle\"",
+    "build:debugadapter": "webpack",
+    "build:test": "tsc -p test/tsconfig.json",
+    "build:outOfBundle": "tsc -p outOfBundle/tsconfig.json",
+    "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\" \"npm run watch:outOfBundle\"",
+    "watch:debugadapter": "webpack -w",
+    "watch:test": "tsc -p test/tsconfig.json -w",
+    "watch:outOfBundle": "tsc -p outOfBundle/tsconfig.json -w",
+    "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
+    "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/*.test.js",
+    "lint": "tslint -t verbose \"src/**/*.ts\"",
+    "vscode:prepublish": "gulp verify-no-linked-modules",
+    "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "contributes": {
+    "breakpoints": [
+      {
+        "language": "javascript"
+      },
+      {
+        "language": "typescriptreact"
+      },
+      {
+        "language": "javascriptreact"
+      },
+      {
+        "language": "fsharp"
+      }
+    ],
     "debuggers": [
       {
         "type": "chrome",
         "label": "Chrome",
-        "enableBreakpointsFor": {
-          "languageIds": [
-            "javascript",
-            "typescriptreact",
-            "javascriptreact"
-          ]
-        },
-        "program": "./out/src/chromeDebug.js",
+        "program": "./out/bundle.js",
         "runtime": "node",
+        "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
+        "languages": [ "javascript", "typescript", "javascriptreact", "typescriptreact" ],
+        "startSessionCommand": "extension.chrome-debug.startSession",
         "initialConfigurations": [
           {
-            "name": "Launch index.html with sourcemaps",
             "type": "chrome",
             "request": "launch",
-            "file": "${workspaceRoot}/index.html",
-            "sourceMaps": true,
-            "webRoot": "${workspaceRoot}"
-          },
-          {
-            "name": "Launch localhost with sourcemaps",
-            "type": "chrome",
-            "request": "launch",
+            "name": "Launch Chrome against localhost",
             "url": "http://localhost:8080",
-            "sourceMaps": true,
             "webRoot": "${workspaceRoot}"
           },
           {
-            "name": "Attach with sourcemaps",
             "type": "chrome",
             "request": "attach",
+            "name": "Attach to Chrome",
             "port": 9222,
-            "sourceMaps": true,
             "webRoot": "${workspaceRoot}"
+          }
+        ],
+        "configurationSnippets": [
+          {
+            "label": "Chrome: Launch",
+            "description": "Launch Chrome to debug a URL",
+            "body": {
+              "type": "chrome",
+              "request": "launch",
+              "name": "${2:Launch Chrome}",
+              "url": "http://localhost:8080",
+              "webRoot": "^\"\\${workspaceRoot}\""
+            }
           }
         ],
         "configurationAttributes": {
@@ -82,6 +130,11 @@
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
               },
+              "address": {
+                "type": "string",
+                "description": "TCP/IP address of debug port",
+                "default": "127.0.0.1"
+              },
               "file": {
                 "type": "string",
                 "description": "A local html file to open in the browser",
@@ -90,12 +143,19 @@
               "url": {
                 "type": "string",
                 "description": "A url to open in the browser",
-                "default": "http://mysite.com/index.html"
+                "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root.",
+                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "pathMapping": {
+                "type": "object",
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "default": {
+                  "/": "${workspaceRoot}"
+                }
               },
               "runtimeExecutable": {
                 "type": [
@@ -120,13 +180,67 @@
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console",
-                "default": true
+                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "verboseDiagnosticLogging": {
+                "type": "boolean",
+                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "userDataDir": {
-                "type": "string",
-                "description": "When set, Chrome is launched with the --user-data-dir option set to this path",
+                "type": ["string", "boolean"],
+                "description": "By default, Chrome is launched with a separate user profile in a temp folder. Use this option to override it. Set to false to launch with your default user profile.",
                 "default": ""
+              },
+              "sourceMapPathOverrides": {
+                "type": "object",
+                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "default": {}
+              },
+              "smartStep": {
+                "type": "boolean",
+                "description": "Automatically step through generated code that cannot be mapped back to the original source.",
+                "default": true
+              },
+              "skipFiles": {
+                "type": "array",
+                "description": "An array of file or folder names, or path globs, to skip when debugging.",
+                "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
+              },
+              "disableNetworkCache": {
+                "type": "boolean",
+                "description": "Controls whether to skip the network cache for each request",
+                "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
+              },
+              "showAsyncStacks": {
+                "type": "boolean",
+                "description": "Show the async calls that led to the current call stack",
+                "default": true
               }
             }
           },
@@ -140,6 +254,11 @@
                 "description": "Port to use for Chrome remote debugging.",
                 "default": 9222
               },
+              "address": {
+                "type": "string",
+                "description": "TCP/IP address of debug port",
+                "default": "127.0.0.1"
+              },
               "sourceMaps": {
                 "type": "boolean",
                 "description": "Use JavaScript source maps (if they exist).",
@@ -147,22 +266,104 @@
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console",
-                "default": true
+                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "default": true,
+                "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "verboseDiagnosticLogging": {
+                "type": "boolean",
+                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
+                "default": true,
+                "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
+              },
+              "trace": {
+                "type": [
+                  "boolean",
+                  "string"
+                ],
+                "enum": [
+                  "verbose",
+                  true
+                ],
+                "default": true,
+                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "url": {
                 "type": "string",
                 "description": "Will search for a tab with this EXACT url and attach to it, if found",
-                "default": "http://mysite.com/index.html"
+                "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk.",
+                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
                 "default": "${workspaceRoot}"
+              },
+              "pathMapping": {
+                "type": "object",
+                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "default": {}
+              },
+              "sourceMapPathOverrides": {
+                "type": "object",
+                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "default": {}
+              },
+              "smartStep": {
+                "type": "boolean",
+                "description": "Automatically step through generated code that cannot be mapped back to the original source.",
+                "default": true
+              },
+              "skipFiles": {
+                "type": "array",
+                "description": "An array of file or folder names, or path globs, to skip when debugging.",
+                "default": []
+              },
+              "timeout": {
+                "type": "number",
+                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "default": 10000
+              },
+              "disableNetworkCache": {
+                "type": "boolean",
+                "description": "Controls whether to skip the network cache for each request",
+                "default": true
+              },
+              "urlFilter": {
+                "type": "string",
+                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "default": ""
+              },
+              "showAsyncStacks": {
+                "type": "boolean",
+                "description": "Show the async calls that led to the current call stack",
+                "default": true
               }
             }
           }
         }
+      }
+    ],
+    "menus": {
+      "debug/callstack/context": [
+        {
+          "command": "extension.chrome-debug.toggleSkippingFile",
+          "group": "navigation",
+          "when": "inDebugMode && debugType == 'chrome'"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "extension.chrome-debug.toggleSkippingFile",
+        "title": "Toggle Skipping This File"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "extension.node-debug.pickLoadedScript",
+        "key": "ctrl+f4",
+        "mac": "cmd+f4",
+        "when": "debugType == 'chrome'"
       }
     ]
   }

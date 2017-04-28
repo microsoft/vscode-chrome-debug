@@ -1,13 +1,10 @@
 language: node_js
 
 node_js:
-  - "4.1"
-
-before_script:
-  - npm install -g gulp
-  - npm install -g typings
+  - "7.0"
 
 script:
-    - gulp build
+    - npm run build
+    - npm run build:test
     - npm test
-    - gulp tslint
+    - npm run lint
