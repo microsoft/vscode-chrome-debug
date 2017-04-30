@@ -1,3 +1,6 @@
+## 3.1.1
+* Fix "extension.chrome-debug.startSession not found" error due to bad publish
+
 ## 3.1.0
 * Implement column breakpoints (with shift+F9) for recent Chrome versions - [Microsoft/vscode-chrome-debug-core#144](https://github.com/Microsoft/vscode-chrome-debug-core/issues/144)
 * Show a quickpick with available tabs when there are multiple - [#280](https://github.com/Microsoft/vscode-chrome-debug/issues/280)
