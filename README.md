@@ -166,6 +166,7 @@ A few mappings are applied by default, corresponding to the default configs for 
     "webpack:///./~/*": "${webRoot}/node_modules/*",       // Example: "webpack:///./~/querystring/index.js" -> "/Users/me/project/node_modules/querystring/index.js"
     "webpack:///./*":   "${webRoot}/*",                    // Example: "webpack:///./src/app.js" -> "/users/me/project/src/app.js",
     "webpack:///*":     "*",                               // Example: "webpack:///C:/project/app.ts" -> "C:/project/app.ts"
+    "webpack:///src/*": "${webRoot}/*",                    // Example: "webpack:///src/App.js" -> "C:/project/src/App.js"
     "meteor://💻app/*": "${webRoot}/*"                    // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
 }
 ```
