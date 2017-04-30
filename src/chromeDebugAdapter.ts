@@ -18,6 +18,7 @@ const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./*': '${webRoot}/*',
     'webpack:///*': '*',
     'meteor://💻app/*': '${webRoot}/*',
+    'webpack:///src/*': '${webRoot}/*'
 };
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
