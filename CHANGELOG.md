@@ -1,6 +1,17 @@
+## 3.1.0
+* Implement column breakpoints (with shift+F9) for recent Chrome versions - [Microsoft/vscode-chrome-debug-core#144](https://github.com/Microsoft/vscode-chrome-debug-core/issues/144)
+* Show a quickpick with available tabs when there are multiple - [#280](https://github.com/Microsoft/vscode-chrome-debug/issues/280)
+* Add `webpack:///./~/` sourcemap mapping by default - [#401](https://github.com/Microsoft/vscode-chrome-debug/issues/401)
+* Add `webpack:///src/*` sourcemap mapping for create-react-app by default - [#315](https://github.com/Microsoft/vscode-chrome-debug/issues/315)
+* Show exception widget for breaking on promise rejection - [Microsoft/vscode#21929](https://github.com/Microsoft/vscode/issues/21929)
+* Completely fix showing empty property names as "" - [Microsoft/vscode#24143](https://github.com/Microsoft/vscode/issues/24143)
+* Fix "Open or close parenthesis in file path prevents debugger from discovering the target" - [#373](https://github.com/Microsoft/vscode-chrome-debug/issues/373)
+* Remove "unimplemented console API" warning
+* Specify languages for creating a launch config when none is set up - [#334](https://github.com/Microsoft/vscode-chrome-debug/issues/334)
+
 ## 3.0.1
-* Fix "Windows - Electron app fails to start after upgrading to 3.0.0" [#407](https://github.com/Microsoft/vscode-chrome-debug/issues/407)
-  * On Windows, the code to prevent Chrome from closing when opening Chrome Devtools [#116](https://github.com/microsoft/vscode-chrome-debug/issues/116) is now not enabled when specifying a runtimeExecutable, until I find a better solution.
+* Fix "Windows - Electron app fails to start after upgrading to 3.0.0" - [#407](https://github.com/Microsoft/vscode-chrome-debug/issues/407)
+  * On Windows, the code to prevent Chrome from closing when opening Chrome Devtools - [#116](https://github.com/microsoft/vscode-chrome-debug/issues/116) is now not enabled when specifying a runtimeExecutable, until I find a better solution.
 
 ## 3.0.0
 * Enable userDataDir by default - [#210](https://github.com/microsoft/vscode-chrome-debug/issues/210)

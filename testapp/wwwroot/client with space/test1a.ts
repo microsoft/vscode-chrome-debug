@@ -2,6 +2,11 @@ const globalCode = 'page loaded';
 console.log(globalCode);
 
 function locals() {
+    function consoleDotLog(m) {
+        console.log(m)
+    }
+
+    Promise.resolve().then(() => consoleDotLog('handler 1')).then(() => consoleDotLog('handler 2'));
     setTimeout(() => {
         let x = 1;
     }, 1000);
@@ -45,7 +50,7 @@ newlines`;
     var str = 'hello';
     var xyz = 1;
     var obj = { a: 2, get thing() { throw 'xyz'; }, set thing(x) { } };
-    xyz++;                xyz++;          xyz++;
+    xyz++;                   xyz++;         xyz++;
 
     anotherFn(fn);
     fn();
