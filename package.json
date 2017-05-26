@@ -22,7 +22,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.15.4",
-    "vscode-debugadapter": "1.19.0-pre.0"
+    "vscode-debugadapter": "1.19.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
@@ -43,8 +43,8 @@
     "typescript": "^2.2.1",
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.14.5",
-    "vscode-debugadapter-testsupport": "^1.18.1",
-    "vscode-debugprotocol": "^1.18.0-pre.2",
+    "vscode-debugadapter-testsupport": "1.19.0",
+    "vscode-debugprotocol": "1.19.0",
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
