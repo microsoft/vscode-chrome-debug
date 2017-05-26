@@ -1,3 +1,7 @@
+## 3.1.2
+* Fix first frame appearing twice (in VS Code 1.13) and fix callstack paging - [Microsoft/vscode#25594](https://github.com/Microsoft/vscode/issues/25594)
+* Enhance path matching by accepting partial paths in `pathMapping` - thanks to [llgcode](https://github.com/llgcode) for the PR! - [Microsoft/vscode-chrome-debug-core#202](https://github.com/Microsoft/vscode-chrome-debug-core/pull/202)
+
 ## 3.1.1
 * Fix "extension.chrome-debug.startSession not found" error due to bad publish
 
