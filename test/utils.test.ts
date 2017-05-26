@@ -20,7 +20,7 @@ suite('Utils', () => {
         testUtils.setupUnhandledRejectionListener();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
-        mockery.registerMock('fs', { statSync: () => { } });
+        mockery.registerMock('fs', { statSync: () => { }, existsSync: () => false });
     });
 
     teardown(() => {
@@ -44,7 +44,8 @@ suite('Utils', () => {
             const statSync = (aPath: string) => {
                 if (aPath.indexOf('(x86)') >= 0) throw new Error('Not found');
             };
-            mockery.registerMock('fs', { statSync });
+            const existsSync = () => false;
+            mockery.registerMock('fs', { statSync, existsSync });
             mockery.registerMock('os', { platform: () => 'win32' });
 
             const Utils = getUtils();
