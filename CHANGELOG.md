@@ -1,3 +1,7 @@
+## 3.1.3
+* Fix longstanding sourcemap location mapping error - [#112](https://github.com/Microsoft/vscode-chrome-debug-core/issues/112)
+* Add existing default values to the `sourceMapPathOverrides` launch config setting
+
 ## 3.1.2
 * Fix first frame appearing twice (in VS Code 1.13) and fix callstack paging - [Microsoft/vscode#25594](https://github.com/Microsoft/vscode/issues/25594)
 * Enhance path matching by accepting partial paths in `pathMapping` - thanks to [llgcode](https://github.com/llgcode) for the PR! - [Microsoft/vscode-chrome-debug-core#202](https://github.com/Microsoft/vscode-chrome-debug-core/pull/202)
