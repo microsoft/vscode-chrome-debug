@@ -218,7 +218,12 @@
               "sourceMapPathOverrides": {
                 "type": "object",
                 "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
-                "default": {}
+                "default": {
+                  "webpack:///*": "*",
+                  "webpack:///./*": "${webRoot}/*",
+                  "webpack:///src/*": "${webRoot}/*",
+                  "webpack:///./~/*": "${webRoot}/node_modules/*"
+                }
               },
               "smartStep": {
                 "type": "boolean",
