@@ -90,7 +90,12 @@
         "program": "./out/bundle.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
-        "languages": [ "javascript", "typescript", "javascriptreact", "typescriptreact" ],
+        "languages": [
+          "javascript",
+          "typescript",
+          "javascriptreact",
+          "typescriptreact"
+        ],
         "startSessionCommand": "extension.chrome-debug.startSession",
         "initialConfigurations": [
           {
@@ -203,7 +208,10 @@
                 "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
               },
               "userDataDir": {
-                "type": ["string", "boolean"],
+                "type": [
+                  "string",
+                  "boolean"
+                ],
                 "description": "By default, Chrome is launched with a separate user profile in a temp folder. Use this option to override it. Set to false to launch with your default user profile.",
                 "default": ""
               },
