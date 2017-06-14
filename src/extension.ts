@@ -47,9 +47,12 @@ async function startSession(config: any): Promise<StartSessionResult> {
         }
     }
 
-    vscode.commands.executeCommand('vscode.startDebug', config);
-
-    return Promise.resolve<StartSessionResult>({ status: 'ok' });
+    if (config.request) {
+        vscode.commands.executeCommand('vscode.startDebug', config);
+        return Promise.resolve<StartSessionResult>({ status: 'ok' });
+    } else {
+        return Promise.resolve<StartSessionResult>({ status: 'initialConfiguration' });
+    }
 }
 
 interface ITargetQuickPickItem extends vscode.QuickPickItem {
