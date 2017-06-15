@@ -1,3 +1,7 @@
+## 3.1.4
+* Fix breakpoints not binding in apps built with Angular 1.1.1 (or any other app with a particular webpack config) - [Microsoft/vscode#28730](https://github.com/Microsoft/vscode/issues/28730)
+* Restore ability to create a launch.json with the default configs when pressing F5, and one is not already present.
+
 ## 3.1.3
 * Fix longstanding sourcemap location mapping error - [#112](https://github.com/Microsoft/vscode-chrome-debug-core/issues/112)
 * Add existing default values to the `sourceMapPathOverrides` launch config setting
