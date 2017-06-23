@@ -1,3 +1,7 @@
+## 3.1.5
+* Fix evaluating object literals in the console - [Microsoft/vscode-node-debug2#104](https://github.com/Microsoft/vscode-node-debug2/issues/104)
+* Fix error callstacks in console sometimes not being sourcemapped - [Microsoft/vscode-chrome-debug-core#212](https://github.com/microsoft/vscode-chrome-debug-core/issues/212)
+
 ## 3.1.4
 * Fix breakpoints not binding in apps built with Angular 1.1.1 (or any other app with a particular webpack config) - [Microsoft/vscode#28730](https://github.com/Microsoft/vscode/issues/28730)
 * Restore ability to create a launch.json with the default configs when pressing F5, and one is not already present.
