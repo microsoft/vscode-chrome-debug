@@ -1,3 +1,7 @@
+## 3.1.6
+* Support `console.dir` and other missing `console` APIs - [Microsoft/vscode#29602](https://github.com/Microsoft/vscode/issues/29602)
+* Resolve longer `pathMapping` mappings before resolving shorter ones - [#444](https://github.com/microsoft/vscode-chrome-debug/issues/444)
+
 ## 3.1.5
 * Fix evaluating object literals in the console - [Microsoft/vscode-node-debug2#104](https://github.com/Microsoft/vscode-node-debug2/issues/104)
 * Fix error callstacks in console sometimes not being sourcemapped - [Microsoft/vscode-chrome-debug-core#212](https://github.com/microsoft/vscode-chrome-debug-core/issues/212)

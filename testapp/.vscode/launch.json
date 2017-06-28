@@ -8,9 +8,14 @@
             "request": "launch",
             "url": "http://localhost:8080/index.html",
             "port": 9223,
-            "webRoot": "${workspaceRoot}/wwwroot",
+            "pathMapping": {
+                "/": "${workspaceRoot}/wwwroot",
+                "/out": "${workspaceRoot}/wwwroot/out"
+            },
+            // "webRoot": "${workspaceRoot}/wwwroot",
             "showAsyncStacks": true,
-            "disableNetworkCache": true
+            "disableNetworkCache": true,
+            "trace": true
         },
         {
             "debugServer": 4712,
