@@ -8,11 +8,8 @@
         "outDir": "out",
         "noImplicitThis": true
     },
-    "exclude": [
-        "node_modules",
-        "!node_modules/@types",
-        "testapp/",
-        "testdata/",
-        "test/"
+    "include": [
+        "src/**/*.ts",
+        "node_modules/@types/**/*.ts"
     ]
 }
