@@ -1,19 +1,14 @@
 {
-    "version": "0.1.0",
-    "command": "npm",
-    "isShellCommand": true,
-    "showOutput": "always",
-    "suppressTaskName": true,
+    "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "watch",
-            "args": ["run", "watch"],
-            "isBuildCommand": true,
-            "isBackground": true
-        },
-        {
-            "taskName": "watch:test",
-            "args": ["run", "watch:test"],
+            "type": "npm",
+            "script": "watch",
+            "problemMatcher": "$gulp-tsc",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
             "isBackground": true
         }
     ]

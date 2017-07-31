@@ -1,17 +1,14 @@
 {
-    "version": "0.1.0",
-    "command": "gulp",
-    "isShellCommand": true,
+    "version": "2.0.0",
     "tasks": [
-       {
-            "taskName": "watch",
-            "args": [],
-            "isBuildCommand": true,
-            "isBackground": true,
-            "showOutput": "never",
-            "problemMatcher": [
-                "$tsc"
-            ]
+        {
+            "type": "gulp",
+            "task": "buildAndServe",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "isBackground": true
         }
     ]
 }
