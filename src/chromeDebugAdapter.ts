@@ -147,11 +147,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         super.onResumed();
     }
 
-    public disconnect(): void {
+    public disconnect(args: DebugProtocol.DisconnectArguments): void {
         const hadTerminated = this._hasTerminated;
 
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
-        super.disconnect();
+        super.disconnect(args);
 
         if (this._chromeProc && !hadTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated

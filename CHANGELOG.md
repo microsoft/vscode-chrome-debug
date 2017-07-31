@@ -1,3 +1,8 @@
+## 3.1.7
+* Support new "Loaded scripts" view in VS Code 1.15 - [Microsoft/vscode-chrome-debug-core#118](https://github.com/microsoft/vscode-chrome-debug-core/issues/118)
+* Fix hover on variables defined in async functions using TS transpilation - [Microsoft/vscode#31469](https://github.com/Microsoft/vscode/issues/31469)
+* Decrease extension package size
+
 ## 3.1.6
 * Support `console.dir` and other missing `console` APIs - [Microsoft/vscode#29602](https://github.com/Microsoft/vscode/issues/29602)
 * Resolve longer `pathMapping` mappings before resolving shorter ones - [#444](https://github.com/microsoft/vscode-chrome-debug/issues/444)
