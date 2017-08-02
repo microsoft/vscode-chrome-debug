@@ -42,7 +42,7 @@ When your launch config is set up, you can debug your project. Pick a launch con
 
 ### Configuration
 
-The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Both modes requires you to be serving your web application from local web server, which is started from either a VS Code task or from your commandline. Using the `url` paramater you simply tell VS Code which URL to either open or launch in Chrome.
+The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Both modes requires you to be serving your web application from local web server, which is started from either a VS Code task or from your commandline. Using the `url` parameter you simply tell VS Code which URL to either open or launch in Chrome.
 
 Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
