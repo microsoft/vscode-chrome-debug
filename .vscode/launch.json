@@ -8,9 +8,6 @@
             "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceRoot}",
-            "runtimeArgs": [
-                "--preserve-symlinks"
-            ],
             "program": "${workspaceRoot}/out/bundle.js",
             // "runtimeExecutable": "/Users/roblou/.nvm/versions/node/v6.5.0/bin/node",
             "stopOnEntry": false,

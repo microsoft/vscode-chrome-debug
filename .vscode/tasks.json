@@ -8,8 +8,7 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            },
-            "isBackground": true
+            }
         }
     ]
 }

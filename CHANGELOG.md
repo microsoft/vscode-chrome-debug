@@ -1,3 +1,9 @@
+## 3.1.8
+* Fix for old runtimes that don't support setAsyncCallStackDepth - [Microsoft/vscode-chrome-debug-core#226](https://github.com/microsoft/vscode-chrome-debug-core/issues/226)
+* Download sourcemaps referenced with file:/// properly - [Microsoft/vscode-chrome-debug-core#205](https://github.com/microsoft/vscode-chrome-debug-core/issues/205)
+* Fix errors when stepping too quickly - [Microsoft/vscode#27696](https://github.com/Microsoft/vscode/issues/27696)
+* Fix some values not formatted correctly in the debug console - [Microsoft/vscode#32064](https://github.com/Microsoft/vscode/issues/32064)
+
 ## 3.1.7
 * Fix hover on variables defined in async functions using TS transpilation - [Microsoft/vscode#31469](https://github.com/Microsoft/vscode/issues/31469)
 * Decrease extension package size

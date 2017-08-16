@@ -2,7 +2,7 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "debugServer": 4712,
+            // "debugServer": 4712,
             "name": "test chrome",
             "type": "chrome",
             "request": "launch",
@@ -14,6 +14,7 @@
             },
             // "webRoot": "${workspaceRoot}/wwwroot",
             "showAsyncStacks": true,
+            // "runtimeExecutable": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
             "disableNetworkCache": true,
             "trace": true
         },
