@@ -179,7 +179,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
      * Opt-in event called when the 'reload' button in the debug widget is pressed
      */
     public restart(): Promise<void> {
-        return this.chrome.Page.reload({ ignoreCache: true });
+        return this.chrome ?
+            this.chrome.Page.reload({ ignoreCache: true }) :
+            Promise.resolve();
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], usingRuntimeExecutable: boolean): ChildProcess {
