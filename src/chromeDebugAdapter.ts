@@ -134,7 +134,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: stoppedEvent.ReasonType): void {
-        this._overlayHelper.doAndCancel(() => this.chrome.Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
+        // TODO - https://github.com/Microsoft/vscode-chrome-debug/issues/486
+        this._overlayHelper.doAndCancel(() => (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }));
         super.onPaused(notification, expectingStopReason);
     }
 
@@ -143,7 +144,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected onResumed(): void {
-        this._overlayHelper.wait(() => this.chrome.Page.configureOverlay({ }).catch(() => { }));
+        this._overlayHelper.wait(() => (<any>this.chrome).Page.configureOverlay({ }).catch(() => { }));
         super.onResumed();
     }
 
