@@ -1,3 +1,8 @@
+## 3.2.0
+* Support 'Command Line API' in the console - commands like `$_` and `$(selector)` will now work.
+* Wait for sourcemaps to finish loading before resolving sourcemaps in stack traces.
+* Fix error from triggering 'reload' before attaching to Chrome - [#484](https://github.com/microsoft/vscode-chrome-debug/issues/484)
+
 ## 3.1.8
 * Fix for old runtimes that don't support setAsyncCallStackDepth - [Microsoft/vscode-chrome-debug-core#226](https://github.com/microsoft/vscode-chrome-debug-core/issues/226)
 * Download sourcemaps referenced with file:/// properly - [Microsoft/vscode-chrome-debug-core#205](https://github.com/microsoft/vscode-chrome-debug-core/issues/205)
