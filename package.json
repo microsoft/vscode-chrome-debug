@@ -117,6 +117,17 @@
               "url": "http://localhost:8080",
               "webRoot": "^\"\\${workspaceRoot}\""
             }
+          },
+          {
+            "label": "Chrome: Attach",
+            "description": "Attach to an instance of Chrome already in debug mode",
+            "body": {
+              "type": "chrome",
+              "request": "attach",
+              "name": "${2:Attach to Chrome}",
+              "port": 9222,
+              "webRoot": "^\"\\${workspaceRoot}\""
+            }
           }
         ],
         "configurationAttributes": {
