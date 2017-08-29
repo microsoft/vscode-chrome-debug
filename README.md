@@ -186,10 +186,10 @@ Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you
 
 ### Cannot connect to the target: connect ECONNREFUSED 127.0.0.1:9222
 This message means that the extension can't attach to Chrome, because Chrome wasn't launched in debug mode. Here are some things to try:
-* If using a `launch` type config, close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary. Or, set the `userDataDir` property to a temp directory. Chrome will read this and launch a new instance using a different profile than running instances. It can be convenient to set `"userDataDir": "${workspaceRoot}/.vscode/chrome"`.
 * If using an `attach` type config, ensure that you launched Chrome using `--remote-debugging-port=9222`. And if there was already a running instance, see the above.
 * Ensure that the `port` property matches the port on which Chrome is listening for remote debugging connections. This is `9222` by default. Ensure nothing else is using this port, including your web server. If something else on your computer responds at `http://localhost:9222`, then set a different port.
 * If all else fails, try to navigate to `http://localhost:<port>/json` in a browser when you see this message - if there is no response, then something is wrong upstream of the extension. If there is a page of JSON returned, then ensure that the `port` in the launch config matches the port in that url.
+* If using a `launch` type config with the `userDataDir` option explicitly disabled, close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary.
 
 ### General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
