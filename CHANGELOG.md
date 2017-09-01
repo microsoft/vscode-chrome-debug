@@ -1,3 +1,6 @@
+## 3.2.1
+* Fix pause overlay on Chrome window - [#486](https://github.com/Microsoft/vscode-chrome-debug/issues/486)
+
 ## 3.2.0
 * Support 'Command Line API' in the console - commands like `$_` and `$(selector)` will now work.
 * Wait for sourcemaps to finish loading before resolving sourcemaps in stack traces.

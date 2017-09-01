@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "author": {
@@ -21,7 +21,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "3.17.0",
+    "vscode-chrome-debug-core": "3.17.1",
     "vscode-debugadapter": "^1.22.0"
   },
   "devDependencies": {
@@ -62,6 +62,7 @@
     "watch:debugadapter": "webpack -w",
     "watch:test": "tsc -p test/tsconfig.json -w",
     "watch:outOfBundle": "tsc -p outOfBundle/tsconfig.json -w",
+    "start": "node out/bundle.js --server=4712",
     "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
     "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/*.test.js",
     "lint": "tslint -t verbose \"src/**/*.ts\"",
