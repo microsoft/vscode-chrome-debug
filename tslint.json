@@ -51,7 +51,6 @@
     "no-internal-module": true,
     "no-require-imports": false,
     "no-shadowed-variable": true,
-    "no-string-literal": true,
     "no-switch-case-fall-through": true,
     "no-trailing-whitespace": true,
     "no-unreachable": true,
@@ -67,10 +66,6 @@
       "check-catch",
       "check-else",
       "check-whitespace"
-    ],
-    "quotemark": [
-      true,
-      "single"
     ],
     "radix": true,
     "switch-default": true,

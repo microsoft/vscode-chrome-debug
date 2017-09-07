@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as os from 'os';
+import * as fs from 'fs';
 import * as path from 'path';
 
 import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, stoppedEvent} from 'vscode-chrome-debug-core';
@@ -12,6 +13,7 @@ import {DebugProtocol} from 'vscode-debugprotocol';
 
 import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
 import * as utils from './utils';
+import * as errors from './errors';
 
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./~/*': '${webRoot}/node_modules/*',
@@ -38,9 +40,18 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
         return super.launch(args).then(() => {
-            // Check exists?
-            const chromePath = args.runtimeExecutable || utils.getBrowserPath();
-            if (!chromePath) {
+            let runtimeExecutable: string;
+            if (args.runtimeExecutable) {
+                const re = findExecutable(args.runtimeExecutable);
+                if (!re) {
+                    return errors.getNotExistErrorResponse('runtimeExecutable', args.runtimeExecutable);
+                }
+
+                runtimeExecutable = re;
+            }
+
+            runtimeExecutable = runtimeExecutable || utils.getBrowserPath();
+            if (!runtimeExecutable) {
                 return coreUtils.errP(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
             }
 
@@ -78,7 +89,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            this._chromeProc = this.spawnChrome(chromePath, chromeArgs, !!args.runtimeExecutable);
+            this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, !!args.runtimeExecutable);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
                 logger.error(errMsg);
@@ -266,4 +277,25 @@ function getChromeSpawnHelperPath(): string {
     } else {
         return path.join(__dirname, 'chromeSpawnHelper.js');
     }
+}
+
+function findExecutable(program: string): string | undefined {
+    if (process.platform === 'win32' && !path.extname(program)) {
+        const PATHEXT = process.env['PATHEXT'];
+        if (PATHEXT) {
+            const executableExtensions = PATHEXT.split(';');
+            for (const extension of executableExtensions) {
+                const path = program + extension;
+                if (fs.existsSync(path)) {
+                    return path;
+                }
+            }
+        }
+    }
+
+    if (fs.existsSync(program)) {
+        return program;
+    }
+
+    return undefined;
 }

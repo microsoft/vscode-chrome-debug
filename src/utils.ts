@@ -66,3 +66,14 @@ export class DebounceHelper {
 
 export const targetFilter: chromeConnection.ITargetFilter =
     target => target && (!target.type || target.type === 'page');
+
+/**
+ * Placeholder localize function
+ */
+export function localize(id: string, msg: string, ...args: any[]): string {
+    args.forEach((arg, i) => {
+        msg = msg.replace(new RegExp(`\\{${i}\\}`, 'g'), arg);
+    });
+
+    return msg;
+}
