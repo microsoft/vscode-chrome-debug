@@ -35,8 +35,14 @@ async function startSession(config: any): Promise<StartSessionResult> {
         const discovery = new Core.chromeTargetDiscoveryStrategy.ChromeTargetDiscovery(
             new Core.NullLogger(), new Core.telemetry.NullTelemetryReporter());
 
-        const targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url);
-        if (targets.length > 1) {
+        let targets;
+        try {
+            targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url);
+        } catch (e) {
+            // Target not running?
+        }
+
+        if (targets && targets.length > 1) {
             const selectedTarget = await pickTarget(targets);
             if (!selectedTarget) {
                 // Quickpick canceled, bail
