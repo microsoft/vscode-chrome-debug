@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "3.2.1",
+  "version": "3.3.0",
   "icon": "images/icon.png",
   "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
   "author": {
@@ -21,8 +21,8 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "3.17.1",
-    "vscode-debugadapter": "^1.22.0"
+    "vscode-chrome-debug-core": "3.17.6",
+    "vscode-debugadapter": "^1.23.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
@@ -43,8 +43,8 @@
     "typescript": "^2.4.1",
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.16.0",
-    "vscode-debugadapter-testsupport": "1.22.0",
-    "vscode-debugprotocol": "^1.22.0",
+    "vscode-debugadapter-testsupport": "1.23.0",
+    "vscode-debugprotocol": "^1.23.0",
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },

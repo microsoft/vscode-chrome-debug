@@ -1,3 +1,8 @@
+## 3.3.0
+* Show whether paused exception was caught or uncaught - [#234](https://github.com/Microsoft/vscode-chrome-debug-core/issues/234)
+* Fix issue where 'attach' configs ignores 'timeout' and fails immediately instead of retrying - [#501](https://github.com/Microsoft/vscode-chrome-debug/issues/501)
+* Look up runtimeExecutable scripts with correct extensions for Windows  - [#448](https://github.com/Microsoft/vscode-chrome-debug/issues/448)
+
 ## 3.2.1
 * Fix pause overlay on Chrome window - [#486](https://github.com/Microsoft/vscode-chrome-debug/issues/486)
 
