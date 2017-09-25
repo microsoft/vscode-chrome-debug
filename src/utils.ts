@@ -34,7 +34,7 @@ export function getBrowserPath(): string {
 }
 
 export class DebounceHelper {
-    private waitToken: NodeJS.Timer;
+    private waitToken: any; // TS can't decide whether Timer or number...
 
     constructor(private timeoutMs: number) { }
 
