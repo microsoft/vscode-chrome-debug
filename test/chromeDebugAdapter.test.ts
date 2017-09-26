@@ -89,7 +89,7 @@ suite('ChromeDebugAdapter', () => {
             function spawn(chromePath: string, args: string[]): any {
                 assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
-                assert(args.indexOf('file:///c:/path%20with%20space/index.html') >= 0);
+                assert(args.indexOf('about:blank') >= 0); // We now launch to about:blank first and then redirect later
                 assert(args.indexOf('abc') >= 0);
                 assert(args.indexOf('def') >= 0);
                 spawnCalled = true;

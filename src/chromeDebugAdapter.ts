@@ -29,6 +29,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
     private _chromePID: number;
+    private _userRequestedUrl: string;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -88,6 +89,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
 
             if (launchUrl) {
+                // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
+                // This is done to facilitate hitting breakpoints on load
+                this._userRequestedUrl = launchUrl;
+                launchUrl = "about:blank";
                 chromeArgs.push(launchUrl);
             }
 
@@ -109,6 +114,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         return super.attach(args);
+    }
+
+    public configurationDone(): Promise<void> {
+        // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
+        this.chrome.Page.navigate({url: this._userRequestedUrl});
+        return super.configurationDone();
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
