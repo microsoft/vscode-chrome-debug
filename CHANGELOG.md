@@ -1,3 +1,7 @@
+## 3.3.1
+* (In VS Code 1.17), show the source location of log statements and exceptions in the debug console - [Microsoft/vscode#34626](https://github.com/Microsoft/vscode/issues/34626)
+* Fix error messages that can appear when detaching from Chrome - [Microsoft/vscode#34615](https://github.com/Microsoft/vscode/issues/34615)
+
 ## 3.3.0
 * Show whether paused exception was caught or uncaught - [#234](https://github.com/Microsoft/vscode-chrome-debug-core/issues/234)
 * Fix issue where 'attach' configs ignores 'timeout' and fails immediately instead of retrying - [#501](https://github.com/Microsoft/vscode-chrome-debug/issues/501)
