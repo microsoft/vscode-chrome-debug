@@ -75,10 +75,9 @@ suite('Breakpoints', () => {
             const bpCol1 = 19;
             const correctBpCol1 = 16;
             const expectedLocation = { path: scriptPath, line: bpLine, column: correctBpCol1 };
-            await dc.hitBreakpoint(
+            await dc.hitBreakpointUnverified(
                 { url, webRoot: testProjectRoot },
                 { path: scriptPath, line: bpLine, column: bpCol1 },
-                expectedLocation,
                 expectedLocation);
         });
     });

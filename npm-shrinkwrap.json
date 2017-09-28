@@ -125,14 +125,14 @@
             "resolved": "https://registry.npmjs.org/vscode-chrome-debug-core/-/vscode-chrome-debug-core-3.17.6.tgz"
         },
         "vscode-debugadapter": {
-            "version": "1.23.0",
-            "from": "vscode-debugadapter@>=1.23.0 <2.0.0",
-            "resolved": "https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.23.0.tgz"
+            "version": "1.24.0",
+            "from": "vscode-debugadapter@>=1.24.0 <2.0.0",
+            "resolved": "https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.24.0.tgz"
         },
         "vscode-debugprotocol": {
-            "version": "1.23.0",
-            "from": "vscode-debugprotocol@>=1.23.0 <2.0.0",
-            "resolved": "https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.23.0.tgz"
+            "version": "1.24.0",
+            "from": "vscode-debugprotocol@>=1.24.0 <2.0.0",
+            "resolved": "https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.24.0.tgz"
         },
         "vscode-nls": {
             "version": "2.0.2",
