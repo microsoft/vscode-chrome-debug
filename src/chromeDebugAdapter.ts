@@ -66,6 +66,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Also start with extra stuff disabled
             chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
             if (args.runtimeArgs) {
+                // If both runtimeArgs and runtimeExecutable are specified, *only* use their args
+                if (args.runtimeExecutable) {
+                    chromeArgs.splice(0);
+                }
                 chromeArgs.push(...args.runtimeArgs);
             }
 
