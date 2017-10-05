@@ -183,6 +183,16 @@
                 },
                 "default": []
               },
+              "env": {
+                "type": "object",
+                "description": "Optional dictionary of environment key/value pairs.",
+                "default": null
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Optional working directory for the runtime executable.",
+                "default": null
+              },
               "sourceMaps": {
                 "type": "boolean",
                 "description": "Use JavaScript source maps (if they exist).",
