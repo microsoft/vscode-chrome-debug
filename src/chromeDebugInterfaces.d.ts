@@ -12,6 +12,8 @@ export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
 export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequestArgs {
     runtimeArgs?: string[];
     runtimeExecutable?: string;
+    env?: { [key: string]: string; };
+    cwd?: string;
     file?: string;
     url?: string;
     stopOnEntry?: boolean;

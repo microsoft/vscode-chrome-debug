@@ -58,6 +58,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Start with remote debugging enabled
             const port = args.port || 9222;
             const chromeArgs: string[] = [];
+            const chromeEnv: {[key: string]: string} = args.env || null;
+            const chromeWorkingDir: string = args.cwd || null;
 
             if (!args.noDebug) {
                 chromeArgs.push('--remote-debugging-port=' + port);
@@ -89,7 +91,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, !!args.runtimeExecutable);
+            this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable);
             this._chromeProc.on('error', (err) => {
                 const errMsg = 'Chrome error: ' + err;
                 logger.error(errMsg);
@@ -204,9 +206,22 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             Promise.resolve();
     }
 
-    private spawnChrome(chromePath: string, chromeArgs: string[], usingRuntimeExecutable: boolean): ChildProcess {
+    private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
-            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], { execArgv: [], silent: true });
+            const options = {
+                execArgv: [],
+                silent: true
+            };
+            if (env) {
+                options['env'] = {
+                    ...process.env,
+                    ...env
+                };
+            }
+            if (cwd) {
+                options['cwd'] = cwd;
+            }
+            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], options);
             chromeProc.unref();
 
             chromeProc.on('message', data => {
@@ -231,10 +246,20 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             return chromeProc;
         } else {
             logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
-            const chromeProc = spawn(chromePath, chromeArgs, {
+            const options = {
                 detached: true,
                 stdio: ['ignore'],
-            });
+            };
+            if (env) {
+                options['env'] = {
+                    ...process.env,
+                    ...env
+                };
+            }
+            if (cwd) {
+                options['cwd'] = cwd;
+            }
+            const chromeProc = spawn(chromePath, chromeArgs, options);
             chromeProc.unref();
             return chromeProc;
         }

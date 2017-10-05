@@ -128,6 +128,8 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `trace`: When true, the adapter logs its own diagnostic info to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub. If you set it to "verbose", it will also log to the console.
 * `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
 * `runtimeArgs`: Optional arguments passed to the runtime executable
+* `env`: Optional dictionary of environment key/value pairs
+* `cwd`: Optional working directory for the runtime executable
 * `userDataDir`: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder. Use this option to set a different path to use, or set to false to launch with your default user profile.
 * `url`: On a 'launch' config, it will launch Chrome at this URL.
 * `urlFilter`: On an 'attach' config, or a 'launch' config with no 'url' set, search for a page with this url and attach to it. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
