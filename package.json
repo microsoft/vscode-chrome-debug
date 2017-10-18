@@ -186,7 +186,7 @@
               "env": {
                 "type": "object",
                 "description": "Optional dictionary of environment key/value pairs.",
-                "default": null
+                "default": {}
               },
               "cwd": {
                 "type": "string",
