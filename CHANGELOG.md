@@ -1,3 +1,11 @@
+## 3.4.0
+* Show locations for exception messages in the Debug Console
+* Fix unmapped names on some stack frames, thanks to [@digeff](https://github.com/digeff) for the PR! - [Microsoft/vscode-chrome-debug-core#246](https://github.com/Microsoft/vscode-chrome-debug-core/pull/246)
+* Exclude some files from the package to make it slightly smaller - thanks to [@torn4dom4n](https://github.com/torn4dom4n) for the PR! - [Microsoft/vscode-chrome-debug-core#248](https://github.com/Microsoft/vscode-chrome-debug-core/pull/248)
+* Terminate properly after running in noDebug mode - [Microsoft/vscode#36235](https://github.com/microsoft/vscode/issues/36235)
+* Fix skipping some promise rejections improperly - [Microsoft/vscode-chrome-debug-core#250](https://github.com/Microsoft/vscode-chrome-debug-core/issues/250)
+* Add `env` and `cwd` launch config options, thanks to [@jpap](https://github.com/jpap) for the PR! - [Microsoft/vscode-chrome-debug#520](https://github.com/Microsoft/vscode-chrome-debug/pull/520)
+
 ## 3.3.1
 * (In VS Code 1.17), show the source location of log statements and exceptions in the debug console - [Microsoft/vscode#34626](https://github.com/Microsoft/vscode/issues/34626)
 * Fix error messages that can appear when detaching from Chrome - [Microsoft/vscode#34615](https://github.com/Microsoft/vscode/issues/34615)
