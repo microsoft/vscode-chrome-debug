@@ -1,6 +1,6 @@
 <h1 align="center">
   <br>
-    <img src="https://github.com/Microsoft/vscode-chrome-debug/blob/master/images/demo.gif?raw=true" alt="logo" width="200">
+    <img src="https://github.com/Microsoft/vscode-chrome-debug/blob/master/images/icon.png?raw=true" alt="logo" width="200">
   <br>
   VS Code - Debugger for Chrome
   <br>
@@ -19,7 +19,7 @@
 
 A VS Code extension to debug your JavaScript code in the Google Chrome browser, or other targets that support the [Chrome DevTools Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
 
-![Demo](https://cdn.rawgit.com/Microsoft/vscode-chrome-debug/master/images/demo.gif)
+![Demo](https://github.com/Microsoft/vscode-chrome-debug/blob/master/images/demo.gif?raw=true)
 
 **Supported features**
 * Setting breakpoints, including in source files when source maps are enabled
