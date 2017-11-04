@@ -19,6 +19,9 @@
   "categories": [
     "Debuggers"
   ],
+  "keywords": [
+    "multi-root ready"
+  ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.18.2",
