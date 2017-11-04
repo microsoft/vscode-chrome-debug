@@ -1,3 +1,8 @@
+## 3.5.0
+* Support debug console colorization for eval results - [Microsoft/vscode#35324](https://github.com/microsoft/vscode/issues/35324)
+* Fix rare NPE when running in noDebug mode - [Microsoft/vscode-node-debug2#149](https://github.com/microsoft/vscode-node-debug2/issues/149)
+* Remove deprecated startSessionCommand API - [#517](https://github.com/Microsoft/vscode-chrome-debug/issues/517)
+
 ## 3.4.0
 * Show locations for exception messages in the Debug Console
 * Fix unmapped names on some stack frames, thanks to [@digeff](https://github.com/digeff) for the PR! - [Microsoft/vscode-chrome-debug-core#246](https://github.com/Microsoft/vscode-chrome-debug-core/pull/246)
