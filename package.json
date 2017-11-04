@@ -14,7 +14,7 @@
   "publisher": "msjsdiag",
   "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
   "engines": {
-    "vscode": "^1.8.0"
+    "vscode": "^1.17.0"
   },
   "categories": [
     "Debuggers"
@@ -50,7 +50,7 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
-    "onCommand:extension.chrome-debug.startSession",
+    "onDebug",
     "onCommand:extension.chrome-debug.toggleSkippingFile"
   ],
   "scripts": {
@@ -96,16 +96,6 @@
           "typescript",
           "javascriptreact",
           "typescriptreact"
-        ],
-        "startSessionCommand": "extension.chrome-debug.startSession",
-        "initialConfigurations": [
-          {
-            "type": "chrome",
-            "request": "launch",
-            "name": "Launch Chrome against localhost",
-            "url": "http://localhost:8080",
-            "webRoot": "${workspaceRoot}"
-          }
         ],
         "configurationSnippets": [
           {
