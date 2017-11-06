@@ -188,7 +188,7 @@ Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you
 
 ### My breakpoints aren't hit. What's wrong?
 
-If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immierdiately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint. We are working in simplifig this in with "break-on-load" breakpoints in https://github.com/Microsoft/vscode-chrome-debug/issues/445, which will make this timing issue transparent.
+If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immediately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint. We are working in simplifig this in with "break-on-load" breakpoints in https://github.com/Microsoft/vscode-chrome-debug/issues/445, which will make this timing issue transparent.
 
 If you have a sourcemapping issue, please see https://github.com/Microsoft/vscode-chrome-debug#sourcemaps
 
