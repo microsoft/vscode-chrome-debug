@@ -277,24 +277,28 @@ function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISo
 export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
     const resolvedOverrides: ISourceMapPathOverrides = {};
     for (let pattern in sourceMapPathOverrides) {
-        const replacePattern = sourceMapPathOverrides[pattern];
-        resolvedOverrides[pattern] = replacePattern;
-
-        const webRootIndex = replacePattern.indexOf('${webRoot}');
-        if (webRootIndex === 0) {
-            if (webRoot) {
-                resolvedOverrides[pattern] = replacePattern.replace('${webRoot}', webRoot);
-            } else if (warnOnMissing) {
-                logger.log('Warning: sourceMapPathOverrides entry contains ${webRoot}, but webRoot is not set');
-            }
-        } else if (webRootIndex > 0) {
-            logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
-        }
+        const replacePattern = replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
+        const replacePatternValue = replaceWebRootInSourceMapPathOverridesEntry(webRoot, sourceMapPathOverrides[pattern], warnOnMissing);
+        
+        resolvedOverrides[replacePattern] = replacePatternValue;
     }
 
     return resolvedOverrides;
 }
 
+function replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: string, warnOnMissing: boolean): string {
+    const webRootIndex = entry.indexOf('${webRoot}');
+    if (webRootIndex === 0) {
+        if (webRoot) {
+            return entry.replace('${webRoot}', webRoot);
+        } else if (warnOnMissing) {
+            logger.log('Warning: sourceMapPathOverrides entry contains ${webRoot}, but webRoot is not set');
+        }
+    } else if (webRootIndex > 0) {
+        logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
+    }
+}                                                     
+                                                     
 function getChromeSpawnHelperPath(): string {
     if (path.basename(__dirname) === 'src') {
         // For tests
