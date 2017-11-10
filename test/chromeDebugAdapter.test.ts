@@ -138,7 +138,7 @@ suite('ChromeDebugAdapter', () => {
                 { '/src': WEBROOT + '/app/src' });
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, <ISourceMapPathOverrides>{ '${webRoot}/src': '${webRoot}/app/src'}),
-                { WEBROOT + '/src': WEBROOT + '/app/src' });
+                { (WEBROOT + '/src'): (WEBROOT + '/app/src') });
         });
 
         test(`ignores the webRoot pattern when it's not at the beginning of the string`, () => {
