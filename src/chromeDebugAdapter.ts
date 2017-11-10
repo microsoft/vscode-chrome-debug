@@ -297,6 +297,8 @@ function replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: str
     } else if (webRootIndex > 0) {
         logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
     }
+    
+    return entry;
 }                                                     
                                                      
 function getChromeSpawnHelperPath(): string {
