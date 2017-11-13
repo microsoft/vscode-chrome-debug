@@ -279,7 +279,7 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
     for (let pattern in sourceMapPathOverrides) {
         const replacePattern = replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
         const replacePatternValue = replaceWebRootInSourceMapPathOverridesEntry(webRoot, sourceMapPathOverrides[pattern], warnOnMissing);
-        
+
         resolvedOverrides[replacePattern] = replacePatternValue;
     }
 
@@ -297,10 +297,10 @@ function replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: str
     } else if (webRootIndex > 0) {
         logger.log('Warning: in a sourceMapPathOverrides entry, ${webRoot} is only valid at the beginning of the path');
     }
-    
+
     return entry;
-}                                                     
-                                                     
+}
+
 function getChromeSpawnHelperPath(): string {
     if (path.basename(__dirname) === 'src') {
         // For tests
