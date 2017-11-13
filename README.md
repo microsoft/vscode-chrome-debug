@@ -42,12 +42,12 @@ When your launch config is set up, you can debug your project. Pick a launch con
 
 ### Configuration
 
-The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Both modes requires you to be serving your web application from local web server, which is started from either a VS Code task or from your commandline. Using the `url` parameter you simply tell VS Code which URL to either open or launch in Chrome.
+The extension operates in two modes - it can launch an instance of Chrome navigated to your app, or it can attach to a running instance of Chrome. Both modes requires you to be serving your web application from local web server, which is started from either a VS Code task or from your command-line. Using the `url` parameter you simply tell VS Code which URL to either open or launch in Chrome.
 
 Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
 ### Launch
-Two example `launch.json` configs with `"request": "launch"`. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path using `${workspaceRoot}` (the folder open in Code). `webRoot` is used to resolve urls (like "http://localhost/app.js") to a file on disk (like "/Users/me/project/app.js"), so be careful that it's set correctly.
+Two example `launch.json` configs with `"request": "launch"`. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path using `${workspaceRoot}` (the folder open in Code). `webRoot` is used to resolve urls (like "http://localhost/app.js") to a file on disk (like `/Users/me/project/app.js`), so be careful that it's set correctly.
 ```json
 {
     "version": "0.1.0",
@@ -70,9 +70,9 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
 }
 ```
 
-If you want to use a different installation of Chrome, you can also set the "runtimeExecutable" field with a path to the Chrome app.
+If you want to use a different installation of Chrome, you can also set the `runtimeExecutable` field with a path to the Chrome app.
 
-> Chrome user profile note: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder, (unless you are using the "runtimeExecutable" field). Use the `userDataDir` launch config field to override or disable this.
+> Chrome user profile note: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder, (unless you are using the `runtimeExecutable` field). Use the `userDataDir` launch config field to override or disable this.
 
 ### Attach
 With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it. Here's how to do that:
@@ -126,13 +126,13 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 
 ### Other optional launch config fields
 * `trace`: When true, the adapter logs its own diagnostic info to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub. If you set it to "verbose", it will also log to the console.
-* `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location
-* `runtimeArgs`: Optional arguments passed to the runtime executable
-* `env`: Optional dictionary of environment key/value pairs
-* `cwd`: Optional working directory for the runtime executable
+* `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.
+* `runtimeArgs`: Optional arguments passed to the runtime executable.
+* `env`: Optional dictionary of environment key/value pairs.
+* `cwd`: Optional working directory for the runtime executable.
 * `userDataDir`: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder. Use this option to set a different path to use, or set to false to launch with your default user profile.
 * `url`: On a 'launch' config, it will launch Chrome at this URL.
-* `urlFilter`: On an 'attach' config, or a 'launch' config with no 'url' set, search for a page with this url and attach to it. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"http://stackoverflow.com"`.
+* `urlFilter`: On an 'attach' config, or a 'launch' config with no 'url' set, search for a page with this url and attach to it. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"https://stackoverflow.com"`.
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
 * `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceRoot}"` is just shorthand for a pathMapping like `{ "/": "${workspaceRoot}" }`.
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.
@@ -188,7 +188,7 @@ Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you
 
 ### My breakpoints aren't hit. What's wrong?
 
-If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immediately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint. We are working in simplifig this in with "break-on-load" breakpoints in https://github.com/Microsoft/vscode-chrome-debug/issues/445, which will make this timing issue transparent.
+If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immediately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint. We are working in simplify this in with "break-on-load" breakpoints in https://github.com/Microsoft/vscode-chrome-debug/issues/445, which will make this timing issue transparent.
 
 If you have a sourcemapping issue, please see https://github.com/Microsoft/vscode-chrome-debug#sourcemaps
 
@@ -203,7 +203,7 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * Ensure `webRoot` is set correctly if needed
 * Look at your sourcemap config carefully. A sourcemap has a path to the source files, and this extension uses that path to find the original source files on disk. Check the `sourceRoot` and `sources` properties in your sourcemap and make sure that they can be combined with the `webRoot` property in your launch config to build the correct path to the original source files.
 * This extension ignores sources that are inlined in the sourcemap - you may have a setup that works in Chrome Dev Tools, but not this extension, because the paths are incorrect, but Chrome Dev Tools are reading the inlined source content.
-* Check the console for warnings that this extension prints in some cases when it can't attach
+* Check the console for warnings that this extension prints in some cases when it can't attach.
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
 * File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "trace" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome-<version>/vscode-chrome-debug.txt`.
