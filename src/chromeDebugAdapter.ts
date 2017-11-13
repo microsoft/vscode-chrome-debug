@@ -299,12 +299,7 @@ export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: I
 }
 
 function getChromeSpawnHelperPath(): string {
-    if (path.basename(__dirname) === 'src') {
-        // For tests
-        return path.join(__dirname, '../chromeSpawnHelper.js');
-    } else {
-        return path.join(__dirname, 'chromeSpawnHelper.js');
-    }
+    return path.join(__dirname, '../chromeSpawnHelper.js');
 }
 
 function findExecutable(program: string): string | undefined {
