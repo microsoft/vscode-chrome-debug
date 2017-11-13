@@ -4,7 +4,8 @@
 
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-import { localize } from './utils';
+import * as nls from 'vscode-nls';
+const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 /**
  * 'Path does not exist' error

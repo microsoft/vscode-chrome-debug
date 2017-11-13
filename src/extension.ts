@@ -7,6 +7,9 @@ import * as Core from 'vscode-chrome-debug-core';
 
 import {targetFilter} from './utils';
 
+import * as nls from 'vscode-nls';
+const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
 
@@ -17,11 +20,11 @@ export function deactivate() {
 }
 
 const DEFAULT_CONFIG = {
-    type: "chrome",
-    request: "launch",
-    name: "Launch Chrome against localhost",
-    url: "http://localhost:8080",
-    webRoot: "${workspaceRoot}"
+    type: 'chrome',
+    request: 'launch',
+    name: localize('chrome.launch.name', "Launch Chrome against localhost"),
+    url: 'http://localhost:8080',
+    webRoot: '${workspaceRoot}'
 };
 
 export class ChromeConfigurationProvider implements vscode.DebugConfigurationProvider {
@@ -87,7 +90,8 @@ async function pickTarget(targets: Core.chromeConnection.ITarget[]): Promise<ITa
         websocketDebuggerUrl: target.webSocketDebuggerUrl
     }));
 
-    const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select a tab', matchOnDescription: true, matchOnDetail: true });
+    const placeHolder = localize('chrome.targets.placeholder', "Select a tab");
+    const selected = await vscode.window.showQuickPick(items, { placeHolder, matchOnDescription: true, matchOnDetail: true });
     return selected;
 }
 

@@ -3,7 +3,7 @@
   "displayName": "Debugger for Chrome",
   "version": "3.5.0",
   "icon": "images/icon.png",
-  "description": "Debug your JavaScript code in the Chrome browser, or any other target that supports the Chrome Debugger protocol.",
+  "description": "%extension.description%",
   "author": {
     "name": "Microsoft Corporation"
   },
@@ -25,7 +25,8 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "vscode-chrome-debug-core": "3.18.4",
-    "vscode-debugadapter": "^1.24.0"
+    "vscode-debugadapter": "^1.24.0",
+    "vscode-nls": "https://registry.npmjs.org/vscode-nls/-/vscode-nls-2.0.2.tgz"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
@@ -36,6 +37,8 @@
     "concurrently": "^3.1.0",
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^2.6.1",
+    "gulp-typescript": "^3.2.3",
     "http-server": "^0.9.0",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
@@ -44,10 +47,12 @@
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
     "typescript": "^2.4.1",
+    "vsce": "^1.32.0",
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.17.1",
     "vscode-debugadapter-testsupport": "1.24.0",
     "vscode-debugprotocol": "^1.24.0",
+    "vscode-nls-dev": "^2.1.5",
     "webpack": "^2.2.0-rc.1",
     "webpack-fail-plugin": "^1.0.5"
   },
@@ -130,32 +135,32 @@
             "properties": {
               "port": {
                 "type": "number",
-                "description": "Port to use for Chrome remote debugging.",
+                "description": "%chrome.port.description%",
                 "default": 9222
               },
               "address": {
                 "type": "string",
-                "description": "TCP/IP address of debug port",
+                "description": "%chrome.address.description%",
                 "default": "127.0.0.1"
               },
               "file": {
                 "type": "string",
-                "description": "A local html file to open in the browser",
+                "description": "%chrome.file.description%",
                 "default": "${workspaceRoot}/index.html"
               },
               "url": {
                 "type": "string",
-                "description": "A url to open in the browser",
+                "description": "%chrome.url.description%",
                 "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
-                "description": "When the 'url' field is specified, this specifies the workspace absolute path to the webserver root. Shorthand for a pathMapping for \"/\"",
+                "description": "%chrome.webRoot.description%",
                 "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
-                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "description": "%chrome.pathMapping.description%",
                 "default": {
                   "/": "${workspaceRoot}"
                 }
@@ -165,12 +170,12 @@
                   "string",
                   "null"
                 ],
-                "description": "Workspace absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.",
+                "description": "%chrome.runtimeExecutable.description%",
                 "default": null
               },
               "runtimeArgs": {
                 "type": "array",
-                "description": "Optional arguments passed to the runtime executable.",
+                "description": "%chrome.runtimeArgs.description%",
                 "items": {
                   "type": "string"
                 },
@@ -178,28 +183,28 @@
               },
               "env": {
                 "type": "object",
-                "description": "Optional dictionary of environment key/value pairs.",
+                "description": "%chrome.env.description%",
                 "default": {}
               },
               "cwd": {
                 "type": "string",
-                "description": "Optional working directory for the runtime executable.",
+                "description": "%chrome.cwd.description%",
                 "default": null
               },
               "sourceMaps": {
                 "type": "boolean",
-                "description": "Use JavaScript source maps (if they exist).",
+                "description": "%chrome.sourceMaps.description%",
                 "default": true
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "description": "%chrome.diagnosticLogging.description%",
                 "default": true,
                 "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
+                "description": "%chrome.verboseDiagnosticLogging.description%",
                 "default": true,
                 "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
               },
@@ -213,19 +218,19 @@
                   true
                 ],
                 "default": true,
-                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
+                "description": "%chrome.trace.description%"
               },
               "userDataDir": {
                 "type": [
                   "string",
                   "boolean"
                 ],
-                "description": "By default, Chrome is launched with a separate user profile in a temp folder. Use this option to override it. Set to false to launch with your default user profile.",
+                "description": "%chrome.userDataDir.description%",
                 "default": ""
               },
               "sourceMapPathOverrides": {
                 "type": "object",
-                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "description": "%chrome.sourceMapPathOverrides.description%",
                 "default": {
                   "webpack:///*": "*",
                   "webpack:///./*": "${webRoot}/*",
@@ -235,32 +240,32 @@
               },
               "smartStep": {
                 "type": "boolean",
-                "description": "Automatically step through generated code that cannot be mapped back to the original source.",
+                "description": "%chrome.smartStep.description%",
                 "default": true
               },
               "skipFiles": {
                 "type": "array",
-                "description": "An array of file or folder names, or path globs, to skip when debugging.",
+                "description": "%chrome.skipFiles.description%",
                 "default": []
               },
               "timeout": {
                 "type": "number",
-                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "description": "%chrome.timeout.description%",
                 "default": 10000
               },
               "disableNetworkCache": {
                 "type": "boolean",
-                "description": "Controls whether to skip the network cache for each request",
+                "description": "%chrome.disableNetworkCache.description%",
                 "default": true
               },
               "urlFilter": {
                 "type": "string",
-                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "description": "%chrome.urlFilter.description%",
                 "default": ""
               },
               "showAsyncStacks": {
                 "type": "boolean",
-                "description": "Show the async calls that led to the current call stack",
+                "description": "%chrome.showAsyncStacks.description%",
                 "default": true
               }
             }
@@ -272,28 +277,28 @@
             "properties": {
               "port": {
                 "type": "number",
-                "description": "Port to use for Chrome remote debugging.",
+                "description": "%chrome.port.description%",
                 "default": 9222
               },
               "address": {
                 "type": "string",
-                "description": "TCP/IP address of debug port",
+                "description": "%chrome.address.description%",
                 "default": "127.0.0.1"
               },
               "sourceMaps": {
                 "type": "boolean",
-                "description": "Use JavaScript source maps (if they exist).",
+                "description": "%chrome.sourceMaps.description%",
                 "default": true
               },
               "diagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs its own diagnostic info to the console in a human readable format",
+                "description": "%chrome.diagnosticLogging.description%",
                 "default": true,
                 "deprecationMessage": "'diagnosticLogging' is deprecated. Use 'trace' instead."
               },
               "verboseDiagnosticLogging": {
                 "type": "boolean",
-                "description": "When true, the adapter logs all traffic with the client and target (as well as the info logged by 'diagnosticLogging')",
+                "description": "%chrome.verboseDiagnosticLogging.description%",
                 "default": true,
                 "deprecationMessage": "'verboseDiagnosticLogging' is deprecated. Use 'trace' instead."
               },
@@ -307,56 +312,56 @@
                   true
                 ],
                 "default": true,
-                "description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console."
+                "description": "%chrome.trace.description%"
               },
               "url": {
                 "type": "string",
-                "description": "Will search for a tab with this EXACT url and attach to it, if found",
+                "description": "%chrome.url.description%",
                 "default": "http://localhost:8080"
               },
               "webRoot": {
                 "type": "string",
-                "description": "This specifies the workspace absolute path to the webserver root. Used to resolve paths like `/app.js` to files on disk. Shorthand for a pathMapping for \"/\"",
+                "description": "%chrome.webRoot.description%",
                 "default": "${workspaceRoot}"
               },
               "pathMapping": {
                 "type": "object",
-                "description": "A mapping of URLs/paths to local folders, to resolve scripts in Chrome to scripts on disk",
+                "description": "%chrome.pathMapping.description%",
                 "default": {}
               },
               "sourceMapPathOverrides": {
                 "type": "object",
-                "description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
+                "description": "%chrome.sourceMapPathOverrides.description%",
                 "default": {}
               },
               "smartStep": {
                 "type": "boolean",
-                "description": "Automatically step through generated code that cannot be mapped back to the original source.",
+                "description": "%chrome.smartStep.description%",
                 "default": true
               },
               "skipFiles": {
                 "type": "array",
-                "description": "An array of file or folder names, or path globs, to skip when debugging.",
+                "description": "%chrome.skipFiles.description%",
                 "default": []
               },
               "timeout": {
                 "type": "number",
-                "description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
+                "description": "%chrome.timeout.description%",
                 "default": 10000
               },
               "disableNetworkCache": {
                 "type": "boolean",
-                "description": "Controls whether to skip the network cache for each request",
+                "description": "%chrome.disableNetworkCache.description%",
                 "default": true
               },
               "urlFilter": {
                 "type": "string",
-                "description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+                "description": "%chrome.urlFilter.description%",
                 "default": ""
               },
               "showAsyncStacks": {
                 "type": "boolean",
-                "description": "Show the async calls that led to the current call stack",
+                "description": "%chrome.showAsyncStacks.description%",
                 "default": true
               }
             }
@@ -376,7 +381,7 @@
     "commands": [
       {
         "command": "extension.chrome-debug.toggleSkippingFile",
-        "title": "Toggle Skipping This File"
+        "title": "%chrome.toggleSkipping.title%"
       }
     ],
     "keybindings": [

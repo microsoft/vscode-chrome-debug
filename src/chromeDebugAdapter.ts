@@ -15,6 +15,9 @@ import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chro
 import * as utils from './utils';
 import * as errors from './errors';
 
+import * as nls from 'vscode-nls';
+const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./~/*': '${webRoot}/node_modules/*',
     'webpack:///./*': '${webRoot}/*',
@@ -52,7 +55,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             runtimeExecutable = runtimeExecutable || utils.getBrowserPath();
             if (!runtimeExecutable) {
-                return coreUtils.errP(`Can't find Chrome - install it or set the "runtimeExecutable" field in the launch config.`);
+                return coreUtils.errP(localize('attribute.chrome.missing', "Can't find Chrome - install it or set the \"runtimeExecutable\" field in the launch config."));
             }
 
             // Start with remote debugging enabled
