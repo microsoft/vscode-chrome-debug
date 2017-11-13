@@ -6,10 +6,12 @@ const ts = require('gulp-typescript');
 const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const gulp = require('gulp');
+const log = require('gulp-util').log;
 const path = require('path');
 const fs = require('fs');
 const nls = require('vscode-nls-dev');
 const vsce = require('vsce');
+const es = require('event-stream');
 
 const transifexApiHostname = 'www.transifex.com'
 const transifexApiName = 'api';

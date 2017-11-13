@@ -12,7 +12,6 @@ tsconfig.json
 tsd.json
 tslint.json
 vscode-chrome-debug.txt
-webpack.config.js
 images/demo.gif
 
 out/test/**

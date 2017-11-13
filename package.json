@@ -35,10 +35,12 @@
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
     "concurrently": "^3.1.0",
+    "event-stream": "^3.3.4",
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.6.1",
     "gulp-typescript": "^3.2.3",
+    "gulp-util": "^3.0.8",
     "http-server": "^0.9.0",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
@@ -52,9 +54,7 @@
     "vscode-chrome-debug-core-testsupport": "^3.17.1",
     "vscode-debugadapter-testsupport": "1.24.0",
     "vscode-debugprotocol": "^1.24.0",
-    "vscode-nls-dev": "^2.1.5",
-    "webpack": "^2.2.0-rc.1",
-    "webpack-fail-plugin": "^1.0.5"
+    "vscode-nls-dev": "^2.1.5"
   },
   "main": "./out/src/extension",
   "activationEvents": [
@@ -63,11 +63,11 @@
   ],
   "scripts": {
     "build": "concurrently \"npm run build:debugadapter\" \"npm run build:test\" \"npm run build:outOfBundle\"",
-    "build:debugadapter": "webpack",
+    "build:debugadapter": "gulp build",
     "build:test": "tsc -p test/tsconfig.json",
     "build:outOfBundle": "tsc -p outOfBundle/tsconfig.json",
     "watch": "concurrently \"npm run watch:debugadapter\" \"npm run watch:test\" \"npm run watch:outOfBundle\"",
-    "watch:debugadapter": "webpack -w",
+    "watch:debugadapter": "gulp watch",
     "watch:test": "tsc -p test/tsconfig.json -w",
     "watch:outOfBundle": "tsc -p outOfBundle/tsconfig.json -w",
     "start": "node out/bundle.js --server=4712",
@@ -96,7 +96,7 @@
       {
         "type": "chrome",
         "label": "Chrome",
-        "program": "./out/bundle.js",
+        "program": "./out/src/chromeDebug.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
         "languages": [
