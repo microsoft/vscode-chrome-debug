@@ -1,0 +1,16 @@
+environment:
+    - nodejs_version: 7.0
+
+matrix:
+  allow_failures:
+    - nodejs_version: 6.2
+
+install:
+  - ps: Install-Product node $env:nodejs_version x64
+  - npm install
+
+build_script:
+  - npm run build
+
+test_script:
+  - npm test
