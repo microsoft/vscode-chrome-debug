@@ -24,7 +24,7 @@ const DEFAULT_CONFIG = {
     request: 'launch',
     name: localize('chrome.launch.name', "Launch Chrome against localhost"),
     url: 'http://localhost:8080',
-    webRoot: '${workspaceRoot}'
+    webRoot: '${workspaceFolder}'
 };
 
 export class ChromeConfigurationProvider implements vscode.DebugConfigurationProvider {

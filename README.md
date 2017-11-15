@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="https://travis-ci.org/Microsoft/vscode-chrome-debug"><img src="https://api.travis-ci.org/Microsoft/vscode-chrome-debug.svg?branch=master" alt="Travis"></a>
+  <a href="https://ci.appveyor.com/project/microsoft/vscode-chrome-debug"><img src="https://ci.appveyor.com/api/projects/status/qrr2hff3eagw5k05?svg=true" alt="Appveyor"></a>
   <a href="https://github.com/microsoft/vscode-chrome-debug/releases"><img src="https://img.shields.io/github/release/Microsoft/vscode-chrome-debug.svg" alt="Release"></a>
     <a href="https://gitter.im/Microsoft/vscode-chrome-debug?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/Microsoft/vscode-chrome-debug.svg" alt="Release"></a>
 
@@ -47,7 +48,7 @@ The extension operates in two modes - it can launch an instance of Chrome naviga
 Just like when using the Node debugger, you configure these modes with a `.vscode/launch.json` file in the root directory of your project. You can create this file manually, or Code will create one for you if you try to run your project, and it doesn't exist yet.
 
 ### Launch
-Two example `launch.json` configs with `"request": "launch"`. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path using `${workspaceRoot}` (the folder open in Code). `webRoot` is used to resolve urls (like "http://localhost/app.js") to a file on disk (like `/Users/me/project/app.js`), so be careful that it's set correctly.
+Two example `launch.json` configs with `"request": "launch"`. You must specify either `file` or `url` to launch Chrome against a local file or a url. If you use a url, set `webRoot` to the directory that files are served from. This can be either an absolute path or a path using `${workspaceFolder}` (the folder open in Code). `webRoot` is used to resolve urls (like "http://localhost/app.js") to a file on disk (like `/Users/me/project/app.js`), so be careful that it's set correctly.
 ```json
 {
     "version": "0.1.0",
@@ -57,14 +58,14 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost/mypage.html",
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "webRoot": "${workspaceFolder}/wwwroot"
         },
         {
             "name": "Launch index.html (disable sourcemaps)",
             "type": "chrome",
             "request": "launch",
             "sourceMaps": false,
-            "file": "${workspaceRoot}/index.html"
+            "file": "${workspaceFolder}/index.html"
         },
     ]
 }
@@ -103,7 +104,7 @@ An example `launch.json` file for an "attach" config.
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "webRoot": "${workspaceRoot}"
+            "webRoot": "${workspaceFolder}"
         },
         {
             "name": "Attach to url with files served from ./out",
@@ -111,7 +112,7 @@ An example `launch.json` file for an "attach" config.
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "webRoot": "${workspaceRoot}"
+            "webRoot": "${workspaceFolder}"
         }
     ]
 }
@@ -134,7 +135,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `url`: On a 'launch' config, it will launch Chrome at this URL.
 * `urlFilter`: On an 'attach' config, or a 'launch' config with no 'url' set, search for a page with this url and attach to it. It can also contain wildcards, for example, `"localhost:*/app"` will match either `"http://localhost:123/app"` or `"http://localhost:456/app"`, but not `"https://stackoverflow.com"`.
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
-* `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceRoot}"` is just shorthand for a pathMapping like `{ "/": "${workspaceRoot}" }`.
+* `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceFolder}"` is just shorthand for a pathMapping like `{ "/": "${workspaceFolder}" }`.
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.
 * `disableNetworkCache`: If true, the network cache will be disabled.
 * `showAsyncStacks`: If true, callstacks across async calls (like `setTimeout`, `fetch`, resolved Promises, etc) will be shown.
@@ -174,13 +175,13 @@ A few mappings are applied by default, corresponding to the default configs for 
     "meteor://💻app/*": "${webRoot}/*"                    // Example: "meteor://💻app/main.ts" -> "c:/code/main.ts"
 }
 ```
-If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceRoot}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `trace` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
+If you set `sourceMapPathOverrides` in your launch config, that will override these defaults. `${workspaceFolder}` and `${webRoot}` can be used here. If you aren't sure what the left side should be, you can use the `.scripts` command (details below). You can also use the `trace` option to see the contents of the sourcemap, or look at the paths of the sources in Chrome DevTools, or open your `.js.map` file and check the values manually.
 
 ### Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
 ```
 "sourceMapPathOverrides": {
-    "/source/*": "${workspaceRoot}/*"
+    "/source/*": "${workspaceFolder}/*"
 }
 ```
 

@@ -10,7 +10,7 @@
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:7890",
-            "webRoot": "${workspaceRoot}",
+            "webRoot": "${workspaceFolder}",
             "skipFiles": [
                 "b.js"
             ],

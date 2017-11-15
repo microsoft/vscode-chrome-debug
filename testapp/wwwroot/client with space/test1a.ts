@@ -1,7 +1,10 @@
 const globalCode = 'page loaded';
 console.log(globalCode);
 
+
 function locals() {
+    中国
+    eval(Date.now() + '+1\n//# sourceURL=blah.js');
     function consoleDotLog(m) {
         console.log(m)
     }

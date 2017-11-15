@@ -7,13 +7,13 @@
             "type": "node",
             "protocol": "inspector",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/out/bundle.js",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/out/bundle.js",
             // "runtimeExecutable": "/Users/roblou/.nvm/versions/node/v6.5.0/bin/node",
             "stopOnEntry": false,
             "args": [ "--server=4712" ],
             // "trace": "verbose",
-            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+            "outFiles": ["${workspaceFolder}/out/**/*.js"]
         },
         {
             // "debugServer": 4712,
@@ -21,15 +21,15 @@
             "type": "node",
             "protocol": "inspector",
             "request": "launch",
-            "cwd": "${workspaceRoot}",
-            "program": "${workspaceRoot}/node_modules/mocha/bin/_mocha",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "args": [
                 "-u", "tdd",
 				"--colors",
 				"out/test/**/*.test.js",
                 "--timeout", "1800000"
             ],
-            "outFiles": ["${workspaceRoot}/out/**/*.js"]
+            "outFiles": ["${workspaceFolder}/out/**/*.js"]
         },
         {
             "type": "node",
@@ -45,7 +45,7 @@
                 "${workspaceFolder}/out/test/int/*.test.js"
             ],
             "outFiles": [
-                "${workspaceRoot}/out/**/*.js"
+                "${workspaceFolder}/out/**/*.js"
             ]
         },
         {
@@ -54,9 +54,9 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}"
+				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
-			"outFiles": [ "${workspaceRoot}/out/**/*.js" ]
+			"outFiles": [ "${workspaceFolder}/out/**/*.js" ]
 		}
     ]
 }

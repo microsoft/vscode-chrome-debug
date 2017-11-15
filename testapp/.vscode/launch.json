@@ -9,10 +9,10 @@
             "url": "http://localhost:8080/index.html",
             "port": 9223,
             "pathMapping": {
-                "/": "${workspaceRoot}/wwwroot",
-                "/out": "${workspaceRoot}/wwwroot/out"
+                "/": "${workspaceFolder}/wwwroot",
+                "/${workspaceFolder}": "${workspaceFolder}/wwwroot/out"
             },
-            // "webRoot": "${workspaceRoot}/wwwroot",
+            // "webRoot": "${workspaceFolder}/wwwroot",
             "showAsyncStacks": true,
             // "runtimeExecutable": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
             "disableNetworkCache": true,
@@ -24,7 +24,7 @@
             "type": "chrome",
             "port": 9222,
             "request": "attach",
-            "webRoot": "${workspaceRoot}/wwwroot"
+            "webRoot": "${workspaceFolder}/wwwroot"
         }
     ]
 }
