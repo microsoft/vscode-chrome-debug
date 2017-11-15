@@ -136,10 +136,13 @@ suite('ChromeDebugAdapter', () => {
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, <ISourceMapPathOverrides>{ '/src': '${webRoot}/app/src'}),
                 { '/src': WEBROOT + '/app/src' });
+            assert.deepEqual(
+                resolveWebRootPattern(WEBROOT, <ISourceMapPathOverrides>{ '${webRoot}/src': '${webRoot}/app/src'}),
+                { [WEBROOT + '/src']:  WEBROOT + '/app/src'});
         });
 
         test(`ignores the webRoot pattern when it's not at the beginning of the string`, () => {
-            const overrides: ISourceMapPathOverrides = { '/src': '/app/${webRoot}/src'};
+            const overrides: ISourceMapPathOverrides = { '/another/${webRoot}/src': '/app/${webRoot}/src'};
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, overrides),
                 overrides);
@@ -150,14 +153,16 @@ suite('ChromeDebugAdapter', () => {
                 '/src*': '${webRoot}/app',
                 '*/app.js': '*/app.js',
                 '/src/app.js': '/src/${webRoot}',
-                '/app.js': '${webRoot}/app.js'
+                '/app.js': '${webRoot}/app.js',
+                '${webRoot}/app1.js': '${webRoot}/app.js'
             };
 
             const expOverrides: ISourceMapPathOverrides = {
                 '/src*': WEBROOT + '/app',
                 '*/app.js': '*/app.js',
                 '/src/app.js': '/src/${webRoot}',
-                '/app.js': WEBROOT + '/app.js'
+                '/app.js': WEBROOT + '/app.js',
+                [WEBROOT + '/app1.js']: WEBROOT + '/app.js'
             };
 
             assert.deepEqual(
