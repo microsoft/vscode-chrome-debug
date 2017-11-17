@@ -126,7 +126,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 
 
 ### Other optional launch config fields
-* `trace`: When true, the adapter logs its own diagnostic info to this file: `~/.vscode/extensions/msjsdiag.debugger-for-chrome/vscode-chrome-debug.txt`. This is often useful info to include when filing an issue on GitHub. If you set it to "verbose", it will also log to the console.
+* `trace`: When true, the adapter logs its own diagnostic info to a file. The file path will be printed in the Debug Console. This is often useful info to include when filing an issue on GitHub. If you set it to "verbose", it will also log to the console.
 * `runtimeExecutable`: Workspace relative or absolute path to the runtime executable to be used. If not specified, Chrome will be used from the default install location.
 * `runtimeArgs`: Optional arguments passed to the runtime executable.
 * `env`: Optional dictionary of environment key/value pairs.
@@ -207,10 +207,10 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * Check the console for warnings that this extension prints in some cases when it can't attach.
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
-* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug). Set the "trace" field in your launch config and attach the logs when filing a bug. You can drag this file into the GitHub comment box: `~/.vscode/extensions/msjsdiag.debugger-for-chrome-<version>/vscode-chrome-debug.txt`.
+* File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug), including the debug adapter log file. Create the log file by setting the "trace" field in your launch config and reproducing the issue. It will print the path to the log file at the top of the Debug Console. You can drag this file into an issue comment to upload it to GitHub.
 
 ### The `.scripts` command
-This feature is extremely useful for understanding how the extension maps files in your workspace to files running in Chrome. You can enter `.scripts` in the debug console to see a listing of all scripts loaded in the runtime, their sourcemap information, and how they are mapped to files on disk. The format is like this:
+This feature is extremely useful for understanding how the extension maps files in your workspace to files running in Chrome. You can enter `.scripts` in the Debug Console to see a listing of all scripts loaded in the runtime, their sourcemap information, and how they are mapped to files on disk. The format is like this:
 
 ```
 › <The exact URL for a script, reported by Chrome> (<The local path that has been inferred for this script, using webRoot, if applicable>)
