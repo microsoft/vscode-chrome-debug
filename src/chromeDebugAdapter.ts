@@ -276,8 +276,10 @@ function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISo
 
 /**
  * Returns a copy of sourceMapPathOverrides with the ${webRoot} pattern resolved in all entries.
+ *
+ * dynamically required by test
  */
-function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
+export function resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
     const resolvedOverrides: ISourceMapPathOverrides = {};
     for (let pattern in sourceMapPathOverrides) {
         const replacePattern = replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
