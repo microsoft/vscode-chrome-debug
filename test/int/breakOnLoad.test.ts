@@ -18,7 +18,7 @@ suite('BreakOnLoad', () => {
     suite('Regex Approach', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, "regex")
+            return testSetup.setup(undefined, { breakOnLoadStrategy: "regex" })
                 .then(_dc => dc = _dc);
         });
 
@@ -165,7 +165,7 @@ suite('BreakOnLoad', () => {
     suite('Instrument Approach', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, "instrument")
+            return testSetup.setup(undefined, { breakOnLoadStrategy: "instrument" })
                 .then(_dc => dc = _dc);
         });
 
@@ -364,7 +364,7 @@ suite('BreakOnLoad', () => {
     suite('BreakOnLoad Disabled (strategy: none)', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, "none")
+            return testSetup.setup(undefined, { breakOnLoadStrategy: "none" })
                 .then(_dc => dc = _dc);
         });
 
@@ -390,37 +390,28 @@ suite('BreakOnLoad', () => {
             const bpLine = 1;
             const bpCol = 1;
 
-            // Variable to track whether the concerned console.log statement gets executed
-            var consoleOutputLogged = false;
-
-            await Promise.all([
-                dc.waitForEvent('initialized').then(event => {
-                    return dc.setBreakpointsRequest({
-                        lines: [bpLine],
-                        breakpoints: [{ line: bpLine, column: bpCol }],
-                        source: { path: scriptPath }
-                    });
-                }).then(response => {
-                    return dc.configurationDoneRequest();
-                }),
+            return new Promise( (resolve, reject) => {
                 // Add an event listener for the output event to capture the console.log statement
                 dc.addListener('output', function(event) {
-                    // If console.log event statement is executed, change the variable to true
+                    // If console.log event statement is executed, pass the test
                     if (event.body.category === 'stdout' && event.body.output === 'Hi\n') {
-                        consoleOutputLogged = true;
+                        resolve();
                     }
                 }),
+                Promise.all([
+                    dc.waitForEvent('initialized').then(event => {
+                        return dc.setBreakpointsRequest({
+                            lines: [bpLine],
+                            breakpoints: [{ line: bpLine, column: bpCol }],
+                            source: { path: scriptPath }
+                        });
+                    }).then(response => {
+                        return dc.configurationDoneRequest();
+                    }),
 
-                dc.launch({ url: 'http://localhost:7890/index.html', webRoot: testProjectRoot })
-            ]);
-
-            // Wait for sometime to make sure the page load is completed
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            if (consoleOutputLogged) {
-                return Promise.resolve();
-            } else {
-                return Promise.reject("Console output not logged even after timeout");
-            }
+                    dc.launch({ url: 'http://localhost:7890/index.html', webRoot: testProjectRoot })
+                ]);
+            });
         });
     });
 });

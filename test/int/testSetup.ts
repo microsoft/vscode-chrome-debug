@@ -13,7 +13,7 @@ import {DebugClient} from 'vscode-debugadapter-testsupport';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
-var testBreakOnLoadStrategy: string;
+var testLaunchProps: any;
 
 function formLaunchArgs(launchArgs: any): void {
     launchArgs.trace = 'verbose';
@@ -22,9 +22,11 @@ function formLaunchArgs(launchArgs: any): void {
     // Start with a clean userDataDir for each test run
     const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
     launchArgs.userDataDir = tmpDir.name;
-    if (testBreakOnLoadStrategy) {
-        launchArgs.breakOnLoadStrategy = testBreakOnLoadStrategy;
-        testBreakOnLoadStrategy = undefined;
+    if (testLaunchProps) {
+        for (let key in testLaunchProps) {
+            launchArgs[key] = testLaunchProps[key];
+        }
+        testLaunchProps = undefined;
     }
 }
 
@@ -36,9 +38,9 @@ export const lowercaseDriveLetterDirname = __dirname.charAt(0).toLowerCase() + _
 export const PROJECT_ROOT = path.join(lowercaseDriveLetterDirname, '../../../');
 export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 
-export function setup(port?: number, breakOnLoadStrategy?: string) {
-    if (breakOnLoadStrategy) {
-        testBreakOnLoadStrategy = breakOnLoadStrategy;
+export function setup(port?: number, launchProps?: any) {
+    if (launchProps) {
+        testLaunchProps = launchProps;
     }
     return ts.setup(DEBUG_ADAPTER, 'chrome', patchLaunchArgs, port);
 }
