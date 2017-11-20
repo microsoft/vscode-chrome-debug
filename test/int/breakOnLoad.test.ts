@@ -12,157 +12,167 @@ import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
 
-suite('BreakOnLoad', () => {
+function runCommonTests(breakOnLoadStrategy: string) {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
-    suite('Regex Approach', () => {
-        let dc: ts.ExtendedDebugClient;
-        setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: "regex" })
-                .then(_dc => dc = _dc);
+    let dc: ts.ExtendedDebugClient;
+    setup(() => {
+        return testSetup.setup(undefined, { breakOnLoadStrategy: breakOnLoadStrategy })
+            .then(_dc => dc = _dc);
+    });
+
+    let server: any;
+    teardown(() => {
+        if (server) {
+            server.close();
+        }
+
+        return testSetup.teardown();
+    });
+
+    suite('TypeScript Project with SourceMaps', () => {
+        test('Hits a single breakpoint in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
+            const scriptPath = path.join(testProjectRoot, 'src/script.ts');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bpLine = 3;
+            const bpCol = 12;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
 
-        let server: any;
-        teardown(() => {
-            if (server) {
-                server.close();
-            }
+        test('Hits multiple breakpoints in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
+            const scriptPath = path.join(testProjectRoot, 'src/script.ts');
 
-            return testSetup.teardown();
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bp1Line = 3;
+            const bp1Col = 12;
+            const bp2Line = 6;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
+            await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
+            await dc.continueTo('breakpoint', { line: bp2Line });
         });
 
-        suite('TypeScript Project with SourceMaps', () => {
-            test('Hits a single breakpoint in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
+        test('Hits a breakpoint at (1,1) in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
+            const scriptPath = path.join(testProjectRoot, 'src/script.ts');
 
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
-                const url = 'http://localhost:7890/index.html';
+            const url = 'http://localhost:7890/index.html';
 
-                const bpLine = 3;
-                const bpCol = 12;
+            const bpLine = 1;
+            const bpCol = 1;
 
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits multiple breakpoints in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bp1Line = 3;
-                const bp1Col = 12;
-                const bp2Line = 6;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
-                await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
-                await dc.continueTo('breakpoint', { line: bp2Line });
-            });
-
-            test('Hits a breakpoint at (1,1) in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits a breakpoint in the first line in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 35;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
 
-        suite('Simple JavaScript Project', () => {
-            test('Hits a single breakpoint in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
+        test('Hits a breakpoint in the first line in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
+            const scriptPath = path.join(testProjectRoot, 'src/script.ts');
 
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
-                const url = 'http://localhost:7890/index.html';
+            const url = 'http://localhost:7890/index.html';
 
-                const bpLine = 3;
-                const bpCol = 12;
+            const bpLine = 1;
+            const bpCol = 35;
 
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits multiple breakpoints in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bp1Line = 3;
-                const bp1Col = 12;
-                const bp2Line = 6;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
-                await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
-                await dc.continueTo('breakpoint', { line: bp2Line });
-            });
-
-            test('Hits a breakpoint at (1,1) in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits a breakpoint in the first line in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 35;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
     });
 
-    suite('Instrument Approach', () => {
+    suite('Simple JavaScript Project', () => {
+        test('Hits a single breakpoint in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bpLine = 3;
+            const bpCol = 12;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+        });
+
+        test('Hits multiple breakpoints in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bp1Line = 3;
+            const bp1Col = 12;
+            const bp2Line = 6;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
+            await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
+            await dc.continueTo('breakpoint', { line: bp2Line });
+        });
+
+        test('Hits a breakpoint at (1,1) in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bpLine = 1;
+            const bpCol = 1;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+        });
+
+        test('Hits a breakpoint in the first line in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            const url = 'http://localhost:7890/index.html';
+
+            const bpLine = 1;
+            const bpCol = 35;
+
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+        });
+    });
+}
+
+suite('BreakOnLoad', () => {
+    const DATA_ROOT = testSetup.DATA_ROOT;
+
+    suite('Regex Common Tests', () => {
+        runCommonTests("regex");
+    });
+
+    suite('Instrument Common Tests', () => {
+        runCommonTests("instrument");
+    });
+
+    suite('Instrument Webpack Project', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
             return testSetup.setup(undefined, { breakOnLoadStrategy: "instrument" })
@@ -178,186 +188,54 @@ suite('BreakOnLoad', () => {
             return testSetup.teardown();
         });
 
-        suite('TypeScript Project with SourceMaps', () => {
-            test('Hits a single breakpoint in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
+        test('Hits a single breakpoint in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
 
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
-                const url = 'http://localhost:7890/index.html';
+            const url = 'http://localhost:7890/dist/index.html';
 
-                const bpLine = 3;
-                const bpCol = 12;
+            const bpLine = 3;
+            const bpCol = 1;
 
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits multiple breakpoints in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bp1Line = 3;
-                const bp1Col = 12;
-                const bp2Line = 6;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
-                await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
-                await dc.continueTo('breakpoint', { line: bp2Line });
-            });
-
-            test('Hits a breakpoint at (1,1) in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits a breakpoint in the first line in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
-                const scriptPath = path.join(testProjectRoot, 'src/script.ts');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 35;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine , column: bpCol});
         });
 
-        suite('Simple JavaScript Project', () => {
-            test('Hits a single breakpoint in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
+        test('Hits multiple breakpoints in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
 
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
-                const url = 'http://localhost:7890/index.html';
+            const url = 'http://localhost:7890/dist/index.html';
 
-                const bpLine = 3;
-                const bpCol = 12;
+            // For some reason, column numbers > don't work perfectly with webpack
+            const bp1Line = 3;
+            const bp1Col = 1;
+            const bp2Line = 5;
+            const bp2Col = 1;
 
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits multiple breakpoints in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bp1Line = 3;
-                const bp1Col = 12;
-                const bp2Line = 6;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line, column: bp1Col });
-                await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line }] });
-                await dc.continueTo('breakpoint', { line: bp2Line });
-            });
-
-            test('Hits a breakpoint at (1,1) in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
-
-            test('Hits a breakpoint in the first line in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/index.html';
-
-                const bpLine = 1;
-                const bpCol = 35;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line , column: bp1Col});
+            await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line , column: bp2Col}] });
+            await dc.continueTo('breakpoint', { line: bp2Line , column: bp2Col});
         });
 
-        suite('Webpack Project', () => {
-            test('Hits a single breakpoint in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
+        test('Hits a breakpoint at (1,1) in a file on load', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
+            const scriptPath = path.join(testProjectRoot, 'src/script.js');
 
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
 
-                const url = 'http://localhost:7890/dist/index.html';
+            const url = 'http://localhost:7890/dist/index.html';
 
-                const bpLine = 3;
-                const bpCol = 1;
+            const bpLine = 1;
+            const bpCol = 1;
 
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine , column: bpCol});
-            });
-
-            test('Hits multiple breakpoints in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/dist/index.html';
-
-                // For some reason, column numbers > don't work perfectly with webpack
-                const bp1Line = 3;
-                const bp1Col = 1;
-                const bp2Line = 5;
-                const bp2Col = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bp1Line , column: bp1Col});
-                await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bp2Line , column: bp2Col}] });
-                await dc.continueTo('breakpoint', { line: bp2Line , column: bp2Col});
-            });
-
-            test('Hits a breakpoint at (1,1) in a file on load', async () => {
-                const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_webpack');
-                const scriptPath = path.join(testProjectRoot, 'src/script.js');
-
-                server = createServer({ root: testProjectRoot });
-                server.listen(7890);
-
-                const url = 'http://localhost:7890/dist/index.html';
-
-                const bpLine = 1;
-                const bpCol = 1;
-
-                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            });
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
     });
 
