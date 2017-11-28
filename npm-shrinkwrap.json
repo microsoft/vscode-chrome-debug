@@ -120,9 +120,9 @@
             "resolved": "https://registry.npmjs.org/ultron/-/ultron-1.0.2.tgz"
         },
         "vscode-chrome-debug-core": {
-            "version": "3.18.4",
-            "from": "vscode-chrome-debug-core@>=3.18.4 <4.0.0",
-            "resolved": "https://registry.npmjs.org/vscode-chrome-debug-core/-/vscode-chrome-debug-core-3.18.4.tgz"
+            "version": "3.20.0",
+            "from": "vscode-chrome-debug-core@>=3.20.0 <4.0.0",
+            "resolved": "https://registry.npmjs.org/vscode-chrome-debug-core/-/vscode-chrome-debug-core-3.20.0.tgz"
         },
         "vscode-debugadapter": {
             "version": "1.24.0",
