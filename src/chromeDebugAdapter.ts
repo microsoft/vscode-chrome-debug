@@ -167,14 +167,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         ];
     }
 
-    protected onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason?: stoppedEvent.ReasonType): void {
+    protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<void> {
         this._overlayHelper.doAndCancel(() => {
             return this._domains.has('Overlay') ?
                 this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }) :
                 (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { });
         });
 
-        super.onPaused(notification, expectingStopReason);
+        return super.onPaused(notification, expectingStopReason);
     }
 
     protected threadName(): string {
