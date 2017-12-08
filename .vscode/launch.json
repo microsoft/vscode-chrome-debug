@@ -2,17 +2,13 @@
     "version": "0.1.0",
     "configurations": [
         {
-            // "debugServer": 4712,
             "name": "launch as server",
             "type": "node",
             "protocol": "inspector",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "program": "${workspaceFolder}/out/bundle.js",
-            // "runtimeExecutable": "/Users/roblou/.nvm/versions/node/v6.5.0/bin/node",
-            "stopOnEntry": false,
+            "program": "${workspaceFolder}/out/src/chromeDebug.js",
             "args": [ "--server=4712" ],
-            // "trace": "verbose",
             "outFiles": ["${workspaceFolder}/out/**/*.js"]
         },
         {
