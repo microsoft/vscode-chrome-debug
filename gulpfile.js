@@ -53,7 +53,7 @@ function doBuild(buildNls) {
         .pipe(tsProject()).js
         .pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
         .pipe(buildNls ? nls.createAdditionalLanguageFiles(nls.coreLanguages, 'i18n', 'out') : es.through())
-        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '..' })) // .. to compensate for TS returning paths from 'out'
+        .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '.' })) // .. to compensate for TS returning paths from 'out'
         .pipe(gulp.dest('out'));
 }
 
