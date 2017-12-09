@@ -325,7 +325,7 @@ function replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: str
 }
 
 function getChromeSpawnHelperPath(): string {
-    return path.join(__dirname, '../chromeSpawnHelper.js');
+    return path.join(__dirname, 'chromeSpawnHelper.js');
 }
 
 function findExecutable(program: string): string | undefined {
