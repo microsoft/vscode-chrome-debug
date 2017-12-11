@@ -47,22 +47,37 @@ const lintSources = [
 ].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
 
 const tsProject = ts.createProject('tsconfig.json', { typescript });
-function doBuild(buildNls) {
-    return tsProject.src()
+function doBuild(buildNls, failOnError) {
+    let gotError = false;
+
+    const tsResult = tsProject.src()
         .pipe(sourcemaps.init())
-        .pipe(tsProject()).js
+        .pipe(tsProject())
+        .once('error', () => {
+            gotError = true;
+        });
+
+    return tsResult.js
         .pipe(buildNls ? nls.rewriteLocalizeCalls() : es.through())
         .pipe(buildNls ? nls.createAdditionalLanguageFiles(nls.coreLanguages, 'i18n', 'out') : es.through())
         .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '.' })) // .. to compensate for TS returning paths from 'out'
-        .pipe(gulp.dest('out'));
+        .pipe(gulp.dest('out'))
+        .once('error', () => {
+            gotError = true;
+        })
+        .once('finish', () => {
+            if (failOnError && gotError) {
+                process.exit(1);
+            }
+        });
 }
 
 gulp.task('build', ['copy-scripts'], function () {
-    doBuild(true);
+    doBuild(true, true);
 });
 
 gulp.task('dev-build', ['copy-scripts'], function () {
-    doBuild(false);
+    doBuild(false, false);
 });
 
 gulp.task('copy-scripts', () => {
