@@ -5,7 +5,7 @@
         ".git": true,
         "bin": true,
         "node_modules": false,
-        "testapp/.vscode/chrome": true
+        "package.nls.*.json": true
     },
     "search.exclude": {
         ".git": true,
