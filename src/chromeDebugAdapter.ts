@@ -127,7 +127,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public configurationDone(): Promise<void> {
-        if (this.breakOnLoadActive) {
+        if (this.breakOnLoadActive && this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl });
         }
