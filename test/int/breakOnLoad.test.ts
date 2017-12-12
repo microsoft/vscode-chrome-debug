@@ -239,10 +239,10 @@ suite('BreakOnLoad', () => {
         });
     });
 
-    suite('BreakOnLoad Disabled (strategy: none)', () => {
+    suite('BreakOnLoad Disabled (strategy: off)', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: "none" })
+            return testSetup.setup(undefined, { breakOnLoadStrategy: "off" })
                 .then(_dc => dc = _dc);
         });
 
