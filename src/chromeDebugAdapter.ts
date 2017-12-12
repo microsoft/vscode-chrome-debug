@@ -43,7 +43,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
-        if (args.breakOnLoad) {
+        if (args.breakOnLoad && !args.breakOnLoadStrategy) {
             args.breakOnLoadStrategy = 'instrument';
         }
 
