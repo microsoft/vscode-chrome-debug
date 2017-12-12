@@ -32,7 +32,6 @@
             "request": "launch",
             "name": "intTest",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
-            "sourceMaps": false,
             "args": [
                 "-u", "tdd",
                 "--timeout", "999999",
