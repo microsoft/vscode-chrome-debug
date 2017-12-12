@@ -24,5 +24,6 @@
 	"chrome.timeout.description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controls whether to skip the network cache for each request",
 	"chrome.urlFilter.description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
-	"chrome.showAsyncStacks.description": "Show the async calls that led to the current call stack"
+	"chrome.showAsyncStacks.description": "Show the async calls that led to the current call stack",
+	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact."
 }

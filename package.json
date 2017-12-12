@@ -261,6 +261,11 @@
                 "type": "boolean",
                 "description": "%chrome.showAsyncStacks.description%",
                 "default": true
+              },
+              "breakOnLoad": {
+                "type": "boolean",
+                "description": "%chrome.breakOnLoad.description",
+                "default": true
               }
             }
           },

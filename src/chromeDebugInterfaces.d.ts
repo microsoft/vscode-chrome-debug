@@ -20,6 +20,7 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
     address?: string;
     port?: number;
     userDataDir?: string;
+    breakOnLoad?: boolean;
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs, ICommonRequestArgs {

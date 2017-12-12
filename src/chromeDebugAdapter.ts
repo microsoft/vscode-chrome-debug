@@ -32,7 +32,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
     private _chromePID: number;
-    private _breakOnLoadActive = false;
     private _userRequestedUrl: string;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
@@ -44,6 +43,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs): Promise<void> {
+        if (args.breakOnLoad) {
+            args.breakOnLoadStrategy = 'instrument';
+        }
+
         return super.launch(args).then(() => {
             let runtimeExecutable: string;
             if (args.runtimeExecutable) {
@@ -93,12 +96,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
 
             if (launchUrl) {
-                if (args.breakOnLoadStrategy !== 'none') {
+                if (this.breakOnLoadActive) {
                     // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
                     // This is done to facilitate hitting breakpoints on load
                     this._userRequestedUrl = launchUrl;
                     launchUrl = "about:blank";
-                    this._breakOnLoadActive = true;
                 }
 
                 chromeArgs.push(launchUrl);
@@ -125,10 +127,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public configurationDone(): Promise<void> {
-        if (this._breakOnLoadActive) {
+        if (this.breakOnLoadActive) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this.chrome.Page.navigate({url: this._userRequestedUrl});
+            this.chrome.Page.navigate({ url: this._userRequestedUrl });
         }
+
         return super.configurationDone();
     }
 
