@@ -23,9 +23,8 @@
 	"chrome.disableNetworkCache.description": "Contrôle s’il faut ignorer le cache de réseau pour chaque requête",
 	"chrome.urlFilter.description": "Recherchera une page avec cette url et l'attachera, si trouvée. Peut contenir des caractères génériques *.",
 	"chrome.showAsyncStacks.description": "Afficher les appels asynchrones qui ont conduit à la pile des appels actuelle",
-	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact.",
+	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
 	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.off.description": "Disable breakOnLoad",
 	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
 	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 }

@@ -1,3 +1,10 @@
+## 4.0.0
+* Implement the `breakOnLoad` launch config option to hit breakpoints in code that runs immediately when the page logs - [PR #513](https://github.com/Microsoft/vscode-chrome-debug/pull/513) and [PR Microsoft/vscode-chrome-debug-core#241](https://github.com/Microsoft/vscode-chrome-debug-core/pull/241)
+* Most strings (error messages, launch config property descriptions, etc) are now translated on [Transifex](https://github.com/Microsoft/Localization/wiki/Visual-Studio-Code-Community-Localization-Project)
+* Resolve `webRoot` variables on the left side of `sourceMapPathOverrides` mappings, not just the right side. Thanks [Amit Mittal](https://github.com/eramitmittal) for the PR! - [PR #543](https://github.com/Microsoft/vscode-chrome-debug/pull/543)
+* Set focus in `webRoot` after using a launch config snippet - [#539](https://github.com/Microsoft/vscode-chrome-debug/issues/539)
+* Fix error/log messages out of order due to async handling - [Microsoft/vscode#37770](https://github.com/Microsoft/vscode/issues/37770)
+
 ## 3.5.0
 * Support debug console colorization for eval results - [Microsoft/vscode#35324](https://github.com/microsoft/vscode/issues/35324)
 * Fix rare NPE when running in noDebug mode - [Microsoft/vscode-node-debug2#149](https://github.com/microsoft/vscode-node-debug2/issues/149)
