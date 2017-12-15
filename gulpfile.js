@@ -12,6 +12,7 @@ const fs = require('fs');
 const nls = require('vscode-nls-dev');
 const vsce = require('vsce');
 const es = require('event-stream');
+const runSequence = require('run-sequence');
 
 const transifexApiHostname = 'www.transifex.com'
 const transifexApiName = 'api';
