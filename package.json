@@ -270,12 +270,10 @@
               "breakOnLoadStrategy": {
                 "type": "enum",
                 "enum": [
-                  "off",
                   "instrument",
                   "regex"
                 ],
                 "enumDescriptions": [
-                  "%chrome.breakOnLoadStrategy.off.description%",
                   "%chrome.breakOnLoadStrategy.instrument.description%",
                   "%chrome.breakOnLoadStrategy.regex.description%"
                 ],

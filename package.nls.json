@@ -25,9 +25,8 @@
 	"chrome.disableNetworkCache.description": "Controls whether to skip the network cache for each request",
 	"chrome.urlFilter.description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
 	"chrome.showAsyncStacks.description": "Show the async calls that led to the current call stack",
-	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact.",
+	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
 	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.off.description": "Disable breakOnLoad",
 	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
 	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 }
