@@ -22,5 +22,10 @@
 	"chrome.timeout.description": "Reintentar durante este número de milisegundos la conexión a Chrome. El valor predeterminado es 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controla si se omite la caché de red para cada petición",
 	"chrome.urlFilter.description": "Buscará una página con esta URL y la adjuntará, si la encuentra. Puede contener * como comodín.",
-	"chrome.showAsyncStacks.description": "Mostrar las llamadas asincrónicas que condujeron a la pila de llamadas actual"
+	"chrome.showAsyncStacks.description": "Mostrar las llamadas asincrónicas que condujeron a la pila de llamadas actual",
+	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact.",
+	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
+	"chrome.breakOnLoadStrategy.off.description": "Disable breakOnLoad",
+	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
+	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 }

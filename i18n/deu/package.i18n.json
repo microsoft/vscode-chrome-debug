@@ -10,8 +10,12 @@
 	"chrome.address.description": "TCP/IP Adresse des Debugports",
 	"chrome.file.description": "Eine lokale html-Datei im Browser zu öffnen",
 	"chrome.url.description": "Es wird eine Registerkarte mit exakt dieser URL gesucht und daran angefügt, falls gefunden",
+	"chrome.webRoot.description": "Dies gibt den absoluten Arbeitsbereichspfad zum Webserverstamm an. Wird zum Auflösen von Pfaden wie \"/apps.js\" für Dateien auf einem Datenträger verwendet. Kurz für ein pathMapping für \"/\".",
 	"chrome.pathMapping.description": "Eine Zuordnung an URLs/Pfaden auf lokale Ordner, um Skripte in Chrome aufzulösen für Skripte auf lokalem Speicher",
+	"chrome.runtimeExecutable.description": "Absoluter Arbeitsbereichspfad zur ausführbaren Laufzeitdatei, die verwendet werden soll. Ist dieser nicht angegeben, wird Chrome vom Standardinstallationsort verwendet.",
 	"chrome.runtimeArgs.description": "Optionale Argumente, die an die ausführbare Laufzeitdatei übergeben werden.",
+	"chrome.env.description": "Optionales Wörterbuch von Umgebungs- Schlüssel-Wert-Paaren.",
+	"chrome.cwd.description": "Optionales Arbeitsverzeichnis für die ausführbare Laufzeitdatei.",
 	"chrome.sourceMaps.description": "Verwendet JavaScript-Quellzuordnungen (wenn vorhanden).",
 	"chrome.diagnosticLogging.description": "Bei \"true\" protokolliert der Adapter seine eigenen Diagnoseinformationen in einem für Menschen lesbares Format an die Konsole.",
 	"chrome.verboseDiagnosticLogging.description": "Bei \"true\" protokolliert der Adapter den gesamten Datenverkehr mit dem Client und Ziel (sowie die von \"diagnosticLogging\" protokollierten Informationen).",
@@ -21,5 +25,7 @@
 	"chrome.smartStep.description": "Durchläuft automatisch den generierten Code, der nicht der ursprünglichen Quelle erneut zugeordnet werden kann.",
 	"chrome.skipFiles.description": "Ein Feld von Datei- oder Ordnernamen oder glob Mustern , die beim Debuggen übersprungen werden sollen.",
 	"chrome.timeout.description": "Führt für diese Anzahl von Millisekunden Wiederholungsversuche aus, um eine Verbindung mit Chrome herzustellen. Der Standardwert sind 10.000 Millisekunden.",
+	"chrome.disableNetworkCache.description": "Steuert, ob der Netzwerkcache für jede Anforderung übersprungen werden soll",
+	"chrome.urlFilter.description": "Eine Seite mit dieser URL wird gesucht und daran angefügt, falls gefunden. Kann den Platzhalter * enthalten.",
 	"chrome.showAsyncStacks.description": "Zeigt die asynchronen Aufrufe an, die zur aktuellen Aufrufliste geführt haben"
 }

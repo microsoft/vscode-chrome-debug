@@ -22,5 +22,10 @@
 	"chrome.timeout.description": "重試連接到 Chrome 前要等待的毫秒數。預設值為 10000 毫秒。",
 	"chrome.disableNetworkCache.description": "控制是否跳過每次要求的網路快取",
 	"chrome.urlFilter.description": "會以此 URL 搜尋頁面，如果有找到的話就將 URL 附加到頁面上。可以有 * 萬用字元。",
-	"chrome.showAsyncStacks.description": "顯示導致目前呼叫堆疊的非同步呼叫"
+	"chrome.showAsyncStacks.description": "顯示導致目前呼叫堆疊的非同步呼叫",
+	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact.",
+	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
+	"chrome.breakOnLoadStrategy.off.description": "Disable breakOnLoad",
+	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
+	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 }

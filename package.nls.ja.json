@@ -22,5 +22,10 @@
 	"chrome.timeout.description": "この数値分のミリ秒の間、Chrome への接続を再試行します。既定値は 10000 ミリ秒です。",
 	"chrome.disableNetworkCache.description": "各リクエストのネットワーク キャッシュをスキップするかどうかの制御",
 	"chrome.urlFilter.description": "この URL でページを検索し、見つかった場合はアタッチします。ワイルドカードとして * を使用できます。",
-	"chrome.showAsyncStacks.description": "現在の呼び出し履歴の原因となった非同期呼び出しを表示する"
+	"chrome.showAsyncStacks.description": "現在の呼び出し履歴の原因となった非同期呼び出しを表示する",
+	"chrome.breakOnLoad.description": "If true, the debug adapter will pause briefly as each script is loaded, giving it a chance to hit breakpoints at the beginnings of those scripts. Has a perf impact.",
+	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
+	"chrome.breakOnLoadStrategy.off.description": "Disable breakOnLoad",
+	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
+	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 }
