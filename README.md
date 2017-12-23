@@ -35,7 +35,8 @@ A VS Code extension to debug your JavaScript code in the Google Chrome browser, 
 * Any features that aren't script debugging.
 
 ## Getting Started
-To use this extension, you must first open the folder containing the project you want to work on.
+1. [Install the extension](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome)
+2. Restart VS Code and open the folder containing the project you want to work on.
 
 ## Using the debugger
 
