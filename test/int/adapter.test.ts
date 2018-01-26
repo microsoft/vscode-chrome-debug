@@ -5,7 +5,7 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-const {createServer} = require('http-server');
+import {createServer} from 'http-server';
 
 import {ExtendedDebugClient} from 'vscode-chrome-debug-core-testsupport';
 

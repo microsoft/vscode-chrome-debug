@@ -3,11 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as assert from 'assert';
 import * as path from 'path';
-const {createServer} = require('http-server');
+import {createServer} from 'http-server';
 
-import {DebugClient} from 'vscode-debugadapter-testsupport';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
