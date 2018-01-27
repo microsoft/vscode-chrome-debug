@@ -1,3 +1,13 @@
+## 4.1.0
+* Implement "step into async code". "step in" on `setTimeout` will now step into the body of the setTimeout if no other breakpoints are hit first. Requires Chrome 65 - [Microsoft/vscode-chrome-debug-core#266](https://github.com/Microsoft/vscode-chrome-debug-core/issues/266)
+* Show exception scope for top frame only - [Microsoft/vscode-chrome-debug-core#233](https://github.com/Microsoft/vscode-chrome-debug-core/issues/233)
+* Fix regex character handling in the left side of `sourceMapPathOverrides` - thanks to [@msafi](https://github.com/msafi) for the PR! - [PR Microsoft/vscode-chrome-debug-core#261](https://github.com/Microsoft/vscode-chrome-debug-core/pull/261)
+* Fix errors showing up in some breakpoint scenarios - thanks to [@obastemur](https://github.com/obastemur) for the PRs! - [PR Microsoft/vscode#263](https://github.com/Microsoft/vscode-chrome-debug-core/pull/263) and [PR Microsoft/vscode-chrome-debug-core#265](https://github.com/Microsoft/vscode-chrome-debug-core/pull/265)
+* Parse sourcemaps more lazily, to improve startup performance
+* Fix `.*` pattern in `skipFiles` (literal `.` followed by wildcard) - [Microsoft/vscode-chrome-debug-core#268](https://github.com/Microsoft/vscode-chrome-debug-core/issues/268)
+* Fix broken "Toggle skipping this file" command (in Insiders) - [Microsoft/vscode#41945](https://github.com/Microsoft/vscode/issues/41945)
+* Fix race condition in handling skipFiles in some sourcemapped files - [Microsoft/vscode-chrome-debug-core#266](https://github.com/Microsoft/vscode-chrome-debug-core/issues/266)
+
 ## 4.0.0
 * Implement the `breakOnLoad` launch config option to hit breakpoints in code that runs immediately when the page logs - [PR #513](https://github.com/Microsoft/vscode-chrome-debug/pull/513) and [PR Microsoft/vscode-chrome-debug-core#241](https://github.com/Microsoft/vscode-chrome-debug-core/pull/241)
 * Most strings (error messages, launch config property descriptions, etc) are now translated on [Transifex](https://github.com/Microsoft/Localization/wiki/Visual-Studio-Code-Community-Localization-Project)
