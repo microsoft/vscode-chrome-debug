@@ -59,7 +59,8 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
-    "onDebug",
+    "onDebugInitialConfigurations",
+    "onDebugResolve:chrome",
     "onCommand:extension.chrome-debug.toggleSkippingFile"
   ],
   "scripts": {
