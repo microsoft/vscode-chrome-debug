@@ -42,7 +42,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return capabilities;
     }
 
-    public launch(args: ILaunchRequestArgs): Promise<void> {
+    public launch(args: ILaunchRequestArgs): Promise<DebugProtocol.Capabilities|void> {
         if (args.breakOnLoad && !args.breakOnLoadStrategy) {
             args.breakOnLoadStrategy = 'instrument';
         }
@@ -118,7 +118,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         });
     }
 
-    public attach(args: IAttachRequestArgs): Promise<void> {
+    public attach(args: IAttachRequestArgs): Promise<DebugProtocol.Capabilities|void> {
         if (args.urlFilter) {
             args.url = args.urlFilter;
         }
