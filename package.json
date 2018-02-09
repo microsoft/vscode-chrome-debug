@@ -270,7 +270,7 @@
                 "default": true
               },
               "breakOnLoadStrategy": {
-                "type": "enum",
+                "type": "string",
                 "enum": [
                   "instrument",
                   "regex"
