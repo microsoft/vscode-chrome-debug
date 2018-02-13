@@ -281,11 +281,6 @@
                 ],
                 "description": "%chrome.breakOnLoadStrategy.description",
                 "default": "instrument"
-              },
-              "_clientOverlayPausedMessage": {
-                "type": "string",
-                "description": "%chrome._clientOverlayPausedMessage.description%",
-                "default": ""
               }
             }
           },
