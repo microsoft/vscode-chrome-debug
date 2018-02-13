@@ -40,7 +40,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
         const capabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
-        if(args.clientID === 'visualstudio') {
+        if (args.clientID === 'visualstudio') {
             this._isClientVS = true;
         }
 
@@ -181,8 +181,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 return this._domains.has('Overlay') ?
                     this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VS }).catch(() => { }) :
                     (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VS }).catch(() => { });
-            }
-            else {
+            } else {
                 return this._domains.has('Overlay') ?
                     this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VSCODE }).catch(() => { }) :
                     (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VSCODE }).catch(() => { });
