@@ -27,22 +27,17 @@ const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
 };
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
-    private static PAGE_PAUSE_MESSAGE_VSCODE = 'Paused in Visual Studio Code';
-    private static PAGE_PAUSE_MESSAGE_VS = 'Paused in Visual Studio';
+    private _pagePauseMessage = 'Paused in Visual Studio Code';
 
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
     private _chromePID: number;
     private _userRequestedUrl: string;
-    private _isClientVS: boolean;
 
     public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
         const capabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
-        if (args.clientID === 'visualstudio') {
-            this._isClientVS = true;
-        }
 
         return capabilities;
     }
@@ -91,6 +86,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             if (args.userDataDir) {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
+            }
+
+            if (args._clientOverlayPausedMessage) {
+                this._pagePauseMessage = args._clientOverlayPausedMessage;
             }
 
             let launchUrl: string;
@@ -177,16 +176,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<void> {
         this._overlayHelper.doAndCancel(() => {
-            if (this._isClientVS) {
-                return this._domains.has('Overlay') ?
-                    this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VS }).catch(() => { }) :
-                    (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VS }).catch(() => { });
-            } else {
-                return this._domains.has('Overlay') ?
-                    this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VSCODE }).catch(() => { }) :
-                    (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE_VSCODE }).catch(() => { });
-            }
 
+        return this._domains.has('Overlay') ?
+            this.chrome.Overlay.setPausedInDebuggerMessage({ message: this._pagePauseMessage }).catch(() => { }) :
+            (<any>this.chrome).Page.configureOverlay({ message: this._pagePauseMessage }).catch(() => { });
         });
 
         return super.onPaused(notification, expectingStopReason);

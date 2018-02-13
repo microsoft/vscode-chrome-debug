@@ -21,6 +21,7 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
     port?: number;
     userDataDir?: string;
     breakOnLoad?: boolean;
+    _clientOverlayPausedMessage?: string;
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs, ICommonRequestArgs {
