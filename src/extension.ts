@@ -49,7 +49,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
             let targets;
             try {
-                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url);
+                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, targetFilter, config.url || config.urlFilter);
             } catch (e) {
                 // Target not running?
             }
