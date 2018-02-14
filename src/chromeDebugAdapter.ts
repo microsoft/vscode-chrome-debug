@@ -27,7 +27,7 @@ const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
 };
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
-    private static PAGE_PAUSE_MESSAGE = 'Paused in Visual Studio Code';
+    private _pagePauseMessage = 'Paused in Visual Studio Code';
 
     private _chromeProc: ChildProcess;
     private _overlayHelper: utils.DebounceHelper;
@@ -86,6 +86,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             if (args.userDataDir) {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
+            }
+
+            if (args._clientOverlayPausedMessage) {
+                this._pagePauseMessage = args._clientOverlayPausedMessage;
             }
 
             let launchUrl: string;
@@ -172,9 +176,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<void> {
         this._overlayHelper.doAndCancel(() => {
-            return this._domains.has('Overlay') ?
-                this.chrome.Overlay.setPausedInDebuggerMessage({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { }) :
-                (<any>this.chrome).Page.configureOverlay({ message: ChromeDebugAdapter.PAGE_PAUSE_MESSAGE }).catch(() => { });
+
+        return this._domains.has('Overlay') ?
+            this.chrome.Overlay.setPausedInDebuggerMessage({ message: this._pagePauseMessage }).catch(() => { }) :
+            (<any>this.chrome).Page.configureOverlay({ message: this._pagePauseMessage }).catch(() => { });
         });
 
         return super.onPaused(notification, expectingStopReason);
