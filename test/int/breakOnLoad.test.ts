@@ -158,7 +158,7 @@ function runCommonTests(breakOnLoadStrategy: string) {
         });
 
         test('Hits breakpoints on the first line of two scripts', async () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_firstLineBp');
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
             const scriptPath = path.join(testProjectRoot, 'src/script.js');
             const script2Path = path.join(testProjectRoot, 'src/script2.js');
 
