@@ -266,7 +266,7 @@
               },
               "breakOnLoad": {
                 "type": "boolean",
-                "description": "%chrome.breakOnLoad.description",
+                "description": "%chrome.breakOnLoad.description%",
                 "default": true
               },
               "breakOnLoadStrategy": {
@@ -279,7 +279,7 @@
                   "%chrome.breakOnLoadStrategy.instrument.description%",
                   "%chrome.breakOnLoadStrategy.regex.description%"
                 ],
-                "description": "%chrome.breakOnLoadStrategy.description",
+                "description": "%chrome.breakOnLoadStrategy.description%",
                 "default": "instrument"
               }
             }
