@@ -12,6 +12,7 @@ const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
+    context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSmartStep', toggleSmartStep));
 
     context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('chrome', new ChromeConfigurationProvider()));
 }
@@ -78,6 +79,12 @@ function toggleSkippingFile(path: string): void {
     if (path && vscode.debug.activeDebugSession) {
         const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
         vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
+    }
+}
+
+function toggleSmartStep(): void {
+    if (vscode.debug.activeDebugSession) {
+        vscode.debug.activeDebugSession.customRequest('toggleSmartStep');
     }
 }
 

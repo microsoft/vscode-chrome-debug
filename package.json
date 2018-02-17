@@ -390,6 +390,11 @@
           "command": "extension.chrome-debug.toggleSkippingFile",
           "group": "navigation",
           "when": "inDebugMode && debugType == 'chrome'"
+        },
+        {
+          "command": "extension.chrome-debug.toggleSmartStep",
+          "group": "navigation",
+          "when": "inDebugMode && debugType == 'chrome'"
         }
       ]
     },
@@ -397,6 +402,10 @@
       {
         "command": "extension.chrome-debug.toggleSkippingFile",
         "title": "%chrome.toggleSkipping.title%"
+      },
+      {
+        "command": "extension.chrome-debug.toggleSmartStep",
+        "title": "%chrome.toggleSmartStep.title%"
       }
     ],
     "keybindings": [
