@@ -18,6 +18,7 @@ import * as errors from './errors';
 import * as nls from 'vscode-nls';
 const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
+// Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'webpack:///./~/*': '${webRoot}/node_modules/*',
     'webpack:///./*': '${webRoot}/*',

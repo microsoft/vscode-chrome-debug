@@ -228,10 +228,11 @@
                 "type": "object",
                 "description": "%chrome.sourceMapPathOverrides.description%",
                 "default": {
-                  "webpack:///*": "*",
                   "webpack:///./*": "${webRoot}/*",
                   "webpack:///src/*": "${webRoot}/*",
-                  "webpack:///./~/*": "${webRoot}/node_modules/*"
+                  "webpack:///*": "*",
+                  "webpack:///./~/*": "${webRoot}/node_modules/*",
+                  "meteor://💻app/*": "${webRoot}/*"
                 }
               },
               "smartStep": {
