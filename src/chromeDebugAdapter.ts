@@ -201,6 +201,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public disconnect(args: DebugProtocol.DisconnectArguments): void {
         const hadTerminated = this._hasTerminated;
 
+        // Continue execution, otherwise when we kill the process it will complain that it didn't shut down correctly
+        this.continue(true);
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         super.disconnect(args);
 
