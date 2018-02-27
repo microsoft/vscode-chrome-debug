@@ -130,13 +130,26 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return super.attach(args);
     }
 
-    public configurationDone(): Promise<void> {
+    protected hookConnectionEvents(): void {
+        super.hookConnectionEvents();
+        this.chrome.Page.onFrameNavigated(params => this.onFrameNavigated(params));
+    }
+
+    protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
+        if (!this._launchProgressReporter.isNull() && params.frame.url === this._userRequestedUrl) {
+            // Chrome started to navigate to the user's requested url
+            this._session.reportTimingsUntilUserPage();
+        }
+    }
+
+    public async configurationDone(): Promise<void> {
         if (this.breakOnLoadActive && this._userRequestedUrl) {
+            this._launchProgressReporter.startStep("ConfigureTarget.RequestNavigateToUserPage");
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl });
         }
 
-        return super.configurationDone();
+        await super.configurationDone();
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
@@ -236,6 +249,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
+        this._launchProgressReporter.startStep("LaunchTarget.LaunchExe");
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
