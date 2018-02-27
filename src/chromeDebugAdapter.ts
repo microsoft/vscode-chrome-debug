@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -130,13 +130,26 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return super.attach(args);
     }
 
-    public configurationDone(): Promise<void> {
+    protected hookConnectionEvents(): void {
+        super.hookConnectionEvents();
+        this.chrome.Page.onFrameNavigated(params => this.onFrameNavigated(params));
+    }
+
+    protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
+        if (params.frame.url === this._userRequestedUrl) {
+            // Chrome started to navigate to the user's requested url
+            this.events.emit(ChromeDebugSession.NavigatedToUserRequestedUrlEventName);
+        }
+    }
+
+    public async configurationDone(): Promise<void> {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl });
+            this.events.emitMilestoneReached("RequestedNavigateToUserPage");
         }
 
-        return super.configurationDone();
+        await super.configurationDone();
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
@@ -236,6 +249,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
+        this.Events.emitStepStarted("LaunchTarget.LaunchExe");
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
