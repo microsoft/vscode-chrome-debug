@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -136,15 +136,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
-        if (!this._launchProgressReporter.isNull() && params.frame.url === this._userRequestedUrl) {
+        if (params.frame.url === this._userRequestedUrl) {
             // Chrome started to navigate to the user's requested url
-            this._session.reportTimingsUntilUserPage(/*userPageWasDetected*/true);
+            this.Events.emit(ChromeDebugSession.NavigatedToUserRequestedUrlEventName);
         }
     }
 
     public async configurationDone(): Promise<void> {
         if (this.breakOnLoadActive && this._userRequestedUrl) {
-            this._launchProgressReporter.startStep("ConfigureTarget.RequestNavigateToUserPage");
+            this.Events.emitStepStarted("ConfigureTarget.RequestNavigateToUserPage");
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl });
         }
@@ -249,7 +249,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
-        this._launchProgressReporter.startStep("LaunchTarget.LaunchExe");
+        this.Events.emitStepStarted("LaunchTarget.LaunchExe");
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
