@@ -201,8 +201,6 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public disconnect(args: DebugProtocol.DisconnectArguments): void {
         const hadTerminated = this._hasTerminated;
 
-        // Continue execution, otherwise when we kill the process it will complain that it didn't shut down correctly
-        this.continue(true);
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         super.disconnect(args);
 
@@ -210,14 +208,20 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
-                // Run synchronously because this process may be killed before exec() would run
-                const taskkillCmd = `taskkill /F /T /PID ${this._chromePID}`;
+                let taskkillCmd = `taskkill /PID ${this._chromePID}`;
                 logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
                 try {
                     execSync(taskkillCmd);
                 } catch (e) {
                     // Can fail if Chrome was already open, and the process with _chromePID is gone.
                     // Or if it already shut down for some reason.
+                }
+                if (!this._hasTerminated) {
+                    taskkillCmd = `taskkill /F /PID ${this._chromePID}`;
+                    logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
+                    try {
+                        execSync(taskkillCmd);
+                    } catch (e) {}
                 }
             } else {
                 logger.log('Killing Chrome process');
