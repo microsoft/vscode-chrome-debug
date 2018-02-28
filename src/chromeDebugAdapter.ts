@@ -211,6 +211,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 let taskkillCmd = `taskkill /PID ${this._chromePID}`;
                 logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
                 try {
+                    // Run synchronously because this process may be killed before exec() would run
                     execSync(taskkillCmd);
                 } catch (e) {
                     // Can fail if Chrome was already open, and the process with _chromePID is gone.
