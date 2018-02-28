@@ -138,7 +138,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
         if (!this._launchProgressReporter.isNull() && params.frame.url === this._userRequestedUrl) {
             // Chrome started to navigate to the user's requested url
-            this._session.reportTimingsUntilUserPage();
+            this._session.reportTimingsUntilUserPage(/*userPageWasDetected*/true);
         }
     }
 
