@@ -24,7 +24,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#feature/telemetry",
+    "vscode-chrome-debug-core": "^3.22.7",
     "vscode-debugadapter": "^1.26.0-pre.2",
     "vscode-nls": "https://registry.npmjs.org/vscode-nls/-/vscode-nls-2.0.2.tgz"
   },
