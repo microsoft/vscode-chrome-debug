@@ -217,13 +217,13 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     // Can fail if Chrome was already open, and the process with _chromePID is gone.
                     // Or if it already shut down for some reason.
                 }
-                if (!this._hasTerminated) {
-                    taskkillCmd = `taskkill /F /PID ${this._chromePID}`;
-                    logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
-                    try {
-                        execSync(taskkillCmd);
-                    } catch (e) {}
-                }
+                // execSync above may succeed, but Chrome still might not shut down, for example if the web page promts the user about unsaved changes.
+                // In that case, we need to use /F to force shutdown, but we risk Chrome not shutting down correctly.
+                taskkillCmd = `taskkill /F /PID ${this._chromePID}`;
+                logger.log(`Killing Chrome process by pid (using force in case the first attempt failed): ${taskkillCmd}`);
+                try {
+                    execSync(taskkillCmd);
+                } catch (e) {}
             } else {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');
