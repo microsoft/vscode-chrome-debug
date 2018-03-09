@@ -1,3 +1,11 @@
+## 4.2.0
+* Use more precise extension activation events to prevent unneeded activation
+* Apply sourceMapPathOverrides in order of longest->shortest, instead of key order within the object - [Microsoft/vscode-chrome-debug-core#297](https://github.com/Microsoft/vscode-chrome-debug-core/issues/297)
+* Make sourceMapPathOverrides default values in package.json match the defaults applied in code - [Microsoft/vscode-chrome-debug#581](https://github.com/Microsoft/vscode-chrome-debug/issues/581)
+* Add "Toggle Smart Step" command - [Microsoft/vscode-chrome-debug-core#298](https://github.com/Microsoft/vscode-chrome-debug-core/issues/298)
+* Fix error when setting BP in scripts with certain weird sourcemap names - [Microsoft/vscode#42162](https://github.com/microsoft/vscode/issues/42162)
+* Fix various breakOnLoad-related issues - [PR Microsoft/vscode-chrome-debug-core#283](https://github.com/Microsoft/vscode-chrome-debug-core/pull/283), [PR Microsoft/vscode-chrome-debug-core#285](https://github.com/Microsoft/vscode-chrome-debug-core/pull/285) and others
+
 ## 4.1.0
 * Implement "step into async code". "step in" on `setTimeout` will now step into the body of the setTimeout if no other breakpoints are hit first. Requires Chrome 65 - [Microsoft/vscode-chrome-debug-core#266](https://github.com/Microsoft/vscode-chrome-debug-core/issues/266)
 * Show exception scope for top frame only - [Microsoft/vscode-chrome-debug-core#233](https://github.com/Microsoft/vscode-chrome-debug-core/issues/233)
