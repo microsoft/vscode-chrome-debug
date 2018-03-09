@@ -27,5 +27,9 @@
 	"chrome.timeout.description": "Riprova a connettersi a Chrome per il numero di millisecondi indicato. Il valore predefinito è 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controlla se ignorare la cache di rete per ogni richiesta",
 	"chrome.urlFilter.description": "Cerca una pagina con questo url e lo allega ad essa, se trovato. Può avere caratteri jolly \"*\".",
-	"chrome.showAsyncStacks.description": "Visualizza le chiamate asincrone che hanno portato allo stack di chiamate corrente"
+	"chrome.showAsyncStacks.description": "Visualizza le chiamate asincrone che hanno portato allo stack di chiamate corrente",
+	"chrome.breakOnLoad.description": "Funzionalità sperimentale - Se impostato a true, l'adapter di debug proverà ad impostare i breakpoint negli script prima che questi ultimi siano caricati in modo da raggiungere i breakpoint all'inizio di tali script. Ha un impatto sulle performance.",
+	"chrome.breakOnLoadStrategy.description": "Strategia da utilizzare per breakOnLoad.",
+	"chrome.breakOnLoadStrategy.instrument.description": "Comunica a Chrome di mettere in pausa non appena lo script è caricato, risolvendo i file di origine e impostando i breakpoint.",
+	"chrome.breakOnLoadStrategy.regex.description": "Imposta i breakpoint ottimisticamente nei file con lo stesso nome dei file in cui i breakpoint sono già definiti."
 }

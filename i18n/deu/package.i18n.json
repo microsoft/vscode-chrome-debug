@@ -27,5 +27,9 @@
 	"chrome.timeout.description": "Führt für diese Anzahl von Millisekunden Wiederholungsversuche aus, um eine Verbindung mit Chrome herzustellen. Der Standardwert sind 10.000 Millisekunden.",
 	"chrome.disableNetworkCache.description": "Steuert, ob der Netzwerkcache für jede Anforderung übersprungen werden soll",
 	"chrome.urlFilter.description": "Eine Seite mit dieser URL wird gesucht und daran angefügt, falls gefunden. Kann den Platzhalter * enthalten.",
-	"chrome.showAsyncStacks.description": "Zeigt die asynchronen Aufrufe an, die zur aktuellen Aufrufliste geführt haben"
+	"chrome.showAsyncStacks.description": "Zeigt die asynchronen Aufrufe an, die zur aktuellen Aufrufliste geführt haben",
+	"chrome.breakOnLoad.description": "Experimentelles Feature - Falls true wird der Debug-Adapter versuchen Breakpoints in Skripte zu setzen, bevor sie geladen sind, sodass er am Anfang der Skripte auf Breakpoints stoßen kann. Beeinflusst die Performance.",
+	"chrome.breakOnLoadStrategy.description": "Die Strategie für breakOnLoad.",
+	"chrome.breakOnLoadStrategy.instrument.description": "Chrome soll anhalten, während jedes Skript geladen wird, um Sourcemaps aufzulösen und Breakpoints zu setzen",
+	"chrome.breakOnLoadStrategy.regex.description": "Breakpoints optimistisch in Dateien mit dem selben Namen setzen wie in der Datei, in der der Breakpoint gesetzt ist."
 }
