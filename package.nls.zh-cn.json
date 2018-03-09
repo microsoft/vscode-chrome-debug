@@ -1,12 +1,13 @@
 {
 	"extension.description": "在 Chrome 浏览器或其他任何支持 Chrome 调试器协议的目标中调试你的 JavaScript 代码。",
 	"chrome.toggleSkipping.title": "切换是否跳过此文件",
+	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
 	"chrome.port.description": "用于 Chrome 远程调试的端口。",
 	"chrome.address.description": "调试端口的 TCP/IP 地址。",
 	"chrome.file.description": "由浏览器打开的本地 html 文件",
-	"chrome.url.description": "将搜索URL 与此完全一致的标签页，若找到则附加于其之上",
+	"chrome.url.description": "将搜索 URL 与此完全一致的标签页，若找到则附加于其之上",
 	"chrome.webRoot.description": "指定网络服务器根目录的工作区绝对路径。用于将类似 \"/app.js\" 的路径解析到磁盘。隐含为 \"/\" 的 pathMapping 路径",
-	"chrome.pathMapping.description": "URL 或路径到本地文件夹的映射，用于在 Chrome 将脚本解析到本地脚本",
+	"chrome.pathMapping.description": "URL 或路径到本地文件夹的映射，用于在 Chrome 中将脚本解析为本地脚本",
 	"chrome.runtimeExecutable.description": "使用的运行时可执行文件的绝对路径。若未指定，将使用默认安装位置的 Chrome。",
 	"chrome.runtimeArgs.description": "传递给运行时可执行文件的可选参数。",
 	"chrome.env.description": "环境键值对字典(可选)。",
@@ -23,8 +24,8 @@
 	"chrome.disableNetworkCache.description": "控制每次请求是否跳过网络缓存",
 	"chrome.urlFilter.description": "将搜索 URL 为此的页面，若找到则附加于其之上。可以包含 * 通配符。",
 	"chrome.showAsyncStacks.description": "显示导致当前调用堆栈的异步调用",
-	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
-	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
-	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
+	"chrome.breakOnLoad.description": "实验性功能 - 若为 \"true\"，调试适配器将在载入脚本之前尝试设置断点，以便在脚本最初处命中。会影响性能。",
+	"chrome.breakOnLoadStrategy.description": "breakOnLoad (载入时中断) 功能使用的策略。",
+	"chrome.breakOnLoadStrategy.instrument.description": "让 Chrome 在每个脚本载入后暂停，并先解析源映射和设置断点",
+	"chrome.breakOnLoadStrategy.regex.description": "在已设置断点文件的同名文件中乐观设置断点。"
 }

@@ -1,6 +1,7 @@
 {
 	"extension.description": "Déboguer votre code JavaScript dans le navigateur Chrome, ou tout autre cible qui prend en charge le protocole Chrome Debugger.",
 	"chrome.toggleSkipping.title": "Activer/désactiver l'évitement de ce fichier",
+	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
 	"chrome.port.description": "Port à utiliser pour le débogage à distance de Chrome.",
 	"chrome.address.description": "Adresse TCP/IP du port de débogage",
 	"chrome.file.description": "Un fichier html local à ouvrir dans le navigateur",
@@ -23,8 +24,8 @@
 	"chrome.disableNetworkCache.description": "Contrôle s’il faut ignorer le cache de réseau pour chaque requête",
 	"chrome.urlFilter.description": "Recherchera une page avec cette url et l'attachera, si trouvée. Peut contenir des caractères génériques *.",
 	"chrome.showAsyncStacks.description": "Afficher les appels asynchrones qui ont conduit à la pile des appels actuelle",
-	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
-	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
-	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
+	"chrome.breakOnLoad.description": "Fonctionnalité expérimentale - Si true, l'adaptateur de débogage essaiera d'affecter les points d'arrêt dans les scripts avant de les charger afin d'atteindre les points d'arrêt au début de ces scripts. Cela a un impact sur les performances.",
+	"chrome.breakOnLoadStrategy.description": "La stratégie à utiliser pour breakOnLoad.",
+	"chrome.breakOnLoadStrategy.instrument.description": "Demande à Chrome de faire une pause quand chaque script est chargé, en résolvant les sourcemaps et en affectant les points d'arrêt",
+	"chrome.breakOnLoadStrategy.regex.description": "Affecte les points d'arrêts de manière optimiste dans les fichiers avec le même nom que le fichier dans lequel le point d'arrêt est affecté."
 }

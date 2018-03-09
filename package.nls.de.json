@@ -1,6 +1,7 @@
 {
 	"extension.description": "Debuggen Sie Ihren JavaScript-Code mit dem Chrome-Browser oder einem, der das Chrom-Debugger-Protokoll unterstützt.",
 	"chrome.toggleSkipping.title": "Überspringen dieser Datei umschalten",
+	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
 	"chrome.port.description": "Zu verwendender Port für Chrome Remote-Debugging.",
 	"chrome.address.description": "TCP/IP Adresse des Debugports",
 	"chrome.file.description": "Eine lokale html-Datei im Browser zu öffnen",
@@ -23,8 +24,8 @@
 	"chrome.disableNetworkCache.description": "Steuert, ob der Netzwerkcache für jede Anforderung übersprungen werden soll",
 	"chrome.urlFilter.description": "Eine Seite mit dieser URL wird gesucht und daran angefügt, falls gefunden. Kann den Platzhalter * enthalten.",
 	"chrome.showAsyncStacks.description": "Zeigt die asynchronen Aufrufe an, die zur aktuellen Aufrufliste geführt haben",
-	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
-	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
-	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
+	"chrome.breakOnLoad.description": "Experimentelles Feature - Falls true wird der Debug-Adapter versuchen Breakpoints in Skripte zu setzen, bevor sie geladen sind, sodass er am Anfang der Skripte auf Breakpoints stoßen kann. Beeinflusst die Performance.",
+	"chrome.breakOnLoadStrategy.description": "Die Strategie für breakOnLoad.",
+	"chrome.breakOnLoadStrategy.instrument.description": "Chrome soll anhalten, während jedes Skript geladen wird, um Sourcemaps aufzulösen und Breakpoints zu setzen",
+	"chrome.breakOnLoadStrategy.regex.description": "Breakpoints optimistisch in Dateien mit dem selben Namen setzen wie in der Datei, in der der Breakpoint gesetzt ist."
 }

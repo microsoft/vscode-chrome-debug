@@ -1,6 +1,7 @@
 {
 	"extension.description": "JavaScript コードを Chrome ブラウザーか、Chrome Debugger プロトコルをサポートする他のターゲットでデバッグします。",
 	"chrome.toggleSkipping.title": "このファイルをスキップする",
+	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
 	"chrome.port.description": "Chrome リモート デバッグで使用するポートです。",
 	"chrome.address.description": "デバッグ ポートの TCP/IP アドレス",
 	"chrome.file.description": "ブラウザーで開くローカル HTML ファイル",
@@ -23,8 +24,8 @@
 	"chrome.disableNetworkCache.description": "各リクエストのネットワーク キャッシュをスキップするかどうかの制御",
 	"chrome.urlFilter.description": "この URL でページを検索し、見つかった場合はアタッチします。ワイルドカードとして * を使用できます。",
 	"chrome.showAsyncStacks.description": "現在の呼び出し履歴の原因となった非同期呼び出しを表示する",
-	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
-	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
-	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
+	"chrome.breakOnLoad.description": "試験的な機能 - true である場合、デバッグ アダプターはスクリプトが読み込まれる前にブレークポイントの設定を試みます。これによってスクリプトの開始時にブレークポイントをヒットできるようになります。パフォーマンスに影響があります。",
+	"chrome.breakOnLoadStrategy.description": "breakOnLoad に使用するストラテジ",
+	"chrome.breakOnLoadStrategy.instrument.description": "各スクリプトの読み込み時に Chrome を一時停止し、ソースマップを解決してブレークポイントを設定する",
+	"chrome.breakOnLoadStrategy.regex.description": "ブレークポイントが設定されているファイルと同じ名前のファイルに楽観的にブレークポイントを設定します。"
 }

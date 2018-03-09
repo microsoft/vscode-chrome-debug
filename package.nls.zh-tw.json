@@ -1,6 +1,7 @@
 {
 	"extension.description": "在 Chrome 瀏覽器中除錯你的 JavaScript 程式碼，或任何其他支援 Chrome Debugger 通訊協定的目標。",
 	"chrome.toggleSkipping.title": "略過此檔案",
+	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
 	"chrome.port.description": "連接埠用於 Chrome 遠端除錯。",
 	"chrome.address.description": "偵錯連接埠 TCP/IP 位址",
 	"chrome.file.description": "本地端的 html 檔案開啟於瀏覽器",
@@ -23,8 +24,8 @@
 	"chrome.disableNetworkCache.description": "控制是否跳過每次要求的網路快取",
 	"chrome.urlFilter.description": "會以此 URL 搜尋頁面，如果有找到的話就將 URL 附加到頁面上。可以有 * 萬用字元。",
 	"chrome.showAsyncStacks.description": "顯示導致目前呼叫堆疊的非同步呼叫",
-	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
-	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",
-	"chrome.breakOnLoadStrategy.instrument.description": "Tell Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints",
-	"chrome.breakOnLoadStrategy.regex.description": "Sets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
+	"chrome.breakOnLoad.description": "實驗性功能 - 若設為 true，偵錯配接器將會試者在指令碼被載入前設定中斷點，因此它可以在這些指令碼的最前面達到中斷點。會有優先權影響。",
+	"chrome.breakOnLoadStrategy.description": "使用 breakOnLoad 的策略",
+	"chrome.breakOnLoadStrategy.instrument.description": "吩咐 Chrome 在加載每個指令碼時暫停，解析 sourcemap 並設定中斷點",
+	"chrome.breakOnLoadStrategy.regex.description": "在已設定中斷點文件的同名文件中設定樂觀中斷點。"
 }
