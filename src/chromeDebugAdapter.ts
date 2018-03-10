@@ -145,8 +145,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public async configurationDone(): Promise<void> {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this.chrome.Page.navigate({ url: this._userRequestedUrl });
-            this.events.emitMilestoneReached("RequestedNavigateToUserPage");
+            this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() =>
+                this.events.emitMilestoneReached("RequestedNavigateToUserPage"));
         }
 
         await super.configurationDone();
