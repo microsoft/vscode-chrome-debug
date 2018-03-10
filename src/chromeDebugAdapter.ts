@@ -101,12 +101,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
 
             if (launchUrl) {
-                if (this.breakOnLoadActive) {
-                    // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
-                    // This is done to facilitate hitting breakpoints on load
-                    this._userRequestedUrl = launchUrl;
-                    launchUrl = "about:blank";
-                }
+
+                // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
+                // This is done to facilitate hitting breakpoints on load
+                this._userRequestedUrl = launchUrl;
+                launchUrl = "about:blank";
 
                 chromeArgs.push(launchUrl);
             }
@@ -132,7 +131,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public configurationDone(): Promise<void> {
-        if (this.breakOnLoadActive && this._userRequestedUrl) {
+        if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl });
         }
