@@ -138,7 +138,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
         if (params.frame.url === this._userRequestedUrl) {
             // Chrome started to navigate to the user's requested url
-            this.events.emit(ChromeDebugSession.NavigatedToUserRequestedUrlEventName);
+            this.events.emit(ChromeDebugSession.FinishedStartingUpEventName);
         }
     }
 
@@ -249,7 +249,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
-        this.Events.emitStepStarted("LaunchTarget.LaunchExe");
+        this.events.emitStepStarted("LaunchTarget.LaunchExe");
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
