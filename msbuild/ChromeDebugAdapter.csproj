@@ -29,9 +29,10 @@
                                                         $(OutDir)\node_modules\resolve\test\resolver\mug.js;
                                                         $(OutDir)\node_modules\resolve\test\pathfilter\deep_ref\main.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\baz\doom.js;
-                                                        $(OutDir)\node_modules\vsce\node_modules\vsce\node_modules\tmp\test\symlinkme\file.js;
+                                                        $(OutDir)\node_modules\node_modules\vsce\node_modules\tmp\test\symlinkme\file.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\other_path\lib\other-lib.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\other_path\root.js;
+                                                        $(OutDir)\node_modules\union\test\fixtures\index.js;
                                                         $(OutDir)\node_modules\union\test\helpers\index.js;">
         <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
