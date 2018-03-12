@@ -11,7 +11,7 @@ import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
+import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs, ISetExpressionArgs, VSDebugProtocolCapabilities, ISetExpressionResponseBody} from './chromeDebugInterfaces';
 import * as utils from './utils';
 import * as errors from './errors';
 
@@ -35,10 +35,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromePID: number;
     private _userRequestedUrl: string;
 
-    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): VSDebugProtocolCapabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
-        const capabilities = super.initialize(args);
+        const capabilities: VSDebugProtocolCapabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
+        capabilities.supportsSetExpression = true;
 
         return capabilities;
     }
@@ -307,6 +308,27 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             return chromeProc;
         }
     }
+
+    public async setExpression(args: ISetExpressionArgs): Promise<ISetExpressionResponseBody> {
+        const reconstructedExpression = `${args.expression} = ${args.value}`;
+        const evaluateEventArgs: DebugProtocol.EvaluateArguments = {
+            expression: reconstructedExpression,
+            frameId: args.frameId,
+            format: args.format,
+            context: 'repl'
+        }
+
+        const evaluateResult = await this.evaluate(evaluateEventArgs);
+        return {
+            value: evaluateResult.result
+        };
+        // Beware that after the expression is changed, the variables on the current stackFrame will not
+        // be updated, which means the return value of the Runtime.getProperties request will not contain
+        // this change until the breakpoint is released(step over or continue).
+        //
+        // See also: https://bugs.chromium.org/p/chromium/issues/detail?id=820535
+    }
+
 }
 
 function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISourceMapPathOverrides): ISourceMapPathOverrides {
