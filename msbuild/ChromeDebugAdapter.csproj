@@ -24,7 +24,7 @@
 
   <Target Name="GetFilesToSign" DependsOnTargets="CopyFilesToSign" BeforeTargets="SignFiles">
     <ItemGroup>
-      <FilesToSign Include="$(OutDir)\**\*.js" />
+      <FilesToSign Include="$(OutDir)\**\*.js">
       <!--<FilesToSign Include="$(OutDir)\**\*.js" Exclude="$(OutDir)\node_modules\globule\test\fixtures\expand\js\foo.js;
                                                         $(OutDir)\node_modules\globule\test\fixtures\expand\js\bar.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\other_path\root.js;
@@ -34,7 +34,7 @@
                                                         $(OutDir)\node_modules\vsce\node_modules\tmp\test\symlinkme\file.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\mug.js;
                                                         $(OutDir)\node_modules\resolve\test\resolver\other_path\lib\other-lib.js;
-                                                        $(OutDir)\node_modules\union\test\fixtures\index.js;" /> -->
+                                                        $(OutDir)\node_modules\union\test\fixtures\index.js;"> -->
         <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
     </ItemGroup>
