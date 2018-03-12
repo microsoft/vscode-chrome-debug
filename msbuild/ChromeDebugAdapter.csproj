@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ImagesToCopy Include="..\images\**\*" />
+    <NodeModulesToCopy Include="..\node_modules\**\*" />
+    <SrcToCopy Include="..\out\src\**\*" />
+    <RootFilesToCopy Include="..\.gitignore;..\.travis.yml;..\appveyor.yml;..\ISSUE_TEMPLATE.md;..\CHANGELOG.md;..\CONTRIBUTING.md;..\LICENSE.txt;..\package.json;..\package.nls.de.json;..\package.nls.es.json;..\package.nls.fr.json;..\package.nls.it.json;..\package.nls.ja.json;..\package.nls.json;..\package.nls.ko.json;..\package.nls.ru.json;..\package.nls.zh-cn.json;..\package.nls.zh-tw.json;..\README.md;..\ThirdPartyNotices.txt" />
+  </ItemGroup>
+
+  <Target Name="CopyFilesToSign" BeforeTargets="GetFilesToSign">
+    <Copy SourceFiles="@(ImagesToCopy)"
+          DestinationFiles="@(ImagesToCopy->'$(OutDir)\images\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(NodeModulesToCopy)" 
+          DestinationFiles="@(NodeModulesToCopy->'$(OutDir)\node_modules\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(SrcToCopy)"
+          DestinationFiles="@(SrcToCopy->'$(OutDir)\out\src\%(RecursiveDir)%(Filename)%(Extension)')" />
+    <Copy SourceFiles="@(RootFilesToCopy)"
+          DestinationFolder="$(OutDir)" />
+  </Target>
+
+  <Target Name="GetFilesToSign" DependsOnTargets="CopyFilesToSign" BeforeTargets="SignFiles">
+    <ItemGroup>
+      <FilesToSign Include="$(OutDir)\**\*.js" />
+      <!--<FilesToSign Include="$(OutDir)\**\*.js" Exclude="$(OutDir)\node_modules\globule\test\fixtures\expand\js\foo.js;
+                                                        $(OutDir)\node_modules\globule\test\fixtures\expand\js\bar.js;
+                                                        $(OutDir)\node_modules\resolve\test\resolver\other_path\root.js;
+                                                        $(OutDir)\node_modules\resolve\test\pathfilter\deep_ref\main.js;
+                                                        $(OutDir)\node_modules\resolve\test\resolver\baz\doom.js;
+                                                        $(OutDir)\node_modules\union\test\helpers\index.js;
+                                                        $(OutDir)\node_modules\vsce\node_modules\tmp\test\symlinkme\file.js;
+                                                        $(OutDir)\node_modules\resolve\test\resolver\mug.js;
+                                                        $(OutDir)\node_modules\resolve\test\resolver\other_path\lib\other-lib.js;
+                                                        $(OutDir)\node_modules\union\test\fixtures\index.js;" /> -->
+        <Authenticode>Microsoft400</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core">
+      <Version>0.2.0</Version>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
