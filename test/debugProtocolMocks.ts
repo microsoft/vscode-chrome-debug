@@ -72,7 +72,8 @@ function getInspectorStubs(mockEventEmitter) {
 
 function getPageStubs() {
     return {
-        enable() { }
+        enable() { },
+        onFrameNavigated() { }
     }
 }
 
