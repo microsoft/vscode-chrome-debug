@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
+import * as mockery from 'mockery';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -39,4 +40,15 @@ export function pathResolve(...segments: string[]): string {
     }
 
     return aPath;
+}
+
+export function registerLocMocks(): void {
+    mockery.registerMock('vscode-nls', {
+        config: () => () => dummyLocalize,
+        loadMessageBundle: () => dummyLocalize
+    });
+}
+
+function dummyLocalize(id: string, englishString: string): string {
+    return englishString;
 }

@@ -18,6 +18,7 @@ suite('Utils', () => {
 
     setup(() => {
         testUtils.setupUnhandledRejectionListener();
+        testUtils.registerLocMocks();
 
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
         mockery.registerMock('fs', { statSync: () => { }, existsSync: () => false });
