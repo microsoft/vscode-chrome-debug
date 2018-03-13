@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <LocFilesToCopy Include="..\i18n\**\*" />
     <ImagesToCopy Include="..\images\**\*" />
     <NodeModulesToCopy Include="..\node_modules\**\*" />
     <SrcToCopy Include="..\out\src\**\*" />
@@ -12,6 +13,8 @@
   </ItemGroup>
 
   <Target Name="CopyFilesToSign" BeforeTargets="GetFilesToSign">
+    <Copy SourceFiles="@(LocFilesToCopy)"
+          DestinationFiles="@(LocFilesToCopy->'$(OutDir)\i18n\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(ImagesToCopy)"
           DestinationFiles="@(ImagesToCopy->'$(OutDir)\images\%(RecursiveDir)%(Filename)%(Extension)')" />
     <Copy SourceFiles="@(NodeModulesToCopy)" 
