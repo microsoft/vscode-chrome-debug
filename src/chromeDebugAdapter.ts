@@ -6,12 +6,12 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
 
-import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs} from './chromeDebugInterfaces';
+import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs, ISetExpressionArgs, VSDebugProtocolCapabilities, ISetExpressionResponseBody} from './chromeDebugInterfaces';
 import * as utils from './utils';
 import * as errors from './errors';
 
@@ -35,10 +35,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromePID: number;
     private _userRequestedUrl: string;
 
-    public initialize(args: DebugProtocol.InitializeRequestArguments): DebugProtocol.Capabilities {
+    public initialize(args: DebugProtocol.InitializeRequestArguments): VSDebugProtocolCapabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
-        const capabilities = super.initialize(args);
+        const capabilities: VSDebugProtocolCapabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
+        capabilities.supportsSetExpression = true;
 
         return capabilities;
     }
@@ -130,13 +131,26 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return super.attach(args);
     }
 
-    public configurationDone(): Promise<void> {
+    protected hookConnectionEvents(): void {
+        super.hookConnectionEvents();
+        this.chrome.Page.onFrameNavigated(params => this.onFrameNavigated(params));
+    }
+
+    protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
+        if (params.frame.url === this._userRequestedUrl) {
+            // Chrome started to navigate to the user's requested url
+            this.events.emit(ChromeDebugSession.FinishedStartingUpEventName);
+        }
+    }
+
+    public async configurationDone(): Promise<void> {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this.chrome.Page.navigate({ url: this._userRequestedUrl });
+            this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() =>
+                this.events.emitMilestoneReached("RequestedNavigateToUserPage"));
         }
 
-        return super.configurationDone();
+        await super.configurationDone();
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
@@ -236,6 +250,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
+        this.events.emitStepStarted("LaunchTarget.LaunchExe");
         if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
@@ -293,6 +308,27 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             return chromeProc;
         }
     }
+
+    public async setExpression(args: ISetExpressionArgs): Promise<ISetExpressionResponseBody> {
+        const reconstructedExpression = `${args.expression} = ${args.value}`;
+        const evaluateEventArgs: DebugProtocol.EvaluateArguments = {
+            expression: reconstructedExpression,
+            frameId: args.frameId,
+            format: args.format,
+            context: 'repl'
+        }
+
+        const evaluateResult = await this.evaluate(evaluateEventArgs);
+        return {
+            value: evaluateResult.result
+        };
+        // Beware that after the expression is changed, the variables on the current stackFrame will not
+        // be updated, which means the return value of the Runtime.getProperties request will not contain
+        // this change until the breakpoint is released(step over or continue).
+        //
+        // See also: https://bugs.chromium.org/p/chromium/issues/detail?id=820535
+    }
+
 }
 
 function getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISourceMapPathOverrides): ISourceMapPathOverrides {

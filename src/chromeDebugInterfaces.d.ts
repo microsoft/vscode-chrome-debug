@@ -3,6 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as Core from 'vscode-chrome-debug-core';
+import {DebugProtocol} from 'vscode-debugprotocol';
 
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
     disableNetworkCache?: boolean;
@@ -25,4 +26,20 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs, ICommonRequestArgs {
+}
+
+export interface ISetExpressionArgs {
+    expression: string;
+    value: string;
+    frameId: number;
+    format?: DebugProtocol.ValueFormat
+    timeout?: number;
+}
+
+export interface ISetExpressionResponseBody {
+    value: string;
+}
+
+export interface VSDebugProtocolCapabilities extends DebugProtocol.Capabilities {
+    supportsSetExpression?: boolean;
 }

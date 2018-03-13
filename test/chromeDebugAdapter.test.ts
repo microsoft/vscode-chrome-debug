@@ -15,6 +15,7 @@ import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
 import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../src/chromeDebugAdapter';
+import { StepProgressEventsEmitter } from 'vscode-chrome-debug-core/out/src/executionTimingsReporter';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -55,6 +56,9 @@ suite('ChromeDebugAdapter', () => {
             .returns(() => Promise.resolve());
         mockChromeConnection
             .setup(x => x.onClose(It.isAny()));
+        mockChromeConnection
+            .setup(x => x.events)
+            .returns(x => new StepProgressEventsEmitter());
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
