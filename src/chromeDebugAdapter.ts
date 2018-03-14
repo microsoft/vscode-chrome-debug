@@ -16,7 +16,7 @@ import * as utils from './utils';
 import * as errors from './errors';
 
 import * as nls from 'vscode-nls';
-const localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+let localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
 
 // Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
@@ -40,6 +40,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         const capabilities: VSDebugProtocolCapabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
         capabilities.supportsSetExpression = true;
+
+        if (args.locale) {
+            localize = nls.config({ locale: args.locale })();
+        }
 
         return capabilities;
     }
