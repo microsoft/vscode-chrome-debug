@@ -16,7 +16,7 @@ import * as utils from './utils';
 import * as errors from './errors';
 
 import * as nls from 'vscode-nls';
-let localize = nls.config(process.env.VSCODE_NLS_CONFIG)();
+let localize = nls.loadMessageBundle();
 
 // Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
