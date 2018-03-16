@@ -172,28 +172,36 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number, websocketUrl?: string, extraCRDPChannelPort?: number): Promise<void> {
         return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(() => {
-            const userAgentPromise = this.globalEvaluate({ expression: 'navigator.userAgent', silent: true }).then(evalResponse => evalResponse.result.value);
-
-            const userAgentForTelemetryPromise = userAgentPromise.then(userAgent => {
-                const properties = { "Versions.Target.UserAgent": userAgent };
-                const chromeVersionMatch = userAgent.match(/Chrom(?:e|ium)\/([0-9]+(?:.[0-9]+)+)/);
-                if (chromeVersionMatch && chromeVersionMatch[1]) {
-                    properties["Versions.Target.Version"] = chromeVersionMatch[1];
-                }
-                return properties;
-            });
-
-            // Add the user agent to all telemetry events
-            telemetry.telemetry.addCustomGlobalProperty(userAgentForTelemetryPromise);
-
             // Don't return this promise, a failure shouldn't fail attach
-            userAgentPromise.then(
-                    userAgent => logger.log('Target userAgent: ' + userAgent),
+            this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
+                .then(
+                    evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
                     err => logger.log('Getting userAgent failed: ' + err.message))
                 .then(() => {
                     const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
                     this.chrome.Network.setCacheDisabled({ cacheDisabled });
                 });
+
+            const versionInformationPromise = this.chrome.Browser.getVersion().then(response => {
+                const properties = {
+                    "Versions.Target.CRDPVersion": response.protocolVersion,
+                    "Versions.Target.Revision": response.revision,
+                    "Versions.Target.UserAgent": response.userAgent,
+                    "Versions.Target.V8": response.jsVersion
+                };
+
+                const parts = (response.product || "").split("/");
+                if (parts.length === 2) { // Currently response.product looks like "Chrome/65.0.3325.162" so we split the project and the actual version number
+                    properties["Versions.Target.Project"] =  parts[0];
+                    properties["Versions.Target.Version"] =  parts[1];
+                } else { // If for any reason that changes, we submit the entire product as-is
+                    properties["Versions.Target.Product"] = response.product;
+                }
+                return properties
+            });
+
+            // Add version information to all telemetry events from now on
+            telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
         });
     }
 
