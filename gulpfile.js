@@ -153,13 +153,13 @@ gulp.task('add-i18n', function () {
 });
 
 gulp.task('transifex-push', ['build'], function () {
-    return gulp.src(['out/nls.metadata.header.json', 'out/nls.metadata.json'])
+    return gulp.src(['package.nls.json', 'out/nls.metadata.header.json', 'out/nls.metadata.json'])
         .pipe(nls.createXlfFiles(transifexProjectName, transifexExtensionName))
         .pipe(nls.pushXlfFiles(transifexApiHostname, transifexApiName, transifexApiToken));
 });
 
 gulp.task('transifex-push-test', ['build'], function () {
-    return gulp.src(['out/nls.metadata.header.json', 'out/nls.metadata.json'])
+    return gulp.src(['package.nls.json', 'out/nls.metadata.header.json', 'out/nls.metadata.json'])
         .pipe(nls.createXlfFiles(transifexProjectName, transifexExtensionName))
         .pipe(gulp.dest(path.join('..', `${transifexExtensionName}-push-test`)));
 });

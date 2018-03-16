@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "4.2.0",
+  "version": "4.2.1",
   "icon": "images/icon.png",
   "description": "%extension.description%",
   "author": {
@@ -24,7 +24,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^3.23.4",
+    "vscode-chrome-debug-core": "^3.23.6",
     "vscode-debugadapter": "^1.27.0",
     "vscode-nls": "^3.2.1"
   },
@@ -39,7 +39,7 @@
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.6.1",
-    "gulp-typescript": "^3.2.3",
+    "gulp-typescript": "^4.0.1",
     "gulp-util": "^3.0.8",
     "http-server": "^0.10.0",
     "mocha": "^3.0.2",
@@ -49,7 +49,7 @@
     "ts-loader": "^1.0.0",
     "tslint": "^3.15.1",
     "typemoq": "^0.3.3",
-    "typescript": "^2.4.1",
+    "typescript": "^2.7.2",
     "vsce": "^1.32.0",
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.20.0",
