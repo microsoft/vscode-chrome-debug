@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -172,10 +172,23 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number, websocketUrl?: string, extraCRDPChannelPort?: number): Promise<void> {
         return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(() => {
+            const userAgentPromise = this.globalEvaluate({ expression: 'navigator.userAgent', silent: true }).then(evalResponse => evalResponse.result.value);
+
+            const userAgentForTelemetryPromise = userAgentPromise.then(userAgent => {
+                const properties = { "Versions.Target.UserAgent": userAgent };
+                const chromeVersionMatch = userAgent.match(/Chrom(?:e|ium)\/([0-9]+(?:.[0-9]+)+)/);
+                if (chromeVersionMatch && chromeVersionMatch[1]) {
+                    properties["Versions.Target.Version"] = chromeVersionMatch[1];
+                }
+                return properties;
+            });
+
+            // Add the user agent to all telemetry events
+            telemetry.telemetry.addCustomGlobalProperty(userAgentForTelemetryPromise);
+
             // Don't return this promise, a failure shouldn't fail attach
-            this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
-                .then(
-                    evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
+            userAgentPromise.then(
+                    userAgent => logger.log('Target userAgent: ' + userAgent),
                     err => logger.log('Getting userAgent failed: ' + err.message))
                 .then(() => {
                     const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
