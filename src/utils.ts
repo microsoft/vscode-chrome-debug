@@ -64,5 +64,6 @@ export class DebounceHelper {
     }
 }
 
-export const targetFilter: chromeConnection.ITargetFilter =
-    target => target && (!target.type || target.type === 'page');
+export const targetFilterProvider =
+    (types: Iterable<string> = ['page']): chromeConnection.ITargetFilter =>
+        target => target && (!target.type || Array.from(types).some(t => t === target.type));
