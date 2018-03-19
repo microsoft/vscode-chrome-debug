@@ -1,3 +1,8 @@
+## 4.2.1
+* Fix Windows issue with breakpoints not binding if they were set before launch - [Microsoft/vscode#45657](https://github.com/Microsoft/vscode/issues/45657)
+* Work around issue where hover shows wrong 'this' - [Microsoft/vscode#44785](https://github.com/Microsoft/vscode/issues/44785)
+* Fix Chrome session restore prompt showing on every start - thanks to [@aj-r](https://github.com/aj-r) for the PR! - [PR #606](https://github.com/Microsoft/vscode-chrome-debug/pull/606)
+
 ## 4.2.0
 * Use more precise extension activation events to prevent unneeded activation
 * Apply sourceMapPathOverrides in order of longest->shortest, instead of key order within the object - [Microsoft/vscode-chrome-debug-core#297](https://github.com/Microsoft/vscode-chrome-debug-core/issues/297)
