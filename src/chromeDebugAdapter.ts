@@ -389,9 +389,9 @@ function findExecutable(program: string): string | undefined {
         if (PATHEXT) {
             const executableExtensions = PATHEXT.split(';');
             for (const extension of executableExtensions) {
-                const path = program + extension;
-                if (fs.existsSync(path)) {
-                    return path;
+                const programPath = program + extension;
+                if (fs.existsSync(programPath)) {
+                    return programPath;
                 }
             }
         }

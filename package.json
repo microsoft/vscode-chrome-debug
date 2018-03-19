@@ -24,8 +24,8 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^3.23.6",
-    "vscode-debugadapter": "^1.27.0",
+    "vscode-chrome-debug-core": "^3.23.8",
+    "vscode-debugadapter": "^1.28.0-pre.2",
     "vscode-nls": "^3.2.1"
   },
   "devDependencies": {
@@ -39,6 +39,7 @@
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
     "gulp-sourcemaps": "^2.6.1",
+    "gulp-tslint": "^8.1.3",
     "gulp-typescript": "^4.0.1",
     "gulp-util": "^3.0.8",
     "http-server": "^0.10.0",
@@ -47,14 +48,14 @@
     "run-sequence": "^2.2.0",
     "tmp": "0.0.31",
     "ts-loader": "^1.0.0",
-    "tslint": "^3.15.1",
+    "tslint": "^5.7.0",
     "typemoq": "^0.3.3",
     "typescript": "^2.7.2",
     "vsce": "^1.32.0",
     "vscode": "^1.0.3",
     "vscode-chrome-debug-core-testsupport": "^3.20.0",
     "vscode-debugadapter-testsupport": "1.24.0",
-    "vscode-debugprotocol": "^1.27.0",
+    "vscode-debugprotocol": "^1.28.0-pre.1",
     "vscode-nls-dev": "^3.0.7"
   },
   "main": "./out/src/extension",
@@ -69,7 +70,7 @@
     "start": "node out/src/chromeDebug.js --server=4712",
     "test": "mocha --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
     "intTest": "mocha --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/*.test.js",
-    "lint": "tslint -t verbose \"src/**/*.ts\"",
+    "lint": "gulp tslint",
     "vscode:prepublish": "gulp verify-no-linked-modules",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },

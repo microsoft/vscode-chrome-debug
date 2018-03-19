@@ -7,6 +7,7 @@ const typescript = require('typescript');
 const sourcemaps = require('gulp-sourcemaps');
 const gulp = require('gulp');
 const log = require('gulp-util').log;
+const tslint = require('gulp-tslint');
 const path = require('path');
 const fs = require('fs');
 const nls = require('vscode-nls-dev');
