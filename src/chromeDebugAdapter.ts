@@ -105,8 +105,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 launchUrl = args.url;
             }
 
-            if (launchUrl) {
-
+            if (launchUrl && !args.noDebug) {
                 // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
                 // This is done to facilitate hitting breakpoints on load
                 this._userRequestedUrl = launchUrl;
