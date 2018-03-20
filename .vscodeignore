@@ -24,3 +24,16 @@ node_modules/vscode-chrome-debug-core/node_modules/ws/node_modules/utf-8-validat
 
 node_modules/vscode-chrome-debug-core/out/test/**
 node_modules/vscode-chrome-debug-core/typings/**
+
+i18n/csy
+i18n/trk
+i18n/ptb
+i18n/plk
+package.nls.cs.json
+package.nls.tr.json
+package.nls.pt-br.json
+package.nls.pl.json
+node_modules/vscode-chrome-debug-core/i18n/csy/**
+node_modules/vscode-chrome-debug-core/i18n/trk/**
+node_modules/vscode-chrome-debug-core/i18n/ptb/**
+node_modules/vscode-chrome-debug-core/i18n/plk/**
