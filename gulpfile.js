@@ -39,7 +39,8 @@ const watchedSources = [
 ];
 
 const scripts = [
-    'src/terminateProcess.sh'
+    'src/terminateProcess.sh',
+    'src/launchUnelevated.js'
 ];
 
 const lintSources = [

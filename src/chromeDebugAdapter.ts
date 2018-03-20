@@ -53,7 +53,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             args.breakOnLoadStrategy = 'instrument';
         }
 
-        return super.launch(args).then(() => {
+        return super.launch(args).then(async () => {
             let runtimeExecutable: string;
             if (args.runtimeExecutable) {
                 const re = findExecutable(args.runtimeExecutable);
@@ -114,12 +114,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(launchUrl);
             }
 
-            this._chromeProc = this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable);
-            this._chromeProc.on('error', (err) => {
-                const errMsg = 'Chrome error: ' + err;
-                logger.error(errMsg);
-                this.terminateSession(errMsg);
-            });
+            this._chromeProc = await this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable,
+                 args.shouldLaunchChromeUnelevated);
+            if (this._chromeProc) {
+                this._chromeProc.on('error', (err) => {
+                    const errMsg = 'Chrome error: ' + err;
+                    logger.error(errMsg);
+                    this.terminateSession(errMsg);
+                });
+            }
 
             return args.noDebug ? undefined :
                 this.doAttach(port, launchUrl || args.urlFilter, args.address, args.timeout, undefined, args.extraCRDPChannelPort);
@@ -242,7 +245,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         super.disconnect(args);
 
-        if (this._chromeProc && !hadTerminated) {
+        if ( (this._chromeProc || (!this._chromeProc && this._chromePID)) && !hadTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
@@ -262,7 +265,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 try {
                     execSync(taskkillCmd);
                 } catch (e) {}
-            } else {
+            } else if (this._chromeProc) {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');
             }
@@ -280,9 +283,34 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             Promise.resolve();
     }
 
-    private spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string}, cwd: string, usingRuntimeExecutable: boolean): ChildProcess {
+    private async spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string},
+                              cwd: string, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean): Promise<ChildProcess> {
         this.events.emitStepStarted("LaunchTarget.LaunchExe");
-        if (coreUtils.getPlatform() === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
+        const platform = coreUtils.getPlatform();
+        if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
+            const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
+            if (fs.existsSync(semaphoreFile)) { // remove the previous semaphoreFile if it exists.
+                fs.unlinkSync(semaphoreFile);
+            }
+            const chromeProc = fork(getChromeSpawnHelperPath(),
+                [`${process.env.windir}\\System32\\cscript.exe`, path.join(__dirname, 'launchUnelevated.js'),
+                semaphoreFile, chromePath, ...chromeArgs], {});
+
+            chromeProc.unref();
+            await new Promise<void>((resolve, reject) => {
+                chromeProc.on('message', resolve);
+            });
+
+            const pidStr = await findNewlyLaunchedChromeProcess(semaphoreFile);
+
+            if (pidStr) {
+                logger.log(`Parsed output file and got Chrome PID ${pidStr}`);
+                this._chromePID = parseInt(pidStr, 10);
+            }
+
+            // Cannot get the real Chrome process, so return null.
+            return null;
+        } else if (platform === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options = {
                 execArgv: [],
                 silent: true
@@ -422,4 +450,43 @@ function findExecutable(program: string): string | undefined {
     }
 
     return undefined;
+}
+
+async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<string> {
+    const regexPattern = /processid\s+=\s+(\d+)\s*;/i
+    let lastAccessFileContent: string;
+    for (let i = 0 ; i < 25; i++) {
+        if (fs.existsSync(semaphoreFile)) {
+            lastAccessFileContent = fs.readFileSync(semaphoreFile, {
+                encoding: 'utf16le'
+            }).toString();
+
+            const lines = lastAccessFileContent.split("\n");
+
+            const matchedLines = (lines || []).filter(line => line.match(regexPattern))
+            if (matchedLines.length > 1) {
+                throw new Error(`Unexpected semaphore file format ${lines}`);
+            }
+
+            if (matchedLines.length === 1) {
+                const match = matchedLines[0].match(regexPattern);
+                return match[1];
+            }
+            // else == 0, wait for 200 ms delay and try again.
+        }
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 200);
+        })
+    }
+
+    const error = new Error(`Cannot acquire Chrome process id`);
+    let telemetryProperties: any = {
+        semaphoreFileContent: lastAccessFileContent
+    };
+
+    coreUtils.fillErrorDetails(telemetryProperties, error);
+
+    telemetry.telemetry.reportEvent('error', telemetryProperties);
+
+    return null;
 }
