@@ -11,6 +11,7 @@ import {Crdp} from 'vscode-chrome-debug-core';
 export interface IMockChromeConnectionAPI {
     apiObjects: Crdp.CrdpClient;
 
+    Browser: Mock<Crdp.BrowserClient>;
     Console: Mock<Crdp.ConsoleClient>;
     Debugger: Mock<Crdp.DebuggerClient>;
     Runtime: Mock<Crdp.RuntimeClient>;
@@ -19,6 +20,12 @@ export interface IMockChromeConnectionAPI {
     Page: Mock<Crdp.PageClient>;
 
     mockEventEmitter: EventEmitter;
+}
+
+function getBrowserStubs() {
+    return {
+        getVersion() { return Promise.resolve(); }
+    }
 }
 
 // See https://github.com/florinn/typemoq/issues/20
@@ -109,7 +116,11 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
 
     const mockPage = Mock.ofInstance<Crdp.PageClient>(<any>getPageStubs());
 
+    const mockBrowser = Mock.ofInstance<Crdp.BrowserClient>(<any>getBrowserStubs());
+    mockBrowser.callBase = true;
+
     const chromeConnectionAPI: Crdp.CrdpClient = <any>{
+        Browser: mockBrowser.object,
         Console: mockConsole.object,
         Debugger: mockDebugger.object,
         Runtime: mockRuntime.object,
@@ -121,6 +132,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     return {
         apiObjects: chromeConnectionAPI,
 
+        Browser: mockBrowser,
         Console: mockConsole,
         Debugger: mockDebugger,
         Runtime: mockRuntime,
