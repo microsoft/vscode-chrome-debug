@@ -23,7 +23,7 @@
                 "-u", "tdd",
 				"--colors",
 				"out/test/**/*.test.js",
-                "--timeout", "1800000"
+                "--timeout", "1800000",
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js"]
         },
@@ -52,6 +52,16 @@
 				"--extensionDevelopmentPath=${workspaceFolder}"
 			],
 			"outFiles": [ "${workspaceFolder}/out/**/*.js" ]
-		}
+		},
+        {
+            "name": "attach chrome-debug",
+            "type": "node",
+            "request": "attach",
+            "protocol": "inspector",
+            "port": 1235,
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "internalConsoleOptions": "openOnSessionStart",
+            "smartStep": true
+        },
     ]
 }

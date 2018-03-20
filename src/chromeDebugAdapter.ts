@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession} from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry} from 'vscode-chrome-debug-core';
 import {spawn, ChildProcess, fork, execSync} from 'child_process';
 import {Crdp} from 'vscode-chrome-debug-core';
 import {DebugProtocol} from 'vscode-debugprotocol';
@@ -181,6 +181,27 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     const cacheDisabled = (<ICommonRequestArgs>this._launchAttachArgs).disableNetworkCache || false;
                     this.chrome.Network.setCacheDisabled({ cacheDisabled });
                 });
+
+            const versionInformationPromise = this.chrome.Browser.getVersion().then(response => {
+                const properties = {
+                    "Versions.Target.CRDPVersion": response.protocolVersion,
+                    "Versions.Target.Revision": response.revision,
+                    "Versions.Target.UserAgent": response.userAgent,
+                    "Versions.Target.V8": response.jsVersion
+                };
+
+                const parts = (response.product || "").split("/");
+                if (parts.length === 2) { // Currently response.product looks like "Chrome/65.0.3325.162" so we split the project and the actual version number
+                    properties["Versions.Target.Project"] =  parts[0];
+                    properties["Versions.Target.Version"] =  parts[1];
+                } else { // If for any reason that changes, we submit the entire product as-is
+                    properties["Versions.Target.Product"] = response.product;
+                }
+                return properties
+            });
+
+            // Add version information to all telemetry events from now on
+            telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
         });
     }
 

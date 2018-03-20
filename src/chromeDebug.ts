@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer} from 'vscode-chrome-debug-core';
+import {ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer, telemetry} from 'vscode-chrome-debug-core';
 import * as path from 'path';
 import * as os from 'os';
 import {targetFilter} from './utils';
@@ -25,4 +25,6 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
     }));
 
 /* tslint:disable:no-var-requires */
-logger.log(EXTENSION_NAME + ': ' + require('../../package.json').version);
+const debugAdapterVersion = require('../../package.json').version;
+logger.log(EXTENSION_NAME + ': ' + debugAdapterVersion);
+telemetry.telemetry.addCustomGlobalProperty({"Versions.DebugAdapter": debugAdapterVersion});
