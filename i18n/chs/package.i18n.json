@@ -25,7 +25,7 @@
 	"chrome.sourceMapPathOverrides.description": "用于根据源映射所述重写源文件位置的一组映射，其将映射到磁盘上所处位置。请参阅自述文件了解详细信息。",
 	"chrome.smartStep.description": "自动单步执行无法映射回原始源的生成代码。",
 	"chrome.skipFiles.description": "将在调试时跳过的一组文件名、文件夹名或路径的 glob 模式。",
-	"chrome.timeout.description": "在此段时间(单位: 毫秒)内一直尝试连接到 Chrome。默认值为 10000 ms。",
+	"chrome.timeout.description": "尝试连接到 Chrome 的等待时间 (单位: 毫秒)。默认值为 10000 ms。",
 	"chrome.disableNetworkCache.description": "控制每次请求是否跳过网络缓存",
 	"chrome.urlFilter.description": "将搜索 URL 为此的页面，若找到则附加于其之上。可以包含 * 通配符。",
 	"chrome.showAsyncStacks.description": "显示导致当前调用堆栈的异步调用",

@@ -30,7 +30,11 @@ const defaultLanguages = [
     { id: 'fr', folderName: 'fra' },
     { id: 'es', folderName: 'esn' },
     { id: 'ru', folderName: 'rus' },
-    { id: 'it', folderName: 'ita' }
+    { id: 'it', folderName: 'ita' },
+    { id: 'cs', folderName: 'csy' },
+    { id: 'tr', folderName: 'trk' },
+    { id: 'pt-br', folderName: 'ptb', transifexId: 'pt_BR' },
+    { id: 'pl', folderName: 'plk' }
 ];
 
 const watchedSources = [
