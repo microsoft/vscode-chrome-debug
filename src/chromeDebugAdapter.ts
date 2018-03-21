@@ -202,6 +202,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 return properties
             });
 
+            // Send the versions information as it's own event so we can easily backfill other events in the user session if needed
+            versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
+
             // Add version information to all telemetry events from now on
             telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
         });
