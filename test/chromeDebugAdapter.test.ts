@@ -2,19 +2,19 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import {DebugProtocol} from 'vscode-debugprotocol';
-import {chromeConnection, ISourceMapPathOverrides} from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { chromeConnection, ISourceMapPathOverrides } from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
-import {EventEmitter} from 'events';
+import { EventEmitter } from 'events';
 import * as assert from 'assert';
-import {Mock, MockBehavior, It} from 'typemoq';
+import { Mock, MockBehavior, It } from 'typemoq';
 
-import {getMockChromeConnectionApi, IMockChromeConnectionAPI} from './debugProtocolMocks';
+import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
-import {ChromeDebugAdapter as _ChromeDebugAdapter} from '../src/chromeDebugAdapter';
+import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { StepProgressEventsEmitter } from 'vscode-chrome-debug-core/out/src/executionTimingsReporter';
 
 class MockChromeDebugSession {

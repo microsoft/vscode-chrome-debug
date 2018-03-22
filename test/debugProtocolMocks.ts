@@ -4,9 +4,9 @@
 /* tslint:disable:typedef */
 // Copied from -core because I don't want to include test stuff in the npm package
 
-import {EventEmitter} from 'events';
-import {Mock, It} from 'typemoq';
-import {Crdp} from 'vscode-chrome-debug-core';
+import { EventEmitter } from 'events';
+import { Mock, It } from 'typemoq';
+import { Crdp } from 'vscode-chrome-debug-core';
 
 export interface IMockChromeConnectionAPI {
     apiObjects: Crdp.CrdpClient;

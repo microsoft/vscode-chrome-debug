@@ -5,9 +5,9 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import {createServer} from 'http-server';
+import { createServer } from 'http-server';
 
-import {ExtendedDebugClient} from 'vscode-chrome-debug-core-testsupport';
+import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
 

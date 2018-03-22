@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
-import {createServer} from 'http-server';
+import { createServer } from 'http-server';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 

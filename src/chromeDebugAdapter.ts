@@ -6,12 +6,12 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry} from 'vscode-chrome-debug-core';
-import {spawn, ChildProcess, fork, execSync} from 'child_process';
-import {Crdp} from 'vscode-chrome-debug-core';
-import {DebugProtocol} from 'vscode-debugprotocol';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry } from 'vscode-chrome-debug-core';
+import { spawn, ChildProcess, fork, execSync } from 'child_process';
+import { Crdp } from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
-import {ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs, ISetExpressionArgs, VSDebugProtocolCapabilities, ISetExpressionResponseBody} from './chromeDebugInterfaces';
+import { ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs, ISetExpressionArgs, VSDebugProtocolCapabilities, ISetExpressionResponseBody } from './chromeDebugInterfaces';
 import * as utils from './utils';
 import * as errors from './errors';
 
@@ -109,7 +109,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
                 // This is done to facilitate hitting breakpoints on load
                 this._userRequestedUrl = launchUrl;
-                launchUrl = "about:blank";
+                launchUrl = 'about:blank';
 
                 chromeArgs.push(launchUrl);
             }
@@ -153,7 +153,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
             this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() =>
-                this.events.emitMilestoneReached("RequestedNavigateToUserPage"));
+                this.events.emitMilestoneReached('RequestedNavigateToUserPage'));
         }
 
         await super.configurationDone();
@@ -186,18 +186,18 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             const versionInformationPromise = this.chrome.Browser.getVersion().then(response => {
                 const properties = {
-                    "Versions.Target.CRDPVersion": response.protocolVersion,
-                    "Versions.Target.Revision": response.revision,
-                    "Versions.Target.UserAgent": response.userAgent,
-                    "Versions.Target.V8": response.jsVersion
+                    'Versions.Target.CRDPVersion': response.protocolVersion,
+                    'Versions.Target.Revision': response.revision,
+                    'Versions.Target.UserAgent': response.userAgent,
+                    'Versions.Target.V8': response.jsVersion
                 };
 
-                const parts = (response.product || "").split("/");
+                const parts = (response.product || '').split('/');
                 if (parts.length === 2) { // Currently response.product looks like "Chrome/65.0.3325.162" so we split the project and the actual version number
-                    properties["Versions.Target.Project"] =  parts[0];
-                    properties["Versions.Target.Version"] =  parts[1];
+                    properties['Versions.Target.Project'] =  parts[0];
+                    properties['Versions.Target.Version'] =  parts[1];
                 } else { // If for any reason that changes, we submit the entire product as-is
-                    properties["Versions.Target.Product"] = response.product;
+                    properties['Versions.Target.Product'] = response.product;
                 }
                 return properties
             });
@@ -288,7 +288,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     private async spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string},
                               cwd: string, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean): Promise<ChildProcess> {
-        this.events.emitStepStarted("LaunchTarget.LaunchExe");
+        this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
             const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
@@ -464,7 +464,7 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
                 encoding: 'utf16le'
             }).toString();
 
-            const lines = lastAccessFileContent.split("\n");
+            const lines = lastAccessFileContent.split('\n');
 
             const matchedLines = (lines || []).filter(line => line.match(regexPattern))
             if (matchedLines.length > 1) {

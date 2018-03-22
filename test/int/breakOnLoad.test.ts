@@ -186,17 +186,17 @@ suite('BreakOnLoad', () => {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     suite('Regex Common Tests', () => {
-        runCommonTests("regex");
+        runCommonTests('regex');
     });
 
     suite('Instrument Common Tests', () => {
-        runCommonTests("instrument");
+        runCommonTests('instrument');
     });
 
     suite('Instrument Webpack Project', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: "instrument" })
+            return testSetup.setup(undefined, { breakOnLoadStrategy: 'instrument' })
                 .then(_dc => dc = _dc);
         });
 
@@ -263,7 +263,7 @@ suite('BreakOnLoad', () => {
     suite('BreakOnLoad Disabled (strategy: off)', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: "off" })
+            return testSetup.setup(undefined, { breakOnLoadStrategy: 'off' })
                 .then(_dc => dc = _dc);
         });
 

@@ -8,12 +8,12 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
-import {DebugProtocol} from 'vscode-debugprotocol';
-import {DebugClient} from 'vscode-debugadapter-testsupport';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
-var testLaunchProps: any;
+let testLaunchProps: any;
 
 function formLaunchArgs(launchArgs: any): void {
     launchArgs.trace = 'verbose';

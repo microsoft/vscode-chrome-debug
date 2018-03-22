@@ -62,6 +62,11 @@
       "check-else",
       "check-whitespace"
     ],
+    "quotemark": [
+      true,
+      "single",
+      "avoid-escape"
+    ],
     "radix": true,
     "switch-default": true,
     "trailing-comma": [
@@ -92,6 +97,7 @@
       "check-decl",
       "check-operator",
       "check-separator",
+      "check-module",
       "check-type"
     ]
   }

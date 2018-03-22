@@ -5,7 +5,7 @@
 import * as vscode from 'vscode';
 import * as Core from 'vscode-chrome-debug-core';
 
-import {targetFilter} from './utils';
+import { targetFilter } from './utils';
 
 import * as nls from 'vscode-nls';
 const localize = nls.loadMessageBundle();
@@ -23,7 +23,7 @@ export function deactivate() {
 const DEFAULT_CONFIG = {
     type: 'chrome',
     request: 'launch',
-    name: localize('chrome.launch.name', "Launch Chrome against localhost"),
+    name: localize('chrome.launch.name', 'Launch Chrome against localhost'),
     url: 'http://localhost:8080',
     webRoot: '${workspaceFolder}'
 };
@@ -99,7 +99,7 @@ async function pickTarget(targets: Core.chromeConnection.ITarget[]): Promise<ITa
         websocketDebuggerUrl: target.webSocketDebuggerUrl
     }));
 
-    const placeHolder = localize('chrome.targets.placeholder', "Select a tab");
+    const placeHolder = localize('chrome.targets.placeholder', 'Select a tab');
     const selected = await vscode.window.showQuickPick(items, { placeHolder, matchOnDescription: true, matchOnDetail: true });
     return selected;
 }
