@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as Core from 'vscode-chrome-debug-core';
-import {DebugProtocol} from 'vscode-debugprotocol';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 export interface ICommonRequestArgs extends Core.ICommonRequestArgs {
     disableNetworkCache?: boolean;
