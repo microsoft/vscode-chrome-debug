@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry } from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector } from 'vscode-chrome-debug-core';
 import { spawn, ChildProcess, fork, execSync } from 'child_process';
 import { Crdp } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -48,13 +48,16 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return capabilities;
     }
 
-    public launch(args: ILaunchRequestArgs): Promise<void> {
+    public launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector, seq?: number): Promise<void> {
         if (args.breakOnLoad && !args.breakOnLoadStrategy) {
             args.breakOnLoadStrategy = 'instrument';
         }
 
-        return super.launch(args).then(async () => {
+        return super.launch(args, telemetryPropertyCollector).then(async () => {
             let runtimeExecutable: string;
+            if (args.shouldLaunchChromeUnelevated !== undefined) {
+                telemetryPropertyCollector.addTelemetryProperty('shouldLaunchChromeUnelevated', args.shouldLaunchChromeUnelevated.toString());
+            }
             if (args.runtimeExecutable) {
                 const re = findExecutable(args.runtimeExecutable);
                 if (!re) {

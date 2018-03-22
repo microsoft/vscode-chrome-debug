@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { chromeConnection, ISourceMapPathOverrides } from 'vscode-chrome-debug-core';
+import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
 import { EventEmitter } from 'events';
@@ -121,7 +121,8 @@ suite('ChromeDebugAdapter', () => {
                 .setup(x => x.evaluate(It.isAny()))
                 .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
 
-            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] })
+            return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] },
+                                             new telemetry.TelemetryPropertyCollector())
                 .then(() => assert(spawnCalled));
         });
     });
