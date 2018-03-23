@@ -110,7 +110,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 // This is done to facilitate hitting breakpoints on load
                 this._userRequestedUrl = launchUrl;
                 launchUrl = 'about:blank';
+            }
 
+            if (launchUrl) {
                 chromeArgs.push(launchUrl);
             }
 
