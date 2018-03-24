@@ -24,7 +24,7 @@ export interface IMockChromeConnectionAPI {
 
 function getBrowserStubs() {
     return {
-        getVersion() { return Promise.resolve(); }
+        getVersion() { return Promise.resolve({}); }
     }
 }
 
