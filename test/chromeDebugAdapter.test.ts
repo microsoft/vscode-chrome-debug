@@ -81,7 +81,7 @@ suite('ChromeDebugAdapter', () => {
             // Hacky mock cleanup
             require('child_process').fork = originalFork;
             require('fs').statSync = originalStatSync;
-        })
+        });
 
         test('launches with minimal correct args', () => {
             let spawnCalled = false;
@@ -175,5 +175,5 @@ suite('ChromeDebugAdapter', () => {
                 resolveWebRootPattern(WEBROOT, overrides),
                 expOverrides);
         });
-    })
+    });
 });

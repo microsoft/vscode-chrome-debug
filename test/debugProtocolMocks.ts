@@ -25,7 +25,7 @@ export interface IMockChromeConnectionAPI {
 function getBrowserStubs() {
     return {
         getVersion() { return Promise.resolve({}); }
-    }
+    };
 }
 
 // See https://github.com/florinn/typemoq/issues/20
@@ -81,7 +81,7 @@ function getPageStubs() {
     return {
         enable() { },
         onFrameNavigated() { }
-    }
+    };
 }
 
 export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {

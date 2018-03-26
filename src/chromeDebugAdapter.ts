@@ -213,7 +213,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 } else { // If for any reason that changes, we submit the entire product as-is
                     properties['Versions.Target.Product'] = response.product;
                 }
-                return properties
+                return properties;
             });
 
             // Send the versions information as it's own event so we can easily backfill other events in the user session if needed
@@ -392,7 +392,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             frameId: args.frameId,
             format: args.format,
             context: 'repl'
-        }
+        };
 
         const evaluateResult = await this.evaluate(evaluateEventArgs);
         return {
@@ -470,7 +470,7 @@ function findExecutable(program: string): string | undefined {
 }
 
 async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<string> {
-    const regexPattern = /processid\s+=\s+(\d+)\s*;/i
+    const regexPattern = /processid\s+=\s+(\d+)\s*;/i;
     let lastAccessFileContent: string;
     for (let i = 0 ; i < 25; i++) {
         if (fs.existsSync(semaphoreFile)) {
@@ -480,7 +480,7 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
 
             const lines = lastAccessFileContent.split('\n');
 
-            const matchedLines = (lines || []).filter(line => line.match(regexPattern))
+            const matchedLines = (lines || []).filter(line => line.match(regexPattern));
             if (matchedLines.length > 1) {
                 throw new Error(`Unexpected semaphore file format ${lines}`);
             }
@@ -493,7 +493,7 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
         }
         await new Promise<void>((resolve) => {
             setTimeout(resolve, 200);
-        })
+        });
     }
 
     const error = new Error(`Cannot acquire Chrome process id`);

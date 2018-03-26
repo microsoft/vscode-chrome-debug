@@ -68,6 +68,7 @@
       "avoid-escape"
     ],
     "radix": true,
+    "semicolon": true,
     "switch-default": true,
     "trailing-comma": [
       false,

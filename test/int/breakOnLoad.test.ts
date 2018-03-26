@@ -177,7 +177,7 @@ function runCommonTests(breakOnLoadStrategy: string) {
                 source: { path: script2Path }
             });
             await dc.continueRequest();
-            await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol })
+            await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol });
         });
     });
 }
