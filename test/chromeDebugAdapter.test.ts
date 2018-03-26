@@ -16,7 +16,6 @@ import * as testUtils from './testUtils';
 /** Not mocked - use for type only */
 import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { StepProgressEventsEmitter } from 'vscode-chrome-debug-core/out/src/executionTimingsReporter';
-import { TelemetryPropertyCollector } from '../../vscode-chrome-debug-core/lib/src/telemetry';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
