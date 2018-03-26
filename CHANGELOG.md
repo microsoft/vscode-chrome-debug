@@ -1,3 +1,8 @@
+## 4.2.2
+* Fix another breakpoints case related to [Microsoft/vscode#45657](https://github.com/Microsoft/vscode/issues/45657)
+* Fix NPE when toggling skip on files that are only in the stack after a label or async frame
+* Fix "start without debugging" navigation - [Microsoft/vscode-chrome-debug#620](https://github.com/Microsoft/vscode-chrome-debug/issues/620)
+
 ## 4.2.1
 * Fix Windows issue with breakpoints not binding if they were set before launch - [Microsoft/vscode#45657](https://github.com/Microsoft/vscode/issues/45657)
 * Work around issue where hover shows wrong 'this' - [Microsoft/vscode#44785](https://github.com/Microsoft/vscode/issues/44785)

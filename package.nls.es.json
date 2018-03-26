@@ -1,7 +1,7 @@
 {
 	"extension.description": "Depurar el código JavaScript en el navegador Chrome, o cualquier otro destino que sea compatible con el protocolo depurador de Chrome.",
-	"chrome.toggleSkipping.title": "Chrome: Toggle Skipping This File",
-	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
+	"chrome.toggleSkipping.title": "Chrome: Alternar la omisión de este archivo.",
+	"chrome.toggleSmartStep.title": "Chrome: alternar Smart Step",
 	"chrome.port.description": "Puerto que se utilizará para la depuración remota de Chrome.",
 	"chrome.address.description": "Dirección TCP/IP del puerto de depuración",
 	"chrome.file.description": "Un archivo html local para abrirlo en el navegador",
@@ -11,7 +11,7 @@
 	"chrome.runtimeExecutable.description": "Ruta absoluta del área de trabajo al ejecutable del entorno de ejecución que se va a usar. Si no se especifica, Chrome se usará desde la ubicación de instalación predeterminada.",
 	"chrome.runtimeArgs.description": "Argumentos opcionales pasados al ejecutable del entorno de ejecución.",
 	"chrome.env.description": "Diccionario opcional de pares clave/valor del ambiente.",
-	"chrome.cwd.description": "Optional working directory for the runtime executable.",
+	"chrome.cwd.description": "Directorio de trabajo opcional para el ejecutable.",
 	"chrome.sourceMaps.description": "Se usan los mapas de origen de JavaScript (si existen).",
 	"chrome.diagnosticLogging.description": "Cuando es verdadero, el adaptador registra su propia información de diagnóstico a la consola en un formato legible para los humanos",
 	"chrome.verboseDiagnosticLogging.description": "Cuando es verdadero, el adaptador registra todo el tráfico con el cliente y el objetivo (así como también la información registrada por 'diagnosticLogging')",
