@@ -264,6 +264,11 @@
                 "description": "%chrome.urlFilter.description%",
                 "default": ""
               },
+              "targetTypes": {
+                "type": "array",
+                "description": "%chrome.targetTypes.description%",
+                "default": ""
+              },
               "showAsyncStacks": {
                 "type": "boolean",
                 "description": "%chrome.showAsyncStacks.description%",
