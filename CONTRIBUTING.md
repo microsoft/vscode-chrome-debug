@@ -1,5 +1,8 @@
+# Contributing
+
+Contributions are always welcome! I only ask that you open an issue first so we can discuss the problem and solution. I just don't want you to waste any time headed in the wrong direction.
+
 ## Development setup
-I welcome any quality bugfixes or contributions!
 
 * Clone this repo
 * Run `npm install -g gulp` and `npm install` in '/vscode-chrome-debug'
