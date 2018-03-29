@@ -267,7 +267,9 @@
               "targetTypes": {
                 "type": "array",
                 "description": "%chrome.targetTypes.description%",
-                "default": ""
+                "default": [
+                  "page"
+                ]
               },
               "showAsyncStacks": {
                 "type": "boolean",
@@ -382,6 +384,13 @@
                 "type": "string",
                 "description": "%chrome.urlFilter.description%",
                 "default": ""
+              },
+              "targetTypes": {
+                "type": "array",
+                "description": "%chrome.targetTypes.description%",
+                "default": [
+                  "page"
+                ]
               },
               "showAsyncStacks": {
                 "type": "boolean",
