@@ -41,6 +41,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         const capabilities: VSDebugProtocolCapabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
         capabilities.supportsSetExpression = true;
+        capabilities.supportsLogPoints = true;
 
         if (args.locale) {
             localize = nls.config({ locale: args.locale })();
