@@ -149,17 +149,19 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
-        const url = params.frame.url;
-        const requestedUrlNoAnchor = this._userRequestedUrl.split('#')[0]; // Frame navigated url doesn't include the anchor
-        if (url === requestedUrlNoAnchor || decodeURI(url) === requestedUrlNoAnchor) { // 'http://localhost:1234/test%20page' will use the not decoded version, 'http://localhost:1234/test page' will use the decoded version
-            // Chrome started to navigate to the user's requested url
-            this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: true } as FinishedStartingUpEventArguments);
-        } else if (url === 'chrome-error://chromewebdata/') {
-            // Chrome couldn't retrieve the web-page in the requested url
-            this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: false, reasonForNotDetected: 'UnreachableURL'} as FinishedStartingUpEventArguments);
-        } else if (url.startsWith('chrome-error://')) {
-            // Uknown chrome error
-            this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: false, reasonForNotDetected: 'UnknownChromeError'} as FinishedStartingUpEventArguments);
+        if (this._userRequestedUrl) {
+            const url = params.frame.url;
+            const requestedUrlNoAnchor = this._userRequestedUrl.split('#')[0]; // Frame navigated url doesn't include the anchor
+            if (url === requestedUrlNoAnchor || decodeURI(url) === requestedUrlNoAnchor) { // 'http://localhost:1234/test%20page' will use the not decoded version, 'http://localhost:1234/test page' will use the decoded version
+                // Chrome started to navigate to the user's requested url
+                this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: true } as FinishedStartingUpEventArguments);
+            } else if (url === 'chrome-error://chromewebdata/') {
+                // Chrome couldn't retrieve the web-page in the requested url
+                this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: false, reasonForNotDetected: 'UnreachableURL'} as FinishedStartingUpEventArguments);
+            } else if (url.startsWith('chrome-error://')) {
+                // Uknown chrome error
+                this.events.emit(ChromeDebugSession.FinishedStartingUpEventName, { requestedContentWasDetected: false, reasonForNotDetected: 'UnknownChromeError'} as FinishedStartingUpEventArguments);
+            }
         }
     }
 
@@ -198,23 +200,30 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     this.chrome.Network.setCacheDisabled({ cacheDisabled });
                 });
 
-            const versionInformationPromise = this.chrome.Browser.getVersion().then(response => {
-                const properties = {
-                    'Versions.Target.CRDPVersion': response.protocolVersion,
-                    'Versions.Target.Revision': response.revision,
-                    'Versions.Target.UserAgent': response.userAgent,
-                    'Versions.Target.V8': response.jsVersion
-                };
+            const versionInformationPromise = this.chrome.Browser.getVersion().then(
+                response => {
+                    const properties = {
+                        'Versions.Target.CRDPVersion': response.protocolVersion,
+                        'Versions.Target.Revision': response.revision,
+                        'Versions.Target.UserAgent': response.userAgent,
+                        'Versions.Target.V8': response.jsVersion
+                    };
 
-                const parts = (response.product || '').split('/');
-                if (parts.length === 2) { // Currently response.product looks like "Chrome/65.0.3325.162" so we split the project and the actual version number
-                    properties['Versions.Target.Project'] =  parts[0];
-                    properties['Versions.Target.Version'] =  parts[1];
-                } else { // If for any reason that changes, we submit the entire product as-is
-                    properties['Versions.Target.Product'] = response.product;
-                }
-                return properties;
-            });
+                    const parts = (response.product || '').split('/');
+                    if (parts.length === 2) { // Currently response.product looks like "Chrome/65.0.3325.162" so we split the project and the actual version number
+                        properties['Versions.Target.Project'] =  parts[0];
+                        properties['Versions.Target.Version'] =  parts[1];
+                    } else { // If for any reason that changes, we submit the entire product as-is
+                        properties['Versions.Target.Product'] = response.product;
+                    }
+                    return properties;
+                },
+                err => {
+                    logger.log('Getting userAgent failed: ' + err.message);
+                    const properties = { 'Versions.Target.NoUserAgentReason': 'Error while retriving target user agent' } as telemetry.IExecutionResultTelemetryProperties;
+                    coreUtils.fillErrorDetails(properties, err);
+                    return properties;
+                });
 
             // Send the versions information as it's own event so we can easily backfill other events in the user session if needed
             versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
