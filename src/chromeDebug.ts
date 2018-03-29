@@ -5,7 +5,7 @@
 import { ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer, telemetry } from 'vscode-chrome-debug-core';
 import * as path from 'path';
 import * as os from 'os';
-import { targetFilterProvider } from './utils';
+import { targetFilter } from './utils';
 
 import { ChromeDebugAdapter } from './chromeDebugAdapter';
 
@@ -18,7 +18,7 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         adapter: ChromeDebugAdapter,
         extensionName: EXTENSION_NAME,
         logFilePath: path.resolve(os.tmpdir(), 'vscode-chrome-debug.txt'),
-        targetFilter: targetFilterProvider(),
+        targetFilter,
 
         pathTransformer: UrlPathTransformer,
         sourceMapTransformer: BaseSourceMapTransformer,
