@@ -1,3 +1,7 @@
+## 4.3.0
+* Enable "log points", requires VS Code 1.22 - [Microsoft/vscode#45128](https://github.com/Microsoft/vscode/issues/45128)
+* Workaround for `"'Browser.getVersion' wasn't found"` issue - [#633](https://github.com/Microsoft/vscode-chrome-debug/issues/633)
+
 ## 4.2.2
 * Fix another breakpoints case related to [Microsoft/vscode#45657](https://github.com/Microsoft/vscode/issues/45657)
 * Fix NPE when toggling skip on files that are only in the stack after a label or async frame
@@ -11,7 +15,7 @@
 ## 4.2.0
 * Use more precise extension activation events to prevent unneeded activation
 * Apply sourceMapPathOverrides in order of longest->shortest, instead of key order within the object - [Microsoft/vscode-chrome-debug-core#297](https://github.com/Microsoft/vscode-chrome-debug-core/issues/297)
-* Make sourceMapPathOverrides default values in package.json match the defaults applied in code - [Microsoft/vscode-chrome-debug#581](https://github.com/Microsoft/vscode-chrome-debug/issues/581)
+* Make sourceMapPathOverrides default values in package.json match the defaults applied in code - [#581](https://github.com/Microsoft/vscode-chrome-debug/issues/581)
 * Add "Toggle Smart Step" command - [Microsoft/vscode-chrome-debug-core#298](https://github.com/Microsoft/vscode-chrome-debug-core/issues/298)
 * Fix error when setting BP in scripts with certain weird sourcemap names - [Microsoft/vscode#42162](https://github.com/microsoft/vscode/issues/42162)
 * Fix various breakOnLoad-related issues - [PR Microsoft/vscode-chrome-debug-core#283](https://github.com/Microsoft/vscode-chrome-debug-core/pull/283), [PR Microsoft/vscode-chrome-debug-core#285](https://github.com/Microsoft/vscode-chrome-debug-core/pull/285) and others
