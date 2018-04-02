@@ -14,7 +14,7 @@ const localize = nls.loadMessageBundle();
 export function getNotExistErrorResponse(attribute: string, path: string): Promise <void> {
     return Promise.reject(new ErrorWithMessage(<DebugProtocol.Message>{
             id: 2007,
-        format: localize('attribute.path.not.exist', "Attribute '{0}' does not exist ('{1}').", attribute, '{path}'),
-        variables: { path }
-    }));
+            format: localize('attribute.path.not.exist', "Attribute '{0}' does not exist ('{1}').", attribute, '{path}'),
+            variables: { path }
+        }));
 }
