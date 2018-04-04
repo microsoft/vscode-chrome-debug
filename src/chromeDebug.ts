@@ -27,4 +27,6 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
 /* tslint:disable:no-var-requires */
 const debugAdapterVersion = require('../../package.json').version;
 logger.log(EXTENSION_NAME + ': ' + debugAdapterVersion);
+
+// __GDPR__COMMON__ "Versions.DebugAdapter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
 telemetry.telemetry.addCustomGlobalProperty({'Versions.DebugAdapter': debugAdapterVersion});

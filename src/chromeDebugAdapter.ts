@@ -169,8 +169,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     public async configurationDone(): Promise<void> {
         if (this._userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() =>
-                this.events.emitMilestoneReached('RequestedNavigateToUserPage'));
+            this.chrome.Page.navigate({ url: this._userRequestedUrl }).then(() => {
+                /* __GDPR__FRAGMENT__
+                   "StepNames" : {
+                      "RequestedNavigateToUserPage" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+                   }
+                 */
+                this.events.emitMilestoneReached('RequestedNavigateToUserPage');
+            });
         }
 
         await super.configurationDone();
@@ -227,9 +233,28 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 });
 
             // Send the versions information as it's own event so we can easily backfill other events in the user session if needed
+            /* __GDPR__FRAGMENT__
+               "VersionInformation" : {
+                  "Versions.Target.CRDPVersion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.Revision" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.UserAgent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.V8" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.Project" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.Version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.Product" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "Versions.Target.NoUserAgentReason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+                  "${include}": [ "${IExecutionResultTelemetryProperties}" ]
+               }
+             */
+            /* __GDPR__
+               "target-version" : {
+                  "${include}": [ "${VersionInformation}" ]
+               }
+             */
             versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
 
             // Add version information to all telemetry events from now on
+            // __GDPR__COMMON__ "${include}": [ "${VersionInformation}" ]
             telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
         });
     }
@@ -312,6 +337,11 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     private async spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string},
                               cwd: string, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean): Promise<ChildProcess> {
+        /* __GDPR__FRAGMENT__
+           "StepNames" : {
+              "LaunchTarget.LaunchExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+           }
+         */
         this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
@@ -513,6 +543,12 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
 
     coreUtils.fillErrorDetails(telemetryProperties, error);
 
+    /* __GDPR__
+       "error" : {
+          "semaphoreFileContent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+          "${include}": [ "${IExecutionResultTelemetryProperties}" ]
+       }
+     */
     telemetry.telemetry.reportEvent('error', telemetryProperties);
 
     return null;
