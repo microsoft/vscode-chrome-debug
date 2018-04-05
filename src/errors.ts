@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ErrorWithMessage } from 'vscode-chrome-debug-core/lib/src/errors';
+import { ErrorWithMessage } from 'vscode-chrome-debug-core/out/src/errors';
 
 import * as nls from 'vscode-nls';
 const localize = nls.loadMessageBundle();
