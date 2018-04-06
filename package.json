@@ -226,7 +226,7 @@
                   "boolean"
                 ],
                 "description": "%chrome.userDataDir.description%",
-                "default": ""
+                "default": true
               },
               "sourceMapPathOverrides": {
                 "type": "object",

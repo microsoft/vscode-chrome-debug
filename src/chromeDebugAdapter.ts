@@ -90,8 +90,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 chromeArgs.push(...args.runtimeArgs);
             }
 
-            // Set a userDataDir by default, if not disabled with 'false' or already specified
-            if (typeof args.userDataDir === 'undefined' && !args.runtimeExecutable) {
+            // Set a default userDataDir, if the user opted in explicitly with 'true' or if args.userDataDir is not set (only when runtimeExecutable is not set).
+            // Can't set it automatically with runtimeExecutable because it may not be desired with Electron, other runtimes, random scripts.
+            if (
+                args.userDataDir === true ||
+                (typeof args.userDataDir === 'undefined' && !args.runtimeExecutable)
+            ) {
                 args.userDataDir = path.join(os.tmpdir(), `vscode-chrome-debug-userdatadir_${port}`);
             }
 

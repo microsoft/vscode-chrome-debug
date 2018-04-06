@@ -20,7 +20,7 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
     stopOnEntry?: boolean;
     address?: string;
     port?: number;
-    userDataDir?: string;
+    userDataDir?: string|boolean;
     breakOnLoad?: boolean;
     _clientOverlayPausedMessage?: string;
     shouldLaunchChromeUnelevated?: boolean;
