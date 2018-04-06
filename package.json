@@ -24,7 +24,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^4.1.3",
+    "vscode-chrome-debug-core": "^4.1.4",
     "vscode-debugadapter": "^1.28.0-pre.2",
     "vscode-nls": "^3.2.1"
   },
