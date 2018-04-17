@@ -28,5 +28,9 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
 const debugAdapterVersion = require('../../package.json').version;
 logger.log(EXTENSION_NAME + ': ' + debugAdapterVersion);
 
-// __GDPR__COMMON__ "Versions.DebugAdapter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+/* __GDPR__FRAGMENT__
+    "DebugCommonProperties" : {
+        "Versions.DebugAdapter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+    }
+*/
 telemetry.telemetry.addCustomGlobalProperty({'Versions.DebugAdapter': debugAdapterVersion});

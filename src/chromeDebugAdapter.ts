@@ -252,13 +252,16 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
              */
             /* __GDPR__
                "target-version" : {
-                  "${include}": [ "${VersionInformation}" ]
+                  "${include}": [ "${DebugCommonProperties}" ]
                }
              */
             versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
 
-            // Add version information to all telemetry events from now on
-            // __GDPR__COMMON__ "${include}": [ "${VersionInformation}" ]
+            /* __GDPR__FRAGMENT__
+                "DebugCommonProperties" : {
+                    "${include}": [ "${VersionInformation}" ]
+                }
+            */
             telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
         });
     }
@@ -550,7 +553,10 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
     /* __GDPR__
        "error" : {
           "semaphoreFileContent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-          "${include}": [ "${IExecutionResultTelemetryProperties}" ]
+          "${include}": [
+              "${IExecutionResultTelemetryProperties}",
+              "${DebugCommonProperties}"
+            ]
        }
      */
     telemetry.telemetry.reportEvent('error', telemetryProperties);
