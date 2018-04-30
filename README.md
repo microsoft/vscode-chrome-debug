@@ -168,7 +168,7 @@ The debugger uses sourcemaps to let you debug with your original sources, but so
 The left hand side of the mapping is a pattern that can contain a wildcard, and will be tested against the `sourceRoot` + `sources` entry in the source map. If it matches, the source file will be resolved to the path on the right hand side, which should be an absolute path to the source file on disk.
 
 A few mappings are applied by default, corresponding to some common default configs for Webpack and Meteor:
-```json
+```javascript
 // Note: These are the mappings that are included by default out of the box, with examples of how they could be resolved in different scenarios. These are not mappings that would make sense together in one project.
 // webRoot = /Users/me/project
 "sourceMapPathOverrides": {
