@@ -187,9 +187,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public commonArgs(args: ICommonRequestArgs): void {
-        if (!args.webRoot && args.pathMapping && args.pathMapping['/']) {
-            // Adapt pathMapping['/'] as the webRoot when not set, since webRoot is explicitly used in many places
-            args.webRoot = args.pathMapping['/'];
+        if (args.webRoot && (!args.pathMapping || !args.pathMapping['/'])) {
+            args.pathMapping = args.pathMapping || {};
+            args.pathMapping['/'] = args.webRoot;
         }
 
         args.sourceMaps = typeof args.sourceMaps === 'undefined' || args.sourceMaps;
