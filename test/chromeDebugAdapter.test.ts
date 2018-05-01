@@ -8,14 +8,13 @@ import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chr
 import * as mockery from 'mockery';
 import { EventEmitter } from 'events';
 import * as assert from 'assert';
-import { Mock, MockBehavior, It } from 'typemoq';
+import { Mock, MockBehavior, It, IMock, Times } from 'typemoq';
 
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
 
 /** Not mocked - use for type only */
 import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
-import { StepProgressEventsEmitter } from 'vscode-chrome-debug-core/out/src/executionTimingsReporter';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -27,7 +26,7 @@ class MockChromeDebugSession {
 
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    let mockChromeConnection: Mock<chromeConnection.ChromeConnection>;
+    let mockChromeConnection: IMock<chromeConnection.ChromeConnection>;
     let mockEventEmitter: EventEmitter;
     let mockChrome: IMockChromeConnectionAPI;
 
@@ -44,21 +43,27 @@ suite('ChromeDebugAdapter', () => {
         mockEventEmitter = mockChrome.mockEventEmitter;
         mockChromeConnection
             .setup(x => x.api)
-            .returns(() => mockChrome.apiObjects);
+            .returns(() => mockChrome.apiObjects)
+            .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isValue(undefined)))
-            .returns(() => Promise.resolve());
+            .returns(() => Promise.resolve())
+            .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.isAttached)
-            .returns(() => false);
+            .returns(() => false)
+            .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.run())
-            .returns(() => Promise.resolve());
+            .returns(() => Promise.resolve())
+            .verifiable(Times.atLeast(0));
         mockChromeConnection
-            .setup(x => x.onClose(It.isAny()));
+            .setup(x => x.onClose(It.isAny()))
+            .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.events)
-            .returns(x => new StepProgressEventsEmitter());
+            .returns(x => null)
+            .verifiable(Times.atLeast(0));
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;

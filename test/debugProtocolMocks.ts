@@ -5,19 +5,19 @@
 // Copied from -core because I don't want to include test stuff in the npm package
 
 import { EventEmitter } from 'events';
-import { Mock, It } from 'typemoq';
+import { Mock, It, IMock } from 'typemoq';
 import { Crdp } from 'vscode-chrome-debug-core';
 
 export interface IMockChromeConnectionAPI {
     apiObjects: Crdp.CrdpClient;
 
-    Browser: Mock<Crdp.BrowserClient>;
-    Console: Mock<Crdp.ConsoleClient>;
-    Debugger: Mock<Crdp.DebuggerClient>;
-    Runtime: Mock<Crdp.RuntimeClient>;
-    Inspector: Mock<Crdp.InspectorClient>;
-    Network: Mock<Crdp.NetworkClient>;
-    Page: Mock<Crdp.PageClient>;
+    Browser: IMock<Crdp.BrowserClient>;
+    Console: IMock<Crdp.ConsoleClient>;
+    Debugger: IMock<Crdp.DebuggerClient>;
+    Runtime: IMock<Crdp.RuntimeClient>;
+    Inspector: IMock<Crdp.InspectorClient>;
+    Network: IMock<Crdp.NetworkClient>;
+    Page: IMock<Crdp.PageClient>;
 
     mockEventEmitter: EventEmitter;
 }
