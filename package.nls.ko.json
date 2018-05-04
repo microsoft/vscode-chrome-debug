@@ -1,7 +1,7 @@
 {
 	"extension.description": "크롬 브라우저 또는 크롬 디버거 프로토콜을 지원하는 다른 대상 내에서 JavaScript 코드를 디버깅합니다.",
-	"chrome.toggleSkipping.title": "Chrome: Toggle Skipping This File",
-	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
+	"chrome.toggleSkipping.title": "Chrome: 이 파일 건너뛰기 설정/해제 ",
+	"chrome.toggleSmartStep.title": "Chrome: 스마트 단계 설정/해제",
 	"chrome.port.description": "Chrome 원격 디버깅에 사용할 포트입니다.",
 	"chrome.address.description": "디버깅 포트에 대한 TCP/IP 주소",
 	"chrome.file.description": "브라우저에서 열 로컬 html 파일",

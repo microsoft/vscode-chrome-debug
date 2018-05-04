@@ -23,7 +23,7 @@
 	"chrome.timeout.description": "Reintentar durante este número de milisegundos la conexión a Chrome. El valor predeterminado es 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controla si se omite la caché de red para cada petición",
 	"chrome.urlFilter.description": "Buscará una página con esta URL y la adjuntará, si la encuentra. Puede contener * como comodín.",
-	"chrome.showAsyncStacks.description": "Show the async calls that led to the current call stack",
+	"chrome.showAsyncStacks.description": "Muestra las llamadas asincrónicas que condujeron a la pila actual.",
 	"chrome.breakOnLoad.description": "Función experimental - si es True, el adaptador de depuración intentará establecer puntos de interrupción en secuencias de comandos antes de que se carguen, por lo que puede tocar puntos de interrupción en los inicios de esas secuencias de comandos. Tiene un impacto en el rendimiento.",
 	"chrome.breakOnLoadStrategy.description": "La estrategia de utilizar para breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Notificar a Chrome que haga una pausa a medida que se cargue cada script, resolviendo mapas de origen y estableciendo puntos de interrupción",

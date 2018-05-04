@@ -1,7 +1,7 @@
 {
 	"extension.description": "Отладка JavaScript кода в браузере Chrome или в любой другой среде, которая поддерживает протокол отладки Chrome.",
-	"chrome.toggleSkipping.title": "Chrome: Toggle Skipping This File",
-	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
+	"chrome.toggleSkipping.title": "Chrome: Включить/выключить пропуск этого файла",
+	"chrome.toggleSmartStep.title": "Chrome: включить/отключить интеллектуальный переход",
 	"chrome.port.description": "Порт, используемый для отладки.",
 	"chrome.address.description": "TCP/IP адрес порта отладки",
 	"chrome.file.description": "Локальный HTML-файл, открываемый в браузере",

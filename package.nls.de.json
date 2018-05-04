@@ -1,7 +1,7 @@
 {
 	"extension.description": "Debuggen Sie Ihren JavaScript-Code mit dem Chrome-Browser oder einem, der das Chrom-Debugger-Protokoll unterstützt.",
-	"chrome.toggleSkipping.title": "Chrome: Toggle Skipping This File",
-	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
+	"chrome.toggleSkipping.title": "Chrome: Überspringen dieser Datei umschalten",
+	"chrome.toggleSmartStep.title": "Chrome: Intelligenten Schritt umschalten",
 	"chrome.port.description": "Zu verwendender Port für Chrome Remote-Debugging.",
 	"chrome.address.description": "TCP/IP Adresse des Debugports",
 	"chrome.file.description": "Eine lokale html-Datei im Browser zu öffnen",
