@@ -150,7 +150,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
     protected hookConnectionEvents(): void {
         super.hookConnectionEvents();
-        this.chrome.Page.onFrameNavigated(params => this.onFrameNavigated(params));
+        this.chrome.Page.on('frameNavigated', params => this.onFrameNavigated(params));
     }
 
     protected onFrameNavigated(params: Crdp.Page.FrameNavigatedEvent): void {
