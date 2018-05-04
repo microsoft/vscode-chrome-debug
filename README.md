@@ -74,9 +74,6 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
 
 If you want to use a different installation of Chrome, you can also set the `runtimeExecutable` field with a path to the Chrome app.
 
-> Chrome user profile note: Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder. Use the `userDataDir` launch config field to override or disable this.
-> If you are using the `runtimeExecutable` field, this isn't enabled by default, but you can forcibly enable it with `"userDataDir": true`.
-
 ### Attach
 With `"request": "attach"`, you must launch Chrome with remote debugging enabled in order for the extension to attach to it. Here's how to do that:
 
@@ -119,6 +116,14 @@ An example `launch.json` file for an "attach" config.
     ]
 }
 ```
+
+### Chrome user profile note (`Cannot connect to the target: connect ECONNREFUSED`)
+
+Normally, if Chrome is already running when you start debugging with a launch config, then the new instance won't start in remote debugging mode. So by default, the extension launches Chrome with a separate user profile in a temp folder. Use the `userDataDir` launch config field to override or disable this. If you are using the `runtimeExecutable` field, this isn't enabled by default, but you can forcibly enable it with `"userDataDir": true`.
+
+If you are using an attach config, make sure you close other running instances of Chrome before launching a new one with `--remote-debugging-port`. Or, use a new profile with the `--user-data-dir` flag yourself.
+
+For other troubleshooting tips for this error, [see below](#cannot-connect-to-the-target:-connect-ECONNREFUSED-127.0.0.1:9222).
 
 ### Other targets
 You can also theoretically attach to other targets that support the same Chrome Debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.
@@ -199,10 +204,10 @@ If you have a sourcemapping issue, please see https://github.com/Microsoft/vscod
 
 ### Cannot connect to the target: connect ECONNREFUSED 127.0.0.1:9222
 This message means that the extension can't attach to Chrome, because Chrome wasn't launched in debug mode. Here are some things to try:
-* If using an `attach` type config, ensure that you launched Chrome using `--remote-debugging-port=9222`. And if there was already a running instance, see the above.
+* If using an `attach` type config, ensure that you launched Chrome using `--remote-debugging-port=9222`. And if there was already a running instance, close it first or see note about `--user-data-dir` above.
 * Ensure that the `port` property matches the port on which Chrome is listening for remote debugging connections. This is `9222` by default. Ensure nothing else is using this port, including your web server. If something else on your computer responds at `http://localhost:9222`, then set a different port.
-* If all else fails, try to navigate to `http://localhost:<port>/json` in a browser when you see this message - if there is no response, then something is wrong upstream of the extension. If there is a page of JSON returned, then ensure that the `port` in the launch config matches the port in that url.
 * If using a `launch` type config with the `userDataDir` option explicitly disabled, close other running instances of Chrome - if Chrome is already running, the extension may not be able to attach, when using launch mode. Chrome can even stay running in the background when all its windows are closed, which will interfere - check the taskbar or kill the process if necessary.
+* If all else fails, try to navigate to `http://localhost:<port>/json` in a browser when you see this message - if there is no response, then something is wrong upstream of the extension. If there is a page of JSON returned, then ensure that the `port` in the launch config matches the port in that url.
 
 ### General things to try if you're having issues:
 * Ensure `webRoot` is set correctly if needed
