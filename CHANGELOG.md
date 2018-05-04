@@ -1,3 +1,12 @@
+## 4.4.0
+* Allow enabling auto `userDataDir` when runtimeExecutable is set - [#641](https://github.com/microsoft/vscode-chrome-debug/issues/641)
+* Show correct source locations for log messages from logpoints - [Microsoft/vscode#47274](https://github.com/microsoft/vscode/issues/47274)
+* Display objects in logpoint messages using interactive object tree view - [Microsoft/vscode#47275](https://github.com/microsoft/vscode/issues/47275)
+* Fix incorrectly formatted `.scripts` entries
+* Remove left behind `targetTypes` attach config prop
+* More localized strings
+* A variety of smaller fixes and tweaks
+
 ## 4.3.0
 * Enable "log points", requires VS Code 1.22 - [Microsoft/vscode#45128](https://github.com/Microsoft/vscode/issues/45128)
 * Workaround for `"'Browser.getVersion' wasn't found"` issue - [#633](https://github.com/Microsoft/vscode-chrome-debug/issues/633)
