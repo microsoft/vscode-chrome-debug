@@ -37,3 +37,5 @@ node_modules/vscode-chrome-debug-core/i18n/csy/**
 node_modules/vscode-chrome-debug-core/i18n/trk/**
 node_modules/vscode-chrome-debug-core/i18n/ptb/**
 node_modules/vscode-chrome-debug-core/i18n/plk/**
+
+node_modules/devtools-protocol/**
