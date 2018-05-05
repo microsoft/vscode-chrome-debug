@@ -1,3 +1,6 @@
+## 4.4.1
+* 4.4.0 was a bad publish. Republished to fix [#655](https://github.com/microsoft/vscode-chrome-debug/issues/655)
+
 ## 4.4.0
 * Allow enabling auto `userDataDir` when runtimeExecutable is set - [#641](https://github.com/microsoft/vscode-chrome-debug/issues/641)
 * Show correct source locations for log messages from logpoints - [Microsoft/vscode#47274](https://github.com/microsoft/vscode/issues/47274)
