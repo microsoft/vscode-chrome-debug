@@ -44,6 +44,7 @@
     "gulp-typescript": "^4.0.1",
     "gulp-util": "^3.0.8",
     "http-server": "^0.10.0",
+    "minimist": "^1.2.0",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
     "run-sequence": "^2.2.0",

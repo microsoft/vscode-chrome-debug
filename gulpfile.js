@@ -15,6 +15,7 @@ const vsce = require('vsce');
 const es = require('event-stream');
 const runSequence = require('run-sequence');
 const del = require('del');
+const minimist = require('minimist');
 
 const transifexApiHostname = 'www.transifex.com'
 const transifexApiName = 'api';
@@ -146,7 +147,12 @@ gulp.task('vsce-publish', function () {
     return vsce.publish();
 });
 gulp.task('vsce-package', function () {
-    return vsce.createVSIX();
+    const cliOptions = minimist(process.argv.slice(2));
+    const packageOptions = {
+        packagePath: cliOptions.packagePath
+    };
+
+    return vsce.createVSIX(packageOptions);
 });
 
 gulp.task('publish', function (callback) {
