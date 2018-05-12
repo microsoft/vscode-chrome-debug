@@ -77,7 +77,8 @@
     "postinstall": "node ./node_modules/vscode/bin/install",
     "patch": "npm version patch -m '%s'",
     "minor": "npm version minor -m '%s'",
-    "major": "npm version major -m '%s'"
+    "major": "npm version major -m '%s'",
+    "package": "gulp package"
   },
   "contributes": {
     "breakpoints": [
