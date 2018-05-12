@@ -396,12 +396,12 @@
         {
           "command": "extension.chrome-debug.toggleSkippingFile",
           "group": "navigation",
-          "when": "inDebugMode && debugType == 'chrome'"
+          "when": "inDebugMode && debugType == 'chrome' && callStackItemType == 'stackFrame'"
         },
         {
           "command": "extension.chrome-debug.toggleSmartStep",
           "group": "navigation",
-          "when": "inDebugMode && debugType == 'chrome'"
+          "when": "inDebugMode && debugType == 'chrome' && callStackItemType == 'stackFrame'"
         }
       ]
     },
