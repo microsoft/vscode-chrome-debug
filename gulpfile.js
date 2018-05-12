@@ -14,6 +14,7 @@ const nls = require('vscode-nls-dev');
 const vsce = require('vsce');
 const es = require('event-stream');
 const runSequence = require('run-sequence');
+const del = require('del');
 
 const transifexApiHostname = 'www.transifex.com'
 const transifexApiName = 'api';
@@ -80,12 +81,16 @@ function doBuild(buildNls, failOnError) {
         });
 }
 
-gulp.task('build', ['copy-scripts'], function () {
-    doBuild(true, true);
+gulp.task('build', () => {
+    return runSequence('clean', '_build');
 });
 
-gulp.task('dev-build', ['copy-scripts'], function () {
-    doBuild(false, false);
+gulp.task('_build', ['copy-scripts'], () => {
+    return doBuild(true, true);
+});
+
+gulp.task('_dev-build', ['copy-scripts'], () => {
+    return doBuild(false, false);
 });
 
 gulp.task('copy-scripts', () => {
@@ -93,14 +98,14 @@ gulp.task('copy-scripts', () => {
         .pipe(gulp.dest('out'));
 });
 
-gulp.task('watch', ['dev-build'], function (cb) {
+gulp.task('watch', ['clean'], cb => {
     log('Watching build sources...');
-    return gulp.watch(watchedSources, ['dev-build']);
+    return runSequence('_dev-build', () => gulp.watch(watchedSources, ['_dev-build']));
 });
 
 gulp.task('default', ['build']);
 
-gulp.task('tslint', function () {
+gulp.task('tslint', () => {
     return gulp.src(lintSources, { base: '.' })
         .pipe(tslint({
             formatter: "verbose"
@@ -108,8 +113,8 @@ gulp.task('tslint', function () {
         .pipe(tslint.report({ emitError: false }));
 });
 
-gulp.task('clean', function () {
-    return del(['out/**', 'package.nls.*.json', 'vscode-chrome-debug-*.vsix']);
+gulp.task('clean', () => {
+    return del(['out/**', 'vscode-chrome-debug-*.vsix']);
 });
 
 function verifyNotALinkedModule(modulePath) {
