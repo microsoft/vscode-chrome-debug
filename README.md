@@ -239,6 +239,8 @@ Example:
     - /src/test2.ts (/Users/me/project/wwwroot/src/test2.ts)
 ```
 
+If the paths of your source files show as not being resolved correctly here, you may have to change `sourceMapPathOverrides` or `webRoot` to help the debugger resolve them to real paths on disk.
+
 If you are wondering what a script is, for example, that 'eval' script, you can also use `.scripts` to get its contents: `.scripts eval://43`.
 
 ---
