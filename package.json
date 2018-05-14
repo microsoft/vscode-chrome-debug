@@ -35,6 +35,7 @@
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
     "concurrently": "^3.1.0",
+    "del": "^3.0.0",
     "event-stream": "^3.3.4",
     "glob": "^7.1.1",
     "gulp": "^3.9.1",
@@ -43,6 +44,7 @@
     "gulp-typescript": "^4.0.1",
     "gulp-util": "^3.0.8",
     "http-server": "^0.10.0",
+    "minimist": "^1.2.0",
     "mocha": "^3.0.2",
     "mockery": "^1.7.0",
     "run-sequence": "^2.2.0",
@@ -75,7 +77,8 @@
     "postinstall": "node ./node_modules/vscode/bin/install",
     "patch": "npm version patch -m '%s'",
     "minor": "npm version minor -m '%s'",
-    "major": "npm version major -m '%s'"
+    "major": "npm version major -m '%s'",
+    "package": "gulp package"
   },
   "contributes": {
     "breakpoints": [
