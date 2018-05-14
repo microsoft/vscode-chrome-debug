@@ -28,7 +28,7 @@ if (objShellWindows != null)
 
     if (objShellWindows.count === 0) {
         // If no File Explorer windows are open fall-back to this alternative way of executing the command
-        var item = objShellWindows.FindWindowSW(0, 0, /*SWC_DESKTOP*/8, 0, /*SWFO_NEEDDISPATCH*/1);
+        var item = objShellWindows.FindWindowSW(/*NULL*/0, /*NULL*/0, /*SWC_DESKTOP*/8, /*NULL*/0, /*SWFO_NEEDDISPATCH*/1);
         item.Document.Application.ShellExecute(command, params);
     }
 }
