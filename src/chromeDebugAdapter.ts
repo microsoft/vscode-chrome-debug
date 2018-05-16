@@ -353,10 +353,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
-            const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
-            if (fs.existsSync(semaphoreFile)) { // remove the previous semaphoreFile if it exists.
-                fs.unlinkSync(semaphoreFile);
-            }
+            const semaphoreFile = path.join(os.tmpdir(), utils.generateRandomString(8) + '.id');
+
             const chromeProc = fork(getChromeSpawnHelperPath(),
                 [`${process.env.windir}\\System32\\cscript.exe`, path.join(__dirname, 'launchUnelevated.js'),
                 semaphoreFile, chromePath, ...chromeArgs], {});
@@ -517,9 +515,18 @@ function findExecutable(program: string): string | undefined {
     return undefined;
 }
 
-async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<string> {
+export async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<string> {
     const regexPattern = /processid\s+=\s+(\d+)\s*;/i;
     let lastAccessFileContent: string;
+    const cleanUp = () => {
+        return new Promise((resolve) => {
+            if (fs.existsSync(semaphoreFile)) {
+                fs.unlink(semaphoreFile, resolve);
+            } else {
+                resolve();
+            }
+        });
+    };
     for (let i = 0 ; i < 25; i++) {
         if (fs.existsSync(semaphoreFile)) {
             lastAccessFileContent = fs.readFileSync(semaphoreFile, {
@@ -535,6 +542,7 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
 
             if (matchedLines.length === 1) {
                 const match = matchedLines[0].match(regexPattern);
+                await cleanUp();
                 return match[1];
             }
             // else == 0, wait for 200 ms delay and try again.
@@ -562,5 +570,6 @@ async function findNewlyLaunchedChromeProcess(semaphoreFile: string): Promise<st
      */
     telemetry.telemetry.reportEvent('error', telemetryProperties);
 
+    await cleanUp();
     return null;
 }

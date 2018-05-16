@@ -8,13 +8,17 @@ import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chr
 import * as mockery from 'mockery';
 import { EventEmitter } from 'events';
 import * as assert from 'assert';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { Mock, MockBehavior, It, IMock, Times } from 'typemoq';
 
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
+import * as utils from '../src/utils';
 
 /** Not mocked - use for type only */
-import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
+import {ChromeDebugAdapter as _ChromeDebugAdapter, findNewlyLaunchedChromeProcess } from '../src/chromeDebugAdapter';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -179,6 +183,39 @@ suite('ChromeDebugAdapter', () => {
             assert.deepEqual(
                 resolveWebRootPattern(WEBROOT, overrides),
                 expOverrides);
+        });
+    });
+
+    suite('launchUnelevatedChrome', () => {
+        test('findNewlyLaunchedChromeProcess() should be able to find the Chrome processId and clean the semophore file afterwards', async () => {
+            const semaphoreFile = path.join(os.tmpdir(), utils.generateRandomString(8) + '.id');
+
+            await new Promise((resolve, reject) => {
+                fs.writeFile(semaphoreFile,
+`Executing (Win32_Process)->Create()
+Method execution successful.
+Out Parameters:
+instance of __PARAMETERS
+{
+    ProcessId = 124432;
+    ReturnValue = 0;
+};`, {'encoding': 'utf16le'}, (err) => {
+                        if(err) {
+                            reject(err);
+                        }
+                        resolve();
+                    });
+            });
+
+            const processId = await findNewlyLaunchedChromeProcess(semaphoreFile);
+
+            assert.equal(processId, 124432, 'The extracted process id is not expected.');
+
+            const semaphoreFileExists = await new Promise((resolve) => {
+                fs.exists(semaphoreFile, resolve);
+            });
+
+            assert.equal(false, semaphoreFileExists, 'The semophore file should have been deleted.')
         });
     });
 });
