@@ -64,10 +64,9 @@ Two example `launch.json` configs with `"request": "launch"`. You must specify e
             "webRoot": "${workspaceFolder}/wwwroot"
         },
         {
-            "name": "Launch index.html (disable sourcemaps)",
+            "name": "Launch index.html",
             "type": "chrome",
             "request": "launch",
-            "sourceMaps": false,
             "file": "${workspaceFolder}/index.html"
         },
     ]
@@ -100,20 +99,12 @@ An example `launch.json` file for an "attach" config.
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Attach",
-            "type": "chrome",
-            "request": "attach",
-            "port": 9222,
-            "url": "<url of the open browser tab to connect to>",
-            "webRoot": "${workspaceFolder}"
-        },
-        {
             "name": "Attach to url with files served from ./out",
             "type": "chrome",
             "request": "attach",
             "port": 9222,
             "url": "<url of the open browser tab to connect to>",
-            "webRoot": "${workspaceFolder}"
+            "webRoot": "${workspaceFolder}/out"
         }
     ]
 }
