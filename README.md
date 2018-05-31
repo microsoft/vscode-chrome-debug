@@ -151,7 +151,7 @@ The supported formats are:
 ## Page refreshing
 This debugger also enables you to refresh your target by simply hitting the `restart` button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut by using the following key mapping:
 
-```
+```json
 {
     "key": "ctrl+r",
     "command": "workbench.action.debug.restart",
