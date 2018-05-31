@@ -181,7 +181,7 @@ If you set `sourceMapPathOverrides` in your launch config, that will override th
 
 ### Ionic/gulp-sourcemaps note
 Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you can't fix this via your build config, I suggest this setting:
-```
+```json
 "sourceMapPathOverrides": {
     "/source/*": "${workspaceFolder}/*"
 }
