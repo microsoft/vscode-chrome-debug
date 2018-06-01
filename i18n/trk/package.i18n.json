@@ -21,7 +21,7 @@
 	"chrome.diagnosticLogging.description": "Doğru olduğunda, bağdaştırıcı kendi tanılama bilgilerini herkesin okuyabileceği biçimde konsola yazdırır",
 	"chrome.verboseDiagnosticLogging.description": "Doğru olduğunda, bağdaştırıcı istemci ve hedef ('diagnosticLogging' tarafından kaydedilen bilgileri de) ile tüm trafiğini günlüğe kaydeder",
 	"chrome.trace.description": "'true' olduğunda; hata ayıklayıcı, izleme bilgisini bir dosyaya günlük şeklinde kaydeder. 'verbose' olduğunda, günlükleri ayrıca konsolda gösterir.",
-	"chrome.userDataDir.description": "Varsayılan olarak, Chrome geçici bir klasörde başka bir kullanıcı profiliyle başlatılır. Bu durumu geçersiz kılmak için bu seçeneği kullanın. Varsayılan kullanıcı profilinizle başlatılması için \"yanlış\" olarak belirleyin.",
+	"chrome.userDataDir.description": "Varsayılan olarak, Chrome geçici bir klasörde başka bir kullanıcı profiliyle başlatılır. Bu durumu geçersiz kılmak için bu seçeneği kullanın. Varsayılan kullanıcı profilinizle başlatılması için \"false\" değerini atayın.",
 	"chrome.sourceMapPathOverrides.description": "Kaynak dosyalarının konumlarını, kaynak haritanın belirttiği yerden disk üzerindeki konumlarına yeniden yazmak için bir eşlemeler dizisi. Ayrıntılar için README dosyasına bakın.",
 	"chrome.smartStep.description": "Orijinal kaynağa geri eşlenemeyen oluşturulmuş kodlar üzerinde otomatik olarak adım adım ilerleyin.",
 	"chrome.skipFiles.description": "Hata ayıklama yapılırken atlanacak dosya veya klasör adları, veya yol glob desenleri dizisi.",
@@ -29,7 +29,7 @@
 	"chrome.disableNetworkCache.description": "Her istek için ağ önbelleğinin atlanıp atlanmayacağını denetler",
 	"chrome.urlFilter.description": "Bu url'in bulunduğu bir sayfa arayacak ve bulunduysa ona bağlayacaktır. * joker karakterini içerebilir.",
 	"chrome.showAsyncStacks.description": "Geçerli çağrı yığınına giden asenkron çağrıları gösterin.",
-	"chrome.breakOnLoad.description": "Deneysel özellik - Doğru ise, hata ayıklama bağdaştırıcısı, betiklerdeki kesme noktalarını betikler yüklenmeden önce ayarlamaya çalışacak ve böylece bu betiklerin başlangıçlarındaki kesme noktalarına isabet edebilecektir. Performansı etkilemektedir.",
+	"chrome.breakOnLoad.description": "Deneysel özellik - Doğruysa, hata ayıklama bağdaştırıcısı, betiklerdeki kesme noktalarını betikler yüklenmeden önce ayarlamaya çalışacak ve böylece bu betiklerin başlangıçlarındaki kesme noktalarına isabet edebilecektir. Performansı etkilemektedir.",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad için kullanılacak strateji.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Chrome'a her betik yüklendiğinde duraklamasını, kaynak haritalarını çözümlemesini ve kesme noktalarını ayarlamasını bildir",
 	"chrome.breakOnLoadStrategy.regex.description": "Kesme noktasının ayarlandığı dosya ile aynı ada sahip dosyalarda kesme noktalarını iyimser olarak ayarlar."

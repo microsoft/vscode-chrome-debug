@@ -1,7 +1,7 @@
 {
 	"extension.description": "Depure seu código JavaScript no navegador Chrome ou em qualquer outro destino que suporte o protocolo de depuração do Chrome.",
-	"chrome.toggleSkipping.title": "Chrome: Toggle Skipping This File",
-	"chrome.toggleSmartStep.title": "Chrome: Toggle Smart Step",
+	"chrome.toggleSkipping.title": "Chrome: Alternar Ignorando este arquivo",
+	"chrome.toggleSmartStep.title": "Chrome: alternar etapa inteligente",
 	"chrome.port.description": "Porta a ser usada para depuração remota do Chrome.",
 	"chrome.address.description": "Endereço TCP/IP da porta de depuração",
 	"chrome.file.description": "Um arquivo HTML local para abrir no navegador",
