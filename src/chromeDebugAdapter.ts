@@ -28,6 +28,10 @@ const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'meteor://💻app/*': '${webRoot}/*'
 };
 
+interface IExtendedInitializeRequestArguments extends DebugProtocol.InitializeRequestArguments{
+    supportsLaunchUnelevatedProcessRequest?: boolean
+}
+
 export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _pagePauseMessage = 'Paused in Visual Studio Code';
 
@@ -35,8 +39,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _overlayHelper: utils.DebounceHelper;
     private _chromePID: number;
     private _userRequestedUrl: string;
+    private _doesHostSupportLaunchUnelevatedProcessRequest: boolean;
 
-    public initialize(args: DebugProtocol.InitializeRequestArguments): VSDebugProtocolCapabilities {
+    public initialize(args: IExtendedInitializeRequestArguments): VSDebugProtocolCapabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
         const capabilities: VSDebugProtocolCapabilities = super.initialize(args);
         capabilities.supportsRestartRequest = true;
@@ -46,6 +51,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         if (args.locale) {
             localize = nls.config({ locale: args.locale })();
         }
+
+        this._doesHostSupportLaunchUnelevatedProcessRequest = args.supportsLaunchUnelevatedProcessRequest || false;
 
         return capabilities;
     }
@@ -353,26 +360,15 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
-            const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
-            if (fs.existsSync(semaphoreFile)) { // remove the previous semaphoreFile if it exists.
-                fs.unlinkSync(semaphoreFile);
-            }
-            const chromeProc = fork(getChromeSpawnHelperPath(),
-                [`${process.env.windir}\\System32\\cscript.exe`, path.join(__dirname, 'launchUnelevated.js'),
-                semaphoreFile, chromePath, ...chromeArgs], {});
+            let chromePid: number;
 
-            chromeProc.unref();
-            await new Promise<void>((resolve, reject) => {
-                chromeProc.on('message', resolve);
-            });
-
-            const pidStr = await findNewlyLaunchedChromeProcess(semaphoreFile);
-
-            if (pidStr) {
-                logger.log(`Parsed output file and got Chrome PID ${pidStr}`);
-                this._chromePID = parseInt(pidStr, 10);
+            if (this._doesHostSupportLaunchUnelevatedProcessRequest) {
+                chromePid = await this.spawnChromeUnelevatedWithClient(chromePath, chromeArgs);
+            } else {
+                chromePid = await this.spawnChromeUnelevatedWithWindowsScriptHost(chromePath, chromeArgs);
             }
 
+            this._chromePID = chromePid;
             // Cannot get the real Chrome process, so return null.
             return null;
         } else if (platform === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
@@ -431,6 +427,45 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             chromeProc.unref();
             return chromeProc;
         }
+    }
+
+    private async spawnChromeUnelevatedWithWindowsScriptHost(chromePath: string, chromeArgs: string[]): Promise<number> {
+        const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
+        if (fs.existsSync(semaphoreFile)) { // remove the previous semaphoreFile if it exists.
+            fs.unlinkSync(semaphoreFile);
+        }
+        const chromeProc = fork(getChromeSpawnHelperPath(),
+            [`${process.env.windir}\\System32\\cscript.exe`, path.join(__dirname, 'launchUnelevated.js'),
+            semaphoreFile, chromePath, ...chromeArgs], {});
+
+        chromeProc.unref();
+        await new Promise<void>((resolve, reject) => {
+            chromeProc.on('message', resolve);
+        });
+
+        const pidStr = await findNewlyLaunchedChromeProcess(semaphoreFile);
+
+        if (pidStr) {
+            logger.log(`Parsed output file and got Chrome PID ${pidStr}`);
+            return parseInt(pidStr, 10);
+        }
+
+        return null
+    }
+
+    private async spawnChromeUnelevatedWithClient(chromePath: string, chromeArgs: string[]): Promise<number> {
+        return new Promise<number>((resolve, reject) => {
+            this._session.sendRequest("launchUnelevated", {
+                "process": chromePath,
+                "args": chromeArgs
+            }, 10000, (response) => {
+                if (!response.success) {
+                    reject(new Error(response.message));
+                } else {
+                    resolve(response.body.processId);
+                }
+            });
+        });
     }
 
     public async setExpression(args: ISetExpressionArgs): Promise<ISetExpressionResponseBody> {
