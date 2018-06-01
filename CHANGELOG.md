@@ -1,3 +1,7 @@
+## 4.5.0
+* Fix `pathMapping` differences with `webRoot` - [#643](https://github.com/microsoft/vscode-chrome-debug/issues/643)
+* Only show context menu commands on stackframes - [Microsoft/vscode#19180](https://github.com/microsoft/vscode/issues/19180)
+
 ## 4.4.1
 * 4.4.0 was a bad publish. Republished to fix [#655](https://github.com/microsoft/vscode-chrome-debug/issues/655)
 
