@@ -1,0 +1,51 @@
+phases:
+- phase: MacOS
+  queue: Hosted macOS Preview
+  steps:
+  - task: NodeTool@0
+    displayName: Use Node 6.x
+
+  - task: Npm@1
+    displayName: npm install
+    inputs:
+      verbose: false
+
+  - task: Npm@1
+    displayName: npm build
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run build'
+
+  - task: Npm@1
+    displayName: npm test
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: test
+
+  - task: Npm@1
+    displayName: npm lint
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run lint'
+
+  - task: Npm@1
+    displayName: npm package
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run package -- --packagePath="$(Build.BinariesDirectory)/vscode-chrome-debug.vsix"'
+
+  - task: ArchiveFiles@2
+    displayName: Archive files
+    inputs:
+      includeRootFolder: false
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifacts: drop'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: drop
+      publishLocation: Container
