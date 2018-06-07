@@ -50,7 +50,8 @@ const scripts = [
 ];
 
 const lintSources = [
-    'src'
+    'src',
+    'test'
 ].map(function (tsFolder) { return tsFolder + '/**/*.ts'; });
 
 const tsProject = ts.createProject('tsconfig.json', { typescript });

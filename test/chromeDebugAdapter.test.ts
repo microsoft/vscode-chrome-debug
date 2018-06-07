@@ -2,19 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { chromeConnection, ISourceMapPathOverrides, telemetry, utils as coreUtils, ChromeDebugSession } from 'vscode-chrome-debug-core';
-
-import * as mockery from 'mockery';
-import { EventEmitter } from 'events';
 import * as assert from 'assert';
-import { Mock, MockBehavior, It, IMock, Times } from 'typemoq';
-
+import { EventEmitter } from 'events';
+import * as mockery from 'mockery';
+import { IMock, It, Mock, MockBehavior, Times } from 'typemoq';
+import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
+import { ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
-
-/** Not mocked - use for type only */
-import {ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -160,26 +156,26 @@ suite('ChromeDebugAdapter', () => {
             let collectedLaunchParams: any;
             mockChromeDebugSession
                 .setup(x => x.sendRequest('launchUnelevated',
-                It.is((x: any) => {
-                    collectedLaunchParams = x;
-                    return true;
-                }),
-                10000,
-                It.is(
-                    (callback: (response: DebugProtocol.Response) => void) => {
-                        callback({
-                            seq: null,
-                            type: 'command',
-                            request_seq: 100,
-                            command: 'launchUnelevated',
-                            success: true,
-                            body: {
-                                processId: expectedProcessId
-                            }
-                        });
+                    It.is((param: any) => {
+                        collectedLaunchParams = param;
                         return true;
-                    })))
-                .verifiable(Times.atLeast(1));
+                    }),
+                    10000,
+                    It.is(
+                        (callback: (response: DebugProtocol.Response) => void) => {
+                            callback({
+                                seq: null,
+                                type: 'command',
+                                request_seq: 100,
+                                command: 'launchUnelevated',
+                                success: true,
+                                body: {
+                                    processId: expectedProcessId
+                                }
+                            });
+                            return true;
+                        })))
+                    .verifiable(Times.atLeast(1));
 
             await chromeDebugAdapter.launch({
                 file: 'c:\\path with space\\index.html',
@@ -192,19 +188,19 @@ suite('ChromeDebugAdapter', () => {
             assert(collectedLaunchParams.process.match(/chrome/i));
             assert(collectedLaunchParams.args != null);
 
-            assert(collectedLaunchParams.args.filter((x) => x == '--no-default-browser-check').length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg === '--no-default-browser-check').length !== 0,
                 'Should have seen the --no-default-browser-check parameter');
-            assert(collectedLaunchParams.args.filter((x) => x == '--no-first-run').length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg === '--no-first-run').length !== 0,
                 'Should have seen the --no-first-run parameter');
-            assert(collectedLaunchParams.args.filter((x) => x == 'abc').length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg === 'abc').length !== 0,
                 'Should have seen the abc parameter');
-            assert(collectedLaunchParams.args.filter((x) => x == 'def').length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg === 'def').length !== 0,
                 'Should have seen the def parameter');
-            assert(collectedLaunchParams.args.filter((x) => x == 'about:blank').length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg === 'about:blank').length !== 0,
                 'Should have seen the about:blank parameter');
-            assert(collectedLaunchParams.args.filter((x) => x.match(/remote-debugging-port/)).length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg.match(/remote-debugging-port/)).length !== 0,
                 'Should have seen a parameter like remote-debugging-port');
-            assert(collectedLaunchParams.args.filter((x) => x.match(/user-data-dir/)).length != 0,
+            assert(collectedLaunchParams.args.filter(arg => arg.match(/user-data-dir/)).length !== 0,
                 'Should have seen a parameter like user-data-dir');
 
             const telemetryProperties = telemetryPropertyCollector.getProperties();
@@ -213,8 +209,6 @@ suite('ChromeDebugAdapter', () => {
 
             require('os').platform = originalGetPlatform;
             require('../src/utils').getBrowserPath = originalGetBrowser;
-
-            return Promise.resolve();
         });
     });
 
