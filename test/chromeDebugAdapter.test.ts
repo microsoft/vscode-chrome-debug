@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chrome-debug-core';
+import { chromeConnection, ISourceMapPathOverrides, telemetry, utils as coreUtils, ChromeDebugSession } from 'vscode-chrome-debug-core';
 
 import * as mockery from 'mockery';
 import { EventEmitter } from 'events';
@@ -30,6 +30,7 @@ suite('ChromeDebugAdapter', () => {
     let mockEventEmitter: EventEmitter;
     let mockChrome: IMockChromeConnectionAPI;
 
+    let mockChromeDebugSession: IMock<MockChromeDebugSession>;
     let chromeDebugAdapter: _ChromeDebugAdapter;
 
     setup(() => {
@@ -41,6 +42,14 @@ suite('ChromeDebugAdapter', () => {
         mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict);
         mockChrome = getMockChromeConnectionApi();
         mockEventEmitter = mockChrome.mockEventEmitter;
+        mockChromeDebugSession = Mock.ofType(MockChromeDebugSession, MockBehavior.Strict);
+        mockChromeDebugSession
+            .setup(x => x.sendEvent(It.isAny()))
+            .verifiable(Times.atLeast(0));
+        mockChromeDebugSession
+            .setup(x => x.sendRequest(It.isAnyString(), It.isAny(), It.isAnyNumber(), It.isAny()))
+            .verifiable(Times.atLeast(0));
+
         mockChromeConnection
             .setup(x => x.api)
             .returns(() => mockChrome.apiObjects)
@@ -67,7 +76,7 @@ suite('ChromeDebugAdapter', () => {
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
         const cDAClass: typeof _ChromeDebugAdapter = require(MODULE_UNDER_TEST).ChromeDebugAdapter;
-        chromeDebugAdapter = new cDAClass({ chromeConnection: function() { return mockChromeConnection.object; } } as any, new MockChromeDebugSession() as any);
+        chromeDebugAdapter = new cDAClass({ chromeConnection: function() { return mockChromeConnection.object; } } as any, mockChromeDebugSession.object as any);
     });
 
     teardown(() => {
@@ -81,6 +90,17 @@ suite('ChromeDebugAdapter', () => {
         let originalFork: any;
         let originalSpawn: any;
         let originalStatSync: any;
+
+        setup(() => {
+            mockChromeConnection
+                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString(), It.isValue(undefined), It.isValue(undefined)))
+                .returns(() => Promise.resolve())
+                .verifiable();
+
+            mockChrome.Runtime
+                .setup(x => x.evaluate(It.isAny()))
+                .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
+        });
 
         teardown(() => {
             // Hacky mock cleanup
@@ -117,18 +137,84 @@ suite('ChromeDebugAdapter', () => {
             originalStatSync = require('fs').statSync;
             require('fs').statSync = () => true;
 
-            mockChromeConnection
-                .setup(x => x.attach(It.isValue(undefined), It.isAnyNumber(), It.isAnyString(), It.isValue(undefined), It.isValue(undefined)))
-                .returns(() => Promise.resolve())
-                .verifiable();
-
-            mockChrome.Runtime
-                .setup(x => x.evaluate(It.isAny()))
-                .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
-
             return chromeDebugAdapter.launch({ file: 'c:\\path with space\\index.html', runtimeArgs: ['abc', 'def'] },
                                              new telemetry.TelemetryPropertyCollector())
                 .then(() => assert(spawnCalled));
+        });
+
+        test('launches unelevated with client', async () => {
+            let telemetryPropertyCollector = new telemetry.TelemetryPropertyCollector();
+            chromeDebugAdapter.initialize({
+                adapterID: 'test debug adapter',
+                pathFormat: 'path',
+                supportsLaunchUnelevatedProcessRequest: true
+            });
+
+            const originalGetPlatform = require('os').platform;
+            require('os').platform = () => { return 'win32'; };
+
+            const originalGetBrowser = require('../src/utils').getBrowserPath;
+            require('../src/utils').getBrowserPath = () => { return 'c:\\someplace\\chrome.exe'; };
+
+            const expectedProcessId = 325;
+            let collectedLaunchParams: any;
+            mockChromeDebugSession
+                .setup(x => x.sendRequest('launchUnelevated',
+                It.is((x: any) => {
+                    collectedLaunchParams = x;
+                    return true;
+                }),
+                10000,
+                It.is(
+                    (callback: (response: DebugProtocol.Response) => void) => {
+                        callback({
+                            seq: null,
+                            type: 'command',
+                            request_seq: 100,
+                            command: 'launchUnelevated',
+                            success: true,
+                            body: {
+                                processId: expectedProcessId
+                            }
+                        });
+                        return true;
+                    })))
+                .verifiable(Times.atLeast(1));
+
+            await chromeDebugAdapter.launch({
+                file: 'c:\\path with space\\index.html',
+                runtimeArgs: ['abc', 'def'],
+                shouldLaunchChromeUnelevated: true
+            }, telemetryPropertyCollector);
+
+            assert.equal(expectedProcessId, (<any>chromeDebugAdapter)._chromePID, 'Debug Adapter should receive the Chrome process id');
+            assert(collectedLaunchParams.process != null);
+            assert(collectedLaunchParams.process.match(/chrome/i));
+            assert(collectedLaunchParams.args != null);
+
+            assert(collectedLaunchParams.args.filter((x) => x == '--no-default-browser-check').length != 0,
+                'Should have seen the --no-default-browser-check parameter');
+            assert(collectedLaunchParams.args.filter((x) => x == '--no-first-run').length != 0,
+                'Should have seen the --no-first-run parameter');
+            assert(collectedLaunchParams.args.filter((x) => x == 'abc').length != 0,
+                'Should have seen the abc parameter');
+            assert(collectedLaunchParams.args.filter((x) => x == 'def').length != 0,
+                'Should have seen the def parameter');
+            assert(collectedLaunchParams.args.filter((x) => x == 'about:blank').length != 0,
+                'Should have seen the about:blank parameter');
+            assert(collectedLaunchParams.args.filter((x) => x.match(/remote-debugging-port/)).length != 0,
+                'Should have seen a parameter like remote-debugging-port');
+            assert(collectedLaunchParams.args.filter((x) => x.match(/user-data-dir/)).length != 0,
+                'Should have seen a parameter like user-data-dir');
+
+            const telemetryProperties = telemetryPropertyCollector.getProperties();
+            assert.equal(telemetryProperties.shouldLaunchChromeUnelevated, 'true', "Should send telemetry that Chrome is requested to be launched unelevated.'");
+            assert.equal(telemetryProperties.doesHostSupportLaunchUnelevated, 'true', "Should send telemetry that host supports launcheing Chrome unelevated.'");
+
+            require('os').platform = originalGetPlatform;
+            require('../src/utils').getBrowserPath = originalGetBrowser;
+
+            return Promise.resolve();
         });
     });
 

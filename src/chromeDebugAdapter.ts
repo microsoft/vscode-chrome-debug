@@ -28,8 +28,8 @@ const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
     'meteor://💻app/*': '${webRoot}/*'
 };
 
-interface IExtendedInitializeRequestArguments extends DebugProtocol.InitializeRequestArguments{
-    supportsLaunchUnelevatedProcessRequest?: boolean
+interface IExtendedInitializeRequestArguments extends DebugProtocol.InitializeRequestArguments {
+    supportsLaunchUnelevatedProcessRequest?: boolean;
 }
 
 export class ChromeDebugAdapter extends CoreDebugAdapter {
@@ -66,6 +66,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             let runtimeExecutable: string;
             if (args.shouldLaunchChromeUnelevated !== undefined) {
                 telemetryPropertyCollector.addTelemetryProperty('shouldLaunchChromeUnelevated', args.shouldLaunchChromeUnelevated.toString());
+            }
+            if (this._doesHostSupportLaunchUnelevatedProcessRequest) {
+                telemetryPropertyCollector.addTelemetryProperty('doesHostSupportLaunchUnelevated', 'true');
             }
             if (args.runtimeExecutable) {
                 const re = findExecutable(args.runtimeExecutable);
@@ -450,14 +453,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             return parseInt(pidStr, 10);
         }
 
-        return null
+        return null;
     }
 
     private async spawnChromeUnelevatedWithClient(chromePath: string, chromeArgs: string[]): Promise<number> {
         return new Promise<number>((resolve, reject) => {
-            this._session.sendRequest("launchUnelevated", {
-                "process": chromePath,
-                "args": chromeArgs
+            this._session.sendRequest('launchUnelevated', {
+                'process': chromePath,
+                'args': chromeArgs
             }, 10000, (response) => {
                 if (!response.success) {
                     reject(new Error(response.message));
