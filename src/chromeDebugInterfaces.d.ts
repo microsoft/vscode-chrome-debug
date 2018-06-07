@@ -34,7 +34,7 @@ export interface ISetExpressionArgs {
     expression: string;
     value: string;
     frameId: number;
-    format?: DebugProtocol.ValueFormat
+    format?: DebugProtocol.ValueFormat;
     timeout?: number;
 }
 
