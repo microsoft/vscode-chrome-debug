@@ -1,3 +1,10 @@
+## 4.6.0
+* Enable breakOnLoad by default 🎉 - [#594](https://github.com/microsoft/vscode-chrome-debug/issues/594)
+* Fix skipFiles in some cases when sourcemappings don't cover the full document, like in webpack - [#667](https://github.com/microsoft/vscode-chrome-debug/issues/667)
+* Fix downloading sourcemaps when offline - [#638](https://github.com/microsoft/vscode-chrome-debug/issues/638)
+* Fix an incorrect sourceMappingUrl case - [#653](https://github.com/microsoft/vscode-chrome-debug/issues/653)
+* Fix global completions in Debug Console when not at a breakpoint - [Microsoft/vscode-chrome-debug-core#331](https://github.com/microsoft/vscode-chrome-debug-core/issues/331)
+
 ## 4.5.0
 * Fix `pathMapping` differences with `webRoot` - [#643](https://github.com/microsoft/vscode-chrome-debug/issues/643)
 
