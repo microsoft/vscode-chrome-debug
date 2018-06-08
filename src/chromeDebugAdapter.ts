@@ -58,7 +58,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     public launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector, seq?: number): Promise<void> {
-        if (args.breakOnLoad && !args.breakOnLoadStrategy) {
+        if ((args.breakOnLoad || typeof args.breakOnLoad === 'undefined') && !args.breakOnLoadStrategy) {
             args.breakOnLoadStrategy = 'instrument';
         }
 
