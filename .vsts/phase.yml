@@ -9,7 +9,7 @@ phases:
     demands:
     - npm
     - node.js
-steps:
+  steps:
   - task: NodeTool@0
     displayName: Use Node 6.x
 
