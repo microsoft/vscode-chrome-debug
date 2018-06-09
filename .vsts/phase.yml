@@ -1,7 +1,15 @@
+parameters:
+  name: ''
+  queueName: ''
+
 phases:
-- phase: MacOS
-  queue: Hosted macOS Preview
-  steps:
+- phase: ${{ parameters.name }}
+  queue:
+    name: ${{ parameters.queueName }}
+    demands:
+    - npm
+    - node.js
+steps:
   - task: NodeTool@0
     displayName: Use Node 6.x
 
