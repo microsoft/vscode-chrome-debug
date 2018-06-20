@@ -428,6 +428,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
             const chromeProc = spawn(chromePath, chromeArgs, options);
             chromeProc.unref();
+
+            this._chromePID = chromeProc.pid;
+
             return chromeProc;
         }
     }
