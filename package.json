@@ -24,13 +24,8 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-<<<<<<< HEAD
-    "vscode-chrome-debug-core": "^6.2.2",
-    "vscode-debugadapter": "^1.28.0-pre.2",
-=======
-    "vscode-chrome-debug-core": "^6.2.3",
+    "vscode-chrome-debug-core": "^6.3.0",
     "vscode-debugadapter": "^1.30.0-pre.2",
->>>>>>> 69eeeeb... Bump deps
     "vscode-nls": "^3.2.1"
   },
   "devDependencies": {
