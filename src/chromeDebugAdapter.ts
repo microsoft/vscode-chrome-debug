@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector } from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector, IOnPausedResult } from 'vscode-chrome-debug-core';
 import { spawn, ChildProcess, fork, execSync } from 'child_process';
 import { Crdp } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -285,15 +285,18 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         ];
     }
 
-    protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<void> {
-        this._overlayHelper.doAndCancel(() => {
+    protected async onPaused(notification: Crdp.Debugger.PausedEvent, expectingStopReason = this._expectingStopReason): Promise<IOnPausedResult> {
+        const result = (await super.onPaused(notification, expectingStopReason));
 
-        return this._domains.has('Overlay') ?
-            this.chrome.Overlay.setPausedInDebuggerMessage({ message: this._pagePauseMessage }).catch(() => { }) :
-            (<any>this.chrome).Page.configureOverlay({ message: this._pagePauseMessage }).catch(() => { });
-        });
+        if (result.didPause) {
+            this._overlayHelper.doAndCancel(() => {
+                return this._domains.has('Overlay') ?
+                    this.chrome.Overlay.setPausedInDebuggerMessage({ message: this._pagePauseMessage }).catch(() => { }) :
+                    (<any>this.chrome).Page.configureOverlay({ message: this._pagePauseMessage }).catch(() => { });
+            });
+        }
 
-        return super.onPaused(notification, expectingStopReason);
+        return result;
     }
 
     protected threadName(): string {
