@@ -1,3 +1,10 @@
+## 4.7.0
+* Don't blink the Chrome pause overlay when starting with breakOnLoad enabled - [#689](https://github.com/microsoft/vscode-chrome-debug/issues/689)
+* Fix debug adapter error when an error is thrown from native code - [Microsoft/vscode-chrome-debug-core#334](https://github.com/microsoft/vscode-chrome-debug-core/issues/334)
+* Fix logging empty strings - [Microsoft/vscode#52028](https://github.com/microsoft/vscode/issues/52028)
+* Fix breaking in random script with breakOnLoad enabled - [#686](https://github.com/microsoft/vscode-chrome-debug/issues/686)
+* Fix a `pathMapping` case that broke after v4.5.0 [#684](https://github.com/microsoft/vscode-chrome-debug/issues/684)
+
 ## 4.6.0
 * Enable breakOnLoad by default 🎉 - [#594](https://github.com/microsoft/vscode-chrome-debug/issues/594)
 * Fix skipFiles in some cases when sourcemappings don't cover the full document, like in webpack - [#667](https://github.com/microsoft/vscode-chrome-debug/issues/667)
