@@ -1,4 +1,5 @@
 {
+  "defaultSeverity": "warn",
   "rules": {
     "align": [
       true,
