@@ -209,7 +209,7 @@ This message means that the extension can't attach to Chrome, because Chrome was
 * Ensure the code in Chrome matches the code in Code. Chrome may cache an old version.
 * If your breakpoints bind, but aren't hit, try refreshing the page. If you set a breakpoint in code that runs immediately when the page loads, you won't hit that breakpoint until you refresh the page.
 * File a bug in this extension's [GitHub repo](https://github.com/Microsoft/vscode-chrome-debug), including the debug adapter log file. Create the log file by setting the "trace" field in your launch config and reproducing the issue. It will print the path to the log file at the top of the Debug Console. You can drag this file into an issue comment to upload it to GitHub.
-* If you're using Webpack, we recommend using the `"devtool": "source-map"` option as the others produce lower-fidelity sourcemaps and you may have issues setting breakpoints.
+* If you're using Webpack, we recommend using the `"devtool": "source-map"` option (in your `webpack.config.js` file) as the others produce lower-fidelity sourcemaps and you may have issues setting breakpoints. See the [full list of devtool options for webpack](https://webpack.js.org/configuration/devtool/) for more information.
 
 ### The `.scripts` command
 This feature is extremely useful for understanding how the extension maps files in your workspace to files running in Chrome. You can enter `.scripts` in the Debug Console to see a listing of all scripts loaded in the runtime, their sourcemap information, and how they are mapped to files on disk. The format is like this:
