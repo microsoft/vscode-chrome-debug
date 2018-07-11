@@ -20,7 +20,7 @@
 	"chrome.trace.description": "When 'true', the debugger will log tracing info to a file. When 'verbose', it will also show logs in the console.",
 	"chrome.userDataDir.description": "By default, Chrome is launched with a separate user profile in a temp folder. Use this option to override it. Set to false to launch with your default user profile.",
 	"chrome.sourceMapPathOverrides.description": "A set of mappings for rewriting the locations of source files from what the sourcemap says, to their locations on disk. See README for details.",
-	"chrome.smartStep.description": "Automatically step through generated code that cannot be mapped back to the original source.",
+	"chrome.smartStep.description": "Automatically step through unmapped lines in sourcemapped files. For example, code that TypeScript produces automatically when downcompiling async/await or other features.",
 	"chrome.skipFiles.description": "An array of file or folder names, or path globs, to skip when debugging.",
 	"chrome.timeout.description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controls whether to skip the network cache for each request",
