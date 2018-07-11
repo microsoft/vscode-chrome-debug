@@ -1,3 +1,7 @@
+## 4.8.0
+* Change `smartStep` to only skip through unmapped lines in files with sourcemappings, not files that don't have sourcemappings. You should use `skipFiles` to skip files that don't have sourcemappings (like node_modules)
+* Don't crash if Chrome sends a scope with invalid locations - [Microsoft/vscode-chrome-debug-core#333](https://github.com/microsoft/vscode-chrome-debug-core/issues/333)
+
 ## 4.7.0
 * Don't blink the Chrome pause overlay when starting with breakOnLoad enabled - [#689](https://github.com/microsoft/vscode-chrome-debug/issues/689)
 * Fix debug adapter error when an error is thrown from native code - [Microsoft/vscode-chrome-debug-core#334](https://github.com/microsoft/vscode-chrome-debug-core/issues/334)
