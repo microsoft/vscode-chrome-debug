@@ -312,32 +312,17 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         super.onResumed();
     }
 
-    public disconnect(args: DebugProtocol.DisconnectArguments): void {
+    public async disconnect(args: DebugProtocol.DisconnectArguments): Promise<void> {
         const hadTerminated = this._hasTerminated;
 
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         super.disconnect(args);
 
-        if ( (this._chromeProc || (!this._chromeProc && this._chromePID)) && !hadTerminated) {
+        if ( (this._chromeProc || this._chromePID) && !hadTerminated) {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
-                let taskkillCmd = `taskkill /PID ${this._chromePID}`;
-                logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
-                try {
-                    // Run synchronously because this process may be killed before exec() would run
-                    execSync(taskkillCmd);
-                } catch (e) {
-                    // Can fail if Chrome was already open, and the process with _chromePID is gone.
-                    // Or if it already shut down for some reason.
-                }
-                // execSync above may succeed, but Chrome still might not shut down, for example if the web page promts the user about unsaved changes.
-                // In that case, we need to use /F to force shutdown, but we risk Chrome not shutting down correctly.
-                taskkillCmd = `taskkill /F /PID ${this._chromePID}`;
-                logger.log(`Killing Chrome process by pid (using force in case the first attempt failed): ${taskkillCmd}`);
-                try {
-                    execSync(taskkillCmd);
-                } catch (e) {}
+                await this.killChromeOnWindows(this._chromePID);
             } else if (this._chromeProc) {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');
@@ -345,6 +330,37 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         this._chromeProc = null;
+    }
+
+    private async killChromeOnWindows(chromePID: number): Promise<void> {
+        let taskkillCmd = `taskkill /PID ${chromePID}`;
+        logger.log(`Killing Chrome process by pid: ${taskkillCmd}`);
+        try {
+            execSync(taskkillCmd);
+        } catch (e) {
+            // The command will fail if process was not found. This can be safely ignored.
+        }
+
+        for (let i = 0 ; i < 10; i++) {
+            // Check to see if the process is still running
+            let tasklistOutput = execSync(`tasklist /FI "PID eq ${chromePID}"`).toString();
+            if (!tasklistOutput.includes(chromePID.toString())) {
+                return;
+            }
+
+            // Give the process some time to close gracefully
+            logger.log(`Chrome process with pid ${chromePID} is still alive, waiting...`)
+            await new Promise<void>((resolve) => {
+                setTimeout(resolve, 200);
+            });
+        }
+
+        // At this point we can assume the process won't close on its own, so force kill it
+        let taskkillForceCmd = `taskkill /F /PID ${chromePID}`;
+        logger.log(`Killing Chrome process timed out. Killing again using force: ${taskkillForceCmd}`);
+        try {
+            execSync(taskkillForceCmd);
+        } catch (e) {}
     }
 
     /**
