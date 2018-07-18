@@ -342,14 +342,21 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         for (let i = 0 ; i < 10; i++) {
-            // Check to see if the process is still running
-            let tasklistOutput = execSync(`tasklist /FI "PID eq ${chromePID}"`).toString();
-            if (!tasklistOutput.includes(chromePID.toString())) {
+            // Check to see if the process is still running, with CSV output format
+            let tasklistCmd = `tasklist /FI "PID eq ${chromePID}" /FO CSV`;
+            logger.log(`Looking up process by pid: ${tasklistCmd}`);
+            let tasklistOutput = execSync(tasklistCmd).toString();
+
+            // If the process is found, tasklist will output CSV with one of the values being the PID. Exit code will be 0.
+            // If the process is not found, tasklist will give a generic "not found" message instead. Exit code will also be 0.
+            // If we see an entry in the CSV for the PID, then we can assume the process was found.
+            if (!tasklistOutput.includes(`"${chromePID}"`)) {
+                logger.log(`Chrome process with pid ${chromePID} is not running`);
                 return;
             }
 
             // Give the process some time to close gracefully
-            logger.log(`Chrome process with pid ${chromePID} is still alive, waiting...`)
+            logger.log(`Chrome process with pid ${chromePID} is still alive, waiting...`);
             await new Promise<void>((resolve) => {
                 setTimeout(resolve, 200);
             });
