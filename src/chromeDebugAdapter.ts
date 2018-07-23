@@ -87,7 +87,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Start with remote debugging enabled
             const port = args.port || 9222;
             const chromeArgs: string[] = [];
-            const chromeEnv: {[key: string]: string} = args.env || null;
+            const chromeEnv: coreUtils.IStringDictionary<string> = args.env || null;
             const chromeWorkingDir: string = args.cwd || null;
 
             if (!args.noDebug) {
@@ -379,7 +379,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             Promise.resolve();
     }
 
-    private async spawnChrome(chromePath: string, chromeArgs: string[], env: {[key: string]: string},
+    private async spawnChrome(chromePath: string, chromeArgs: string[], env: coreUtils.IStringDictionary<string>,
                               cwd: string, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean): Promise<ChildProcess> {
         /* __GDPR__FRAGMENT__
            "StepNames" : {
@@ -406,10 +406,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 silent: true
             };
             if (env) {
-                options['env'] = {
-                    ...process.env,
-                    ...env
-                };
+                options['env'] = this.getFullEnv(env);
             }
             if (cwd) {
                 options['cwd'] = cwd;
@@ -444,10 +441,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 stdio: ['ignore'],
             };
             if (env) {
-                options['env'] = {
-                    ...process.env,
-                    ...env
-                };
+                options['env'] = this.getFullEnv(env);
             }
             if (cwd) {
                 options['cwd'] = cwd;
@@ -483,6 +477,16 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         return null;
+    }
+
+    private getFullEnv(customEnv: coreUtils.IStringDictionary<string>): coreUtils.IStringDictionary<string> {
+        const env = {
+            ...process.env,
+            ...customEnv
+        };
+
+        Object.keys(env).filter(k => env[k] === null).forEach(key => delete env[key]);
+        return env;
     }
 
     private async spawnChromeUnelevatedWithClient(chromePath: string, chromeArgs: string[]): Promise<number> {
