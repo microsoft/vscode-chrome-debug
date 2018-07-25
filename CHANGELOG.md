@@ -1,3 +1,6 @@
+## 4.8.2
+* Fix error on launch
+
 ## 4.8.1
 * Allow setting env vars to "null" like when debugging node - [#706](https://github.com/microsoft/vscode-chrome-debug/issues/706)
 * Fix rare issue killing Chrome on Windows - [PR #703](https://github.com/microsoft/vscode-chrome-debug/pull/703)
