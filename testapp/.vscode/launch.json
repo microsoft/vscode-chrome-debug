@@ -9,8 +9,7 @@
             "url": "http://localhost:8080/index.html",
             "port": 9223,
             "pathMapping": {
-                "/": "${workspaceFolder}/wwwroot",
-                "/${workspaceFolder}": "${workspaceFolder}/wwwroot/out"
+                "/": "${workspaceFolder}/wwwroot"
             },
             // "webRoot": "${workspaceFolder}/wwwroot",
             "showAsyncStacks": true,
