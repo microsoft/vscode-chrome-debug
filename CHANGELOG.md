@@ -1,5 +1,5 @@
 ## 4.8.2
-* Fix error on launch
+* Fix error "Cannot read property 'startsWith' of undefined"
 
 ## 4.8.1
 * Allow setting env vars to "null" like when debugging node - [#706](https://github.com/microsoft/vscode-chrome-debug/issues/706)
