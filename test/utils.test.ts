@@ -79,4 +79,24 @@ suite('Utils', () => {
                 '/usr/bin/google-chrome');
         });
     });
+
+    suite('targetFilter()', () => {
+        test('filter irregular targets', () => {
+            const Utils = getUtils();
+            const targets = [
+                {
+                    // Kept (webSocketDebuggerUrl is provided and truthy)
+                    id: 'keep',
+                    webSocketDebuggerUrl: 'ws://...'
+                },
+                {
+                    // Discarded (webSocketDebuggerUrl is not provided or falsy)
+                    id: 'discard',
+                }
+            ];
+            assert.deepEqual(
+                targets.filter(Utils.targetFilter),
+                [{id: 'keep', webSocketDebuggerUrl: 'ws://...'}]);
+        });
+    });
 });
