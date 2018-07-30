@@ -65,4 +65,4 @@ export class DebounceHelper {
 }
 
 export const targetFilter: chromeConnection.ITargetFilter =
-    target => target && (!target.type || target.type === 'page');
+    target => target && !!target.webSocketDebuggerUrl;
