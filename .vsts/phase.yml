@@ -49,7 +49,7 @@ phases:
     inputs:
       command: custom
       verbose: false
-      customCommand: intTest
+      customCommand: 'run intTest'
 
   - task: Npm@1
     displayName: npm lint
