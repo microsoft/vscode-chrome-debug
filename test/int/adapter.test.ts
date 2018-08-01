@@ -76,5 +76,53 @@ suite('Chrome Debug Adapter etc', () => {
                 dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
             ]);
         });
+
+        test('Should hit breakpoint even if webRoot has unexpected case all uppercase for VisualStudio', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const breakFile = path.join(testProjectRoot, 'src/script.js');
+            const DEBUGGER_LINE = 3;
+
+            const server = createServer({ root: testProjectRoot });
+            try {
+                server.listen(7890);
+                await dc.initializeRequest({
+                    adapterID: 'chrome',
+                    clientID: 'visualstudio',
+                    linesStartAt1: true,
+                    columnsStartAt1: true,
+                    pathFormat: 'path'
+                });
+                await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase() } as any);
+                await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+                await dc.configurationDoneRequest();
+                await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
+            } finally {
+                server.close();
+            }
+        });
+
+        test('Should hit breakpoint even if webRoot has unexpected case all lowercase for VisualStudio', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const breakFile = path.join(testProjectRoot, 'src/script.js');
+            const DEBUGGER_LINE = 3;
+
+            const server = createServer({ root: testProjectRoot });
+            try {
+                server.listen(7890);
+                await dc.initializeRequest({
+                    adapterID: 'chrome',
+                    clientID: 'visualstudio',
+                    linesStartAt1: true,
+                    columnsStartAt1: true,
+                    pathFormat: 'path'
+                });
+                await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase() } as any);
+                await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+                await dc.configurationDoneRequest();
+                await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
+            } finally {
+                server.close();
+            }
+        });
     });
 });
