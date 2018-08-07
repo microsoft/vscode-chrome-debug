@@ -44,12 +44,12 @@ phases:
       verbose: false
       customCommand: test
 
-  - task: Npm@1
-    displayName: npm intTest
-    inputs:
-      command: custom
-      verbose: false
-      customCommand: 'run intTest'
+  # - task: Npm@1
+  #   displayName: npm intTest
+  #   inputs:
+  #     command: custom
+  #     verbose: false
+  #     customCommand: 'run intTest'
 
   - task: Npm@1
     displayName: npm lint
