@@ -1,3 +1,7 @@
+## 4.9.0
+* Support new "Loaded Scripts" view in VS Code 1.27 - [Microsoft/vscode#55462](https://github.com/microsoft/vscode/issues/55462)
+* Use less memory when running for a long time with lots of scripts - [Microsoft/vscode#53535](https://github.com/microsoft/vscode/issues/53535)
+
 ## 4.8.2
 * Fix error "Cannot read property 'startsWith' of undefined"
 
