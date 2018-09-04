@@ -1,3 +1,7 @@
+## 4.9.1
+* Support `console.clear()`
+* Show errors from Chrome itself, e.g. 404s and other network errors
+
 ## 4.9.0
 * Support new "Loaded Scripts" view in VS Code 1.27 - [Microsoft/vscode#55462](https://github.com/microsoft/vscode/issues/55462)
 * Use less memory when running for a long time with lots of scripts - [Microsoft/vscode#53535](https://github.com/microsoft/vscode/issues/53535)
