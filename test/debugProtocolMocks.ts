@@ -18,6 +18,7 @@ export interface IMockChromeConnectionAPI {
     Inspector: IMock<Crdp.InspectorApi>;
     Network: IMock<Crdp.NetworkApi>;
     Page: IMock<Crdp.PageApi>;
+    Log: IMock<Crdp.LogApi>;
 
     mockEventEmitter: EventEmitter;
 }
@@ -79,6 +80,13 @@ function getPageStubs() {
     };
 }
 
+function getLogStubs() {
+    return {
+        enable() { },
+        on(eventName, handler) { }
+    };
+}
+
 export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     const mockEventEmitter = new EventEmitter();
 
@@ -114,6 +122,9 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     const mockBrowser = Mock.ofInstance<Crdp.BrowserApi>(<any>getBrowserStubs());
     mockBrowser.callBase = true;
 
+    const mockLog = Mock.ofInstance<Crdp.LogApi>(<any>getLogStubs());
+    mockLog.callBase = true;
+
     const chromeConnectionAPI: Crdp.ProtocolApi = <any>{
         Browser: mockBrowser.object,
         Console: mockConsole.object,
@@ -121,7 +132,8 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
         Runtime: mockRuntime.object,
         Inspector: mockInspector.object,
         Network: mockNetwork.object,
-        Page: mockPage.object
+        Page: mockPage.object,
+        Log: mockLog.object
     };
 
     return {
@@ -134,6 +146,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
         Inspector: mockInspector,
         Network: mockNetwork,
         Page: mockPage,
+        Log: mockLog,
 
         mockEventEmitter
     };
