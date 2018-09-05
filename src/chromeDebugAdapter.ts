@@ -206,6 +206,12 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         args.sourceMapPathOverrides = getSourceMapPathOverrides(args.webRoot, args.sourceMapPathOverrides);
         args.skipFileRegExps = ['^chrome-extension:.*'];
 
+        if (args.targetTypes === undefined) {
+            args.targetFilter = utils.defaultTargetFilter;
+        } else {
+            args.targetFilter = utils.getTargetFilter(args.targetTypes);
+        }
+
         super.commonArgs(args);
     }
 

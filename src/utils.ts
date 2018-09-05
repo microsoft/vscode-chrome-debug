@@ -3,7 +3,7 @@
  *--------------------------------------------------------*/
 
 import * as path from 'path';
-import {utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
+import { utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
 
 const WIN_APPDATA = process.env.LOCALAPPDATA || '/';
 const DEFAULT_CHROME_PATH = {
@@ -64,5 +64,12 @@ export class DebounceHelper {
     }
 }
 
-export const targetFilter: chromeConnection.ITargetFilter =
-    target => target && (!target.type || target.type === 'page');
+export const getTargetFilter = (targetTypes?: string[]): chromeConnection.ITargetFilter => {
+    if (targetTypes) {
+        return target => target && (!target.type || targetTypes.indexOf(target.type) !== -1);
+    }
+
+    return () => true;
+};
+
+export const defaultTargetFilter = getTargetFilter(['page']);

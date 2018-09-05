@@ -47,6 +47,9 @@ suite('ChromeDebugAdapter', () => {
             .verifiable(Times.atLeast(0));
 
         mockChromeConnection
+            .setup(x => x.setTargetFilter(It.isAny()))
+            .verifiable(Times.atLeast(0));
+        mockChromeConnection
             .setup(x => x.api)
             .returns(() => mockChrome.apiObjects)
             .verifiable(Times.atLeast(0));
