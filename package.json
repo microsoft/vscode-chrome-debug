@@ -24,14 +24,14 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^6.7.10",
-    "vscode-debugadapter": "^1.31.0-pre.0",
-    "vscode-nls": "^3.2.1"
+    "vscode-chrome-debug-core": "^6.7.11",
+    "vscode-debugadapter": "^1.31.0",
+    "vscode-nls": "^4.0.0"
   },
   "devDependencies": {
     "@types/mocha": "^2.2.35",
     "@types/mockery": "^1.4.29",
-    "@types/node": "^6.0.41",
+    "@types/node": "^8.0.58",
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
     "concurrently": "^3.1.0",
@@ -53,12 +53,12 @@
     "tslint": "^5.7.0",
     "typemoq": "^2.1.0",
     "typescript": "^2.7.2",
-    "vsce": "^1.32.0",
+    "vsce": "^1.48.0",
     "vscode": "^1.1.17",
     "vscode-chrome-debug-core-testsupport": "^3.20.0",
     "vscode-debugadapter-testsupport": "1.24.0",
-    "vscode-debugprotocol": "^1.31.0-pre.0",
-    "vscode-nls-dev": "^3.0.7"
+    "vscode-debugprotocol": "^1.31.0",
+    "vscode-nls-dev": "^3.2.2"
   },
   "main": "./out/src/extension",
   "activationEvents": [

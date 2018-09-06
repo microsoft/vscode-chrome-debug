@@ -82,7 +82,7 @@ function getPageStubs() {
 
 function getLogStubs() {
     return {
-        enable() { },
+        enable() { return Promise.resolve(); },
         on(eventName, handler) { }
     };
 }
