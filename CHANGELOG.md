@@ -1,3 +1,7 @@
+## 4.10.0
+* Enable `disableNetworkCache` by default - [#725](https://github.com/microsoft/vscode-chrome-debug/issues/725)
+* Fix for runtimes that don't support the `Log` domain - [Microsoft/vscode#58053](https://github.com/microsoft/vscode/issues/58053)
+
 ## 4.9.1
 * Support `console.clear()`
 * Show errors from Chrome itself, e.g. 404s and other network errors
