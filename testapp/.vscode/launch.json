@@ -7,14 +7,11 @@
             "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080/index.html",
-            "port": 9223,
+            "port": 9222,
             "pathMapping": {
                 "/": "${workspaceFolder}/wwwroot"
             },
-            // "webRoot": "${workspaceFolder}/wwwroot",
-            "showAsyncStacks": true,
             // "runtimeExecutable": "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
-            "disableNetworkCache": true,
             "trace": true
         },
         {
