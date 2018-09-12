@@ -381,6 +381,11 @@
                 "description": "%chrome.urlFilter.description%",
                 "default": ""
               },
+              "targetTypes": {
+                "type": ["array", "null"],
+                "description": "%chrome.targetTypes.description%",
+                "default": ["page"]
+              },
               "showAsyncStacks": {
                 "type": "boolean",
                 "description": "%chrome.showAsyncStacks.description%",
