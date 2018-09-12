@@ -1,3 +1,6 @@
+## 4.10.1
+* Add the `targetTypes` config parameter to allow attaching to targets other than `page`. Note that this extension **doesn't officially support** debugging other types of targets, but this may enable some advanced debugging scenarios. Thanks to [@stristr](https://github.com/stristr) for the PR! - [Microsoft/vscode-chrome-debug-core#350](https://github.com/microsoft/vscode-chrome-debug-core/pull/350) and [#727](https://github.com/microsoft/vscode-chrome-debug/pull/727)
+
 ## 4.10.0
 * Enable `disableNetworkCache` by default - [#725](https://github.com/microsoft/vscode-chrome-debug/issues/725)
 * Fix for runtimes that don't support the `Log` domain - [Microsoft/vscode#58053](https://github.com/microsoft/vscode/issues/58053)
