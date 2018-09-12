@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Esperar este número de milissegundos para se reconectar ao Chrome. O padrão é 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controla se deve ignorar o cache de rede para cada solicitação",
 	"chrome.urlFilter.description": "Procura uma página com esta url e anexa-a à ela, se encontrado. Pode ter caracteres curingas *.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Mostra as chamadas assíncronas que levam à pilha de chamadas atual",
 	"chrome.breakOnLoad.description": "Funcionalidade experimental. Se verdadeiro, o adaptador de depuração tentará definir pontos de parada nos scripts antes que eles sejam carregados, para que eles possam ser atingidos no início destes scripts. Há impacto de performance.",
 	"chrome.breakOnLoadStrategy.description": "A estratégia a ser usada para breakOnLoad.",

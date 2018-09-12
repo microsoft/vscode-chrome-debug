@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "이 시간(밀리초) 동안 Chrome에 연결하려고 다시 시도합니다. 기본값은 10000ms입니다.",
 	"chrome.disableNetworkCache.description": "매 요청에 대해 네트워크 캐시를 건너뛸지를 제어합니다.",
 	"chrome.urlFilter.description": "이 url로 페이지를 검색하고 찾는 경우 연결합니다. * 와일드카드를 사용할 수 있습니다.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "현재 호출 스택을 발생시킨 비동기 호출을 표시합니다.",
 	"chrome.breakOnLoad.description": "실험적인 기능 - true이면 디버그 어댑터가 로딩이 이루어지기 전에 스크립트에서 중단점을 설정하도록 시도하므로 해당 스크립트 시작 부분에서 중단점을 누를 수 있습니다. 성능에 영향이 있습니다.",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad를 위해 사용하는 전략입니다.",

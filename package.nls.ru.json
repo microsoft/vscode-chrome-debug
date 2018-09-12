@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Повторять в течение этого указанного количества миллисекунд для подключения к Node.js. Значение по умолчанию — 10000 мс. ",
 	"chrome.disableNetworkCache.description": "Определяет, нужно ли пропустить сетевой кэш для каждого запроса",
 	"chrome.urlFilter.description": "Найдет страницу с указанным URL-адресом и присоединится к ней, если она найдена. Можно указывать подстановочные знаки *.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Отображение асинхронных вызовов, которые привели к текущему стеку вызовов",
 	"chrome.breakOnLoad.description": "Экспериментальная функция: если для этого параметра установлено значение true, адаптер отладки попытается установить точки останова в сценариях до их загрузки и поэтому может переходить на точки останова в начале сценариев. Оказывает влияние на производительность.",
 	"chrome.breakOnLoadStrategy.description": "Стратегия использования breakOnLoad.",

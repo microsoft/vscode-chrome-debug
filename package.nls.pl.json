@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Retry for this number of milliseconds to connect to Chrome. Default is 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controls whether to skip the network cache for each request",
 	"chrome.urlFilter.description": "Will search for a page with this url and attach to it, if found. Can have * wildcards.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Show the async calls that led to the current call stack",
 	"chrome.breakOnLoad.description": "Experimental feature -  If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.",
 	"chrome.breakOnLoadStrategy.description": "The strategy to use for breakOnLoad.",

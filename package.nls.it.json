@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Riprova a connettersi a Chrome per il numero di millisecondi indicato. Il valore predefinito è 10000 ms.",
 	"chrome.disableNetworkCache.description": "Controlla se ignorare la cache di rete per ogni richiesta",
 	"chrome.urlFilter.description": "Cerca una pagina con questo url e lo allega ad essa, se trovato. Può avere caratteri jolly \"*\".",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Visualizza le chiamate asincrone che hanno portato allo stack di chiamate corrente",
 	"chrome.breakOnLoad.description": "Funzionalità sperimentale - Se impostato a true, l'adapter di debug proverà ad impostare i breakpoint negli script prima che questi ultimi siano caricati in modo da raggiungere i breakpoint all'inizio di tali script. Ha un impatto sulle performance.",
 	"chrome.breakOnLoadStrategy.description": "Strategia da utilizzare per breakOnLoad.",

@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "重試連接到 Chrome 前要等待的毫秒數。預設值為 10000 毫秒。",
 	"chrome.disableNetworkCache.description": "控制是否跳過每次要求的網路快取",
 	"chrome.urlFilter.description": "會以此 URL 搜尋頁面，如果有找到的話就將 URL 附加到頁面上。可以有 * 萬用字元。",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "顯示導致目前呼叫堆疊的非同步呼叫",
 	"chrome.breakOnLoad.description": "實驗性功能 - 若設為 true，偵錯配接器將會試者在指令碼被載入前設定中斷點，因此它可以在這些指令碼的最前面達到中斷點。會有優先權影響。",
 	"chrome.breakOnLoadStrategy.description": "使用 breakOnLoad 的策略",

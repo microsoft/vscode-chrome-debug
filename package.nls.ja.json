@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "この数値分のミリ秒の間、Chrome への接続を再試行します。既定値は 10000 ミリ秒です。",
 	"chrome.disableNetworkCache.description": "各リクエストのネットワーク キャッシュをスキップするかどうかの制御",
 	"chrome.urlFilter.description": "この URL でページを検索し、見つかった場合はアタッチします。ワイルドカードとして * を使用できます。",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "現在の呼び出し履歴の原因となった非同期呼び出しを表示する",
 	"chrome.breakOnLoad.description": "試験的な機能 - true である場合、デバッグ アダプターはスクリプトが読み込まれる前にブレークポイントの設定を試みます。これによってスクリプトの開始時にブレークポイントをヒットできるようになります。パフォーマンスに影響があります。",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad に使用するストラテジ",

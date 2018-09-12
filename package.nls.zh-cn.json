@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "尝试连接到 Chrome 的等待时间 (单位: 毫秒)。默认值为 10000 ms。",
 	"chrome.disableNetworkCache.description": "控制每次请求是否跳过网络缓存",
 	"chrome.urlFilter.description": "将搜索 URL 为此的页面，若找到则附加于其之上。可以包含 * 通配符。",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "显示导致当前调用堆栈的异步调用",
 	"chrome.breakOnLoad.description": "实验性功能 - 若为 \"true\"，调试适配器将在载入脚本之前尝试设置断点，以便在脚本最初处命中。会影响性能。",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad (载入时中断) 功能使用的策略。",

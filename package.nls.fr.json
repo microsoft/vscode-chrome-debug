@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Réessayer pendant ce nombre de millisecondes de se connecter àChrome. La valeur par défaut est 10000 ms.",
 	"chrome.disableNetworkCache.description": "Contrôle s’il faut ignorer le cache de réseau pour chaque requête",
 	"chrome.urlFilter.description": "Recherchera une page avec cette url et l'attachera, si trouvée. Peut contenir des caractères génériques *.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Afficher les appels asynchrones qui ont conduit à la pile des appels actuelle",
 	"chrome.breakOnLoad.description": "Fonctionnalité expérimentale - Si true, l'adaptateur de débogage essaiera d'affecter les points d'arrêt dans les scripts avant de les charger afin d'atteindre les points d'arrêt au début de ces scripts. Cela a un impact sur les performances.",
 	"chrome.breakOnLoadStrategy.description": "La stratégie à utiliser pour breakOnLoad.",

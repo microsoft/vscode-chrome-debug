@@ -23,6 +23,7 @@
 	"chrome.timeout.description": "Chrome'a yeniden bağlanmak için bu sayıda milisaniye kadar tekrar deneyin. Varsayılan 10000 ms'dir.",
 	"chrome.disableNetworkCache.description": "Her istek için ağ önbelleğinin atlanıp atlanmayacağını denetler",
 	"chrome.urlFilter.description": "Bu url'in bulunduğu bir sayfa arayacak ve bulunduysa ona bağlayacaktır. * joker karakterini içerebilir.",
+	"chrome.targetTypes.description": "An array of acceptable target types. The default is `[\"page\"]`.",
 	"chrome.showAsyncStacks.description": "Geçerli çağrı yığınına giden asenkron çağrıları gösterin.",
 	"chrome.breakOnLoad.description": "Deneysel özellik - Doğruysa, hata ayıklama bağdaştırıcısı, betiklerdeki kesme noktalarını betikler yüklenmeden önce ayarlamaya çalışacak ve böylece bu betiklerin başlangıçlarındaki kesme noktalarına isabet edebilecektir. Performansı etkilemektedir.",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad için kullanılacak strateji.",
