@@ -149,7 +149,7 @@ The supported formats are:
   * A path glob, to skip all scripts that match (like `node_modules/react/*.min.js`)
 
 ## Page refreshing
-This debugger also enables you to refresh your target by simply hitting the `restart` button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut. To do so, please add following key mapping to `keybindings.js` which is located in `Code => Preferences => Keyboard Shortcuts`:
+This debugger also enables you to refresh your target by simply hitting the restart button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut by adding the following key mapping to  [Key Bindings](https://code.visualstudio.com/docs/getstarted/keybindings):
 
 ```json
 {
@@ -158,7 +158,6 @@ This debugger also enables you to refresh your target by simply hitting the `res
     "when": "inDebugMode"
 }
 ```
-![Refresh](https://i.imgur.com/ffGBIWG.gif) \
 Read more here https://github.com/Microsoft/vscode-chrome-debug-core/issues/91#issuecomment-265027348
 
 ## Sourcemaps
