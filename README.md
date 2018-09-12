@@ -149,7 +149,7 @@ The supported formats are:
   * A path glob, to skip all scripts that match (like `node_modules/react/*.min.js`)
 
 ## Page refreshing
-This debugger also enables you to refresh your target by simply hitting the restart button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut by adding the following key mapping to  [Key Bindings](https://code.visualstudio.com/docs/getstarted/keybindings):
+This debugger also enables you to refresh your target by simply hitting the restart button in the debugger UI. Additionally you can map the refresh action to your favorite keyboard shortcut by adding the following key mapping to [Key Bindings](https://code.visualstudio.com/docs/getstarted/keybindings):
 
 ```json
 {
