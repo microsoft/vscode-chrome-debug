@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector, IOnPausedResult } from 'vscode-chrome-debug-core';
+import {ChromeDebugAdapter as CoreDebugAdapter, logger, utils as coreUtils, ISourceMapPathOverrides, ChromeDebugSession, telemetry, ITelemetryPropertyCollector, IOnPausedResult, Version } from 'vscode-chrome-debug-core';
 import { spawn, ChildProcess, fork, execSync } from 'child_process';
 import { Crdp } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -17,6 +17,7 @@ import * as errors from './errors';
 
 import * as nls from 'vscode-nls';
 import { FinishedStartingUpEventArguments } from 'vscode-chrome-debug-core/lib/src/executionTimingsReporter';
+import { version } from 'vscode';
 let localize = nls.loadMessageBundle();
 
 // Keep in sync with sourceMapPathOverrides package.json default
@@ -216,7 +217,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     }
 
     protected doAttach(port: number, targetUrl?: string, address?: string, timeout?: number, websocketUrl?: string, extraCRDPChannelPort?: number): Promise<void> {
-        return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(() => {
+        return super.doAttach(port, targetUrl, address, timeout, websocketUrl, extraCRDPChannelPort).then(async () => {
             // Don't return this promise, a failure shouldn't fail attach
             this.globalEvaluate({ expression: 'navigator.userAgent', silent: true })
                 .then(
@@ -277,6 +278,25 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                }
              */
             versionInformationPromise.then(versionInformation => telemetry.telemetry.reportEvent('target-version', versionInformation));
+
+            try {
+                if (this._breakOnLoadHelper) {
+                    // This is what -core is doing. We only actually care to see if this fails, to see if we need to apply the workaround
+                    const browserVersion = (await this._chromeConnection.version).browser;
+                    if (browserVersion.isAtLeastVersion(0, 1)) { // If this is false it means it's unknown version
+                        this._breakOnLoadHelper.setBrowserVersion(browserVersion);
+                    } else {
+                        logger.log(`/json/version failed, attempting workaround to get the version`);
+                        // If the original way failed, we try to use versionInformationPromise to get this information
+                        const versionInformation = await versionInformationPromise;
+                        const browserVersion = Version.parse(versionInformation['Versions.Target.Version']);
+                        this._breakOnLoadHelper.setBrowserVersion(browserVersion);
+                    }
+                }
+            } catch (exception) {
+                // If something fails we report telemetry and we ignore it
+                telemetry.telemetry.reportEvent('break-on-load-target-version-workaround-failed', exception);
+            }
 
             /* __GDPR__FRAGMENT__
                 "DebugCommonProperties" : {
