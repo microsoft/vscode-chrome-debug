@@ -17,7 +17,6 @@ import * as errors from './errors';
 
 import * as nls from 'vscode-nls';
 import { FinishedStartingUpEventArguments } from 'vscode-chrome-debug-core/lib/src/executionTimingsReporter';
-import { version } from 'vscode';
 let localize = nls.loadMessageBundle();
 
 // Keep in sync with sourceMapPathOverrides package.json default
@@ -289,8 +288,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                         logger.log(`/json/version failed, attempting workaround to get the version`);
                         // If the original way failed, we try to use versionInformationPromise to get this information
                         const versionInformation = await versionInformationPromise;
-                        const browserVersion = Version.parse(versionInformation['Versions.Target.Version']);
-                        this._breakOnLoadHelper.setBrowserVersion(browserVersion);
+                        const alternativeBrowserVersion = Version.parse(versionInformation['Versions.Target.Version']);
+                        this._breakOnLoadHelper.setBrowserVersion(alternativeBrowserVersion);
                     }
                 }
             } catch (exception) {
