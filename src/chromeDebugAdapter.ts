@@ -282,9 +282,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 if (this._breakOnLoadHelper) {
                     // This is what -core is doing. We only actually care to see if this fails, to see if we need to apply the workaround
                     const browserVersion = (await this._chromeConnection.version).browser;
-                    if (browserVersion.isAtLeastVersion(0, 1)) { // If this is false it means it's unknown version
-                        this._breakOnLoadHelper.setBrowserVersion(browserVersion);
-                    } else {
+                    if (!browserVersion.isAtLeastVersion(0, 1)) { // If this is true it means it's unknown version
                         logger.log(`/json/version failed, attempting workaround to get the version`);
                         // If the original way failed, we try to use versionInformationPromise to get this information
                         const versionInformation = await versionInformationPromise;
