@@ -1,3 +1,7 @@
+## 4.10.2
+* Only show callstack context menu on stack frames - [Microsoft/vscode#19180](https://github.com/microsoft/vscode/issues/19180)
+* Fix missing breakpoints on first line of script in Chrome 69 - [Microsoft/vscode-chrome-debug-core#352](https://github.com/microsoft/vscode-chrome-debug-core/issues/352)
+
 ## 4.10.1
 * Add the `targetTypes` config parameter to allow attaching to targets other than `page`. Note that this extension **doesn't officially support** debugging other types of targets, but this may enable some advanced debugging scenarios. Thanks to [@stristr](https://github.com/stristr) for the PR! - [Microsoft/vscode-chrome-debug-core#350](https://github.com/microsoft/vscode-chrome-debug-core/pull/350) and [#727](https://github.com/microsoft/vscode-chrome-debug/pull/727)
 

@@ -24,8 +24,8 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^6.7.17",
-    "vscode-debugadapter": "^1.31.0",
+    "vscode-chrome-debug-core": "^6.7.19",
+    "vscode-debugadapter": "^1.32.1",
     "vscode-nls": "^4.0.0"
   },
   "devDependencies": {
@@ -57,7 +57,7 @@
     "vscode": "^1.1.17",
     "vscode-chrome-debug-core-testsupport": "^3.20.0",
     "vscode-debugadapter-testsupport": "1.24.0",
-    "vscode-debugprotocol": "^1.31.0",
+    "vscode-debugprotocol": "^1.32.0",
     "vscode-nls-dev": "^3.2.2"
   },
   "main": "./out/src/extension",

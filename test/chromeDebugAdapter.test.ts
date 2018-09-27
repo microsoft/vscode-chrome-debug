@@ -6,7 +6,7 @@ import * as assert from 'assert';
 import { EventEmitter } from 'events';
 import * as mockery from 'mockery';
 import { IMock, It, Mock, MockBehavior, Times } from 'typemoq';
-import { chromeConnection, ISourceMapPathOverrides, telemetry } from 'vscode-chrome-debug-core';
+import { chromeConnection, ISourceMapPathOverrides, telemetry, TargetVersions, Version } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
@@ -71,6 +71,10 @@ suite('ChromeDebugAdapter', () => {
         mockChromeConnection
             .setup(x => x.events)
             .returns(x => null)
+            .verifiable(Times.atLeast(0));
+        mockChromeConnection
+            .setup(x => x.version)
+            .returns(() => Promise.resolve(new TargetVersions(Version.unknownVersion(), Version.unknownVersion())))
             .verifiable(Times.atLeast(0));
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection
