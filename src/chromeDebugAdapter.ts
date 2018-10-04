@@ -79,7 +79,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 runtimeExecutable = re;
             }
 
-            runtimeExecutable = runtimeExecutable || utils.getBrowserPath();
+            runtimeExecutable = runtimeExecutable || utils.getBrowserLaunchCommand();
             if (!runtimeExecutable) {
                 return coreUtils.errP(localize('attribute.chrome.missing', "Can't find Chrome - install it or set the \"runtimeExecutable\" field in the launch config."));
             }
@@ -462,7 +462,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             return chromeProc;
         } else {
-            logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
+            const [, chromeLaunchCommand, launchArgs] = (/([a-z0-9]*)\ (.*)/i).exec(chromePath); // TODO: extract/rename!
+            const args = [launchArgs, ...chromeArgs];
+
+            logger.log(`spawn('${chromeLaunchCommand}', ${args})`);
             const options = {
                 detached: true,
                 stdio: ['ignore'],
@@ -473,7 +476,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             if (cwd) {
                 options['cwd'] = cwd;
             }
-            const chromeProc = spawn(chromePath, chromeArgs, options);
+            const chromeProc = spawn(chromeLaunchCommand, args, options);
             chromeProc.unref();
 
             this._chromePID = chromeProc.pid;

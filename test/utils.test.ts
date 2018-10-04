@@ -31,12 +31,12 @@ suite('Utils', () => {
         mockery.disable();
     });
 
-    suite('getBrowserPath()', () => {
+    suite('getBrowserLaunchCommand()', () => {
         test('osx', () => {
             mockery.registerMock('os', { platform: () => 'darwin' });
             const Utils = getUtils();
             assert.equal(
-                Utils.getBrowserPath(),
+                Utils.getBrowserLaunchCommand(),
                 '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
         });
 
@@ -51,7 +51,7 @@ suite('Utils', () => {
 
             const Utils = getUtils();
             assert.equal(
-                Utils.getBrowserPath(),
+                Utils.getBrowserLaunchCommand(),
                 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
         });
 
@@ -59,7 +59,7 @@ suite('Utils', () => {
             mockery.registerMock('os', { platform: () => 'win32' });
             const Utils = getUtils();
             assert.equal(
-                Utils.getBrowserPath(),
+                Utils.getBrowserLaunchCommand(),
                 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe');
         });
 
@@ -67,7 +67,7 @@ suite('Utils', () => {
             mockery.registerMock('os', { platform: () => 'linux' });
             const Utils = getUtils();
             assert.equal(
-                Utils.getBrowserPath(),
+                Utils.getBrowserLaunchCommand(),
                 '/usr/bin/google-chrome');
         });
 
@@ -75,7 +75,7 @@ suite('Utils', () => {
             mockery.registerMock('os', { platform: () => 'freebsd' });
             const Utils = getUtils();
             assert.equal(
-                Utils.getBrowserPath(),
+                Utils.getBrowserLaunchCommand(),
                 '/usr/bin/google-chrome');
         });
     });
