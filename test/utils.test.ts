@@ -35,9 +35,10 @@ suite('Utils', () => {
         test('osx', () => {
             mockery.registerMock('os', { platform: () => 'darwin' });
             const Utils = getUtils();
-            assert.equal(
+            assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+                ['open', '-a', 'google chrome', '--args']
+            );
         });
 
         test('win', () => {
@@ -50,33 +51,37 @@ suite('Utils', () => {
             mockery.registerMock('os', { platform: () => 'win32' });
 
             const Utils = getUtils();
-            assert.equal(
+            assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
+                ['C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'],
+            );
         });
 
         test('winx86', () => {
             mockery.registerMock('os', { platform: () => 'win32' });
             const Utils = getUtils();
-            assert.equal(
+            assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe');
+                ['C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'],
+            );
         });
 
         test('linux', () => {
             mockery.registerMock('os', { platform: () => 'linux' });
             const Utils = getUtils();
-            assert.equal(
+            assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                '/usr/bin/google-chrome');
+                ['xdg-open', 'chrome'],
+            );
         });
 
         test('freebsd (default to Linux for anything unknown)', () => {
             mockery.registerMock('os', { platform: () => 'freebsd' });
             const Utils = getUtils();
-            assert.equal(
+            assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                '/usr/bin/google-chrome');
+                ['xdg-open', 'chrome'],
+            );
         });
     });
 

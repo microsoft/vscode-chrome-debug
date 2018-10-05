@@ -113,14 +113,16 @@ suite('ChromeDebugAdapter', () => {
 
         test('launches with minimal correct args', () => {
             let spawnCalled = false;
-            function fork(chromeSpawnHelperPath: string, [chromePath, ...args]: string[]): any {
+            function fork(chromeSpawnHelperPath: string, [command, ...args]: string[]): any {
                 // Just assert that the chrome path is some string with 'chrome' in the path, and there are >0 args
                 assert(chromeSpawnHelperPath.indexOf('chromeSpawnHelper.js') >= 0);
-                return spawn(chromePath, args);
+                return spawn(command, args);
             }
 
-            function spawn(chromePath: string, args: string[]): any {
-                assert(chromePath.toLowerCase().indexOf('chrome') >= 0);
+            function spawn(command: string, args: string[]): any {
+                assert(command.toLowerCase().indexOf('open') >= 0);
+                assert(args.indexOf('-a') >= 0);
+                assert(args.indexOf('google chrome') >= 0);
                 assert(args.indexOf('--remote-debugging-port=9222') >= 0);
                 assert(args.indexOf('about:blank') >= 0); // Now we use the landing page for all scenarios
                 assert(args.indexOf('abc') >= 0);
@@ -157,7 +159,7 @@ suite('ChromeDebugAdapter', () => {
             require('os').platform = () => { return 'win32'; };
 
             const originalGetBrowser = require('../src/utils').getBrowserPath;
-            require('../src/utils').getBrowserPath = () => { return 'c:\\someplace\\chrome.exe'; };
+            require('../src/utils').getBrowserLaunchCommand = () => ['c:\\someplace\\chrome.exe'];
 
             const expectedProcessId = 325;
             let collectedLaunchParams: any;
