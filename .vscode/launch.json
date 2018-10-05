@@ -9,7 +9,7 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/out/src/chromeDebug.js",
             "args": [ "--server=4712" ],
-            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "outFiles": ["${workspaceFolder}/out/**/*.js"]
         },
         {
             // "debugServer": 4712,

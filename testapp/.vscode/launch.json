@@ -2,10 +2,9 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "debugServer": 4712,
+            // "debugServer": 4712,
             "name": "test chrome",
             "request": "launch",
-            "type": "node",
             "url": "http://localhost:8080/index.html",
             "port": 9222,
             "pathMapping": {
