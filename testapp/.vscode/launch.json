@@ -4,6 +4,7 @@
         {
             // "debugServer": 4712,
             "name": "test chrome",
+            "type": "chrome",
             "request": "launch",
             "url": "http://localhost:8080/index.html",
             "port": 9222,
