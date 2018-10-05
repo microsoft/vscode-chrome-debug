@@ -71,7 +71,7 @@ suite('Utils', () => {
             const Utils = getUtils();
             assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                ['xdg-open', 'chrome'],
+                ['/usr/bin/google-chrome'],
             );
         });
 
@@ -80,7 +80,7 @@ suite('Utils', () => {
             const Utils = getUtils();
             assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                ['xdg-open', 'chrome'],
+                ['/usr/bin/google-chrome'],
             );
         });
     });

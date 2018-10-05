@@ -7,7 +7,7 @@ import { utils as coreUtils, chromeConnection } from 'vscode-chrome-debug-core';
 
 const WIN_APPDATA = process.env.LOCALAPPDATA || '/';
 const CHROME_LAUNCH_COMMANDS = {
-    LINUX: ['xdg-open', 'chrome'],
+    LINUX: ['/usr/bin/google-chrome'],
     OSX: ['open', '-a', 'google chrome', '--args'],
     WIN: ['C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'],
     WIN_LOCALAPPDATA: [path.join(WIN_APPDATA, 'Google\\Chrome\\Application\\chrome.exe')],
