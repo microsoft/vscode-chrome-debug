@@ -478,8 +478,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                 options['cwd'] = cwd;
             }
 
-            // TODO: figure out why it doesn't launch with chromeArgs!
-            const chromeProc = spawn(launchExecutable, launchArgs, options);
+            const chromeProc = spawn(launchExecutable, args, options);
             chromeProc.unref();
 
             this._chromePID = chromeProc.pid;
