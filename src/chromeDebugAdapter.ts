@@ -63,7 +63,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         }
 
         return super.launch(args, telemetryPropertyCollector).then(async () => {
-            let runtimeExecutable: string;
+            let runtimeExecutable: string[];
             if (args.shouldLaunchChromeUnelevated !== undefined) {
                 telemetryPropertyCollector.addTelemetryProperty('shouldLaunchChromeUnelevated', args.shouldLaunchChromeUnelevated.toString());
             }
@@ -76,7 +76,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                     return errors.getNotExistErrorResponse('runtimeExecutable', args.runtimeExecutable);
                 }
 
-                runtimeExecutable = re;
+                runtimeExecutable = [re];
             }
 
             runtimeExecutable = runtimeExecutable || utils.getBrowserLaunchCommand();
@@ -406,7 +406,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             Promise.resolve();
     }
 
-    private async spawnChrome(chromePath: string, chromeArgs: string[], env: coreUtils.IStringDictionary<string>,
+    private async spawnChrome(launchCommand: string[], chromeArgs: string[], env: coreUtils.IStringDictionary<string>,
                               cwd: string, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean): Promise<ChildProcess> {
         /* __GDPR__FRAGMENT__
            "StepNames" : {
@@ -415,13 +415,14 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
          */
         this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
+        const [launchExecutable] = launchCommand;
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
             let chromePid: number;
 
             if (this._doesHostSupportLaunchUnelevatedProcessRequest) {
-                chromePid = await this.spawnChromeUnelevatedWithClient(chromePath, chromeArgs);
+                chromePid = await this.spawnChromeUnelevatedWithClient(launchExecutable, chromeArgs);
             } else {
-                chromePid = await this.spawnChromeUnelevatedWithWindowsScriptHost(chromePath, chromeArgs);
+                chromePid = await this.spawnChromeUnelevatedWithWindowsScriptHost(launchExecutable, chromeArgs);
             }
 
             this._chromePID = chromePid;
@@ -438,7 +439,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             if (cwd) {
                 options['cwd'] = cwd;
             }
-            const chromeProc = fork(getChromeSpawnHelperPath(), [chromePath, ...chromeArgs], options);
+            const chromeProc = fork(getChromeSpawnHelperPath(), [launchExecutable, ...chromeArgs], options);
             chromeProc.unref();
 
             chromeProc.on('message', data => {
@@ -462,10 +463,10 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             return chromeProc;
         } else {
-            const [, chromeLaunchCommand, launchArgs] = (/([a-z0-9]*)\ (.*)/i).exec(chromePath); // TODO: extract/rename!
-            const args = [launchArgs, ...chromeArgs];
+            const [, ...launchArgs] = launchCommand;
+            const args = [...launchArgs, ...chromeArgs];
 
-            logger.log(`spawn('${chromeLaunchCommand}', ${args})`);
+            logger.log(`spawn('${launchExecutable}', ${args})`);
             const options = {
                 detached: true,
                 stdio: ['ignore'],
@@ -476,7 +477,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             if (cwd) {
                 options['cwd'] = cwd;
             }
-            const chromeProc = spawn(chromeLaunchCommand, args, options);
+
+            // TODO: figure out why it doesn't launch with chromeArgs!
+            const chromeProc = spawn(launchExecutable, launchArgs, options);
             chromeProc.unref();
 
             this._chromePID = chromeProc.pid;
