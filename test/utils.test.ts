@@ -37,7 +37,7 @@ suite('Utils', () => {
             const Utils = getUtils();
             assert.deepStrictEqual(
                 Utils.getBrowserLaunchCommand(),
-                ['open', '-a', 'google chrome', '--args']
+                ['open', '-a', 'google chrome', '-n', '--args']
             );
         });
 
