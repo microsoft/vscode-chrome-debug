@@ -97,6 +97,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Also start with extra stuff disabled
             chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
             if (args.runtimeArgs) {
+                telemetryPropertyCollector.addTelemetryProperty('chromeCmdLineSwitchesBeingUsed', 'true');
                 chromeArgs.push(...args.runtimeArgs);
             }
 
