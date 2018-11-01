@@ -98,6 +98,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             chromeArgs.push(...['--no-first-run', '--no-default-browser-check']);
             if (args.runtimeArgs) {
                 telemetryPropertyCollector.addTelemetryProperty('numberOfChromeCmdLineSwitchesBeingUsed', String(args.runtimeArgs.length));
+            }
             if (args.userDataDir) {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
             }
