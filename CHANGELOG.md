@@ -1,3 +1,7 @@
+## 4.11.0
+* Support %c styling in console.log - thanks to [@rdegelo](https://github.com/rdegelo) for [PR #367](https://github.com/Microsoft/vscode-chrome-debug-core/pull/367) and [PR #374](https://github.com/Microsoft/vscode-chrome-debug-core/pull/374).
+* Fixes for breakOnLoad edge cases
+
 ## 4.10.2
 * Only show callstack context menu on stack frames - [Microsoft/vscode#19180](https://github.com/microsoft/vscode/issues/19180)
 * Fix missing breakpoints on first line of script in Chrome 69 - [Microsoft/vscode-chrome-debug-core#352](https://github.com/microsoft/vscode-chrome-debug-core/issues/352)
