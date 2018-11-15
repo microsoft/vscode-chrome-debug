@@ -1,3 +1,8 @@
+## 4.11.1
+* Enable `smartStep` by default - [Microsoft/vscode#62965](https://github.com/microsoft/vscode/issues/62965)
+* Enable `showAsyncStacks` by default, finally
+* Fix some frames incorrectly labelled as "skipped by smartStep"
+
 ## 4.11.0
 * Support %c styling in console.log - thanks to [@rdegelo](https://github.com/rdegelo) for [PR #367](https://github.com/Microsoft/vscode-chrome-debug-core/pull/367) and [PR #374](https://github.com/Microsoft/vscode-chrome-debug-core/pull/374).
 * Fixes for breakOnLoad edge cases
