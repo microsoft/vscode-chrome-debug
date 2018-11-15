@@ -213,6 +213,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             args.targetFilter = utils.getTargetFilter(args.targetTypes);
         }
 
+        args.smartStep = typeof args.smartStep === 'undefined' ? !this._isVSClient : args.smartStep;
+
         super.commonArgs(args);
     }
 
