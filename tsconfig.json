@@ -6,11 +6,27 @@
         "target": "ES6",
         "sourceMap": true,
         "outDir": "out",
-        "noImplicitThis": true
+        "noImplicitThis": true,
+
+        "types": ["reflect-metadata"],
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "noUnusedLocals": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitReturns": true,
+        "noUnusedParameters": true,
+        "strictFunctionTypes": true,
+
+        "strictNullChecks": false,
+        "strictPropertyInitialization": false,
+
+        "lib": ["es6", "dom"]
+
     },
     "exclude": [
         "node_modules/",
         "testapp/",
-        "testdata/"
+        "testdata/",
+        "test/"
     ]
 }
