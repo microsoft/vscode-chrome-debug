@@ -53,7 +53,7 @@
     "ts-loader": "^1.0.0",
     "tslint": "^5.7.0",
     "typemoq": "^2.1.0",
-    "typescript": "^3.0.3",
+    "typescript": "^3.1.6",
     "vsce": "^1.48.0",
     "vscode": "^1.1.21",
     "vscode-chrome-debug-core-testsupport": "^3.20.0",
