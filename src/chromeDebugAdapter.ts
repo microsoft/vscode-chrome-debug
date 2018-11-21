@@ -57,7 +57,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         return capabilities;
     }
 
-    public launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector, seq?: number): Promise<void> {
+    public launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector, _seq?: number): Promise<void> {
         if ((args.breakOnLoad || typeof args.breakOnLoad === 'undefined') && !args.breakOnLoadStrategy) {
             args.breakOnLoadStrategy = 'instrument';
         }
@@ -497,7 +497,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             semaphoreFile, chromePath, ...chromeArgs], {});
 
         chromeProc.unref();
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>((resolve, _reject) => {
             chromeProc.on('message', resolve);
         });
 
