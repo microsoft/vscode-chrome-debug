@@ -231,7 +231,9 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
                         configDisableNetworkCache :
                         true;
 
-                    this.chrome.Network.setCacheDisabled({ cacheDisabled });
+                    this.chrome.Network.setCacheDisabled({ cacheDisabled }).catch(() => {
+                        // Ignore failure
+                    });
                 });
 
             const versionInformationPromise = this.chrome.Browser.getVersion().then(
