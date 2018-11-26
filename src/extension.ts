@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 import * as Core from 'vscode-chrome-debug-core';
 import * as nls from 'vscode-nls';
 
-import { defaultTargetFilter } from './utils';
+import { defaultTargetFilter, getTargetFilter } from './utils';
 
 const localize = nls.loadMessageBundle();
 
@@ -50,7 +50,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
             let targets;
             try {
-                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, defaultTargetFilter, config.url || config.urlFilter);
+                targets = await discovery.getAllTargets(config.address || '127.0.0.1', config.port, config.targetTypes === undefined ? defaultTargetFilter : getTargetFilter(config.targetTypes), config.url || config.urlFilter);
             } catch (e) {
                 // Target not running?
             }
