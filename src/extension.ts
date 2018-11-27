@@ -77,7 +77,7 @@ function toggleSkippingFile(path: string): void {
     }
 
     if (path && vscode.debug.activeDebugSession) {
-        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
+        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { source: Core.parseResourceIdentifier(path) } : { sourceReference: path };
         vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
     }
 }

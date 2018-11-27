@@ -30,6 +30,7 @@ export interface ILaunchRequestArgs extends Core.ILaunchRequestArgs, ICommonRequ
 }
 
 export interface IAttachRequestArgs extends Core.IAttachRequestArgs, ICommonRequestArgs {
+    port: number; // We re-declare this property because if not we get a compiler error that we cannot extend both interfaces because the port property is not compatible (one is optional)
 }
 
 export interface ISetExpressionArgs {
