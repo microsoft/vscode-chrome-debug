@@ -20,11 +20,6 @@
             "type": "gulp",
             "task": "add-i18n",
             "problemMatcher": []
-        },
-        {
-            "type": "gulp",
-            "task": "transifex-pull",
-            "problemMatcher": []
         }
     ]
 }
