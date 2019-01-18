@@ -22,7 +22,7 @@
             "args": [
                 "-u", "tdd",
 				"--colors",
-				"out/test/**/*.test.js",
+				"out/test/*.test.js",
                 "--timeout", "1800000",
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js"]

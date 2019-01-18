@@ -25,7 +25,7 @@ suite('Stepping', () => {
             server.close();
         }
 
-        return testSetup.teardown();
+        testSetup.teardown();
     });
 
     suite('skipFiles', () => {

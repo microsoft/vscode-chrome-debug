@@ -25,7 +25,7 @@ suite('Breakpoints', () => {
             server.close();
         }
 
-        return testSetup.teardown();
+        testSetup.teardown();
     });
 
     suite('Column BPs', () => {

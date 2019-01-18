@@ -21,7 +21,7 @@ suite('Chrome Debug Adapter etc', () => {
     });
 
     teardown(() => {
-        return testSetup.teardown();
+        testSetup.teardown();
     });
 
     suite('basic', () => {
