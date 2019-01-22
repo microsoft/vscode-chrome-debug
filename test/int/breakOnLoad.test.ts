@@ -25,13 +25,16 @@ function runCommonTests(breakOnLoadStrategy: string) {
             server.close();
         }
 
-        testSetup.teardown();
+        return new Promise((resolve, reject) => {
+            testSetup.teardown();
+            resolve();
+        });
     });
 
     // this function is to help when launching and setting a breakpoint
     // currently, the chrome debug adapter, when launching in instrument mode and setting a breakpoint at (1, 1)
     // the breakpoint is not yet 'hit' so the reason is given as 'debugger_statement'
-    // https://github.com/Microsoft/vscode-chrome-debug-core/blob/master/src/chrome/chromeDebugAdapter.ts#L692
+    // https://github.com/Microsoft/vscode-chrome-debug-core/blob/90797bc4a3599b0a7c0f197efe10ef7fab8442fd/src/chrome/chromeDebugAdapter.ts#L692
     // so we don't want to use hitBreakpointUnverified function because it specifically checks for 'breakpoint' as the reason
     function launchWithUrlAndSetBreakpoints(url: string, projectRoot: string, scriptPath: string, lineNum: number, colNum: number): Promise<any> {
         return Promise.all([
