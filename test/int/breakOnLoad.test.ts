@@ -28,6 +28,26 @@ function runCommonTests(breakOnLoadStrategy: string) {
         return testSetup.teardown();
     });
 
+    // this function is to help when launching and setting a breakpoint
+    // currently, the chrome debug adapter, when launching in instrument mode and setting a breakpoint at (1, 1)
+    // the breakpoint is not yet 'hit' so the reason is given as 'debugger_statement'
+    // https://github.com/Microsoft/vscode-chrome-debug-core/blob/90797bc4a3599b0a7c0f197efe10ef7fab8442fd/src/chrome/chromeDebugAdapter.ts#L692
+    // so we don't want to use hitBreakpointUnverified function because it specifically checks for 'breakpoint' as the reason
+    function launchWithUrlAndSetBreakpoints(url: string, projectRoot: string, scriptPath: string, lineNum: number, colNum: number): Promise<any> {
+        return Promise.all([
+            dc.launch({ url: url, webRoot: projectRoot }),
+            dc.waitForEvent('initialized').then(event => {
+                return dc.setBreakpointsRequest({
+                    lines: [lineNum],
+                    breakpoints: [{ line: lineNum, column: colNum }],
+                    source: { path: scriptPath }
+                });
+            }).then(response => {
+                return dc.configurationDoneRequest();
+            })
+        ]);
+    }
+
     suite('TypeScript Project with SourceMaps', () => {
         test('Hits a single breakpoint in a file on load', async () => {
             const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_sourceMaps');
@@ -74,7 +94,12 @@ function runCommonTests(breakOnLoadStrategy: string) {
             const bpLine = 1;
             const bpCol = 1;
 
-            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+            if (breakOnLoadStrategy === 'instrument') {
+                await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
+                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+            } else {
+                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+            }
         });
 
         test('Hits a breakpoint in the first line in a file on load', async () => {
@@ -139,7 +164,14 @@ function runCommonTests(breakOnLoadStrategy: string) {
             const bpLine = 1;
             const bpCol = 1;
 
-            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+
+            if (breakOnLoadStrategy === 'instrument') {
+                await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
+                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+            } else {
+                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+            }
+
         });
 
         test('Hits a breakpoint in the first line in a file on load', async () => {
@@ -170,14 +202,26 @@ function runCommonTests(breakOnLoadStrategy: string) {
             const bpLine = 1;
             const bpCol = 1;
 
-            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
-            await dc.setBreakpointsRequest({
-                lines: [bpLine],
-                breakpoints: [{ line: bpLine, column: bpCol }],
-                source: { path: script2Path }
-            });
-            await dc.continueRequest();
-            await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol });
+            if (breakOnLoadStrategy === 'instrument') {
+                await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
+                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.setBreakpointsRequest({
+                    lines: [bpLine],
+                    breakpoints: [{ line: bpLine, column: bpCol }],
+                    source: { path: script2Path }
+                });
+                await dc.continueRequest();
+                await dc.assertStoppedLocation('debugger_statement', { path: script2Path, line: bpLine, column: bpCol });
+            } else {
+                await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.setBreakpointsRequest({
+                    lines: [bpLine],
+                    breakpoints: [{ line: bpLine, column: bpCol }],
+                    source: { path: script2Path }
+                });
+                await dc.continueRequest();
+                await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol });
+            }
         });
     });
 }

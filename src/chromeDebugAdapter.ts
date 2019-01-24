@@ -354,7 +354,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
-                await this.killChromeOnWindows(this._chromePID);
+                this.killChromeOnWindows(this._chromePID);
             } else if (this._chromeProc) {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');

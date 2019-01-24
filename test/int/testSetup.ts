@@ -42,7 +42,7 @@ export function setup(port?: number, launchProps?: any) {
     if (launchProps) {
         testLaunchProps = launchProps;
     }
-    return ts.setup(DEBUG_ADAPTER, 'chrome', patchLaunchArgs, port);
+    return ts.setup({entryPoint: DEBUG_ADAPTER, type:'chrome', patchLaunchArgs: patchLaunchArgs, port: port});
 }
 
 export function teardown() {
