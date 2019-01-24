@@ -25,10 +25,7 @@ function runCommonTests(breakOnLoadStrategy: string) {
             server.close();
         }
 
-        return new Promise((resolve, reject) => {
-            testSetup.teardown();
-            resolve();
-        });
+        return testSetup.teardown();
     });
 
     // this function is to help when launching and setting a breakpoint
@@ -253,7 +250,7 @@ suite('BreakOnLoad', () => {
                 server.close();
             }
 
-            testSetup.teardown();
+            return testSetup.teardown();
         });
 
         test('Hits a single breakpoint in a file on load', async () => {
@@ -320,7 +317,7 @@ suite('BreakOnLoad', () => {
                 server.close();
             }
 
-            testSetup.teardown();
+            return testSetup.teardown();
         });
 
         test('Does not hit a breakpoint in a file on load', async () => {

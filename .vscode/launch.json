@@ -39,6 +39,7 @@
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "${workspaceFolder}/out/test/int/*.test.js"
             ],
+            "skipFiles": ["<node_internals>/**"],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ]

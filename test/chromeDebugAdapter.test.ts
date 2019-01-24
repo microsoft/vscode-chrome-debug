@@ -103,6 +103,10 @@ suite('ChromeDebugAdapter', () => {
             mockChrome.Runtime
                 .setup(x => x.evaluate(It.isAny()))
                 .returns(() => Promise.resolve<any>({ result: { type: 'string', value: '123' }}));
+
+            mockChrome.Network
+                .setup(x => x.setCacheDisabled(It.isAny()))
+                .returns(() => Promise.resolve());
         });
 
         teardown(() => {
