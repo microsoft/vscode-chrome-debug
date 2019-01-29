@@ -64,7 +64,8 @@
   "activationEvents": [
     "onDebugInitialConfigurations",
     "onDebugResolve:chrome",
-    "onCommand:extension.chrome-debug.toggleSkippingFile"
+    "onCommand:extension.chrome-debug.toggleSkippingFile",
+    "onCommand:extension.chrome-debug.toggleSmartStep"
   ],
   "scripts": {
     "build": "gulp build",
