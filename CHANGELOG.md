@@ -1,3 +1,8 @@
+## 4.11.2
+* Fix disabling smartStep - [Microsoft/vscode#68464](https://github.com/microsoft/vscode/issues/68464)
+* Fix smartStep frames sometimes not grayed out - [Microsoft/vscode#65025](https://github.com/microsoft/vscode/issues/65025)
+* Various minor bug fixes
+
 ## 4.11.1
 * Enable `smartStep` by default - [Microsoft/vscode#62965](https://github.com/microsoft/vscode/issues/62965)
 * Enable `showAsyncStacks` by default, finally
