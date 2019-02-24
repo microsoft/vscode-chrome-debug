@@ -7,7 +7,7 @@ phases:
 - template: phase.yml
   parameters:
     name: Linux
-    queueName: Hosted Linux Preview
+    vmImage: 'ubuntu-16.04'
 
 - template: phase.yml
   parameters:
