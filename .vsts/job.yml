@@ -1,19 +1,16 @@
 parameters:
   name: ''
-  queueName: ''
+  vmImage: ''
 
-phases:
-- phase: ${{ parameters.name }}
-  queue:
-    name: ${{ parameters.queueName }}
-    demands:
-    - npm
-    - node.js
+jobs:
+- job: ${{ parameters.name }}
+  pool:
+    vmImage: ${{ parameters.vmImage }}
   steps:
   - task: NodeTool@0
-    displayName: Use Node 8.x
+    displayName: Use Node 10.x
     inputs:
-      versionSpec: 8.x
+      versionSpec: 10.x
       checkLatest: true
 
   - ${{ if eq(parameters.name, 'Windows') }}:

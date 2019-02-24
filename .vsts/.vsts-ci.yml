@@ -1,15 +1,15 @@
-phases:
-- template: phase.yml
+jobs:
+- template: job.yml
   parameters:
     name: macOS
-    queueName: Hosted macOS Preview
+    vmImage: 'macOS-10.13'
 
-- template: phase.yml
+- template: job.yml
   parameters:
     name: Linux
     vmImage: 'ubuntu-16.04'
 
-- template: phase.yml
+- template: job.yml
   parameters:
     name: Windows
-    queueName: Hosted VS2017
+    vmImage: 'vs2017-win2016'
