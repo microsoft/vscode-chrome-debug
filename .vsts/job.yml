@@ -8,9 +8,9 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   steps:
   - task: NodeTool@0
-    displayName: Use Node 10.x
+    displayName: Use Node 8.x
     inputs:
-      versionSpec: 10.x
+      versionSpec: 8.x
       checkLatest: true
 
   - ${{ if eq(parameters.name, 'Windows') }}:
