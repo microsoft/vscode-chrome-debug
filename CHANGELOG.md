@@ -1,3 +1,7 @@
+## 4.11.3
+* Fix frames labeled as `smartStep` when they shouldn't be - [Microsoft/vscode#68127](https://github.com/microsoft/vscode/issues/68127)
+* Fix slow attach when files don't exist on disk - [Microsoft/vscode#69118](https://github.com/microsoft/vscode/issues/69118)
+
 ## 4.11.2
 * Fix disabling smartStep - [Microsoft/vscode#68464](https://github.com/microsoft/vscode/issues/68464)
 * Fix smartStep frames sometimes not grayed out - [Microsoft/vscode#65025](https://github.com/microsoft/vscode/issues/65025)
