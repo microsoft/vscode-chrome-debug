@@ -95,7 +95,7 @@ gulp.task('build', gulp.series('clean', '_build'));
 
 gulp.task('_dev-build', gulp.series('copy-scripts', doBuild(false, false)));
 
-gulp.task('watch', gulp.series('clean', () => {
+gulp.task('watch', gulp.series('clean', '_dev-build', () => {
     log('Watching build sources...');
     return gulp.watch(watchedSources, gulp.series('_dev-build'));
 }));
