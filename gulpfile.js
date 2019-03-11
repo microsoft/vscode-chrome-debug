@@ -174,7 +174,7 @@ gulp.task('translations-import', () => {
 		return gulp.src(path.join(options.location, id, 'vscode-extensions', `${translationExtensionName}.xlf`))
 			.pipe(nls.prepareJsonFiles())
 			.pipe(gulp.dest(path.join('./i18n', language.folderName)));
-	}));
+	})).on('end', () => done());
 });
 
 gulp.task('i18n-import', () => {
