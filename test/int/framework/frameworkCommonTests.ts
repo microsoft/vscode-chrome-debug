@@ -26,7 +26,7 @@ export class FrameworkTestSuite {
         return test('Should stop on breakpoint on initial page load', async () => {
             const testSpec = this.suiteContext.testSpec;
             await this.suiteContext.debugClient
-                .hitBreakpointUnverified(testSpec.launchConfig, bpLocation);
+                .hitBreakpointUnverified(testSpec.props.launchConfig, bpLocation);
         });
     }
 

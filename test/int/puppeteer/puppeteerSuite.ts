@@ -35,7 +35,7 @@ export async function puppeteerTest(
   ) {
     return test(description, async () => {
       let debugClient = await context.debugClient;
-      await launchTestAdapter(debugClient, context.testSpec.launchConfig);
+      await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
       let browser = await connectPuppeteer(9222);
       let page = await firstPage(browser);
       await testFunction({ ...context, browser, page}, page);
@@ -67,7 +67,7 @@ export function puppeteerSuite(
     setup(async () => {
       suiteContext.debugClient = await testSetup.setup();
       await suiteContext.debugClient;
-      server = createServer({ root: testSpec.webRoot });
+      server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);
     });
 

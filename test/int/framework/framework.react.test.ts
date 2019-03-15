@@ -15,8 +15,8 @@ import { FrameworkTestSuite } from './frameworkCommonTests';
 import { TestProjectSpec } from './frameworkTestSupport';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
-const REACT_PROJECT_ROOT = path.join(DATA_ROOT, 'react');
-const TEST_SPEC = new TestProjectSpec(REACT_PROJECT_ROOT);
+const REACT_PROJECT_ROOT = path.join(DATA_ROOT, 'react', 'dist');
+const TEST_SPEC = new TestProjectSpec( { projectRoot: REACT_PROJECT_ROOT } );
 
 puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
 

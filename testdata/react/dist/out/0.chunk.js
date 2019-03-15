@@ -7719,4 +7719,4 @@ module.exports = g;
 /***/ })
 
 }]);
-//# sourceMappingURL=/development/react_test_project/my-app/out/0.chunk.js.map
+//# sourceMappingURL=0.chunk.js.map
