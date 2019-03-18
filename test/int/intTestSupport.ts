@@ -60,15 +60,3 @@ export function setConditionalBreakpoint(client: DebugClient, location: { path: 
         source: { path: location.path }
     });
 }
-
-/**
- * Set a timer. (Note: this method should be used SPARINGLY, if at all, as it will tend to make tests non-deterministic)
- * @param ms Milliseconds to wait
- */
-export function timer(ms: number): Promise<any> {
-    return new Promise((a, r) => {
-        setTimeout(() => {
-            a();
-        }, ms);
-    });
-}
