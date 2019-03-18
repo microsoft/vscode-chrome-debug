@@ -29,5 +29,5 @@ export async function connectPuppeteer(port: number): Promise<puppeteer.Browser>
  * @param browser Puppeteer browser object
  */
 export async function firstPage(browser: puppeteer.Browser): Promise<puppeteer.Page> {
-    return browser.pages().then(p => p[0]);
+    return (await browser.pages())[0];
 }
