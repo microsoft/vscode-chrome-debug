@@ -4,7 +4,7 @@ import { runForever } from './Running';
 
 class App extends Component {
   render() {
-    return (
+    return ( // bpLabel: react_App_render
       <Counter ></Counter>
     );
   }

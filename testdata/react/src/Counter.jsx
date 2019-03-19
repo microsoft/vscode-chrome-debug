@@ -5,14 +5,14 @@ export class Counter extends Component {
 
   constructor(props) {
     super(props);
-    
+
     this.state = {
       count: 0
     };
   }
 
     increment() {
-      console.log('blub');
+      console.log('blub'); // bpLabel: react_Counter_increment
       const newval = this.state.count + 1 ;
       this.setState({ count: newval });
     }

@@ -10,6 +10,7 @@ import { launchTestAdapter } from '../intTestSupport';
 import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
 import { FrameworkTestContext, TestProjectSpec } from '../framework/frameworkTestSupport';
 import { promiseTimeout } from 'vscode-chrome-debug-core/lib/src/utils';
+import { loadProjectLabels } from '../labels';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -72,6 +73,7 @@ export function puppeteerSuite(
       suiteContext.debugClient = await testSetup.setup();
       await suiteContext.debugClient;
       // Running tests on CI can time out at the default 5s, so we up this to 10s
+      suiteContext.breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
       suiteContext.debugClient.defaultTimeout = 10000;
       server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);

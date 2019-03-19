@@ -43,6 +43,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
     let before = new Date().getTime();
     let current = before;
 
+    // poll for the desired page url. If we don't find it within the timeout, throw an error
     while ((current - before) < timeout) {
 
         const pages = await browser.pages();
@@ -51,6 +52,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
             return desiredPage;
         }
 
+        // TODO: yuck, clean up
         await new Promise((a, r) =>  setTimeout(() => a(), timeout / 10));
         current = new Date().getTime();
     }

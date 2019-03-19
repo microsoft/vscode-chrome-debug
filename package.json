@@ -30,12 +30,14 @@
     "vscode-nls": "^4.0.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
     "@types/mocha": "^2.2.35",
     "@types/mockery": "^1.4.29",
     "@types/node": "^8.0.58",
     "@types/puppeteer": "^1.12.3",
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
+    "chai": "^4.2.0",
     "concurrently": "^3.1.0",
     "del": "^3.0.0",
     "event-stream": "^3.3.4",

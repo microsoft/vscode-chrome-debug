@@ -20,13 +20,14 @@ export class FrameworkTestSuite {
 
     /**
      * Test that we can stop on a breakpoint set before launch
-     * @param bpLocation Breakpoint location
+     * @param bpLabel Label for the breakpoint to set
      */
-    testBreakOnLoad(bpLocation: BreakpointLocation) {
+    testBreakOnLoad(bpLabel: string) {
         return test('Should stop on breakpoint on initial page load', async () => {
             const testSpec = this.suiteContext.testSpec;
+            const location = this.suiteContext.breakpointLabels.get(bpLabel);
             await this.suiteContext.debugClient
-                .hitBreakpointUnverified(testSpec.props.launchConfig, bpLocation);
+                .hitBreakpointUnverified(testSpec.props.launchConfig, location);
         });
     }
 
@@ -34,12 +35,13 @@ export class FrameworkTestSuite {
      * Test that a breakpoint set after the page loads is hit on reload
      * @param frameworkName The name of the framework for which this test is being run
      * @param suiteContext The puppeteer suite context
-     * @param bpLocation Location for the breakpoint
+     * @param bpLabel Label for the breakpoint to set
      */
-    testPageReloadBreakpoint(bpLocation: BreakpointLocation) {
+    testPageReloadBreakpoint(bpLabel: string) {
         return puppeteerTest(`${this.frameworkName} - Should hit breakpoint on page reload`, this.suiteContext,
             async (context, page) => {
                 const debugClient = context.debugClient;
+                const bpLocation = context.breakpointLabels.get(bpLabel);
                 await setBreakpoint(debugClient, bpLocation);
                 let reloaded = page.reload();
                 await debugClient.assertStoppedLocation('breakpoint', bpLocation);
