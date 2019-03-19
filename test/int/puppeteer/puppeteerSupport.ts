@@ -31,3 +31,28 @@ export async function connectPuppeteer(port: number): Promise<puppeteer.Browser>
 export async function firstPage(browser: puppeteer.Browser): Promise<puppeteer.Page> {
     return (await browser.pages())[0];
 }
+
+/**
+ * Get a page in the browser by the url
+ * @param browser Puppeteer browser object
+ * @param url The url of the desired page
+ * @param timeout Timeout in milliseconds
+ */
+export async function getPageByUrl(browser: puppeteer.Browser, url: string, timeout = 5000): Promise<puppeteer.Page> {
+
+    let before = new Date().getTime();
+    let current = before;
+
+    while ((current - before) < timeout) {
+
+        const pages = await browser.pages();
+        const desiredPage = pages.find(p => p.url() === url);
+        if (desiredPage) {
+            return desiredPage;
+        }
+
+        await new Promise((a, r) =>  setTimeout(() => a(), timeout / 10));
+        current = new Date().getTime();
+    }
+    throw `Page with url: ${url} could not be found within ${timeout}ms`;
+}

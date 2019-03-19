@@ -7,8 +7,9 @@ import { createServer } from 'http-server';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from '../testSetup';
 import { launchTestAdapter } from '../intTestSupport';
-import { firstPage, connectPuppeteer } from './puppeteerSupport';
+import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
 import { FrameworkTestContext, TestProjectSpec } from '../framework/frameworkTestSupport';
+import { promiseTimeout } from 'vscode-chrome-debug-core/lib/src/utils';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -37,7 +38,10 @@ export async function puppeteerTest(
       let debugClient = await context.debugClient;
       await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
       let browser = await connectPuppeteer(9222);
-      let page = await firstPage(browser);
+
+
+
+      let page = await getPageByUrl(browser, context.testSpec.props.url);
       await testFunction({ ...context, browser, page}, page);
     });
   }
