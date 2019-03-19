@@ -29,9 +29,10 @@
     "vscode-nls": "^4.0.0"
   },
   "devDependencies": {
-    "@types/mocha": "^2.2.35",
+    "@types/lodash": "^4.14.120",
+    "@types/mocha": "^2.2.48",
     "@types/mockery": "^1.4.29",
-    "@types/node": "^8.0.58",
+    "@types/node": "^8.10.39",
     "@types/source-map": "^0.1.27",
     "@types/tmp": "0.0.32",
     "concurrently": "^3.1.0",
@@ -51,7 +52,7 @@
     "ts-loader": "^1.0.0",
     "tslint": "^5.7.0",
     "typemoq": "^2.1.0",
-    "typescript": "^2.7.2",
+    "typescript": "^3.2.2",
     "vsce": "^1.48.0",
     "vscode": "^1.1.30",
     "vscode-chrome-debug-core-testsupport": "^4.0.0",

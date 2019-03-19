@@ -3,9 +3,9 @@
  *--------------------------------------------------------*/
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ErrorWithMessage } from 'vscode-chrome-debug-core/out/src/errors';
 
 import * as nls from 'vscode-nls';
+import { ErrorWithMessage } from 'vscode-chrome-debug-core';
 const localize = nls.loadMessageBundle();
 
 /**

@@ -13,10 +13,10 @@ import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugPro
 import * as testUtils from './testUtils';
 
 class MockChromeDebugSession {
-    public sendEvent(event: DebugProtocol.Event): void {
+    public sendEvent(_event: DebugProtocol.Event): void {
     }
 
-    public sendRequest(command: string, args: any, timeout: number, cb: (response: DebugProtocol.Response) => void): void {
+    public sendRequest(_command: string, _args: any, _timeout: number, _cb: (response: DebugProtocol.Response) => void): void {
     }
 }
 

@@ -29,14 +29,14 @@ const DEFAULT_CONFIG = {
 };
 
 export class ChromeConfigurationProvider implements vscode.DebugConfigurationProvider {
-    provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration[]> {
+    provideDebugConfigurations(_folder: vscode.WorkspaceFolder | undefined, _token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration[]> {
         return Promise.resolve([DEFAULT_CONFIG]);
     }
 
     /**
      * Try to add all missing attributes to the debug configuration being launched.
      */
-    async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration> {
+    async resolveDebugConfiguration(_folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, _token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration> {
         // if launch.json is missing or empty
         if (!config.type && !config.request && !config.name) {
             // Return null so it will create a launch.json and fall back on provideDebugConfigurations - better to point the user towards the config
@@ -77,7 +77,7 @@ function toggleSkippingFile(path: string): void {
     }
 
     if (path && vscode.debug.activeDebugSession) {
-        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
+        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path: path } : { sourceReference: path };
         vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
     }
 }
