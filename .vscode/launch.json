@@ -73,8 +73,7 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "build",
-                "-LLLL"
+                "build"
             ],
             "internalConsoleOptions": "openOnSessionStart"
         }
