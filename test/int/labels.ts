@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { BreakpointLocation } from "./intTestSupport";
+import { BreakpointLocation } from './intTestSupport';
 import * as fs from 'fs';
 import * as util from 'util';
 import * as readline from 'readline';
@@ -15,7 +15,7 @@ import * as path from 'path';
 
 const readdirAsync = util.promisify(fs.readdir);
 
-const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/mg;
+const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/;
 const ignoreList = [ 'node_modules', '.git' ];
 
 /**
@@ -67,8 +67,8 @@ export async function loadLabelsFromFile(filePath: string): Promise<Map<string, 
         input: fileStream
     });
 
-    lineReader.on('line', (line) => {
-        let match = labelRegex.exec(line);
+    lineReader.on('line', (fileLine) => {
+        let match = labelRegex.exec(fileLine);
 
         if (match) {
             labelMap.set(match[2], { path: filePath, line: lineNumber });
