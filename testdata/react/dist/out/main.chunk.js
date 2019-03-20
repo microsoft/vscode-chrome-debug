@@ -117,7 +117,7 @@ function (_Component) {
         onClick: function onClick() {
           return _this2.increment();
         }
-      }, "Increment")));
+      }, "Increment"), " "));
     }
   }]);
 

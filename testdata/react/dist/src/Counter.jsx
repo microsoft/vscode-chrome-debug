@@ -22,7 +22,7 @@ export class Counter extends Component {
         <div className="shopping-list">
           Click count = {this.state.count};
           <div>
-            <button id="incrementBtn" onClick={ () => this.increment() } >Increment</button>
+            <button id="incrementBtn" onClick={ () => this.increment() } >Increment</button> { /* bpLabel: react_Counter_stepOut */ }
           </div>
         </div>
       );

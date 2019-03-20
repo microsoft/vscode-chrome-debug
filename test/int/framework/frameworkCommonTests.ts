@@ -23,7 +23,7 @@ export class FrameworkTestSuite {
      * @param bpLabel Label for the breakpoint to set
      */
     testBreakOnLoad(bpLabel: string) {
-        return test('Should stop on breakpoint on initial page load', async () => {
+        return test(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
             const testSpec = this.suiteContext.testSpec;
             const location = this.suiteContext.breakpointLabels.get(bpLabel);
             await this.suiteContext.debugClient
@@ -33,8 +33,6 @@ export class FrameworkTestSuite {
 
     /**
      * Test that a breakpoint set after the page loads is hit on reload
-     * @param frameworkName The name of the framework for which this test is being run
-     * @param suiteContext The puppeteer suite context
      * @param bpLabel Label for the breakpoint to set
      */
     testPageReloadBreakpoint(bpLabel: string) {
@@ -51,11 +49,52 @@ export class FrameworkTestSuite {
     }
 
     /**
+     * Test that step over (next) command works as expected.
+     * Note: currently this test assumes that next will land us on the very next line in the file.
+     * @param bpLabel Label for the breakpoint to set
+     */
+    testStepOver(bpLabel: string) {
+        return puppeteerTest(`${this.frameworkName} - Should step over correctly`, this.suiteContext,
+        async (context, page) => {
+            let location = this.suiteContext.breakpointLabels.get('react_Counter_increment');
+            await setBreakpoint(this.suiteContext.debugClient, location);
+            let incBtn = await page.waitForSelector('#incrementBtn');
+            incBtn.click();
+            await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step',  { ...location, line: location.line + 1 });
+            await this.suiteContext.debugClient.nextAndStop();
+            await stopOnStep;
+            await this.suiteContext.debugClient.continueRequest();
+        });
+    }
+
+    /**
+     * Test that step out command works as expected.
+     * @param bpLabelStop Label for the breakpoint to set
+     * @param bpLabelStepOut Label for the location where the 'step out' command should land us
+     */
+    testStepOut(bpLabelStop: string, bpLabelStepOut: string) {
+        return puppeteerTest(`${this.frameworkName} - Should step out correctly`, this.suiteContext,
+        async (context, page) => {
+            let location = this.suiteContext.breakpointLabels.get('react_Counter_increment');
+            let stepOutLocation = this.suiteContext.breakpointLabels.get('react_Counter_stepOut');
+            await setBreakpoint(this.suiteContext.debugClient, location);
+            let incBtn = await page.waitForSelector('#incrementBtn');
+            incBtn.click();
+            await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepOutLocation);
+            await this.suiteContext.debugClient.stepOutAndStop();
+            await stopOnStep;
+            await this.suiteContext.debugClient.continueRequest();
+        });
+    }
+
+    /**
      * Test that the debug adapter can correctly pause execution
      * @param bpLocation
      */
     testPauseExecution() {
-        return puppeteerTest('Should correctly pause execution on a pause request', this.suiteContext, async (context, page) => {
+        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, page) => {
             const debugClient = context.debugClient;
             await debugClient.pauseRequest({ threadId: 0 });
             await debugClient.waitForEvent('stopped');

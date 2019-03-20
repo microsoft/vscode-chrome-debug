@@ -13,7 +13,6 @@ import { setBreakpoint, setConditionalBreakpoint } from '../intTestSupport';
 import { puppeteerSuite, puppeteerTest } from '../puppeteer/puppeteerSuite';
 import { FrameworkTestSuite } from './frameworkCommonTests';
 import { TestProjectSpec } from './frameworkTestSupport';
-import { loadLabelsFromFile, loadProjectLabels } from '../labels';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 const REACT_PROJECT_ROOT = path.join(DATA_ROOT, 'react', 'dist');
@@ -26,6 +25,8 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
         frameworkTests.testPageReloadBreakpoint('react_App_render');
         frameworkTests.testPauseExecution();
         frameworkTests.testBreakOnLoad('react_App_render');
+        frameworkTests.testStepOver('react_Counter_increment');
+        frameworkTests.testStepOut('react_Counter_increment', 'react_Counter_stepOut');
     });
 
     suite('React specific tests', () => {
@@ -53,5 +54,6 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
             // be rejected because the chrome instance is closed before it completes.
             await suiteContext.debugClient.continueRequest();
         });
+
     });
 });
