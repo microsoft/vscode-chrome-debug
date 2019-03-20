@@ -15,7 +15,7 @@ import * as path from 'path';
 
 const readdirAsync = util.promisify(fs.readdir);
 
-const labelRegex = /\/\/\s*bpLabel:\s*(.+?)\b/mg;
+const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/mg;
 const ignoreList = [ 'node_modules', '.git' ];
 
 /**
@@ -71,7 +71,7 @@ export async function loadLabelsFromFile(filePath: string): Promise<Map<string, 
         let match = labelRegex.exec(line);
 
         if (match) {
-            labelMap.set(match[1], { path: filePath, line: lineNumber });
+            labelMap.set(match[2], { path: filePath, line: lineNumber });
         }
         lineNumber++;
     });
