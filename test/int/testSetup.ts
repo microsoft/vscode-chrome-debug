@@ -3,13 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as os from 'os';
 import * as path from 'path';
 import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 

@@ -68,7 +68,7 @@ function doBuild(buildNls, failOnError) {
             .pipe(buildNls ? nls.bundleLanguageFiles() : es.through())
 
             .pipe(sourcemaps.write('.', { includeContent: false, sourceRoot: '.' })) // .. to compensate for TS returning paths from 'out'
-            .pipe(gulp.dest('out/src'))
+            .pipe(gulp.dest('out'))
             .once('error', () => {
                 gotError = true;
             })

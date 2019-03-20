@@ -8,7 +8,7 @@
         "outDir": "out",
         "noImplicitThis": true,
 
-        "types": ["reflect-metadata"],
+        "types": ["reflect-metadata", "mocha"],
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
         "noUnusedLocals": true,
@@ -26,7 +26,6 @@
     "exclude": [
         "node_modules/",
         "testapp/",
-        "testdata/",
-        "test/"
+        "testdata/"
     ]
 }

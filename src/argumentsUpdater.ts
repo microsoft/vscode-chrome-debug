@@ -50,7 +50,8 @@ export class ArgumentsUpdater {
      *
      * dynamically required by test
      */
-    private resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
+    /// TODO: Refactor this, possibly not making it a public method in this class. It might be a public method in a different class
+    public resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
         const resolvedOverrides: ISourceMapPathOverrides = {};
         for (let pattern in sourceMapPathOverrides) {
             const replacePattern = this.replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
