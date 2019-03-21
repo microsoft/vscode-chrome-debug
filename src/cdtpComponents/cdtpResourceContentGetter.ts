@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { TYPES, inject, injectable, CDTPEnableableDiagnosticsModule, CDTP, CDTPDomainsEnabler } from 'vscode-chrome-debug-core';
 
 /**

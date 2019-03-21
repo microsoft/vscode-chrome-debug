@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { inject, TYPES, IBrowserNavigator } from 'vscode-chrome-debug-core';
 
 export class RestartDebugSession {

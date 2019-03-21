@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { ISource, ILoadedSourceTreeNode, IScript, SourceScriptRelationship, utilities, ISourcesRetriever } from 'vscode-chrome-debug-core';
 import { CDTPResourceContentGetter } from '../cdtpComponents/cdtpResourceContentGetter';
 import * as _ from 'lodash';

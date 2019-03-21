@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import {
     IDebuggeeRunner, ITelemetryPropertyCollector, inject,
     injectable, postConstruct, TYPES, utils as coreUtils, CDTP, IBrowserNavigator

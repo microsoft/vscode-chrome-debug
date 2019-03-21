@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import {
     utils as coreUtils, logger, telemetry, inject, TYPES, IDebuggeeStateInspector, ConnectedCDAConfiguration, INetworkCacheConfigurer, IDebuggeeRuntimeVersionProvider,
 } from 'vscode-chrome-debug-core';

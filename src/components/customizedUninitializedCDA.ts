@@ -1,9 +1,9 @@
-import { BaseCDAState, injectable, IInitializeRequestArgs, UninitializedCDA, ITelemetryPropertyCollector, IDebugAdapterState } from 'vscode-chrome-debug-core';
-import { DebugProtocol } from 'vscode-debugprotocol';
-
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
+
+import { BaseCDAState, injectable, IInitializeRequestArgs, UninitializedCDA, ITelemetryPropertyCollector, IDebugAdapterState } from 'vscode-chrome-debug-core';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 /**
  * We use our own version of the UninitializedCDA component to declare some extra capabilities that this client supports

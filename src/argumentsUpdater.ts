@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import { ILaunchRequestArgs, IAttachRequestArgs } from './chromeDebugInterfaces';
 import * as utils from './utils';
 import { ISourceMapPathOverrides, logger, ScenarioType } from 'vscode-chrome-debug-core';

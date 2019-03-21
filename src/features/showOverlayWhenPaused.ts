@@ -1,3 +1,6 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
 import * as utils from '../utils';
 import { CDTP, ISupportedDomains, inject, TYPES, CDTPEventsEmitterDiagnosticsModule, IServiceComponent, ConnectedCDAConfiguration, CDTPDomainsEnabler, IPausedOverlayConfigurer, ICDTPDebuggeeExecutionEventsProvider, injectable } from 'vscode-chrome-debug-core';
 import { ILaunchRequestArgs } from '../chromeDebugInterfaces';
