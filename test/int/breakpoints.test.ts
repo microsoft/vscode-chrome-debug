@@ -15,17 +15,17 @@ suite('Breakpoints', () => {
 
     let dc: ts.ExtendedDebugClient;
     setup(() => {
-        return testSetup.setup()
+        return testSetup.setup(/*4712*/) // Enable this to debug the debug adapter under test
             .then(_dc => dc = _dc);
     });
 
     let server: any;
-    teardown(() => {
+    teardown(async () => {
         if (server) {
             server.close();
         }
 
-        return testSetup.teardown();
+        testSetup.teardown(); // TODO: Should we be awaiting this? This might be the reason that disconnecting is not killing chrome.exe properly
     });
 
     suite('Column BPs', () => {
@@ -39,6 +39,7 @@ suite('Breakpoints', () => {
             const url = 'http://localhost:7890/index.html';
 
             const bpLine = 4;
+
             const bpCol = 16;
             await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
@@ -58,6 +59,7 @@ suite('Breakpoints', () => {
             await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol1 });
             await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bpLine, column: bpCol2 }] });
             await dc.continueTo('breakpoint', { line: bpLine, column: bpCol2 });
+
         });
 
         test('BP col is adjusted to correct col', async () => {
