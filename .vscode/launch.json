@@ -64,5 +64,18 @@
             "internalConsoleOptions": "openOnSessionStart",
             "smartStep": true
         },
+        {
+            "name": "Debug gulpfile",
+            "type": "node",
+            "request": "launch",
+            "protocol": "inspector",
+
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "build"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
+        }
     ]
 }

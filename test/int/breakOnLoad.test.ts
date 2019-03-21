@@ -36,13 +36,13 @@ function runCommonTests(breakOnLoadStrategy: string) {
     function launchWithUrlAndSetBreakpoints(url: string, projectRoot: string, scriptPath: string, lineNum: number, colNum: number): Promise<any> {
         return Promise.all([
             dc.launch({ url: url, webRoot: projectRoot }),
-            dc.waitForEvent('initialized').then(event => {
+            dc.waitForEvent('initialized').then(_event => {
                 return dc.setBreakpointsRequest({
                     lines: [lineNum],
                     breakpoints: [{ line: lineNum, column: colNum }],
                     source: { path: scriptPath }
                 });
-            }).then(response => {
+            }).then(_response => {
                 return dc.configurationDoneRequest();
             })
         ]);
@@ -327,13 +327,11 @@ suite('BreakOnLoad', () => {
             server = createServer({ root: testProjectRoot });
             server.listen(7890);
 
-            const url = 'http://localhost:7890/index.html';
-
             // We try to put a breakpoint at (1,1). If this doesn't get hit, the console.log statement in the script should be executed
             const bpLine = 1;
             const bpCol = 1;
 
-            return new Promise( (resolve, reject) => {
+            return new Promise( (resolve, _reject) => {
                 // Add an event listener for the output event to capture the console.log statement
                 dc.addListener('output', function(event) {
                     // If console.log event statement is executed, pass the test
@@ -342,13 +340,13 @@ suite('BreakOnLoad', () => {
                     }
                 }),
                 Promise.all([
-                    dc.waitForEvent('initialized').then(event => {
+                    dc.waitForEvent('initialized').then(_event => {
                         return dc.setBreakpointsRequest({
                             lines: [bpLine],
                             breakpoints: [{ line: bpLine, column: bpCol }],
                             source: { path: scriptPath }
                         });
-                    }).then(response => {
+                    }).then(_response => {
                         return dc.configurationDoneRequest();
                     }),
 

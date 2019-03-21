@@ -13,7 +13,7 @@ export function removeUnhandledRejectionListener(): void {
     process.removeListener('unhandledRejection', unhandledRejectionListener);
 }
 
-function unhandledRejectionListener(reason: any, p: Promise<any>) {
+function unhandledRejectionListener(reason: any, _p: Promise<any>) {
     console.log('*');
     console.log('**');
     console.log('***');
@@ -49,6 +49,6 @@ export function registerLocMocks(): void {
     });
 }
 
-function dummyLocalize(id: string, englishString: string): string {
+function dummyLocalize(_id: string, englishString: string): string {
     return englishString;
 }

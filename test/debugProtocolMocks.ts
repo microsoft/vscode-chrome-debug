@@ -6,7 +6,7 @@
 
 import { EventEmitter } from 'events';
 import { Mock, It, IMock } from 'typemoq';
-import { Crdp } from 'vscode-chrome-debug-core';
+import { CDTP as Crdp } from 'vscode-chrome-debug-core';
 
 export interface IMockChromeConnectionAPI {
     apiObjects: Crdp.ProtocolApi;
@@ -33,7 +33,7 @@ function getBrowserStubs() {
 function getConsoleStubs() {
     return {
         enable() { },
-        on(eventName, handler) { }
+        on(_eventName, _handler) { }
     };
 }
 
@@ -76,14 +76,14 @@ function getInspectorStubs(mockEventEmitter) {
 function getPageStubs() {
     return {
         enable() { },
-        on(eventName, handler) { }
+        on(_eventName, _handler) { }
     };
 }
 
 function getLogStubs() {
     return {
         enable() { return Promise.resolve(); },
-        on(eventName, handler) { }
+        on(_eventName, _handler) { }
     };
 }
 
