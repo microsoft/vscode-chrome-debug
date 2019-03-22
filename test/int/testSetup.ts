@@ -46,6 +46,11 @@ export function setup(port?: number, launchProps?: any) {
 export async function teardown() {
     // TODO: This is a short-term fix because stopping chrome.exe when the debug session ends is not working properly
     // We need to fix the product/tests to kill chrome properly and remove this code
-    execSync('taskkill /im chrome.exe', { stdio: 'ignore' });
+    try {
+        execSync('taskkill /im chrome.exe', { stdio: 'ignore' });
+    } catch (exception) {
+        console.log('Killing all instances of chrome failed');
+    }
+
     await ts.teardown();
 }
