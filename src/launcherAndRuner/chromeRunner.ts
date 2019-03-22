@@ -14,6 +14,12 @@ import { ChromeLauncher } from './chromeLauncher';
 export class ChromeRunner implements IDebuggeeRunner {
     private readonly _userPageLaunched = coreUtils.promiseDefer<void>();
 
+    public constructor(
+        @inject(TYPES.IBrowserNavigation) private readonly _browserNavigation: IBrowserNavigator,
+        @inject(TYPES.IDebuggeeLauncher) private readonly _chromeLauncher: ChromeLauncher) {
+        this.install();
+    }
+
     public async run(_telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<void> {
         // TODO: Is this needed?  await this._browserNavigation.enable();
 
@@ -53,9 +59,7 @@ export class ChromeRunner implements IDebuggeeRunner {
         }
     }
 
-    constructor(
-        @inject(TYPES.IBrowserNavigation) private readonly _browserNavigation: IBrowserNavigator,
-        @inject(TYPES.IDebuggeeLauncher) private readonly _chromeLauncher: ChromeLauncher) {
-        this.install();
+    public async stop(): Promise<void> {
+        // Nothing to do here. The chromeLauncher.stop() is handling everything at this time
     }
 }

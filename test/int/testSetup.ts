@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
+import { execSync } from 'child_process';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
@@ -39,9 +40,17 @@ export function setup(port?: number, launchProps?: any) {
     if (launchProps) {
         testLaunchProps = launchProps;
     }
-    return ts.setup({entryPoint: DEBUG_ADAPTER, type:'chrome', patchLaunchArgs: patchLaunchArgs, port: port});
+    return ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: patchLaunchArgs, port: port });
 }
 
-export function teardown() {
-    return ts.teardown();
+export async function teardown() {
+    // TODO: This is a short-term fix because stopping chrome.exe when the debug session ends is not working properly
+    // We need to fix the product/tests to kill chrome properly and remove this code
+    try {
+        execSync('taskkill /im chrome.exe', { stdio: 'ignore' });
+    } catch (exception) {
+        console.log('Killing all instances of chrome failed');
+    }
+
+    await ts.teardown();
 }
