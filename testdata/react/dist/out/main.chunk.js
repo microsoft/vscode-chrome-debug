@@ -104,6 +104,12 @@ function (_Component) {
       this.setState({
         count: newval
       });
+      this.stepIn(); //bpLabel: react_Counter_stepInStop
+    }
+  }, {
+    key: "stepIn",
+    value: function stepIn() {
+      console.log('stepped in'); //bpLabel: react_Counter_stepIn;
     }
   }, {
     key: "render",

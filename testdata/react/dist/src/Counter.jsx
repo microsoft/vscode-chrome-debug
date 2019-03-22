@@ -15,6 +15,11 @@ export class Counter extends Component {
       console.log('blub'); // bpLabel: react_Counter_increment
       const newval = this.state.count + 1 ;
       this.setState({ count: newval });
+      this.stepIn(); //bpLabel: react_Counter_stepInStop
+    }
+
+    stepIn() {
+      console.log('stepped in'); //bpLabel: react_Counter_stepIn;
     }
 
     render() {

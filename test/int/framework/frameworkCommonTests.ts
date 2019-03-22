@@ -49,6 +49,27 @@ export class FrameworkTestSuite {
     }
 
     /**
+     * Test that step in command works as expected.
+     * @param bpLabelStop Label for the breakpoint to set
+     * @param bpLabelStepIn Label for the location where the 'step out' command should land us
+     */
+    testStepIn(bpLabelStop: string, bpLabelStepIn: string) {
+        return puppeteerTest(`${this.frameworkName} - Should step in correctly`, this.suiteContext,
+        async (context, page) => {
+            let location = this.suiteContext.breakpointLabels.get(bpLabelStop);
+            let stepInLocation = this.suiteContext.breakpointLabels.get(bpLabelStepIn);
+            await setBreakpoint(this.suiteContext.debugClient, location);
+            let incBtn = await page.waitForSelector('#incrementBtn');
+            incBtn.click();
+            await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepInLocation);
+            await this.suiteContext.debugClient.stepInAndStop();
+            await stopOnStep;
+            await this.suiteContext.debugClient.continueRequest();
+        });
+    }
+
+    /**
      * Test that step over (next) command works as expected.
      * Note: currently this test assumes that next will land us on the very next line in the file.
      * @param bpLabel Label for the breakpoint to set
@@ -56,7 +77,7 @@ export class FrameworkTestSuite {
     testStepOver(bpLabel: string) {
         return puppeteerTest(`${this.frameworkName} - Should step over correctly`, this.suiteContext,
         async (context, page) => {
-            let location = this.suiteContext.breakpointLabels.get('react_Counter_increment');
+            let location = this.suiteContext.breakpointLabels.get(bpLabel);
             await setBreakpoint(this.suiteContext.debugClient, location);
             let incBtn = await page.waitForSelector('#incrementBtn');
             incBtn.click();
@@ -76,8 +97,8 @@ export class FrameworkTestSuite {
     testStepOut(bpLabelStop: string, bpLabelStepOut: string) {
         return puppeteerTest(`${this.frameworkName} - Should step out correctly`, this.suiteContext,
         async (context, page) => {
-            let location = this.suiteContext.breakpointLabels.get('react_Counter_increment');
-            let stepOutLocation = this.suiteContext.breakpointLabels.get('react_Counter_stepOut');
+            let location = this.suiteContext.breakpointLabels.get(bpLabelStop);
+            let stepOutLocation = this.suiteContext.breakpointLabels.get(bpLabelStepOut);
             await setBreakpoint(this.suiteContext.debugClient, location);
             let incBtn = await page.waitForSelector('#incrementBtn');
             incBtn.click();

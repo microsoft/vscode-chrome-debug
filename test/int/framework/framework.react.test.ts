@@ -27,6 +27,7 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
         frameworkTests.testBreakOnLoad('react_App_render');
         frameworkTests.testStepOver('react_Counter_increment');
         frameworkTests.testStepOut('react_Counter_increment', 'react_Counter_stepOut');
+        frameworkTests.testStepIn('react_Counter_stepInStop', 'react_Counter_stepIn');
     });
 
     suite('React specific tests', () => {
