@@ -99,3 +99,10 @@ jobs:
   - ${{ if eq(parameters.name, 'Windows') }}:
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
       displayName: 'Publish Security Analysis Logs'
+  
+   # Publish Test Results
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: 'JUnit' # Options: JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: '**/test-*.xml' 
+      
