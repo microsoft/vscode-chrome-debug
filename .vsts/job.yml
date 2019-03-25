@@ -62,6 +62,13 @@ jobs:
   #     customCommand: 'run intTest'
 
   - task: Npm@1
+    displayName: npm frameworkTest
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run frameworkTest'
+
+  - task: Npm@1
     displayName: npm lint
     inputs:
       command: custom
