@@ -1,0 +1,3 @@
+{
+    "reporterEnabled": "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js, mocha-junit-reporter"
+}
