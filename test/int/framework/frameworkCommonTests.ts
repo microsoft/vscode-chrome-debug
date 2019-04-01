@@ -53,7 +53,7 @@ export class FrameworkTestSuite {
      * @param bpLocation
      */
     testPauseExecution() {
-        return puppeteerTest('Should correctly pause execution on a pause request', this.suiteContext, async (context, page) => {
+        return puppeteerTest('Should correctly pause execution on a pause request', this.suiteContext, async (context, _page) => {
             const debugClient = context.debugClient;
             await debugClient.pauseRequest({ threadId: 0 });
             await debugClient.waitForEvent('stopped');

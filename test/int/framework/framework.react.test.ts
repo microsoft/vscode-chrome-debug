@@ -29,7 +29,7 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
 
     suite('React specific tests', () => {
 
-        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (context, page) => {
+        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (_context, page) => {
             let location = { path: TEST_SPEC.src('Counter.jsx'), line: 15};
             await setBreakpoint(suiteContext.debugClient, location);
             let incBtn = await page.waitForSelector('#incrementBtn');
@@ -38,7 +38,7 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
             suiteContext.debugClient.continueRequest();
         });
 
-        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (context, page) => {
+        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (_context, page) => {
             let location = { path: TEST_SPEC.src('Counter.jsx'), line: 15};
             await setConditionalBreakpoint(suiteContext.debugClient, location, 'this.state.count == 2');
             let incBtn = await page.waitForSelector('#incrementBtn');
