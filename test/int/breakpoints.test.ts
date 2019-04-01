@@ -25,7 +25,7 @@ suite('Breakpoints', () => {
             server.close();
         }
 
-        testSetup.teardown(); // TODO: Should we be awaiting this? This might be the reason that disconnecting is not killing chrome.exe properly
+        await testSetup.teardown(); // TODO: Should we be awaiting this? This might be the reason that disconnecting is not killing chrome.exe properly
     });
 
     suite('Column BPs', () => {

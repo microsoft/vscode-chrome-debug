@@ -76,7 +76,7 @@
     "start": "node out/src/chromeDebug.js --server=4712",
     "test": "mocha --exit --timeout 20000 -s 2000 -u tdd --colors \"./out/test/*.test.js\"",
     "intTest": "mocha --exit --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/*.test.js",
-    "frameworkTest": "mocha --exit --timeout 990000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/framework/*.test.js",
+    "frameworkTest": "mocha --exit --timeout 20000 -s 3500 -u tdd --colors --reporter node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js ./out/test/int/framework/*.test.js",
     "lint": "gulp tslint",
     "vscode:prepublish": "gulp verify-no-linked-modules",
     "postinstall": "node ./node_modules/vscode/bin/install",
