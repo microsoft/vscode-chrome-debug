@@ -73,7 +73,8 @@ export function puppeteerSuite(
 
     teardown(() => {
       if (server) {
-        server.close();
+        server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+        server = null;
       }
       return testSetup.teardown();
     });

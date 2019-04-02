@@ -22,7 +22,8 @@ function runCommonTests(breakOnLoadStrategy: string) {
     let server: any;
     teardown(() => {
         if (server) {
-            server.close();
+            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+            server = null;
         }
 
         return testSetup.teardown();
@@ -248,6 +249,7 @@ suite('BreakOnLoad', () => {
         teardown(() => {
             if (server) {
                 server.close();
+                server = null;
             }
 
             return testSetup.teardown();
@@ -315,6 +317,7 @@ suite('BreakOnLoad', () => {
         teardown(() => {
             if (server) {
                 server.close();
+                server = null;
             }
 
             return testSetup.teardown();

@@ -24,7 +24,6 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "mocha-junit-reporter": "^1.18.0",
     "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#v2",
     "vscode-debugadapter": "^1.32.1",
     "vscode-nls": "^4.0.0"
@@ -49,6 +48,7 @@
     "http-server": "^0.10.0",
     "minimist": "^1.2.0",
     "mocha": "^5.2.0",
+    "mocha-junit-reporter": "^1.21.0",
     "mockery": "^1.7.0",
     "puppeteer": "^1.13.0",
     "tmp": "0.0.31",

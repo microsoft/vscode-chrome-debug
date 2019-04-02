@@ -22,10 +22,11 @@ suite('Breakpoints', () => {
     let server: any;
     teardown(async () => {
         if (server) {
-            server.close();
+            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+            server = null;
         }
 
-        await testSetup.teardown(); // TODO: Should we be awaiting this? This might be the reason that disconnecting is not killing chrome.exe properly
+        await testSetup.teardown();
     });
 
     suite('Column BPs', () => {
