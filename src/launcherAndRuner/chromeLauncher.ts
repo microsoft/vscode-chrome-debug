@@ -251,8 +251,6 @@ export class ChromeLauncher implements IDebuggeeLauncher, IChromeProcessIDProvid
     }
 
     public async stop(): Promise<void> {
-        console.log('Diego: stop');
-        logger.log('Diego: stop');
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         // TODO: super.disconnect(args);
 
