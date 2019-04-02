@@ -67,6 +67,8 @@ export function puppeteerSuite(
     setup(async () => {
       suiteContext.debugClient = await testSetup.setup();
       await suiteContext.debugClient;
+      // Running tests on CI can time out at the default 5s, so we up this to 10s
+      suiteContext.debugClient.defaultTimeout = 10000;
       server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);
     });
