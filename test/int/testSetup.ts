@@ -7,7 +7,6 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
-import { execSync } from 'child_process';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
