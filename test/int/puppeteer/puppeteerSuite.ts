@@ -66,7 +66,6 @@ export function puppeteerSuite(
 
     setup(async () => {
       suiteContext.debugClient = await testSetup.setup();
-      await suiteContext.debugClient;
       server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);
     });
