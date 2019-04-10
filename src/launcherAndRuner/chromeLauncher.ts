@@ -251,8 +251,6 @@ export class ChromeLauncher implements IDebuggeeLauncher, IChromeProcessIDProvid
     }
 
     public async stop(): Promise<void> {
-        console.log('Diego: stop');
-        logger.log('Diego: stop');
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
         // TODO: super.disconnect(args);
 
@@ -260,7 +258,7 @@ export class ChromeLauncher implements IDebuggeeLauncher, IChromeProcessIDProvid
             // Only kill Chrome if the 'disconnect' originated from vscode. If we previously terminated
             // due to Chrome shutting down, or devtools taking over, don't kill Chrome.
             if (coreUtils.getPlatform() === coreUtils.Platform.Windows && this._chromePID) {
-                this.killChromeOnWindows(this._chromePID);
+                await this.killChromeOnWindows(this._chromePID);
             } else if (this._chromeProc) {
                 logger.log('Killing Chrome process');
                 this._chromeProc.kill('SIGINT');

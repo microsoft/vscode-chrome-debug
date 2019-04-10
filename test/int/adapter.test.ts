@@ -15,12 +15,19 @@ const DATA_ROOT = testSetup.DATA_ROOT;
 
 suite('Chrome Debug Adapter etc', () => {
     let dc: ExtendedDebugClient;
+    let server;
+
     setup(() => {
         return testSetup.setup()
             .then(_dc => dc = _dc);
     });
 
     teardown(() => {
+        if (server) {
+            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+            server = null;
+        }
+
         return testSetup.teardown();
     });
 
@@ -61,20 +68,14 @@ suite('Chrome Debug Adapter etc', () => {
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
 
-            const server = createServer({ root: testProjectRoot });
+            server = createServer({ root: testProjectRoot });
             server.listen(7890);
 
             return Promise.all([
                 dc.configurationSequence(),
                 dc.launch({ url: 'http://localhost:7890', webRoot: testProjectRoot }),
                 dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
-            ])
-            .then(
-                () => server.close(),
-                e => {
-                    server.close();
-                    throw e;
-                });
+            ]);
         });
     });
 });
