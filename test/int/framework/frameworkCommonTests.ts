@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { puppeteerTest } from '../puppeteer/puppeteerSuite';
-import { setBreakpoint, BreakpointLocation } from '../intTestSupport';
+import { setBreakpoint } from '../intTestSupport';
 import { FrameworkTestContext } from './frameworkTestSupport';
 
 /**
@@ -40,10 +40,14 @@ export class FrameworkTestSuite {
             async (context, page) => {
                 const debugClient = context.debugClient;
                 const bpLocation = context.breakpointLabels.get(bpLabel);
+
+                // wait for something on the page to ensure we're fully loaded, TODO: make this more generic?
+                await page.waitForSelector('#incrementBtn');
+
                 await setBreakpoint(debugClient, bpLocation);
-                let reloaded = page.reload();
+                const reloaded = page.reload();
                 await debugClient.assertStoppedLocation('breakpoint', bpLocation);
-                debugClient.continueRequest();
+                await debugClient.continueRequest();
                 await reloaded;
             });
     }
@@ -56,16 +60,19 @@ export class FrameworkTestSuite {
     testStepIn(bpLabelStop: string, bpLabelStepIn: string) {
         return puppeteerTest(`${this.frameworkName} - Should step in correctly`, this.suiteContext,
         async (context, page) => {
-            let location = this.suiteContext.breakpointLabels.get(bpLabelStop);
-            let stepInLocation = this.suiteContext.breakpointLabels.get(bpLabelStepIn);
+            const location = this.suiteContext.breakpointLabels.get(bpLabelStop);
+            const stepInLocation = this.suiteContext.breakpointLabels.get(bpLabelStepIn);
+
+            // wait for selector **before** setting breakpoint to avoid race conditions against scriptParsed event
+            const incBtn = await page.waitForSelector('#incrementBtn');
             await setBreakpoint(this.suiteContext.debugClient, location);
-            let incBtn = await page.waitForSelector('#incrementBtn');
-            incBtn.click();
+            const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepInLocation);
+            const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepInLocation);
             await this.suiteContext.debugClient.stepInAndStop();
             await stopOnStep;
             await this.suiteContext.debugClient.continueRequest();
+            await clicked;
         });
     }
 
@@ -77,15 +84,17 @@ export class FrameworkTestSuite {
     testStepOver(bpLabel: string) {
         return puppeteerTest(`${this.frameworkName} - Should step over correctly`, this.suiteContext,
         async (context, page) => {
-            let location = this.suiteContext.breakpointLabels.get(bpLabel);
+            const location = this.suiteContext.breakpointLabels.get(bpLabel);
+
+            const incBtn = await page.waitForSelector('#incrementBtn');
             await setBreakpoint(this.suiteContext.debugClient, location);
-            let incBtn = await page.waitForSelector('#incrementBtn');
-            incBtn.click();
+            const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step',  { ...location, line: location.line + 1 });
+            const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step',  { ...location, line: location.line + 1 });
             await this.suiteContext.debugClient.nextAndStop();
             await stopOnStep;
             await this.suiteContext.debugClient.continueRequest();
+            await clicked;
         });
     }
 
@@ -97,16 +106,18 @@ export class FrameworkTestSuite {
     testStepOut(bpLabelStop: string, bpLabelStepOut: string) {
         return puppeteerTest(`${this.frameworkName} - Should step out correctly`, this.suiteContext,
         async (context, page) => {
-            let location = this.suiteContext.breakpointLabels.get(bpLabelStop);
-            let stepOutLocation = this.suiteContext.breakpointLabels.get(bpLabelStepOut);
+            const location = this.suiteContext.breakpointLabels.get(bpLabelStop);
+            const stepOutLocation = this.suiteContext.breakpointLabels.get(bpLabelStepOut);
+
+            const incBtn = await page.waitForSelector('#incrementBtn');
             await setBreakpoint(this.suiteContext.debugClient, location);
-            let incBtn = await page.waitForSelector('#incrementBtn');
-            incBtn.click();
+            const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            let stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepOutLocation);
+            const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepOutLocation);
             await this.suiteContext.debugClient.stepOutAndStop();
             await stopOnStep;
             await this.suiteContext.debugClient.continueRequest();
+            await clicked;
         });
     }
 
@@ -119,7 +130,7 @@ export class FrameworkTestSuite {
             const debugClient = context.debugClient;
             await debugClient.pauseRequest({ threadId: 0 });
             await debugClient.waitForEvent('stopped');
-            debugClient.continueRequest();
+            await debugClient.continueRequest();
         });
     }
 }
