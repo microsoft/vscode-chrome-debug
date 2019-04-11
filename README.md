@@ -35,7 +35,7 @@ A VS Code extension to debug your JavaScript code in the Google Chrome browser, 
 
 ## Getting Started
 1. [Install the extension](https://marketplace.visualstudio.com/items?itemName=msjsdiag.debugger-for-chrome)
-2. Restart VS Code and open the folder containing the project you want to work on.
+2. Open the folder containing the project you want to work on.
 
 ## Using the debugger
 
@@ -121,7 +121,7 @@ For other troubleshooting tips for this error, [see below](#cannot-connect-to-th
 
 If you see errors with a location like `chrome-error://chromewebdata/` in the error stack, these errors are not from the extension or from your app - they are usually a sign that Chrome was not able to load your app.
 
-WHen you see these errors, first check whether Chrome was able to load your app. Does Chrome say "This site can't be reached" or something similar? You must start your own server to run your app. Double-check that your server is running, and that the url and port are configured correctly.
+When you see these errors, first check whether Chrome was able to load your app. Does Chrome say "This site can't be reached" or something similar? You must start your own server to run your app. Double-check that your server is running, and that the url and port are configured correctly.
 
 ### Other targets
 You can also theoretically attach to other targets that support the same Chrome Debugging protocol, such as Electron or Cordova. These aren't officially supported, but should work with basically the same steps. You can use a launch config by setting `"runtimeExecutable"` to a program or script to launch, or an attach config to attach to a process that's already running. If Code can't find the target, you can always verify that it is actually available by navigating to `http://localhost:<port>/json` in a browser. If you get a response with a bunch of JSON, and can find your target page in that JSON, then the target should be available to this extension.

@@ -7,8 +7,9 @@ import { createServer } from 'http-server';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from '../testSetup';
 import { launchTestAdapter } from '../intTestSupport';
-import { firstPage, connectPuppeteer } from './puppeteerSupport';
+import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
 import { FrameworkTestContext, TestProjectSpec } from '../framework/frameworkTestSupport';
+import { loadProjectLabels } from '../labels';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -34,10 +35,19 @@ export async function puppeteerTest(
     testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>
   ) {
     return test(description, async () => {
-      let debugClient = await context.debugClient;
+      const debugClient = await context.debugClient;
       await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
-      let browser = await connectPuppeteer(9222);
-      let page = await firstPage(browser);
+      const browser = await connectPuppeteer(9222);
+      const page = await getPageByUrl(browser, context.testSpec.props.url);
+
+      // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
+      // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
+      // If we don't wait here, there's always a possibility that we can send the set breakpoint request
+      // for a subsequent test after the scripts have started being parsed/run by Chrome, yet before
+      // the target script is parsed, in which case the adapter will try to use breakOnLoad, but
+      // the instrumentation BP will never be hit, leaving our breakpoint in limbo
+      await new Promise(a => setTimeout(a, 500));
+
       await testFunction({ ...context, browser, page}, page);
     });
   }
@@ -66,6 +76,9 @@ export function puppeteerSuite(
 
     setup(async () => {
       suiteContext.debugClient = await testSetup.setup();
+      // Running tests on CI can time out at the default 5s, so we up this to 10s
+      suiteContext.breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
+      suiteContext.debugClient.defaultTimeout = 15000;
       server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);
     });
