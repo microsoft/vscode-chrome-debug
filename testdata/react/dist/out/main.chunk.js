@@ -41,7 +41,9 @@ function (_Component) {
   Object(C_development_debug_adapters_v1_vscode_chrome_debug_testdata_react_node_modules_babel_runtime_helpers_esm_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(App, [{
     key: "render",
     value: function render() {
-      return react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_Counter__WEBPACK_IMPORTED_MODULE_6__["Counter"], null);
+      return (// bpLabel: react_App_render
+        react__WEBPACK_IMPORTED_MODULE_5___default.a.createElement(_Counter__WEBPACK_IMPORTED_MODULE_6__["Counter"], null)
+      );
     }
   }]);
 
@@ -96,11 +98,18 @@ function (_Component) {
   Object(C_development_debug_adapters_v1_vscode_chrome_debug_testdata_react_node_modules_babel_runtime_helpers_esm_createClass__WEBPACK_IMPORTED_MODULE_1__["default"])(Counter, [{
     key: "increment",
     value: function increment() {
-      console.log('blub');
+      console.log('blub'); // bpLabel: react_Counter_increment
+
       var newval = this.state.count + 1;
       this.setState({
         count: newval
       });
+      this.stepIn(); //bpLabel: react_Counter_stepInStop
+    }
+  }, {
+    key: "stepIn",
+    value: function stepIn() {
+      console.log('stepped in'); //bpLabel: react_Counter_stepIn;
     }
   }, {
     key: "render",
@@ -114,7 +123,7 @@ function (_Component) {
         onClick: function onClick() {
           return _this2.increment();
         }
-      }, "Increment")));
+      }, "Increment"), " "));
     }
   }]);
 
