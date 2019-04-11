@@ -61,6 +61,14 @@ jobs:
   #     verbose: false
   #     customCommand: 'run intTest'
 
+  - ${{ if eq(parameters.name, 'Windows') }}:
+    - task: Npm@1
+      displayName: npm frameworkTest
+      inputs:
+        command: custom
+        verbose: false
+        customCommand: 'run frameworkTest'
+
   - task: Npm@1
     displayName: npm lint
     inputs:
@@ -92,3 +100,11 @@ jobs:
   - ${{ if eq(parameters.name, 'Windows') }}:
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
       displayName: 'Publish Security Analysis Logs'
+
+   # Publish Test Results
+  - ${{ if eq(parameters.name, 'Windows') }}:
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'JUnit' # Options: JUnit, NUnit, VSTest, xUnit, cTest
+        testResultsFiles: '**/test-*.xml'
+

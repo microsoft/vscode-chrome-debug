@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
+import { BreakpointLocation } from '../intTestSupport';
 
 /*
  * A collection of supporting classes/functions for running framework tests
@@ -71,6 +72,8 @@ export class TestProjectSpec {
 export interface FrameworkTestContext {
     /** The test project specs for the currently executing test suite */
     testSpec: TestProjectSpec;
+    /** A mapping of labels set in source files to a breakpoint location for a test */
+    breakpointLabels?: Map<string, BreakpointLocation>;
     /** The debug adapter test support client */
     debugClient?: ExtendedDebugClient;
 }
