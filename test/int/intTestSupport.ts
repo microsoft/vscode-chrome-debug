@@ -29,8 +29,10 @@ export interface BreakpointLocation {
  * @param launchConfig The launch config to use
  */
 export async function launchTestAdapter(client: DebugClient, launchConfig: any) {
+
+    let init = client.waitForEvent('initialized');
     await client.launch(launchConfig);
-    await client.waitForEvent('initialized');
+    await init;
     await client.configurationDoneRequest();
 }
 
