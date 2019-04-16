@@ -52,8 +52,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
             return desiredPage;
         }
 
-        // TODO: yuck, clean up
-        await new Promise((a, _r) =>  setTimeout(() => a(), timeout / 10));
+        await new Promise(a =>  setTimeout(a, timeout / 10));
         current = new Date().getTime();
     }
     throw `Page with url: ${url} could not be found within ${timeout}ms`;

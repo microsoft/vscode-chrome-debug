@@ -32,31 +32,31 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
 
     suite('React specific tests', () => {
 
-        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (_context, page) => {
-            const location = suiteContext.breakpointLabels.get('react_Counter_increment');
+        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (context, page) => {
+            const location = context.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 
-            await setBreakpoint(suiteContext.debugClient, location);
+            await setBreakpoint(context.debugClient, location);
             const clicked = incBtn.click();
-            await suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            await suiteContext.debugClient.continueRequest();
+            await context.debugClient.assertStoppedLocation('breakpoint',  location);
+            await context.debugClient.continueRequest();
             await clicked;
         });
 
-        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (_context, page) => {
-            const location = suiteContext.breakpointLabels.get('react_Counter_increment');
+        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (context, page) => {
+            const location = context.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 
-            await setConditionalBreakpoint(suiteContext.debugClient, location, 'this.state.count == 2');
+            await setConditionalBreakpoint(context.debugClient, location, 'this.state.count == 2');
             // click 3 times, state will be = 2 on the third click
             await incBtn.click();
             await incBtn.click();
             // don't await the last click, as the stopped debugger will deadlock it
             const clicked = incBtn.click();
-            await suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await context.debugClient.assertStoppedLocation('breakpoint',  location);
             // Be sure to await the continue request, otherwise sometimes the last click promise will
             // be rejected because the chrome instance is closed before it completes.
-            await suiteContext.debugClient.continueRequest();
+            await context.debugClient.continueRequest();
             await clicked;
         });
 
