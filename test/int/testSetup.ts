@@ -3,20 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as os from 'os';
 import * as path from 'path';
 import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
-let testLaunchProps: any;
+let testLaunchProps: ILaunchRequestArgs;
 
-function formLaunchArgs(launchArgs: any): void {
+export const isThisV2 = false;
+export const isThisV1 = !isThisV2;
+
+function formLaunchArgs(launchArgs: ILaunchRequestArgs): void {
     launchArgs.trace = 'verbose';
+    launchArgs.logTimestamps = true;
     launchArgs.disableNetworkCache = true;
 
     // Start with a clean userDataDir for each test run
@@ -30,7 +32,7 @@ function formLaunchArgs(launchArgs: any): void {
     }
 }
 
-function patchLaunchArgs(launchArgs: any): void {
+function patchLaunchArgs(launchArgs: ILaunchRequestArgs): void {
     formLaunchArgs(launchArgs);
 }
 
@@ -38,7 +40,7 @@ export const lowercaseDriveLetterDirname = __dirname.charAt(0).toLowerCase() + _
 export const PROJECT_ROOT = path.join(lowercaseDriveLetterDirname, '../../../');
 export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 
-export function setup(port?: number, launchProps?: any) {
+export function setup(port?: number, launchProps?: ILaunchRequestArgs) {
     if (launchProps) {
         testLaunchProps = launchProps;
     }

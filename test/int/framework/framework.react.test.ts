@@ -32,7 +32,7 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
 
     suite('React specific tests', () => {
 
-        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (context, page) => {
+        puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (_context, page) => {
             const location = suiteContext.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 
@@ -43,7 +43,7 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
             await clicked;
         });
 
-        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (context, page) => {
+        puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (_context, page) => {
             const location = suiteContext.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 

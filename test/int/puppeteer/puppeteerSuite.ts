@@ -10,15 +10,16 @@ import { launchTestAdapter } from '../intTestSupport';
 import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
 import { FrameworkTestContext, TestProjectSpec } from '../framework/frameworkTestSupport';
 import { loadProjectLabels } from '../labels';
+import { isThisV2, isThisV1 } from '../testSetup';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
  */
 export interface PuppeteerTestContext extends FrameworkTestContext {
-    /** The connected puppeteer browser object */
-    browser: puppeteer.Browser;
-    /** The currently running html page in Chrome */
-    page: puppeteer.Page;
+  /** The connected puppeteer browser object */
+  browser: puppeteer.Browser;
+  /** The currently running html page in Chrome */
+  page: puppeteer.Page;
 }
 
 /**
@@ -30,27 +31,29 @@ export interface PuppeteerTestContext extends FrameworkTestContext {
  * @param testFunction The inner test function that will run a test using puppeteer
  */
 export async function puppeteerTest(
-    description: string,
-    context: FrameworkTestContext,
-    testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>
-  ) {
-    return test(description, async () => {
-      const debugClient = await context.debugClient;
-      await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
-      const browser = await connectPuppeteer(9222);
-      const page = await getPageByUrl(browser, context.testSpec.props.url);
+  description: string,
+  context: FrameworkTestContext,
+  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>
+) {
+  return test(description, async function () {
+    const debugClient = await context.debugClient;
+    await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
+    const browser = await connectPuppeteer(9222);
+    const page = await getPageByUrl(browser, context.testSpec.props.url);
 
-      // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
-      // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
-      // If we don't wait here, there's always a possibility that we can send the set breakpoint request
-      // for a subsequent test after the scripts have started being parsed/run by Chrome, yet before
-      // the target script is parsed, in which case the adapter will try to use breakOnLoad, but
-      // the instrumentation BP will never be hit, leaving our breakpoint in limbo
+    // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
+    // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
+    // If we don't wait here, there's always a possibility that we can send the set breakpoint request
+    // for a subsequent test after the scripts have started being parsed/run by Chrome, yet before
+    // the target script is parsed, in which case the adapter will try to use breakOnLoad, but
+    // the instrumentation BP will never be hit, leaving our breakpoint in limbo
+    if (isThisV1) {
       await new Promise(a => setTimeout(a, 500));
+    }
 
-      await testFunction({ ...context, browser, page}, page);
-    });
-  }
+    await testFunction({ ...context, browser, page }, page);
+  });
+}
 
 /**
  * Defines a custom test suite which will:
@@ -75,11 +78,18 @@ export function puppeteerSuite(
     let server: any;
 
     setup(async () => {
-      suiteContext.debugClient = await testSetup.setup();
+      const portNumber = process.env['MSFT_TEST_DA_PORT']
+        ? parseInt(process.env['MSFT_TEST_DA_PORT'], 10)
+        : undefined;
+
+      let debugClient = await testSetup.setup(portNumber);
+      suiteContext.debugClient = debugClient;
       await suiteContext.debugClient;
+
       // Running tests on CI can time out at the default 5s, so we up this to 10s
       suiteContext.breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
       suiteContext.debugClient.defaultTimeout = 15000;
+
       server = createServer({ root: testSpec.props.webRoot });
       server.listen(7890);
     });
