@@ -1,5 +1,5 @@
 import { BreakpointLocation } from '../intTestSupport';
-import { loadProjectLabels, loadLabelsFromFile } from '../labels';
+import { loadProjectLabels } from '../labels';
 import { expect } from 'chai';
 
 suite('Test framework tests', () => {
