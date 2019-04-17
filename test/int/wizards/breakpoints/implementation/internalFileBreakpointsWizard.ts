@@ -1,4 +1,3 @@
-import * as _ from 'lodash';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { findPositionOfTextInFile } from '../../../utils/findPositionOfTextInFile';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -19,7 +18,7 @@ export class BreakpointsUpdate {
         public readonly toKeepAsIs: BreakpointWizard[]) { }
 }
 
-export interface IPerformChangesImmediatelyOrBatchState {
+export interface IBreakpointsBatchingStrategy {
     readonly currentBreakpointsMapping: CurrentBreakpointsMapping;
 
     set(breakpointWizard: BreakpointWizard): void;
@@ -34,10 +33,12 @@ export interface IPerformChangesImmediatelyOrBatchState {
 
 export type CurrentBreakpointsMapping = ValidatedMap<BreakpointWizard, DebugProtocol.Breakpoint>;
 
-export type StateChanger = (newState: IPerformChangesImmediatelyOrBatchState) => void;
+export type StateChanger = (newState: IBreakpointsBatchingStrategy) => void;
 
 export class InternalFileBreakpointsWizard {
-    private _state: IPerformChangesImmediatelyOrBatchState = new PerformChangesImmediatelyState(this._breakpointsWizard, this, new ValidatedMap());
+    private readonly _breakpointsUpdater = new BreakpointsUpdater(this._breakpointsWizard, this, this.client, state => this._state = state);
+
+    private _state: IBreakpointsBatchingStrategy = new PerformChangesImmediatelyState(this._breakpointsWizard, this, new ValidatedMap());
 
     public constructor(private readonly _breakpointsWizard: BreakpointsWizard, public readonly client: ExtendedDebugClient, public readonly filePath: string) { }
 
@@ -79,6 +80,6 @@ export class InternalFileBreakpointsWizard {
     }
 
     public async sendBreakpointsToClient(update: BreakpointsUpdate): Promise<void> {
-        return new BreakpointsUpdater(this._breakpointsWizard, this, this.client, update, state => this._state = state).update();
+        return this._breakpointsUpdater.update(update);
     }
 }

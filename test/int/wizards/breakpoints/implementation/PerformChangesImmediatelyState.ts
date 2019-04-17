@@ -1,11 +1,11 @@
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointWizard } from '../breakpointWizard';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
-import { IPerformChangesImmediatelyOrBatchState, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate } from './internalFileBreakpointsWizard';
+import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate } from './internalFileBreakpointsWizard';
 import { BreakpointsAssertions } from './breakpointsAssertions';
 import { BreakpointsWizard } from '../breakpointsWizard';
 
-export class PerformChangesImmediatelyState implements IPerformChangesImmediatelyOrBatchState {
+export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrategy {
     private readonly _idToBreakpoint = new ValidatedMap<number, BreakpointWizard>();
     private readonly _breakpointsAssertions = new BreakpointsAssertions(this._breakpointsWizard, this._internal, this.currentBreakpointsMapping);
 

@@ -78,11 +78,6 @@ export class BreakpointsAssertions {
 
     private printStackTraceFrame(frame: DebugProtocol.StackFrame): string {
         let frameName = frame.name;
-        if (isThisV1) {
-            // V1 currently has a bug where line numbers are off by 1
-            frameName = frameName.replace(`Line ${frame.line - 1}`, `Line ${frame.line}`);
-        }
-
         return `${frameName}:${frame.column}${frame.presentationHint && frame.presentationHint !== 'normal' ? ` (${frame.presentationHint})` : ''}`;
     }
 
@@ -93,10 +88,7 @@ export class BreakpointsAssertions {
         stackTraceResponse.body.stackFrames.forEach(frame => {
             // Warning: We don't currently validate frame.source.path
             const expectedSourceNameAndLine = ` [${frame.source.name}] Line ${frame.line}`;
-            if (isThisV2) {
-                // V1 has a bug where frame.name is not coherent with frame.line
-                expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
-            }
+            expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
         });
     }
 }
