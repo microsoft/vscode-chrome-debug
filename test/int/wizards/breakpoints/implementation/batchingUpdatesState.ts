@@ -4,10 +4,10 @@ import { BreakpointWizard } from '../breakpointWizard';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { ValidatedSet } from '../../../core-v2/chrome/collections/validatedSet';
 import {
-    IPerformChangesImmediatelyOrBatchState, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate
+    IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate
 } from './internalFileBreakpointsWizard';
 
-export class BatchingUpdatesState implements IPerformChangesImmediatelyOrBatchState {
+export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
     private readonly _breakpointsToSet = new ValidatedSet<BreakpointWizard>();
     private readonly _breakpointsToUnset = new ValidatedSet<BreakpointWizard>();
     private readonly _actionsToCompleteAfterBatch: (() => PromiseOrNot<void>)[] = [];

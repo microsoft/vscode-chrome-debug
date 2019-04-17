@@ -13,11 +13,10 @@ export class BreakpointsUpdater {
         private readonly _breakpointsWizard: BreakpointsWizard,
         private readonly _internal: InternalFileBreakpointsWizard,
         private readonly _client: ExtendedDebugClient,
-        private readonly _update: BreakpointsUpdate,
         private readonly _changeState: StateChanger) { }
 
-    public async update(): Promise<void> {
-        const updatedBreakpoints = this._update.toKeepAsIs.concat(this._update.toAdd);
+    public async update(update: BreakpointsUpdate): Promise<void> {
+        const updatedBreakpoints = update.toKeepAsIs.concat(update.toAdd);
         const vsCodeBps = updatedBreakpoints.map(bp => this.toVSCodeProtocol(bp));
 
         const response = await this._client.setBreakpointsRequest({ breakpoints: vsCodeBps, source: { path: this._internal.filePath } });
