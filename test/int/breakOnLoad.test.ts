@@ -9,8 +9,9 @@ import { createServer } from 'http-server';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
+import { BreakOnLoadStrategy } from 'vscode-chrome-debug-core';
 
-function runCommonTests(breakOnLoadStrategy: string) {
+function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;

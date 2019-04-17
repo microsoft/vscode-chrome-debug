@@ -6,6 +6,7 @@
 import * as path from 'path';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointLocation } from '../intTestSupport';
+import { ILaunchRequestArgs } from '../../../src/chromeDebugInterfaces';
 
 /*
  * A collection of supporting classes/functions for running framework tests
@@ -21,7 +22,7 @@ export interface ProjectSpecProps {
     /** The outfiles directory for the test project */
     outFiles?: string;
     /** The default launch configuration for the test project */
-    launchConfig?: any;
+    launchConfig?: ILaunchRequestArgs;
     /** Port to use for the server */
     port?: number;
     /** Url to use for the project */
@@ -49,7 +50,7 @@ export class TestProjectSpec {
         this._props.url = props.url || `http://localhost:${props.port}/`;
         this._props.launchConfig = props.launchConfig || {
             url: props.url,
-            outFiles: props.outFiles,
+            outFiles: [props.outFiles],
             sourceMaps: true,
             /* TODO: get this dynamically */
             runtimeExecutable: 'node_modules/puppeteer/.local-chromium/win64-637110/chrome-win/chrome.exe',
