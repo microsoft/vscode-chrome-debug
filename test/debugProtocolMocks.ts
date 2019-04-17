@@ -33,11 +33,13 @@ function getBrowserStubs() {
 function getConsoleStubs() {
     return {
         enable() { },
-        on(_eventName, _handler) { }
+        on(_eventName: 'messageAdded', _handler: Crdp.Console.MessageAddedEvent) { }
     };
 }
 
-function getDebuggerStubs(mockEventEmitter) {
+type TypeOfDebuggerOn = Parameters<Crdp.DebuggerApi['on']>;
+
+function getDebuggerStubs(mockEventEmitter: EventEmitter) {
     return {
         setBreakpoint() { },
         setBreakpointByUrl() { },
@@ -47,7 +49,7 @@ function getDebuggerStubs(mockEventEmitter) {
         setBlackboxPatterns() { return Promise.resolve(); },
         setAsyncCallStackDepth() { },
 
-        on(eventName, handler) { mockEventEmitter.on(`Debugger.${eventName}`, handler); }
+        on(eventName: TypeOfDebuggerOn[0], handler: TypeOfDebuggerOn[1]) { mockEventEmitter.on(`Debugger.${eventName}`, handler); }
     };
 }
 
@@ -58,32 +60,38 @@ function getNetworkStubs() {
     };
 }
 
-function getRuntimeStubs(mockEventEmitter) {
+type TypeOfRuntimeOn = Parameters<Crdp.RuntimeApi['on']>;
+
+function getRuntimeStubs(mockEventEmitter: EventEmitter) {
     return {
         enable() { },
         evaluate() { },
 
-        on(eventName, handler) { mockEventEmitter.on(`Runtime.${eventName}`, handler); }
+        on(eventName: TypeOfRuntimeOn[0], handler: TypeOfRuntimeOn[1]) { mockEventEmitter.on(`Runtime.${eventName}`, handler); }
     };
 }
 
-function getInspectorStubs(mockEventEmitter) {
+type TypeOfInspectorOn = Parameters<Crdp.InspectorApi['on']>;
+
+function getInspectorStubs(mockEventEmitter: EventEmitter) {
     return {
-        on(eventName, handler) { mockEventEmitter.on(`Inspector.${eventName}`, handler); }
+        on(eventName: TypeOfInspectorOn[0], handler: TypeOfInspectorOn[1]) { mockEventEmitter.on(`Inspector.${eventName}`, handler); }
     };
 }
+
+type TypeOfPageOn = Parameters<Crdp.PageApi['on']>;
 
 function getPageStubs() {
     return {
         enable() { },
-        on(_eventName, _handler) { }
+        on(_eventName: TypeOfPageOn[0], _handler: TypeOfPageOn[1]) { }
     };
 }
 
 function getLogStubs() {
     return {
         enable() { return Promise.resolve(); },
-        on(_eventName, _handler) { }
+        on(_eventName: 'messageAdded', _handler: (params: Crdp.Console.MessageAddedEvent) => void) { }
     };
 }
 
@@ -100,7 +108,7 @@ export function getMockChromeConnectionApi(): IMockChromeConnectionAPI {
     mockDebugger.callBase = true;
     mockDebugger
         .setup(x => x.enable())
-        .returns(() => Promise.resolve(null));
+        .returns(() => Promise.resolve({ debuggerId: 'id' }));
 
     const mockNetwork = Mock.ofInstance<Crdp.NetworkApi>(<any>getNetworkStubs());
     mockNetwork.callBase = true;

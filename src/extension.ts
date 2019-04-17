@@ -36,7 +36,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
     /**
      * Try to add all missing attributes to the debug configuration being launched.
      */
-    async resolveDebugConfiguration(_folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, _token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration> {
+    async resolveDebugConfiguration(_folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, _token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration | null> {
         // if launch.json is missing or empty
         if (!config.type && !config.request && !config.name) {
             // Return null so it will create a launch.json and fall back on provideDebugConfigurations - better to point the user towards the config
@@ -70,7 +70,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
     }
 }
 
-function toggleSkippingFile(path: string): void {
+function toggleSkippingFile(path: string | undefined): void {
     if (!path) {
         const activeEditor = vscode.window.activeTextEditor;
         path = activeEditor && activeEditor.document.fileName;
@@ -92,7 +92,7 @@ interface ITargetQuickPickItem extends vscode.QuickPickItem {
     websocketDebuggerUrl: string;
 }
 
-async function pickTarget(targets: Core.chromeConnection.ITarget[]): Promise<ITargetQuickPickItem> {
+async function pickTarget(targets: Core.chromeConnection.ITarget[]): Promise<ITargetQuickPickItem | undefined> {
     const items = targets.map(target => (<ITargetQuickPickItem>{
         label: unescapeTargetTitle(target.title),
         detail: target.url,

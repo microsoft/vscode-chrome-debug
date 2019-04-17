@@ -87,7 +87,8 @@ export class BreakpointsAssertions {
             .to.equal(stackTraceResponse.body.stackFrames.length);
         stackTraceResponse.body.stackFrames.forEach(frame => {
             // Warning: We don't currently validate frame.source.path
-            const expectedSourceNameAndLine = ` [${frame.source.name}] Line ${frame.line}`;
+            expect(frame.source).not.to.equal(undefined);
+            const expectedSourceNameAndLine = ` [${frame.source!.name}] Line ${frame.line}`;
             expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
         });
     }

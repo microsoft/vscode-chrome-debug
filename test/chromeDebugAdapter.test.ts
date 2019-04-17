@@ -33,7 +33,7 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict);
+        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict, false, {events: {}}, { extensibilityPoints: {}});
         mockChrome = getMockChromeConnectionApi();
         mockChromeDebugSession = Mock.ofType(MockChromeDebugSession, MockBehavior.Strict);
         mockChromeDebugSession
@@ -63,7 +63,7 @@ suite('ChromeDebugAdapter', () => {
             .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.events)
-            .returns(_x => null)
+            .returns(_x => <any>null)
             .verifiable(Times.atLeast(0));
         mockChromeConnection
             .setup(x => x.version)
@@ -79,7 +79,9 @@ suite('ChromeDebugAdapter', () => {
         testUtils.removeUnhandledRejectionListener();
         mockery.deregisterAll();
         mockery.disable();
-        mockChromeConnection.verifyAll();
+        if (mockChromeConnection) {
+            mockChromeConnection.verifyAll();
+        }
     });
 
     // suite('launch()', () => {
@@ -216,7 +218,7 @@ suite('ChromeDebugAdapter', () => {
 
     suite('resolveWebRootPattern', () => {
         const WEBROOT = testUtils.pathResolve('/project/webroot');
-        const resolveWebRootPattern = (webRoot, sourceMapPathOverrides) => new ArgumentsUpdater().resolveWebRootPattern(webRoot, sourceMapPathOverrides, false);
+        const resolveWebRootPattern = (webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides) => new ArgumentsUpdater().resolveWebRootPattern(webRoot, sourceMapPathOverrides, false);
 
         test('does nothing when no ${webRoot} present', () => {
             const overrides: ISourceMapPathOverrides = { '/src': '/project' };

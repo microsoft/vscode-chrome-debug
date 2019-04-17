@@ -6,6 +6,10 @@ import {
 } from 'vscode-chrome-debug-core';
 import { ICommonRequestArgs } from '../chromeDebugInterfaces';
 
+export interface IVersionProperties {
+    [key: string]: string;
+}
+
 // TODO: Enable this class so it's used to report the version information
 export class ReportVersionInformation {
     public async report(): Promise<void> {
@@ -27,7 +31,7 @@ export class ReportVersionInformation {
 
         const versionInformationPromise = this._debugeeVersionProvider.componentVersions().then(
             response => {
-                const properties = {
+                const properties: IVersionProperties = {
                     'Versions.Target.CRDPVersion': response.product,
                     'Versions.Target.Revision': response.revision,
                     'Versions.Target.UserAgent': response.userAgent,

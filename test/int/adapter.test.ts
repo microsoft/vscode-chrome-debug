@@ -5,17 +5,18 @@
 
 import * as assert from 'assert';
 import * as path from 'path';
-import { createServer } from 'http-server';
+import { createServer, } from 'http-server';
 
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
+import { HttpOrHttpsServer } from './types/server';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
 suite('Chrome Debug Adapter etc', () => {
     let dc: ExtendedDebugClient;
-    let server;
+    let server: HttpOrHttpsServer | null;
 
     setup(() => {
         return testSetup.setup()
@@ -44,7 +45,8 @@ suite('Chrome Debug Adapter etc', () => {
     suite('initialize', () => {
         test('should return supported features', () => {
             return dc.initializeRequest().then(response => {
-                assert.equal(response.body.supportsConfigurationDoneRequest, true);
+                assert.notEqual(response.body, undefined);
+                assert.equal(response.body!.supportsConfigurationDoneRequest, true);
             });
         });
     });

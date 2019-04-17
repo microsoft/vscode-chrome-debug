@@ -43,7 +43,7 @@ export class ArgumentsUpdater {
         return <T>args;
     }
 
-    private getSourceMapPathOverrides(webRoot: string, sourceMapPathOverrides?: ISourceMapPathOverrides): ISourceMapPathOverrides {
+    private getSourceMapPathOverrides(webRoot: string | undefined, sourceMapPathOverrides?: ISourceMapPathOverrides): ISourceMapPathOverrides {
         return sourceMapPathOverrides ? this.resolveWebRootPattern(webRoot, sourceMapPathOverrides, /*warnOnMissing=*/true) :
             this.resolveWebRootPattern(webRoot, DefaultWebSourceMapPathOverrides, /*warnOnMissing=*/false);
     }
@@ -54,7 +54,7 @@ export class ArgumentsUpdater {
      * dynamically required by test
      */
     /// TODO: Refactor this, possibly not making it a public method in this class. It might be a public method in a different class
-    public resolveWebRootPattern(webRoot: string, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
+    public resolveWebRootPattern(webRoot: string | undefined, sourceMapPathOverrides: ISourceMapPathOverrides, warnOnMissing: boolean): ISourceMapPathOverrides {
         const resolvedOverrides: ISourceMapPathOverrides = {};
         for (let pattern in sourceMapPathOverrides) {
             const replacePattern = this.replaceWebRootInSourceMapPathOverridesEntry(webRoot, pattern, warnOnMissing);
@@ -66,7 +66,7 @@ export class ArgumentsUpdater {
         return resolvedOverrides;
     }
 
-    private replaceWebRootInSourceMapPathOverridesEntry(webRoot: string, entry: string, warnOnMissing: boolean): string {
+    private replaceWebRootInSourceMapPathOverridesEntry(webRoot: string | undefined, entry: string, warnOnMissing: boolean): string {
         const webRootIndex = entry.indexOf('${webRoot}');
         if (webRootIndex === 0) {
             if (webRoot) {

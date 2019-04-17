@@ -14,7 +14,7 @@ const DEFAULT_CHROME_PATH = {
     WINx86: 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
 };
 
-export function getBrowserPath(): string {
+export function getBrowserPath(): string | null {
     const platform = coreUtils.getPlatform();
     if (platform === coreUtils.Platform.OSX) {
         return coreUtils.existsSync(DEFAULT_CHROME_PATH.OSX) ? DEFAULT_CHROME_PATH.OSX : null;
