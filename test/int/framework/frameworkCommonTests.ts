@@ -59,7 +59,7 @@ export class FrameworkTestSuite {
      */
     testStepIn(bpLabelStop: string, bpLabelStepIn: string) {
         return puppeteerTest(`${this.frameworkName} - Should step in correctly`, this.suiteContext,
-        async (context, page) => {
+        async (_context, page) => {
             const location = this.suiteContext.breakpointLabels.get(bpLabelStop);
             const stepInLocation = this.suiteContext.breakpointLabels.get(bpLabelStepIn);
 
@@ -83,7 +83,7 @@ export class FrameworkTestSuite {
      */
     testStepOver(bpLabel: string) {
         return puppeteerTest(`${this.frameworkName} - Should step over correctly`, this.suiteContext,
-        async (context, page) => {
+        async (_context, page) => {
             const location = this.suiteContext.breakpointLabels.get(bpLabel);
 
             const incBtn = await page.waitForSelector('#incrementBtn');
@@ -105,7 +105,7 @@ export class FrameworkTestSuite {
      */
     testStepOut(bpLabelStop: string, bpLabelStepOut: string) {
         return puppeteerTest(`${this.frameworkName} - Should step out correctly`, this.suiteContext,
-        async (context, page) => {
+        async (_context, page) => {
             const location = this.suiteContext.breakpointLabels.get(bpLabelStop);
             const stepOutLocation = this.suiteContext.breakpointLabels.get(bpLabelStepOut);
 
@@ -126,7 +126,7 @@ export class FrameworkTestSuite {
      * @param bpLocation
      */
     testPauseExecution() {
-        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, page) => {
+        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, _page) => {
             const debugClient = context.debugClient;
             await debugClient.pauseRequest({ threadId: 0 });
             await debugClient.waitForEvent('stopped');
