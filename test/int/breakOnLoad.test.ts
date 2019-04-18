@@ -10,6 +10,7 @@ import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
 import { BreakOnLoadStrategy } from 'vscode-chrome-debug-core';
+import { HttpOrHttpsServer } from './types/server';
 
 function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
     const DATA_ROOT = testSetup.DATA_ROOT;
@@ -20,7 +21,7 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
             .then(_dc => dc = _dc);
     });
 
-    let server: any;
+    let server: HttpOrHttpsServer | null;
     teardown(() => {
         if (server) {
             server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));

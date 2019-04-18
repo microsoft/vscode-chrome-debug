@@ -8,9 +8,10 @@ import * as puppeteer from 'puppeteer';
 import * as testSetup from '../testSetup';
 import { launchTestAdapter } from '../intTestSupport';
 import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
-import { FrameworkTestContext, TestProjectSpec } from '../framework/frameworkTestSupport';
-import { loadProjectLabels } from '../labels';
+import { FrameworkTestContext, TestProjectSpec, ReassignableFrameworkTestContext } from '../framework/frameworkTestSupport';
 import { isThisV1 } from '../testSetup';
+import { HttpOrHttpsServer } from '../types/server';
+import { loadProjectLabels } from '../labels';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -73,20 +74,24 @@ export function puppeteerSuite(
   callback: (suiteContext: FrameworkTestContext) => any
 ): Mocha.ISuite {
   return suite(description, () => {
-    let suiteContext: FrameworkTestContext = { testSpec };
+    const suiteContext = new ReassignableFrameworkTestContext();
 
-    let server: any;
+    let server: HttpOrHttpsServer | null;
 
     setup(async () => {
-      const portNumber = process.env['MSFT_TEST_DA_PORT']
-        ? parseInt(process.env['MSFT_TEST_DA_PORT'], 10)
+      const daPort = process.env['MSFT_TEST_DA_PORT'];
+      const portNumber = daPort
+        ? parseInt(daPort, 10)
         : undefined;
 
       let debugClient = await testSetup.setup(portNumber);
-      suiteContext.debugClient = debugClient;
+      suiteContext.reassignTo({
+        testSpec,
+        debugClient: debugClient,
+        breakpointLabels: await loadProjectLabels(testSpec.props.webRoot)
+      });
 
       // Running tests on CI can time out at the default 5s, so we up this to 10s
-      suiteContext.breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
       suiteContext.debugClient.defaultTimeout = 15000;
 
       server = createServer({ root: testSpec.props.webRoot });

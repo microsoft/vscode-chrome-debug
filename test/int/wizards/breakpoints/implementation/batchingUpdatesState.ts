@@ -1,10 +1,9 @@
 import _ = require('lodash');
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointWizard } from '../breakpointWizard';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { ValidatedSet } from '../../../core-v2/chrome/collections/validatedSet';
 import {
-    IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate
+    IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId
 } from './internalFileBreakpointsWizard';
 
 export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
@@ -32,7 +31,7 @@ export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
         this._actionsToCompleteAfterBatch.push(() => this._internal.waitUntilVerified(breakpoint));
     }
 
-    public onBreakpointStatusChange(_breakpointStatusChanged: DebugProtocol.BreakpointEvent): void {
+    public onBreakpointStatusChange(_breakpointStatusChanged: BreakpointStatusChangedWithId): void {
         throw new Error(`Breakpoint status shouldn't be updated while doing a batch update. Is this happening due to a product or test bug?`);
     }
 

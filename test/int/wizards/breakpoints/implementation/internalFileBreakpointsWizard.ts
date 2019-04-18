@@ -10,6 +10,10 @@ import { BatchingUpdatesState } from './batchingUpdatesState';
 import { PerformChangesImmediatelyState } from './performChangesImmediatelyState';
 import { BreakpointsUpdater } from './breakpointsUpdater';
 import { BreakpointsWizard } from '../breakpointsWizard';
+import { MakePropertyRequired, Replace } from '../../../core-v2/typeUtils';
+
+export type BreakpointWithId = MakePropertyRequired<DebugProtocol.Breakpoint, 'id'>;
+export type BreakpointStatusChangedWithId = Replace<DebugProtocol.BreakpointEvent['body'], 'breakpoint', BreakpointWithId>;
 
 export class BreakpointsUpdate {
     public constructor(
@@ -28,10 +32,10 @@ export interface IBreakpointsBatchingStrategy {
     assertIsVerified(breakpoint: BreakpointWizard): void;
     assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void>;
 
-    onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent): void;
+    onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void;
 }
 
-export type CurrentBreakpointsMapping = ValidatedMap<BreakpointWizard, DebugProtocol.Breakpoint>;
+export type CurrentBreakpointsMapping = ValidatedMap<BreakpointWizard, BreakpointWithId>;
 
 export type StateChanger = (newState: IBreakpointsBatchingStrategy) => void;
 
@@ -67,7 +71,7 @@ export class InternalFileBreakpointsWizard {
         return this._state.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, expectedStackTrace);
     }
 
-    public onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent): void {
+    public onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void {
         this._state.onBreakpointStatusChange(breakpointStatusChanged);
     }
 

@@ -1,7 +1,6 @@
-import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointWizard } from '../breakpointWizard';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
-import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate } from './internalFileBreakpointsWizard';
+import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId } from './internalFileBreakpointsWizard';
 import { BreakpointsAssertions } from './breakpointsAssertions';
 import { BreakpointsWizard } from '../breakpointsWizard';
 
@@ -35,9 +34,9 @@ export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrat
         await this._internal.sendBreakpointsToClient(new BreakpointsUpdate([], [breakpointWizard], remainingBreakpoints));
     }
 
-    public onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent): void {
-        const breakpoint = this._idToBreakpoint.get(breakpointStatusChanged.body.breakpoint.id);
-        this.currentBreakpointsMapping.setAndReplaceIfExist(breakpoint, breakpointStatusChanged.body.breakpoint);
+    public onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void {
+        const breakpoint = this._idToBreakpoint.get(breakpointStatusChanged.breakpoint.id);
+        this.currentBreakpointsMapping.setAndReplaceIfExist(breakpoint, breakpointStatusChanged.breakpoint);
     }
 
     public assertIsVerified(breakpoint: BreakpointWizard): void {

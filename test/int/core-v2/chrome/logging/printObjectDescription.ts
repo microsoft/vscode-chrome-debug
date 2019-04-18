@@ -14,16 +14,23 @@ export function printObjectDescription(objectToPrint: unknown, fallbackPrintDesc
             // This is a noice-json-rpc proxy
             printed = 'CDTP Proxy';
         } else {
-            const toString = objectToPrint.toString();
-            if (toString !== '[object Object]') {
-                printed = toString;
-            } else if (isJSONObject(objectToPrint)) {
-                printed = JSON.stringify(objectToPrint);
-            } else if (objectToPrint.constructor === Object) {
-                printed = fallbackPrintDescription(objectToPrint);
+            // This if is actually unnecesary, the previous if (!objectToPrint) { does the same thing. For some reason the typescript compiler cannot infer the type from that if
+            // so we just write this code to leave the compiler happy
+            // TODO: Sync with the typescript team and figure out how to remove this
+            if (!objectToPrint) {
+                printed = `${objectToPrint}`;
             } else {
-                printed = `${objectToPrint}(${objectToPrint.constructor.name})`;
-            }
+                const toString = objectToPrint.toString();
+                if (toString !== '[object Object]') {
+                    printed = toString;
+                } else if (isJSONObject(objectToPrint)) {
+                    printed = JSON.stringify(objectToPrint);
+                } else if (objectToPrint.constructor === Object) {
+                    printed = fallbackPrintDescription(objectToPrint);
+                } else {
+                    printed = `${objectToPrint}(${objectToPrint.constructor.name})`;
+                }
+                }
         }
     } else if (typeof objectToPrint === 'function') {
         if (objectToPrint.name) {
@@ -46,7 +53,7 @@ export function printObjectDescription(objectToPrint: unknown, fallbackPrintDesc
 function isJSONObject(objectToPrint: any): boolean {
     if (objectToPrint.constructor === Object) {
         const values = _.values(objectToPrint);
-        return values.every(value => value.constructor === Object);
+        return values.every(value => !value || value.constructor === Object);
     } else {
         return false;
     }

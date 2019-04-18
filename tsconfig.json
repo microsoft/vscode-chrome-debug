@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "module": "commonjs",
-        "noImplicitAny": false,
         "removeComments": false,
         "target": "ES6",
         "sourceMap": true,
@@ -17,8 +16,11 @@
         "noUnusedParameters": true,
         "strictFunctionTypes": true,
 
-        "strictNullChecks": false,
-        "strictPropertyInitialization": false,
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "strictPropertyInitialization": true,
 
         "lib": ["es6", "dom"]
 

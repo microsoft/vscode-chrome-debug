@@ -14,4 +14,4 @@ const chromeProc = cp.spawn(chromePath, chromeArgs, {
 });
 
 chromeProc.unref();
-process.send(chromeProc.pid);
+process.send!(chromeProc.pid);

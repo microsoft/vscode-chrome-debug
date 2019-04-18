@@ -1,6 +1,6 @@
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { TestProjectSpec } from '../../framework/frameworkTestSupport';
-import { InternalFileBreakpointsWizard } from './implementation/internalFileBreakpointsWizard';
+import { InternalFileBreakpointsWizard, BreakpointStatusChangedWithId } from './implementation/internalFileBreakpointsWizard';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ValidatedMap } from '../../core-v2/chrome/collections/validatedMap';
 import { wrapWithMethodLogger } from '../../core-v2/chrome/logging/methodsCalledLogger';
@@ -16,7 +16,7 @@ export class BreakpointsWizard {
     private constructor(private readonly _client: ExtendedDebugClient, private readonly _project: TestProjectSpec) {
         this._client.on('stopped', stopped => this._state.onPaused(stopped));
         this._client.on('continued', continued => this._state.onResumed(continued));
-        this._client.on('breakpoint', breakpointStatusChange => this.onBreakpointStatusChange(breakpointStatusChange));
+        this._client.on('breakpoint', breakpointStatusChange => this.onBreakpointStatusChange(breakpointStatusChange.body));
     }
 
     public static create(debugClient: ExtendedDebugClient, testProjectSpecification: TestProjectSpec): BreakpointsWizard {
@@ -46,10 +46,16 @@ export class BreakpointsWizard {
         return 'Breakpoints';
     }
 
-    private onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent): void {
-        for (const fileWizard of this._pathToFileWizard.values()) {
-            fileWizard.onBreakpointStatusChange(breakpointStatusChanged);
+    private onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent['body']): void {
+        if (this.isBreakpointStatusChangedWithId(breakpointStatusChanged)) {
+            for (const fileWizard of this._pathToFileWizard.values()) {
+                fileWizard.onBreakpointStatusChange(breakpointStatusChanged);
+            }
         }
+    }
+
+    private isBreakpointStatusChangedWithId(statusChanged: DebugProtocol.BreakpointEvent['body']): statusChanged is BreakpointStatusChangedWithId {
+        return statusChanged.breakpoint.id !== undefined;
     }
 
     private changeStateFunction(): (newState: IEventForConsumptionAvailabilityState) => void {

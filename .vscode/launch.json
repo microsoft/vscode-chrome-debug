@@ -80,7 +80,13 @@
             ],
             "skipFiles": [
                 "<node_internals>/**",
-                "methodCalledLogger.ts"
+                "methodCalledLogger.ts",
+                "runnable.js",
+                "runner.js",
+                "next_tick.js",
+                "hook.js",
+                "/suite.js",
+                "context.js",
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

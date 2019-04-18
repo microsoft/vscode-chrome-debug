@@ -8,15 +8,16 @@ import * as tmp from 'tmp';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
+import { Dictionary } from 'lodash';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
-let testLaunchProps: ILaunchRequestArgs;
+let testLaunchProps: ILaunchRequestArgs & Dictionary<unknown> | undefined;
 
 export const isThisV2 = true;
 export const isThisV1 = !isThisV2;
 
-function formLaunchArgs(launchArgs: ILaunchRequestArgs): void {
+function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>): void {
     launchArgs.trace = 'verbose';
     launchArgs.logTimestamps = true;
     launchArgs.disableNetworkCache = true;
