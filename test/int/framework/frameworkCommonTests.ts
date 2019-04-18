@@ -23,7 +23,7 @@ export class FrameworkTestSuite {
      * @param bpLabel Label for the breakpoint to set
      */
     testBreakOnLoad(bpLabel: string) {
-        return test(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
+        return test.skip(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
             const testSpec = this.suiteContext.testSpec;
             const location = this.suiteContext.breakpointLabels.get(bpLabel);
             await this.suiteContext.debugClient
@@ -36,7 +36,7 @@ export class FrameworkTestSuite {
      * @param bpLabel Label for the breakpoint to set
      */
     testPageReloadBreakpoint(bpLabel: string) {
-        return puppeteerTest(`${this.frameworkName} - Should hit breakpoint on page reload`, this.suiteContext,
+        return puppeteerTest.skip(`${this.frameworkName} - Should hit breakpoint on page reload`, this.suiteContext,
             async (context, page) => {
                 const debugClient = context.debugClient;
                 const bpLocation = context.breakpointLabels.get(bpLabel);

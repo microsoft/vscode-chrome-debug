@@ -63,11 +63,11 @@ jobs:
 
   - ${{ if eq(parameters.name, 'Windows') }}:
     - task: Npm@1
-      displayName: npm frameworkTest
+      displayName: All integration tests
       inputs:
         command: custom
         verbose: false
-        customCommand: 'run frameworkTest'
+        customCommand: 'run allIntTest'
 
   - task: Npm@1
     displayName: npm lint

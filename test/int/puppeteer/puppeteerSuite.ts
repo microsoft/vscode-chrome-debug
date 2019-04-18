@@ -16,11 +16,17 @@ import { loadProjectLabels } from '../labels';
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
  */
-export interface PuppeteerTestContext extends FrameworkTestContext {
+export interface IPuppeteerTestContext extends FrameworkTestContext {
   /** The connected puppeteer browser object */
   browser: puppeteer.Browser;
   /** The currently running html page in Chrome */
   page: puppeteer.Page;
+}
+
+export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
+  public constructor(public readonly browser: puppeteer.Browser, public readonly page: puppeteer.Page) {
+    super();
+  }
 }
 
 /**
@@ -31,10 +37,10 @@ export interface PuppeteerTestContext extends FrameworkTestContext {
  * @param context The test context for this test sutie
  * @param testFunction The inner test function that will run a test using puppeteer
  */
-export async function puppeteerTest(
+async function puppeteerTestFunction(
   description: string,
   context: FrameworkTestContext,
-  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>
+  testFunction: (context: IPuppeteerTestContext, page: puppeteer.Page) => Promise<any>
 ) {
   return test(description, async function () {
     const debugClient = await context.debugClient;
@@ -52,9 +58,17 @@ export async function puppeteerTest(
       await new Promise(a => setTimeout(a, 500));
     }
 
-    await testFunction({ ...context, browser, page }, page);
+    await testFunction( new PuppeteerTestContext(browser, page).reassignTo(context), page);
   });
 }
+
+puppeteerTestFunction.skip = (
+  description: string,
+  _context: FrameworkTestContext,
+  _testFunction: (context: IPuppeteerTestContext, page: puppeteer.Page) => Promise<any>
+) => test.skip(description, () => {throw new Error(`We don't expect this to be called`); });
+
+export const puppeteerTest = puppeteerTestFunction;
 
 /**
  * Defines a custom test suite which will:
@@ -79,12 +93,7 @@ export function puppeteerSuite(
     let server: HttpOrHttpsServer | null;
 
     setup(async () => {
-      const daPort = process.env['MSFT_TEST_DA_PORT'];
-      const portNumber = daPort
-        ? parseInt(daPort, 10)
-        : undefined;
-
-      let debugClient = await testSetup.setup(portNumber);
+      let debugClient = await testSetup.setup();
       suiteContext.reassignTo({
         testSpec,
         debugClient: debugClient,

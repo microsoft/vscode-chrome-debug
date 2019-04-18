@@ -102,8 +102,9 @@ export class ReassignableFrameworkTestContext implements FrameworkTestContext {
         return this._wrapped.debugClient;
     }
 
-    public reassignTo(newWrapped: FrameworkTestContext): void {
+    public reassignTo(newWrapped: FrameworkTestContext): this {
         this._wrapped = newWrapped;
+        return this;
     }
 }
 

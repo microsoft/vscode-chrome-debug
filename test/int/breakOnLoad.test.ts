@@ -99,7 +99,7 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
             }
@@ -170,7 +170,7 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
             }
@@ -207,14 +207,14 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('debugger_statement', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
                 await dc.setBreakpointsRequest({
                     lines: [bpLine],
                     breakpoints: [{ line: bpLine, column: bpCol }],
                     source: { path: script2Path }
                 });
                 await dc.continueRequest();
-                await dc.assertStoppedLocation('debugger_statement', { path: script2Path, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol });
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
                 await dc.setBreakpointsRequest({
@@ -240,7 +240,7 @@ suite('BreakOnLoad', () => {
         runCommonTests('instrument');
     });
 
-    suite('Instrument Webpack Project', () => {
+    suite.skip('Instrument Webpack Project', () => {
         let dc: ts.ExtendedDebugClient;
         setup(() => {
             return testSetup.setup(undefined, { breakOnLoadStrategy: 'instrument' })
