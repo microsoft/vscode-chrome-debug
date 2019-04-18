@@ -3,9 +3,10 @@
  *--------------------------------------------------------*/
 import {
     IDebuggeeRunner, ITelemetryPropertyCollector, inject,
-    injectable, postConstruct, TYPES, utils as coreUtils, CDTP, IBrowserNavigator
+    injectable, postConstruct, TYPES, utils as coreUtils, CDTP, IBrowserNavigator, parseResourceIdentifier, logger
 } from 'vscode-chrome-debug-core';
 import { ChromeLauncher } from './chromeLauncher';
+import Uri from 'vscode-uri';
 
 /**
  * Run the specified web-page url in Chrome
@@ -44,9 +45,13 @@ export class ChromeRunner implements IDebuggeeRunner {
 
     protected onFrameNavigated(params: CDTP.Page.FrameNavigatedEvent): void {
         if (this._chromeLauncher.userRequestedUrl) {
-            const url = params.frame.url;
+            // TODO: Make sure we are doing the right thing in this method and we send proper telemetry
+            const url = Uri.parse(params.frame.url).toString();
             const requestedUrlNoAnchor = this._chromeLauncher.userRequestedUrl.split('#')[0]; // Frame navigated url doesn't include the anchor
-            if (url === requestedUrlNoAnchor || decodeURI(url) === requestedUrlNoAnchor) { // 'http://localhost:1234/test%20page' will use the not decoded version, 'http://localhost:1234/test page' will use the decoded version
+            const requestedIdentifier = parseResourceIdentifier(Uri.parse(requestedUrlNoAnchor).toString());
+            const urlIdentifier = parseResourceIdentifier(url);
+            if (url === requestedUrlNoAnchor || decodeURI(url) === requestedUrlNoAnchor
+                || requestedIdentifier.isEquivalentTo(urlIdentifier)) { // 'http://localhost:1234/test%20page' will use the not decoded version, 'http://localhost:1234/test page' will use the decoded version
                 // Chrome started to navigate to the user's requested url
                 this._userPageLaunched.resolve();
             } else if (url === 'chrome-error://chromewebdata/') {
@@ -55,6 +60,8 @@ export class ChromeRunner implements IDebuggeeRunner {
             } else if (url.startsWith('chrome-error://')) {
                 // Uknown chrome error
                 this._userPageLaunched.reject('UnknownChromeError');
+            } else {
+                logger.log(`ChromeRunner.onFrameNavigated: Unexpected case: url: ${params.frame.url} requested: ${this._chromeLauncher.userRequestedUrl}`);
             }
         }
     }

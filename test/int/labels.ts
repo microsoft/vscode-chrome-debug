@@ -17,7 +17,7 @@ import { ValidatedMap, IValidatedMap } from './core-v2/chrome/collections/valida
 const readdirAsync = util.promisify(fs.readdir);
 
 const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/;
-const ignoreList = [ 'node_modules', '.git', 'dist' ];
+const ignoreList = [ 'node_modules', '.git', 'dist\\out', 'testdata\\react\\src' ];
 
 /**
  * A label in a source file that tells us where to put a breakpoint for a specific test
@@ -72,7 +72,7 @@ export async function loadLabelsFromFile(filePath: string): Promise<Map<string, 
         let match = labelRegex.exec(fileLine);
 
         if (match) {
-            labelMap.set(match[2], { path: filePath, line: lineNumber });
+            labelMap.set(match[2], new BreakpointLocation(filePath, lineNumber));
         }
         lineNumber++;
     });

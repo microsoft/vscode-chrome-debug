@@ -24,10 +24,11 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#v2",
     "reflect-metadata": "^0.1.13",
+    "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#v2",
     "vscode-debugadapter": "^1.32.1",
-    "vscode-nls": "^4.0.0"
+    "vscode-nls": "^4.0.0",
+    "vscode-uri": "^1.0.6"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
@@ -40,6 +41,7 @@
     "@types/puppeteer": "^1.12.3",
     "@types/request-promise-native": "^1.0.15",
     "@types/semver": "^6.0.0",
+    "@types/source-map": "^0.5.7",
     "@types/tmp": "0.0.32",
     "chai": "^4.2.0",
     "chai-string": "^1.5.0",

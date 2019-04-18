@@ -30,7 +30,7 @@ suite('Stepping', () => {
         return testSetup.teardown();
     });
 
-    suite('skipFiles', () => {
+    suite.skip('skipFiles', () => {
         test('when generated script is skipped via regex, the source can be un-skipped', async () => {
             const testProjectRoot = path.join(DATA_ROOT, 'calls-between-merged-files');
             const sourceA = path.join(testProjectRoot, 'sourceA.ts');

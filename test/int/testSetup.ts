@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import * as tmp from 'tmp';
+import * as puppeteer from 'puppeteer';
 
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
@@ -21,6 +22,10 @@ function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>): v
     launchArgs.trace = 'verbose';
     launchArgs.logTimestamps = true;
     launchArgs.disableNetworkCache = true;
+
+    if (!launchArgs.runtimeExecutable) {
+        launchArgs.runtimeExecutable = puppeteer.executablePath()
+    }
 
     // Start with a clean userDataDir for each test run
     const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
@@ -42,6 +47,13 @@ export const PROJECT_ROOT = path.join(lowercaseDriveLetterDirname, '../../../');
 export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 
 export function setup(port?: number, launchProps?: ILaunchRequestArgs) {
+    if (!port) {
+        const daPort = process.env['MSFT_TEST_DA_PORT'];
+        port = daPort
+            ? parseInt(daPort, 10)
+            : undefined;
+    }
+
     if (launchProps) {
         testLaunchProps = launchProps;
     }
