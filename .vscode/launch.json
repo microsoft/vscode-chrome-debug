@@ -64,6 +64,23 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "sourcesTest",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+                "--timeout", "999999",
+                "--colors",
+                "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
+                "${workspaceFolder}/out/test/int/sources/*.test.js"
+                ],
+                "skipFiles": ["<node_internals>/**"],
+                "outFiles": [
+                    "${workspaceFolder}/out/**/*.js"
+                ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "debug integration test",
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "env": {

@@ -1,0 +1,1 @@
+This folder contains tests that apply to checking the loaded sources (panel) when debugging.
