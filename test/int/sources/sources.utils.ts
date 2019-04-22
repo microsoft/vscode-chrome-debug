@@ -9,11 +9,11 @@ export async function loadedSourcesContainsScript(loadedSources: Script[], scrip
 
 export function createScriptItemFromInfo(name: string,
                                          path: string,
-                                         sourceReference: number = null,
-                                         presentationHint: any = null,
-                                         origin: string = null,
-                                         sources: DebugProtocol.Source[] = null,
-                                         adapterData: any = null,
-                                         checksums: DebugProtocol.Checksum[] = null): Script {
+                                         sourceReference?: number,
+                                         presentationHint?: any,
+                                         origin?: string,
+                                         sources?: DebugProtocol.Source[],
+                                         adapterData?: any,
+                                         checksums?: DebugProtocol.Checksum[]): Script {
     return {name, path, sourceReference, presentationHint, origin, sources, adapterData, checksums};
 }
