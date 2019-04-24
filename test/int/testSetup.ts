@@ -10,6 +10,9 @@ import * as puppeteer from 'puppeteer';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
 import { Dictionary } from 'lodash';
+import { logCallsTo, getDebugAdapterLogFilePath, setTestLogName } from './utils/logging';
+import { IBeforeAndAfterContext } from 'mocha';
+import { execSync } from 'child_process';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
@@ -17,14 +20,16 @@ let testLaunchProps: ILaunchRequestArgs & Dictionary<unknown> | undefined;
 
 export const isThisV2 = true;
 export const isThisV1 = !isThisV2;
+export const isWindows = process.platform === 'win32';
 
-function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>): void {
+function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>, testTitle: string): void {
     launchArgs.trace = 'verbose';
     launchArgs.logTimestamps = true;
     launchArgs.disableNetworkCache = true;
+    launchArgs.logFilePath = getDebugAdapterLogFilePath(testTitle);
 
     if (!launchArgs.runtimeExecutable) {
-        launchArgs.runtimeExecutable = puppeteer.executablePath()
+        launchArgs.runtimeExecutable = puppeteer.executablePath();
     }
 
     // Start with a clean userDataDir for each test run
@@ -38,15 +43,18 @@ function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>): v
     }
 }
 
-function patchLaunchArgs(launchArgs: ILaunchRequestArgs): void {
-    formLaunchArgs(launchArgs);
+function patchLaunchArgs(launchArgs: ILaunchRequestArgs, testTitle: string): void {
+    formLaunchArgs(launchArgs, testTitle);
 }
 
 export const lowercaseDriveLetterDirname = __dirname.charAt(0).toLowerCase() + __dirname.substr(1);
 export const PROJECT_ROOT = path.join(lowercaseDriveLetterDirname, '../../../');
 export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 
-export function setup(port?: number, launchProps?: ILaunchRequestArgs) {
+export async function setup(context: IBeforeAndAfterContext, port?: number, launchProps?: ILaunchRequestArgs) {
+    const testTitle = context.currentTest.fullTitle();
+    setTestLogName(testTitle);
+
     if (!port) {
         const daPort = process.env['MSFT_TEST_DA_PORT'];
         port = daPort
@@ -57,9 +65,22 @@ export function setup(port?: number, launchProps?: ILaunchRequestArgs) {
     if (launchProps) {
         testLaunchProps = launchProps;
     }
-    return ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: patchLaunchArgs, port: port });
+
+    const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
+    debugClient.defaultTimeout = 10000/*ms*/; // The VSTS agents run slower than our machines
+
+    const wrappedDebugClient = logCallsTo(debugClient, 'DebugAdapterClient');
+    return wrappedDebugClient;
 }
 
 export async function teardown() {
     await ts.teardown();
+
+    if (process.platform === 'win32' && process.env.TF_BUILD) {
+        // We only need to kill the chrome.exe instances on the Windows agent
+        try {
+            // TODO: Figure out a way to remove this
+            execSync('taskkill /f /im chrome.exe', { stdio: 'ignore' });
+        } catch { }
+    }
 }

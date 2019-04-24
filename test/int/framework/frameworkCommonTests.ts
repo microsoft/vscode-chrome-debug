@@ -23,7 +23,7 @@ export class FrameworkTestSuite {
      * @param bpLabel Label for the breakpoint to set
      */
     testBreakOnLoad(bpLabel: string) {
-        return test.skip(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
+        return test(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
             const testSpec = this.suiteContext.testSpec;
             const location = this.suiteContext.breakpointLabels.get(bpLabel);
             await this.suiteContext.debugClient
@@ -128,8 +128,9 @@ export class FrameworkTestSuite {
     testPauseExecution() {
         return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, _page) => {
             const debugClient = context.debugClient;
+            const waitForPaused = debugClient.waitForEvent('stopped');
             await debugClient.pauseRequest({ threadId: 0 });
-            await debugClient.waitForEvent('stopped');
+            await waitForPaused;
             await debugClient.continueRequest();
         });
     }

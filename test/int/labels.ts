@@ -17,7 +17,7 @@ import { ValidatedMap, IValidatedMap } from './core-v2/chrome/collections/valida
 const readdirAsync = util.promisify(fs.readdir);
 
 const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/;
-const ignoreList = [ 'node_modules', '.git', 'dist\\out', 'testdata\\react\\src' ];
+const ignoreList = [ 'node_modules', '.git', path.join('dist', 'out'), path.join('testdata', 'react', 'src') ];
 
 /**
  * A label in a source file that tells us where to put a breakpoint for a specific test
