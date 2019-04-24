@@ -15,8 +15,8 @@ suite('Breakpoints', () => {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;
-    setup(() => {
-        return testSetup.setup(/*4712*/) // Enable this to debug the debug adapter under test
+    setup(function () {
+        return testSetup.setup(this)
             .then(_dc => dc = _dc);
     });
 

@@ -54,16 +54,10 @@ jobs:
     inputs:
       ignoreDirectories: 'testdata'
 
-  # - task: Npm@1
-  #   displayName: npm intTest
-  #   inputs:
-  #     command: custom
-  #     verbose: false
-  #     customCommand: 'run intTest'
-
-  - ${{ if eq(parameters.name, 'Windows') }}:
+  # At the moment all the tests fail on Linux, so we only run them on Windows and MacOS
+  - ${{ if or(eq(parameters.name, 'Windows'), eq(parameters.name, 'MacOS')) }}:
     - task: Npm@1
-      displayName: All integration tests
+      displayName: Integration tests
       inputs:
         command: custom
         verbose: false
@@ -101,10 +95,25 @@ jobs:
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
       displayName: 'Publish Security Analysis Logs'
 
-   # Publish Test Results
-  - ${{ if eq(parameters.name, 'Windows') }}:
+  # At the moment all the tests fail on Linux, so we only run them on Windows and MacOS
+  - ${{ if or(eq(parameters.name, 'Windows'), eq(parameters.name, 'MacOS')) }}:
     - task: PublishTestResults@2
+      condition: always()
       inputs:
         testResultsFormat: 'JUnit' # Options: JUnit, NUnit, VSTest, xUnit, cTest
         testResultsFiles: '**/test-*.xml'
+        publishRunAttachments: true
 
+  - ${{ if eq(parameters.name, 'Windows') }}:
+    - task: PublishPipelineArtifact@0
+      condition: always()
+      inputs:
+        artifactName: 'testsOnWindows'
+        targetPath: 'logs/'
+
+  - ${{ if eq(parameters.name, 'MacOS') }}:
+    - task: PublishPipelineArtifact@0
+      condition: always()
+      inputs:
+        artifactName: 'testsOnMacOS'
+        targetPath: 'logs/'

@@ -8,6 +8,7 @@ import { FileBreakpointsWizard } from './fileBreakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../utils/waitUntilReadyWithTimeout';
 import { isThisV2, isThisV1 } from '../../testSetup';
 import { expect } from 'chai';
+import { BreakpointWizard } from './breakpointWizard';
 
 export class BreakpointsWizard {
     private _state: IEventForConsumptionAvailabilityState = new NoEventAvailableToBeConsumed(this.changeStateFunction());
@@ -32,14 +33,20 @@ export class BreakpointsWizard {
         await this._state.assertNotPaused();
     }
 
-    public assertIsPaused(): void {
-        this._state.assertIsPaused();
+    public assertIsPaused(breakpoint: BreakpointWizard): void {
+        this._state.assertIsPaused(breakpoint);
     }
 
     public async waitUntilJustResumed(): Promise<void> {
-        await waitUntilReadyWithTimeout(() => this._state instanceof EventAvailableToBeConsumed);
+        await waitUntilReadyWithTimeout(() => this._state instanceof ResumedEventAvailableToBeConsumed);
 
-        await this._state.waitUntilJustResumed();
+        await this._state.assertNotPaused();
+    }
+
+    public async waitUntilPaused(breakpoint: BreakpointWizard): Promise<void> {
+        await waitUntilReadyWithTimeout(() => this._state instanceof PausedEventAvailableToBeConsumed);
+
+        await this._state.assertIsPaused(breakpoint);
     }
 
     public toString(): string {
@@ -69,22 +76,17 @@ interface IEventForConsumptionAvailabilityState {
     onPaused(stopped: DebugProtocol.StoppedEvent): void;
     onResumed(continued: DebugProtocol.ContinuedEvent): void;
 
-    waitUntilJustResumed(): Promise<void>;
-    assertIsPaused(): void;
+    assertIsPaused(breakpoint: BreakpointWizard): void;
     assertNotPaused(): Promise<void>;
 }
 
 type ChangeState = (newState: IEventForConsumptionAvailabilityState) => void;
 
-class EventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(private readonly _changeState: ChangeState, public readonly latestEvent: DebugProtocol.StoppedEvent | DebugProtocol.ContinuedEvent) { }
+class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
+    public constructor(protected readonly _changeState: ChangeState, public readonly latestEvent: DebugProtocol.StoppedEvent) {}
 
     public onPaused(stopped: DebugProtocol.StoppedEvent): void {
-        if (isThisV1 && this.latestEvent.event === 'continued') {
-            this._changeState(new EventAvailableToBeConsumed(this._changeState, stopped));
-        } else {
-            throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new stopped event: ${JSON.stringify(stopped)}`);
-        }
+        throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new stopped event: ${JSON.stringify(stopped)}`);
     }
 
     public onResumed(continued: DebugProtocol.ContinuedEvent): void {
@@ -93,14 +95,9 @@ class EventAvailableToBeConsumed implements IEventForConsumptionAvailabilityStat
         }
     }
 
-    public async waitUntilJustResumed(): Promise<void> {
-        if (this.latestEvent.event === 'continued') {
-            this._changeState(new NoEventAvailableToBeConsumed(this._changeState));
-        }
-    }
-
-    public assertIsPaused(): void {
+    public assertIsPaused(_breakpoint: BreakpointWizard): void {
         if (this.latestEvent.event === 'stopped') {
+            expect(this.latestEvent.body.reason).to.equal('breakpoint');
             this._changeState(new NoEventAvailableToBeConsumed(this._changeState));
         }
     }
@@ -115,26 +112,50 @@ class EventAvailableToBeConsumed implements IEventForConsumptionAvailabilityStat
     }
 }
 
+class ResumedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
+    public constructor(protected readonly _changeState: ChangeState, public readonly latestEvent: DebugProtocol.ContinuedEvent) {}
+
+    public onPaused(stopped: DebugProtocol.StoppedEvent): void {
+        if (isThisV1) {
+            this._changeState(new PausedEventAvailableToBeConsumed(this._changeState, stopped));
+        }
+    }
+
+    public onResumed(continued: DebugProtocol.ContinuedEvent): void {
+        if (isThisV2) {
+            throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new continued event: ${JSON.stringify(continued)}`);
+        }
+    }
+
+    public assertIsPaused(_breakpoint: BreakpointWizard): void {
+        throw new Error(`The debugger is not paused`);
+    }
+
+    public async assertNotPaused(): Promise<void> {
+        this._changeState(new NoEventAvailableToBeConsumed(this._changeState));
+    }
+
+    public toString(): string {
+        return `Resumed Event available to be consumed: ${JSON.stringify(this.latestEvent)}`;
+    }
+}
+
 class NoEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(private readonly _changeState: ChangeState) { }
+    public constructor(protected readonly _changeState: ChangeState) { }
 
     public get latestEvent(): never {
         throw new Error(`There is no event available to be consumed`);
     }
 
     public onPaused(stopped: DebugProtocol.StoppedEvent): void {
-        this._changeState(new EventAvailableToBeConsumed(this._changeState, stopped));
+        this._changeState(new PausedEventAvailableToBeConsumed(this._changeState, stopped));
     }
 
     public onResumed(continued: DebugProtocol.ContinuedEvent): void {
-        this._changeState(new EventAvailableToBeConsumed(this._changeState, continued));
+        this._changeState(new ResumedEventAvailableToBeConsumed(this._changeState, continued));
     }
 
-    public waitUntilJustResumed(): Promise<void> {
-        throw new Error(`There is no event available to be consumed`);
-    }
-
-    public assertIsPaused(): void {
+    public assertIsPaused(_breakpoint: BreakpointWizard): void {
         throw new Error(`There is no event available to be consumed`);
     }
 
