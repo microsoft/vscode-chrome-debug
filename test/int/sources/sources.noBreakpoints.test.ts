@@ -3,19 +3,46 @@ import * as testSetup from '../testSetup';
 import * as assert from 'assert';
 import { puppeteerSuite, puppeteerTest } from '../puppeteer/puppeteerSuite';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
-import { loadedSourcesContainsScript, createScriptItemFromInfo } from './sources.utils';
+import * as sourcesHelper from './sources.utils';
+import { LoadedSourceEvent } from 'vscode-debugadapter';
 
 // We are using the "Simple" project app inside the testdata directory
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'simple');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
+const sourceChecker = new sourcesHelper.SourcesChecker();
 
 puppeteerSuite('Static HTML Pages Without Breakpoints', TEST_SPEC, (suiteContext) => {
+    puppeteerTest('Receive loaded source events after page load', suiteContext, async (context, page) => {
+        sourceChecker.resetLoadedSourcesCount();
+        let dynamicScript1 = 'console.log(\'hello new page!\')';
+
+        await Promise.all([
+            page.addScriptTag({content: dynamicScript1}),
+            context.debugClient.waitForEvent('loadedSource').then(event => {
+                sourceChecker.assertNewSource(<LoadedSourceEvent>event);
+                sourceChecker.updateSourcesCount(1);
+                sourceChecker.assertLoadedSourceCountIs(1);
+            })
+        ]);
+
+        let dynamicScript2 = 'console.log(\'hello again!\')';
+
+        await Promise.all([
+            page.evaluate(dynamicScript2),
+            context.debugClient.waitForEvent('loadedSource').then(event => {
+                sourceChecker.assertNewSource(<LoadedSourceEvent>event);
+                sourceChecker.updateSourcesCount(1);
+                sourceChecker.assertLoadedSourceCountIs(2);
+            })
+        ]);
+    });
+
     puppeteerTest('Static webpage with single loaded script', suiteContext, async (context) => {
-        let scriptToMatch = createScriptItemFromInfo('app.js', TEST_SPEC.props.url + 'app.js');
+        let scriptToMatch = sourcesHelper.createScriptItemFromInfo('app.js', TEST_SPEC.props.url + 'app.js');
         let loadedSourcesResponse = await context.debugClient.loadedSources({});
 
-        let hasScript = await loadedSourcesContainsScript(loadedSourcesResponse.sources, scriptToMatch);
+        let hasScript = await sourcesHelper.loadedSourcesContainsScript(loadedSourcesResponse.sources, scriptToMatch);
         assert.equal(hasScript, true, "loaded sources does not contain given script");
     });
 
@@ -41,3 +68,4 @@ puppeteerSuite('Static HTML Pages Without Breakpoints', TEST_SPEC, (suiteContext
         assert.equal(loadedSourcesResponseAfterInjection.sources.length, 2, "loaded sources should have 2 sources after script injection");
     });
 });
+
