@@ -8,6 +8,7 @@ import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './inte
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTimeout';
 import { isThisV2 } from '../../../testSetup';
+import { findLineNumber } from '../../../utils/findPositionOfTextInFile';
 
 use(chaiString);
 
@@ -37,12 +38,11 @@ export class BreakpointsAssertions {
 
     public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void> {
         const actionResult = lastActionToMakeBreakpointHit();
-        const vsCodeStatus = this.currentBreakpointsMapping.get(breakpoint);
-        const location = { path: this._internal.filePath, line: vsCodeStatus.line, colum: vsCodeStatus.column };
+        // TODO: Re-enable this checks and validate that we hit the location that the breakpoint specifies
+        // const vsCodeStatus = this.currentBreakpointsMapping.get(breakpoint);
+        // const location = { path: this._internal.filePath, line: vsCodeStatus.line, colum: vsCodeStatus.column };
 
-        // TODO: Merge the two following calls together
-        await this._internal.client.assertStoppedLocation('breakpoint', location);
-        await this._breakpointsWizard.assertIsPaused();
+        await this._breakpointsWizard.waitUntilPaused(breakpoint);
 
         const stackTraceResponse = await this._internal.client.send('stackTrace', {
             threadId: THREAD_ID,
@@ -58,6 +58,7 @@ export class BreakpointsAssertions {
         this.validateStackTraceResponse(stackTraceResponse);
 
         const formattedExpectedStackTrace = expectedStackTrace.replace(/^\s+/gm, ''); // Remove the white space we put at the start of the lines to make the stack trace align with the code
+        this.applyIgnores(formattedExpectedStackTrace, stackTraceResponse);
         const actualStackTrace = this.extractStackTrace(stackTraceResponse);
         assert.equal(actualStackTrace, formattedExpectedStackTrace, `Expected the stack trace when hitting ${breakpoint} to be:\n${formattedExpectedStackTrace}\nyet it is:\n${actualStackTrace}`);
 
@@ -70,6 +71,16 @@ export class BreakpointsAssertions {
         }
 
         await actionResult;
+    }
+
+    public applyIgnores(formattedExpectedStackTrace: string, stackTraceResponse: DebugProtocol.StackTraceResponse): void {
+        const ignoreFunctionNameText = '<__IGNORE_FUNCTION_NAME__>';
+        const ignoreFunctionName = findLineNumber(formattedExpectedStackTrace, formattedExpectedStackTrace.indexOf(ignoreFunctionNameText));
+        if (ignoreFunctionName >= 0) {
+            expect(stackTraceResponse.body.stackFrames.length).to.be.greaterThan(ignoreFunctionName);
+            const ignoredFrame = stackTraceResponse.body.stackFrames[ignoreFunctionName];
+            ignoredFrame.name = `${ignoreFunctionNameText} [${ignoredFrame.source!.name}] Line ${ignoredFrame.line}`;
+        }
     }
 
     private extractStackTrace(stackTraceResponse: DebugProtocol.StackTraceResponse): string {

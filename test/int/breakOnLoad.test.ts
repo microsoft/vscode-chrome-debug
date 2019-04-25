@@ -16,8 +16,8 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;
-    setup(() => {
-        return testSetup.setup(undefined, { breakOnLoadStrategy: breakOnLoadStrategy })
+    setup(function () {
+        return testSetup.setup(this, undefined, { breakOnLoadStrategy: breakOnLoadStrategy })
             .then(_dc => dc = _dc);
     });
 
@@ -37,9 +37,10 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
     // https://github.com/Microsoft/vscode-chrome-debug-core/blob/90797bc4a3599b0a7c0f197efe10ef7fab8442fd/src/chrome/chromeDebugAdapter.ts#L692
     // so we don't want to use hitBreakpointUnverified function because it specifically checks for 'breakpoint' as the reason
     function launchWithUrlAndSetBreakpoints(url: string, projectRoot: string, scriptPath: string, lineNum: number, colNum: number): Promise<any> {
+        const waitForInitialized = dc.waitForEvent('initialized');
         return Promise.all([
             dc.launch({ url: url, webRoot: projectRoot }),
-            dc.waitForEvent('initialized').then(_event => {
+            waitForInitialized.then(_event => {
                 return dc.setBreakpointsRequest({
                     lines: [lineNum],
                     breakpoints: [{ line: lineNum, column: colNum }],
@@ -240,10 +241,10 @@ suite('BreakOnLoad', () => {
         runCommonTests('instrument');
     });
 
-    suite.skip('Instrument Webpack Project', () => {
+    suite('Instrument Webpack Project', () => {
         let dc: ts.ExtendedDebugClient;
-        setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: 'instrument' })
+        setup(function () {
+            return testSetup.setup(this, undefined, { breakOnLoadStrategy: 'instrument' })
                 .then(_dc => dc = _dc);
         });
 
@@ -269,7 +270,7 @@ suite('BreakOnLoad', () => {
             const bpLine = 3;
             const bpCol = 1;
 
-            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine , column: bpCol});
+            await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
 
         test('Hits multiple breakpoints in a file on load', async () => {
@@ -310,8 +311,8 @@ suite('BreakOnLoad', () => {
 
     suite('BreakOnLoad Disabled (strategy: off)', () => {
         let dc: ts.ExtendedDebugClient;
-        setup(() => {
-            return testSetup.setup(undefined, { breakOnLoadStrategy: 'off' })
+        setup(function () {
+            return testSetup.setup(this, undefined, { breakOnLoadStrategy: 'off' })
                 .then(_dc => dc = _dc);
         });
 

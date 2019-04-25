@@ -11,7 +11,7 @@ export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
     private readonly _breakpointsToUnset = new ValidatedSet<BreakpointWizard>();
     private readonly _actionsToCompleteAfterBatch: (() => PromiseOrNot<void>)[] = [];
 
-    public constructor(private readonly _internal: InternalFileBreakpointsWizard, public readonly currentBreakpointsMapping: CurrentBreakpointsMapping) { }
+    public constructor(private readonly _internal: InternalFileBreakpointsWizard, public readonly currentBreakpointsMapping: CurrentBreakpointsMapping) {}
 
     public set(breakpointWizard: BreakpointWizard): void {
         this._breakpointsToSet.add(breakpointWizard);

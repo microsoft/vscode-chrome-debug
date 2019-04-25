@@ -28,7 +28,7 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
             Kb [react-dom.production.min.js] Line 660:1
             Dd [react-dom.production.min.js] Line 1760:1
             (anonymous function) [react-dom.production.min.js] Line 6017:1
-            push../node_modules/scheduler/cjs/scheduler.production.min.js.exports.unstable_runWithPriority [scheduler.production.min.js] Line 274:1
+            <__IGNORE_FUNCTION_NAME__> [scheduler.production.min.js] Line 274:1
             Ii [react-dom.production.min.js] Line 6016:1
             Cd [react-dom.production.min.js] Line 1737:1`;
 

@@ -15,19 +15,19 @@ suite('Stepping', () => {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;
-    setup(() => {
-        return testSetup.setup()
+    setup(function () {
+        return testSetup.setup(this)
             .then(_dc => dc = _dc);
     });
 
     let server: HttpOrHttpsServer | null;
-    teardown(() => {
+    teardown(async () => {
         if (server) {
             server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
             server = null;
         }
 
-        return testSetup.teardown();
+        await testSetup.teardown();
     });
 
     suite.skip('skipFiles', () => {

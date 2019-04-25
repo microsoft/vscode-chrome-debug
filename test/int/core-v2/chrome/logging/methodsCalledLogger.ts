@@ -55,7 +55,7 @@ export class MethodsCalledLogger<T extends object> {
 
     public wrapped(): T {
         const handler = {
-            get: <K extends keyof T>(target: T, propertyKey: K, _receiver: any) => {
+            get: <K extends keyof T>(target: T, propertyKey: K, receiver: any) => {
                 const originalPropertyValue = target[propertyKey];
                 if (typeof originalPropertyValue === 'function') {
                     return (...args: any) => {
@@ -69,15 +69,23 @@ export class MethodsCalledLogger<T extends object> {
                             const result = originalPropertyValue.apply(target, args);
                             if (!result || !result.then) {
                                 this.logCall(propertyKey, Synchronicity.Sync, args, Outcome.Succesful, result);
-                                let resultPossiblyWrapped = result;
-                                this._configuration.decideWhetherToWrapMethodResult(propertyKey, args, result, name => resultPossiblyWrapped = new MethodsCalledLogger(this._configuration, result, name).wrapped());
-                                return resultPossiblyWrapped;
+                                if (result === target) {
+                                    return receiver;
+                                } else {
+                                    let resultPossiblyWrapped = result;
+                                    this._configuration.decideWhetherToWrapMethodResult(propertyKey, args, result, name => resultPossiblyWrapped = new MethodsCalledLogger(this._configuration, result, name).wrapped());
+                                    return resultPossiblyWrapped;
+                                }
                             } else {
                                 return result.then((promiseResult: unknown) => {
                                     this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Succesful, promiseResult);
-                                    let resultPossiblyWrapped = promiseResult;
-                                    this._configuration.decideWhetherToWrapMethodResult(propertyKey, args, promiseResult, name => resultPossiblyWrapped = new MethodsCalledLogger(this._configuration, <object>promiseResult, name).wrapped());
-                                    return resultPossiblyWrapped;
+                                    if (promiseResult === target) {
+                                        return receiver;
+                                    } else {
+                                        let resultPossiblyWrapped = promiseResult;
+                                        this._configuration.decideWhetherToWrapMethodResult(propertyKey, args, promiseResult, name => resultPossiblyWrapped = new MethodsCalledLogger(this._configuration, <object>promiseResult, name).wrapped());
+                                        return resultPossiblyWrapped;
+                                    }
                                 }, (error: unknown) => {
                                     this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Failure, error);
                                     return Promise.reject(error);
