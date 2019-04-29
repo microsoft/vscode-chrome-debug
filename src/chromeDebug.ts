@@ -4,7 +4,7 @@
 
 import * as os from 'os';
 import * as path from 'path';
-import { BaseSourceMapTransformer, ChromeDebugSession, logger, OnlyProvideCustomLauncherExtensibilityPoints, ISourcesRetriever, telemetry, UrlPathTransformer, TYPES, interfaces, GetComponentByID, DependencyInjection, UninitializedCDA } from 'vscode-chrome-debug-core';
+import { ChromeDebugSession, logger, OnlyProvideCustomLauncherExtensibilityPoints, ISourcesRetriever, telemetry, UrlPathTransformer, TYPES, interfaces, GetComponentByID, DependencyInjection, UninitializedCDA } from 'vscode-chrome-debug-core';
 import { ChromeDebugAdapter } from './chromeDebugAdapter';
 import { ChromeLauncher } from './launcherAndRuner/chromeLauncher';
 import { defaultTargetFilter } from './utils';
@@ -39,7 +39,6 @@ const extensibilityPoints = new OnlyProvideCustomLauncherExtensibilityPoints(log
 extensibilityPoints.updateArguments = (scenario, args) => new ArgumentsUpdater().updateArguments(scenario, args);
 extensibilityPoints.targetFilter = defaultTargetFilter;
 extensibilityPoints.pathTransformer = UrlPathTransformer;
-extensibilityPoints.sourceMapTransformer = BaseSourceMapTransformer;
 extensibilityPoints.bindAdditionalComponents = (diContainer: DependencyInjection) => {
     diContainer.configureClass(TYPES.IServiceComponent, ShowOverlayWhenPaused);
     diContainer.configureClass(CDTPDeprecatedPage, CDTPDeprecatedPage);
