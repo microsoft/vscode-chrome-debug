@@ -74,7 +74,7 @@
                 "-u", "tdd",
                 "--timeout", "999999",
                 "--colors",
-                "--grep", "Should hit breakpoint on page reload",
+                "--grep", "Hit count breakpoints =",
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "${workspaceFolder}/out/test/int/**/*.test.js",
             ],

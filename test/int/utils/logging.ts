@@ -19,7 +19,14 @@ export function getDebugAdapterLogFilePath(testTitle: string): string {
 }
 
 function sanitizeTestTitle(testTitle: string) {
-    return testTitle.replace(/[:\/\\]/g, '-');
+    return testTitle
+    .replace(/[:\/\\]/g, '-')
+
+    // These replacements are needed for the hit count breakpoint tests, which have these characters in their title
+    .replace(/ > /g, ' bigger than ')
+    .replace(/ < /g, ' smaller than ')
+    .replace(/ >= /g, ' bigger than or equal to ')
+    .replace(/ <= /g, ' smaller than or equal to ');
 }
 
 function logFilePath(testTitle: string, logType: string) {
@@ -28,12 +35,16 @@ function logFilePath(testTitle: string, logType: string) {
 
 logger.init(() => { });
 
+// Dispose the logger on unhandled errors, so it'll flush the remaining contents of the log...
+process.on('uncaughtException', () => logger.dispose());
+process.on('unhandledRejection', () => logger.dispose());
+
 export function setTestLogName(testTitle: string): void {
     logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
 }
 
 class PuppeteerMethodsCalledLoggerConfiguration implements IMethodsCalledLoggerConfiguration {
-    private readonly _wrapped = new MethodsCalledLoggerConfiguration([]);
+    private readonly _wrapped = new MethodsCalledLoggerConfiguration('', []);
     public readonly replacements: ReplacementInstruction[] = [];
 
     public decideWhetherToWrapMethodResult(methodName: string | symbol | number, args: any, _result: unknown, wrapWithName: (name: string) => void): void {
