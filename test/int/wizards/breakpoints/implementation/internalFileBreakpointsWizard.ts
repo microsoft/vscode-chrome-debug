@@ -11,6 +11,7 @@ import { PerformChangesImmediatelyState } from './performChangesImmediatelyState
 import { BreakpointsUpdater } from './breakpointsUpdater';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { MakePropertyRequired, Replace } from '../../../core-v2/typeUtils';
+import { IVerifications } from './breakpointsAssertions';
 
 export type BreakpointWithId = MakePropertyRequired<DebugProtocol.Breakpoint, 'id'>;
 export type BreakpointStatusChangedWithId = Replace<DebugProtocol.BreakpointEvent['body'], 'breakpoint', BreakpointWithId>;
@@ -30,7 +31,8 @@ export interface IBreakpointsBatchingStrategy {
 
     waitUntilVerified(breakpoint: BreakpointWizard): Promise<void>;
     assertIsVerified(breakpoint: BreakpointWizard): void;
-    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void>;
+    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void>;
+    assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void>;
 
     onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void;
 }
@@ -46,9 +48,10 @@ export class InternalFileBreakpointsWizard {
 
     public constructor(private readonly _breakpointsWizard: BreakpointsWizard, public readonly client: ExtendedDebugClient, public readonly filePath: string) { }
 
-    public async hitCountBreakpoint(options: { lineText: string; hitCountCondition: string; name: string }): Promise<BreakpointWizard> {
-        const position = await findPositionOfTextInFile(this.filePath, options.lineText);
-        return new BreakpointWizard(this, position, new PauseOnHitCount(options.hitCountCondition), options.name);
+    public async hitCountBreakpoint(options: { text: string; hitCountCondition: string; name: string, boundText?: string }): Promise<BreakpointWizard> {
+        const position = await findPositionOfTextInFile(this.filePath, options.text);
+        const boundPosition = options.boundText ? await findPositionOfTextInFile(this.filePath, options.boundText) : position;
+        return new BreakpointWizard(this, position, new PauseOnHitCount(options.hitCountCondition), options.name, boundPosition);
     }
 
     public async set(breakpointWizard: BreakpointWizard): Promise<void> {
@@ -67,8 +70,12 @@ export class InternalFileBreakpointsWizard {
         this._state.assertIsVerified(breakpoint);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void> {
-        return this._state.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, expectedStackTrace);
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+        return this._state.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, verifications);
+    }
+
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+        return this._state.assertIsHitThenResume(breakpoint, verifications);
     }
 
     public onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void {

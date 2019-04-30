@@ -4,7 +4,8 @@ import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { wrapWithMethodLogger } from '../../core-v2/chrome/logging/methodsCalledLogger';
 
 export interface IBreakpointOptions {
-    lineText: string;
+    text: string;
+    boundText?: string;
 }
 
 export interface IHitCountBreakpointOptions extends IBreakpointOptions {
@@ -20,9 +21,10 @@ export class FileBreakpointsWizard {
 
     public async unsetHitCountBreakpoint(options: IHitCountBreakpointOptions): Promise<BreakpointWizard> {
         return wrapWithMethodLogger(await this._internal.hitCountBreakpoint({
-            lineText: options.lineText,
+            text: options.text,
+            boundText: options.boundText,
             hitCountCondition: options.hitCountCondition,
-            name: `BP @ ${options.lineText}`
+            name: `BP @ ${options.text}`
         }));
     }
 

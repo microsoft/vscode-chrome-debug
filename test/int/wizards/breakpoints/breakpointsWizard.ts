@@ -6,18 +6,30 @@ import { ValidatedMap } from '../../core-v2/chrome/collections/validatedMap';
 import { wrapWithMethodLogger } from '../../core-v2/chrome/logging/methodsCalledLogger';
 import { FileBreakpointsWizard } from './fileBreakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../utils/waitUntilReadyWithTimeout';
-import { isThisV2, isThisV1 } from '../../testSetup';
 import { expect } from 'chai';
 import { BreakpointWizard } from './breakpointWizard';
+import { logger, ContinuedEvent, StoppedEvent } from 'vscode-debugadapter';
+import { isThisV2 } from '../../testSetup';
+import { utils } from 'vscode-chrome-debug-core';
 
 export class BreakpointsWizard {
-    private _state: IEventForConsumptionAvailabilityState = new NoEventAvailableToBeConsumed(this.changeStateFunction());
+    private _eventsToBeConsumed: (DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent)[] = [];
     private readonly _pathToFileWizard = new ValidatedMap<string, InternalFileBreakpointsWizard>();
 
     private constructor(private readonly _client: ExtendedDebugClient, private readonly _project: TestProjectSpec) {
-        this._client.on('stopped', stopped => this._state.onPaused(stopped));
-        this._client.on('continued', continued => this._state.onResumed(continued));
+        this._client.on('stopped', stopped => {
+            this._eventsToBeConsumed.push(stopped);
+            this.logState();
+        });
+        this._client.on('continued', continued => {
+            this._eventsToBeConsumed.push(continued);
+            this.logState();
+        });
         this._client.on('breakpoint', breakpointStatusChange => this.onBreakpointStatusChange(breakpointStatusChange.body));
+    }
+
+    private logState() {
+        logger.log(`BreakpointsWizard #events = ${this._eventsToBeConsumed.length}, state = ${this.state}`);
     }
 
     public static create(debugClient: ExtendedDebugClient, testProjectSpecification: TestProjectSpec): BreakpointsWizard {
@@ -26,35 +38,70 @@ export class BreakpointsWizard {
 
     public at(filePath: string): FileBreakpointsWizard {
         return wrapWithMethodLogger(new FileBreakpointsWizard(this._pathToFileWizard.getOrAdd(filePath,
-            () => new InternalFileBreakpointsWizard(this, this._client, this._project.src(filePath)))));
+            () => new InternalFileBreakpointsWizard(wrapWithMethodLogger(this), this._client, this._project.src(filePath)))));
     }
 
-    public async assertNotPaused(): Promise<void> {
-        await this._state.assertNotPaused();
+    /**
+     * Wait for a little while, and verify that the debuggee is not paused after that
+     *
+     * @param millisecondsToWaitForPauses How much time to wait for pauses
+     */
+    public async waitAndAssertNotPaused(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
+        await utils.promiseTimeout(undefined, millisecondsToWaitForPauses); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
+        await this.state.assertNotPaused();
     }
 
-    public assertIsPaused(breakpoint: BreakpointWizard): void {
-        this._state.assertIsPaused(breakpoint);
+    public isPaused(): boolean {
+        return this.state.isPaused();
     }
 
     public async waitUntilJustResumed(): Promise<void> {
-        await waitUntilReadyWithTimeout(() => this._state instanceof ResumedEventAvailableToBeConsumed);
+        await waitUntilReadyWithTimeout(() => this.state instanceof ResumedEventAvailableToBeConsumed);
 
-        await this._state.assertNotPaused();
+        await this.state.assertNotPaused();
+    }
+
+    /**
+     * Instruct the debuggee to resume, and verify that the Debug-Adapter sends the proper notification after that happens
+     */
+    public async resume(): Promise<void> {
+        await this._client.continueRequest();
+        if (isThisV2) {
+            // TODO: Is getting this event on V2 a bug? See: Continued Event at https://microsoft.github.io/debug-adapter-protocol/specification
+            await this.waitUntilJustResumed();
+        }
     }
 
     public async waitUntilPaused(breakpoint: BreakpointWizard): Promise<void> {
-        await waitUntilReadyWithTimeout(() => this._state instanceof PausedEventAvailableToBeConsumed);
+        await waitUntilReadyWithTimeout(() => this.state instanceof PausedEventAvailableToBeConsumed);
 
-        await this._state.assertIsPaused(breakpoint);
+        await this.state.assertIsPaused(breakpoint);
     }
 
     public toString(): string {
         return 'Breakpoints';
     }
 
+    private get state(): IEventForConsumptionAvailabilityState {
+        if (this._eventsToBeConsumed.length === 0) {
+            return new NoEventAvailableToBeConsumed();
+        } else {
+            const nextEventToBeConsumed = this._eventsToBeConsumed[0];
+            switch (nextEventToBeConsumed.event) {
+                case 'stopped':
+                    return new PausedEventAvailableToBeConsumed(this.markNextEventAsConsumed(), <StoppedEvent>nextEventToBeConsumed);
+                case 'continued':
+                    return new ResumedEventAvailableToBeConsumed(this.markNextEventAsConsumed(), <ContinuedEvent>nextEventToBeConsumed);
+                default:
+                    throw new Error(`Expected the event to be consumed to be either a stopped or continued yet it was: ${JSON.stringify(nextEventToBeConsumed)}`);
+            }
+        }
+    }
+
     private onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent['body']): void {
         if (this.isBreakpointStatusChangedWithId(breakpointStatusChanged)) {
+
+            // TODO: Update this code to only send the breakpoint to the file that owns it
             for (const fileWizard of this._pathToFileWizard.values()) {
                 fileWizard.onBreakpointStatusChange(breakpointStatusChanged);
             }
@@ -65,41 +112,35 @@ export class BreakpointsWizard {
         return statusChanged.breakpoint.id !== undefined;
     }
 
-    private changeStateFunction(): (newState: IEventForConsumptionAvailabilityState) => void {
-        return newState => this._state = newState;
+    private markNextEventAsConsumed(): () => void {
+        return () => {
+            this._eventsToBeConsumed.shift();
+            this.logState();
+        };
     }
 }
 
 interface IEventForConsumptionAvailabilityState {
     readonly latestEvent: DebugProtocol.StoppedEvent | DebugProtocol.ContinuedEvent;
 
-    onPaused(stopped: DebugProtocol.StoppedEvent): void;
-    onResumed(continued: DebugProtocol.ContinuedEvent): void;
-
     assertIsPaused(breakpoint: BreakpointWizard): void;
     assertNotPaused(): Promise<void>;
+
+    isPaused(): boolean;
 }
 
-type ChangeState = (newState: IEventForConsumptionAvailabilityState) => void;
+type MarkNextEventWasConsumed = () => void;
 
 class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(protected readonly _changeState: ChangeState, public readonly latestEvent: DebugProtocol.StoppedEvent) {}
-
-    public onPaused(stopped: DebugProtocol.StoppedEvent): void {
-        throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new stopped event: ${JSON.stringify(stopped)}`);
-    }
-
-    public onResumed(continued: DebugProtocol.ContinuedEvent): void {
-        if (isThisV2) {
-            throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new continued event: ${JSON.stringify(continued)}`);
-        }
-    }
+    public constructor(protected readonly _markNextEventWasConsumed: MarkNextEventWasConsumed, public readonly latestEvent: DebugProtocol.StoppedEvent) { }
 
     public assertIsPaused(_breakpoint: BreakpointWizard): void {
-        if (this.latestEvent.event === 'stopped') {
-            expect(this.latestEvent.body.reason).to.equal('breakpoint');
-            this._changeState(new NoEventAvailableToBeConsumed(this._changeState));
-        }
+        expect(this.latestEvent.body.reason).to.equal('breakpoint');
+        this._markNextEventWasConsumed();
+    }
+
+    public isPaused(): boolean {
+        return true;
     }
 
     public async assertNotPaused(): Promise<void> {
@@ -113,26 +154,18 @@ class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabili
 }
 
 class ResumedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(protected readonly _changeState: ChangeState, public readonly latestEvent: DebugProtocol.ContinuedEvent) {}
-
-    public onPaused(stopped: DebugProtocol.StoppedEvent): void {
-        if (isThisV1) {
-            this._changeState(new PausedEventAvailableToBeConsumed(this._changeState, stopped));
-        }
-    }
-
-    public onResumed(continued: DebugProtocol.ContinuedEvent): void {
-        if (isThisV2) {
-            throw new Error(`Expected to consume previous event: ${JSON.stringify(this.latestEvent)} before receiving a new continued event: ${JSON.stringify(continued)}`);
-        }
-    }
+    public constructor(protected readonly _markNextEventWasConsumed: MarkNextEventWasConsumed, public readonly latestEvent: DebugProtocol.ContinuedEvent) { }
 
     public assertIsPaused(_breakpoint: BreakpointWizard): void {
         throw new Error(`The debugger is not paused`);
     }
 
     public async assertNotPaused(): Promise<void> {
-        this._changeState(new NoEventAvailableToBeConsumed(this._changeState));
+        this._markNextEventWasConsumed();
+    }
+
+    public isPaused(): boolean {
+        return false;
     }
 
     public toString(): string {
@@ -141,18 +174,8 @@ class ResumedEventAvailableToBeConsumed implements IEventForConsumptionAvailabil
 }
 
 class NoEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(protected readonly _changeState: ChangeState) { }
-
     public get latestEvent(): never {
         throw new Error(`There is no event available to be consumed`);
-    }
-
-    public onPaused(stopped: DebugProtocol.StoppedEvent): void {
-        this._changeState(new PausedEventAvailableToBeConsumed(this._changeState, stopped));
-    }
-
-    public onResumed(continued: DebugProtocol.ContinuedEvent): void {
-        this._changeState(new ResumedEventAvailableToBeConsumed(this._changeState, continued));
     }
 
     public assertIsPaused(_breakpoint: BreakpointWizard): void {
@@ -161,6 +184,10 @@ class NoEventAvailableToBeConsumed implements IEventForConsumptionAvailabilitySt
 
     public async assertNotPaused(): Promise<void> {
         // Always true for this state
+    }
+
+    public isPaused(): boolean {
+        return false;
     }
 
     public toString(): string {

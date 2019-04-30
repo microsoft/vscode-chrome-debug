@@ -23,19 +23,21 @@ export class ReplacementInstruction {
 
 export interface IMethodsCalledLoggerConfiguration {
     readonly replacements: ReplacementInstruction[];
+
     decideWhetherToWrapMethodResult(methodName: string | symbol | number, args: unknown[], result: unknown, wrapWithName: (name: string) => void): void;
     decideWhetherToWrapEventEmitterListener(receiverName: string, methodName: string | symbol | number, args: unknown[], wrapWithName: (name: string) => void): void;
 }
 
 export class MethodsCalledLoggerConfiguration implements IMethodsCalledLoggerConfiguration {
+
+    public constructor(public readonly containerName: string, private _replacements: ReplacementInstruction[]) { }
+
     public decideWhetherToWrapMethodResult(_methodName: string | symbol | number, _args: unknown[], _result: unknown, _wrapWithName: (name: string) => void): void { }
     public decideWhetherToWrapEventEmitterListener(receiverName: string, methodName: string | symbol | number, args: unknown[], wrapWithName: (name: string) => void): void {
         if (methodName === 'on') {
             wrapWithName(`(${receiverName} emits ${args[0]})`);
         }
     }
-
-    public constructor(private _replacements: ReplacementInstruction[]) { }
 
     public get replacements(): ReplacementInstruction[] {
         return this._replacements;
@@ -47,6 +49,7 @@ export class MethodsCalledLoggerConfiguration implements IMethodsCalledLoggerCon
 }
 
 export class MethodsCalledLogger<T extends object> {
+    private static _nextCallId = 10000;
     constructor(
         private readonly _configuration: IMethodsCalledLoggerConfiguration,
         private readonly _objectToWrap: T,
@@ -77,8 +80,10 @@ export class MethodsCalledLogger<T extends object> {
                                     return resultPossiblyWrapped;
                                 }
                             } else {
+                                const callId = this.generateCallId();
+                                this.logCallStart(propertyKey, args, callId);
                                 return result.then((promiseResult: unknown) => {
-                                    this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Succesful, promiseResult);
+                                    this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Succesful, promiseResult, callId);
                                     if (promiseResult === target) {
                                         return receiver;
                                     } else {
@@ -87,7 +92,7 @@ export class MethodsCalledLogger<T extends object> {
                                         return resultPossiblyWrapped;
                                     }
                                 }, (error: unknown) => {
-                                    this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Failure, error);
+                                    this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Failure, error, callId);
                                     return Promise.reject(error);
                                 });
                             }
@@ -105,6 +110,10 @@ export class MethodsCalledLogger<T extends object> {
         return new Proxy<T>(this._objectToWrap, handler);
     }
 
+    private generateCallId(): number {
+        return MethodsCalledLogger._nextCallId++;
+    }
+
     private printMethodCall(propertyKey: PropertyKey, methodCallArguments: any[]): string {
         return `${this._objectToWrapName}.${String(propertyKey)}(${this.printArguments(methodCallArguments)})`;
     }
@@ -117,8 +126,14 @@ export class MethodsCalledLogger<T extends object> {
         return `${synchronicity === Synchronicity.Sync ? '' : ' async'}`;
     }
 
-    private logCall(propertyKey: PropertyKey, synchronicity: Synchronicity, methodCallArguments: any[], outcome: Outcome, resultOrException: unknown): void {
-        const message = `${this.printMethodCall(propertyKey, methodCallArguments)} ${this.printMethodSynchronicity(synchronicity)}  ${this.printMethodResponse(outcome, resultOrException)}`;
+    private logCallStart(propertyKey: PropertyKey, methodCallArguments: any[], callId: number): void {
+        const message = `START ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
+        logger.verbose(message);
+    }
+
+    private logCall(propertyKey: PropertyKey, synchronicity: Synchronicity, methodCallArguments: any[], outcome: Outcome, resultOrException: unknown, callId?: number): void {
+        const endPrefix = callId ? `END   ${callId}: ` : '';
+        const message = `${endPrefix}${this.printMethodCall(propertyKey, methodCallArguments)} ${this.printMethodSynchronicity(synchronicity)}  ${this.printMethodResponse(outcome, resultOrException)}`;
         logger.verbose(message);
     }
 
@@ -138,5 +153,5 @@ export class MethodsCalledLogger<T extends object> {
 }
 
 export function wrapWithMethodLogger<T extends object>(objectToWrap: T, objectToWrapName = `${objectToWrap}`): T {
-    return new MethodsCalledLogger(new MethodsCalledLoggerConfiguration([]), objectToWrap, objectToWrapName).wrapped();
+    return new MethodsCalledLogger(new MethodsCalledLoggerConfiguration('no container', []), objectToWrap, objectToWrapName).wrapped();
 }

@@ -1,6 +1,9 @@
 import { utils } from 'vscode-chrome-debug-core';
 
-export async function waitUntilReadyWithTimeout(isReady: () => boolean, maxWaitTimeInMilliseconds = 5000) {
+/**
+ * Wait until the isReady condition evaluates to true. This method will evaluate it every 50 milliseconds until it returns true. It will time-out after maxWaitTimeInMilliseconds milliseconds
+ */
+export async function waitUntilReadyWithTimeout(isReady: () => boolean, maxWaitTimeInMilliseconds = 30000 /* 30 seconds */) {
     const maximumDateTimeToWaitUntil = Date.now() + maxWaitTimeInMilliseconds;
 
     while (!isReady() && Date.now() < maximumDateTimeToWaitUntil) {
@@ -8,6 +11,6 @@ export async function waitUntilReadyWithTimeout(isReady: () => boolean, maxWaitT
     }
 
     if (!isReady()) {
-        throw new Error(`Timed-out after waiting for condition to be ready for ${maxWaitTimeInMilliseconds}ms`);
+        throw new Error(`Timed-out after waiting for condition to be ready for ${maxWaitTimeInMilliseconds}ms. Condition: ${isReady}`);
     }
 }
