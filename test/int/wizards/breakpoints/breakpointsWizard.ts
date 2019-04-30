@@ -41,8 +41,13 @@ export class BreakpointsWizard {
             () => new InternalFileBreakpointsWizard(wrapWithMethodLogger(this), this._client, this._project.src(filePath)))));
     }
 
-    public async assertNotPaused(): Promise<void> {
-        await utils.promiseTimeout(undefined, 1000); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
+    /**
+     * Wait for a little while, and verify that the debuggee is not paused after that
+     *
+     * @param millisecondsToWaitForPauses How much time to wait for pauses
+     */
+    public async waitAndAssertNotPaused(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
+        await utils.promiseTimeout(undefined, millisecondsToWaitForPauses); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
         await this.state.assertNotPaused();
     }
 

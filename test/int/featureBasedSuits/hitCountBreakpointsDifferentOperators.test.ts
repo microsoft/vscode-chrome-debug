@@ -74,7 +74,7 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
             }
 
             if (conditionConfiguration.noMorePausesAfterwards) {
-                await breakpoints.assertNotPaused();
+                await breakpoints.waitAndAssertNotPaused();
                 await setStateBreakpoint.unset();
             } else {
                 await breakpoints.waitUntilPaused(setStateBreakpoint);
