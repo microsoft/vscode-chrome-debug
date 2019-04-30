@@ -10,6 +10,7 @@ import { expect } from 'chai';
 import { BreakpointWizard } from './breakpointWizard';
 import { logger, ContinuedEvent, StoppedEvent } from 'vscode-debugadapter';
 import { isThisV2 } from '../../testSetup';
+import { utils } from 'vscode-chrome-debug-core';
 
 export class BreakpointsWizard {
     private _eventsToBeConsumed: (DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent)[] = [];
@@ -41,17 +42,13 @@ export class BreakpointsWizard {
     }
 
     public async assertNotPaused(): Promise<void> {
+        await utils.promiseTimeout(undefined, 1000); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
         await this.state.assertNotPaused();
-    }
-
-    public assertIsPaused(breakpoint: BreakpointWizard): void {
-        this.state.assertIsPaused(breakpoint);
     }
 
     public isPaused(): boolean {
         return this.state.isPaused();
     }
-
 
     public async waitUntilJustResumed(): Promise<void> {
         await waitUntilReadyWithTimeout(() => this.state instanceof ResumedEventAvailableToBeConsumed);
