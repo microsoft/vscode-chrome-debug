@@ -87,10 +87,21 @@ class BreakpointSetState implements IBreakpointSetOrUnsetState {
         this._changeState(new BreakpointUnsetState(this._breakpoint, this._internal, this._changeState));
     }
 
+    /**
+     * This method is intended to avoid hangs when performing a puppeteer action that will get blocked while the debuggee hits a breakpoint.
+     *
+     * The method will execute the puppeteer action, verify that the breakpoint is hit, and afterwards verify that the puppeteer action was properly finished.
+     *
+     * More details:
+     * The method will also verify that the pause was in the exact locatio that the breakpoint is located, and any other verifications specified in the verifications parameter
+     */
     public assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
         return this._internal.assertIsHitThenResumeWhen(this._breakpoint, lastActionToMakeBreakpointHit, verifications);
     }
 
+    /**
+     * Verify that the debuggee is paused due to this breakpoint, and perform a customizable list of extra verifications
+     */
     public assertIsHitThenResume(verifications: IVerifications): Promise<void> {
         return this._internal.assertIsHitThenResume(this._breakpoint, verifications);
     }

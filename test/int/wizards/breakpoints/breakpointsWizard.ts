@@ -59,6 +59,9 @@ export class BreakpointsWizard {
         await this.state.assertNotPaused();
     }
 
+    /**
+     * Instruct the debuggee to resume, and verify that the Debug-Adapter sends the proper notification after that happens
+     */
     public async resume(): Promise<void> {
         await this._client.continueRequest();
         if (isThisV2) {

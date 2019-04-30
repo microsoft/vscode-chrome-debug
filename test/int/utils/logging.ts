@@ -18,6 +18,9 @@ export function getDebugAdapterLogFilePath(testTitle: string): string {
     return logFilePath(testTitle, 'DA');
 }
 
+/**
+ * Transforms a title to an equivalent title that can be used as a filename (We use this to convert the name of our tests into the name of the logfile for that test)
+ */
 function sanitizeTestTitle(testTitle: string) {
     return testTitle
     .replace(/[:\/\\]/g, '-')

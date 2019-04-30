@@ -6,10 +6,16 @@ export interface IVariablesVerification {
     [name: string]: string;
 }
 
+/**
+ * Provide methods to validate that the variables appearing on the stack trace are what we expect
+ */
 export class VariablesAssertions {
     public constructor(
         private readonly _client: ExtendedDebugClient) { }
 
+    /**
+     * Verify that the stackFrame contains some variables with a specific value
+     */
     public async assertStackTraceContains(stackFrame: DebugProtocol.StackFrame, variables: IVariablesVerification): Promise<void> {
         const scopesResponse = await this._client.scopesRequest({ frameId: stackFrame.id });
         const localsScope = scopesResponse.body.scopes.find(scope => scope.name === 'Locals');
