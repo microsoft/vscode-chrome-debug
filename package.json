@@ -25,6 +25,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "reflect-metadata": "^0.1.13",
+    "mocha-junit-reporter": "^1.18.0",
     "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#v2",
     "vscode-debugadapter": "^1.32.1",
     "vscode-nls": "^4.0.0",
