@@ -7,7 +7,6 @@ import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTest
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
 import { setBreakpoint } from './intTestSupport';
 import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
-import { activate } from '../../src/extension';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
@@ -27,9 +26,18 @@ interface ExpectedFrame {
     presentationHint?: string;
 }
 
-function assertSourceMatches(actual: DebugProtocol.Source, expected: ExpectedSource, index: number) {
+function assertSourceMatches(actual: DebugProtocol.Source | undefined, expected: ExpectedSource | undefined, index: number) {
+    if (actual == null && expected == null) {
+        return;
+    }
+
     if (expected == null) {
-        assert.equal(actual, null, `Source was returned for frame ${index} but none was expected`);
+        assert.fail(`Source was returned for frame ${index} but none was expected`);
+        return;
+    }
+
+    if (actual == null) {
+        assert.fail(`Source was expected for frame ${index} but none was returned`);
         return;
     }
 
@@ -46,6 +54,9 @@ function assertSourceMatches(actual: DebugProtocol.Source, expected: ExpectedSou
         url.pathname = expected.urlRelativePath;
         expectedName = url.host;
         expectedPath = url.toString();
+    } else {
+        assert.fail('Not enough information for expected source: set either "fileRelativePath" or "urlRelativePath"');
+        return;
     }
 
     assert.equal(actual.name, expectedName, `Source name for frame ${index} does not match`);
@@ -56,7 +67,14 @@ function assertFrameMatches(actual: DebugProtocol.StackFrame, expected: Expected
     assert.equal(actual.name, expected.name, `Name for frame ${index} does not match`);
     assert.equal(actual.line, expected.line, `Line number for frame ${index} does not match`);
     assert.equal(actual.column, expected.column, `Column number for frame ${index} does not match`);
-    assert.equal(actual.presentationHint, expected.presentationHint, `Presentation hint for frame ${index} does not match`);
+
+    // Normal V1 stack frames will have no presentationHint, normal V2 stack frames will have presentationHint 'normal'
+    if (testSetup.isThisV1 && expected.presentationHint === 'normal') {
+        assert.equal(actual.presentationHint, undefined);
+    } else {
+        assert.equal(actual.presentationHint, expected.presentationHint, `Presentation hint for frame ${index} does not match`);
+    }
+
     assertSourceMatches(actual.source, expected.source, index);
 }
 
@@ -122,11 +140,11 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 threadId: THREAD_ID
             },
             expectedFranes: [
-                { name: '(anonymous function)', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+                { name: '(anonymous function)', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'inner', line: 8, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: 'onclick', line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'onclick', line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
             ]
         });
     });
@@ -144,11 +162,11 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 }
             },
             expectedFranes: [
-                { name: '(anonymous function) [app.js]', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner [app.js]', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+                { name: '(anonymous function) [app.js]', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'inner [app.js]', line: 8, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: `onclick [${TEST_URL.host}]`, line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: `onclick [${TEST_URL.host}]`, line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
             ]
         });
     });
@@ -166,11 +184,11 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 }
             },
             expectedFranes: [
-                { name: '(anonymous function) Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+                { name: '(anonymous function) Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'inner Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: 'onclick Line 7', line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'onclick Line 7', line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
             ]
         });
     });
@@ -192,11 +210,11 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 }
             },
             expectedFranes: [
-                { name: '(anonymous function) [app.js] Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner [app.js] Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+                { name: '(anonymous function) [app.js] Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'inner [app.js] Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: `onclick [${TEST_URL.host}] Line 7`, line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: `onclick [${TEST_URL.host}] Line 7`, line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
             ]
         });
     });
