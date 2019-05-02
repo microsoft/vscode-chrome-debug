@@ -13,6 +13,7 @@
   },
   "publisher": "msjsdiag",
   "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
+  "extensionKind": "ui",
   "engines": {
     "vscode": "^1.17.0"
   },
