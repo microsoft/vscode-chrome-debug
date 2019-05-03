@@ -12,10 +12,14 @@ import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import * as testSetup from './testSetup';
 import { HttpOrHttpsServer } from './types/server';
 import { isWindows } from './testSetup';
+import * as puppeteer from 'puppeteer';
+import { IAttachRequestArgs } from '../../../vscode-chrome-debug-core/lib/src/debugAdapterInterfaces';
+import { execSync } from 'child_process';
+import { expect } from 'chai';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
-suite('Chrome Debug Adapter etc', function () {
+suite('Chrome Debug Adapter etc', () => {
     let dc: ExtendedDebugClient;
     let server: HttpOrHttpsServer | null;
 
@@ -84,6 +88,53 @@ suite('Chrome Debug Adapter etc', function () {
                 dc.launch({ url: 'http://localhost:7890', webRoot: testProjectRoot }),
                 dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
             ]);
+        });
+
+        test('Should attach to existing instance of chrome and break on debugger statement', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
+            const DEBUGGER_LINE = 2;
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+            const browser = await puppeteer.launch(<puppeteer.LaunchOptions>{ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=7777'] });
+
+            await Promise.all([
+                dc.configurationSequence(),
+                dc.initializeRequest().then(_ => {
+                    return dc.attachRequest(<IAttachRequestArgs>{ url: 'http://localhost:7890', port: 7777, webRoot: testProjectRoot });
+                }),
+                dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
+            ]);
+
+            await browser.close();
+        });
+
+        test('Should throw error when launching if chrome debug port is in use', async () => {
+
+            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+
+            // browser already launched to the default port, and navigated away from about:blank
+            const browser = await puppeteer.launch(<puppeteer.LaunchOptions>{ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=9222'] });
+            try {
+                await Promise.all([
+                    dc.configurationSequence(),
+                    dc.launch({ url: 'http://localhost:7890', timeout: 2000, webRoot: testProjectRoot }),
+                ]);
+            } catch (err) {
+                expect(err.message).to.satisfy( (x: string) => x.startsWith('Cannot connect to runtime process, timeout after 2000 ms'));
+            }
+
+            await browser.close();
+
+            console.log('killing all instances of chrome');
+            // force kill chrome here, as it will be left open by the debug adapter (same behavior as v1)
+            const killCmd = (process.platform === 'win32') ? 'taskkill /F /IM chrome.exe /T' : 'killall chrome';
+            const output = execSync(killCmd);
+            console.log(output.toString());
         });
     });
 });
