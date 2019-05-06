@@ -28,6 +28,7 @@ A VS Code extension to debug your JavaScript code in the Google Chrome browser, 
 * Debugging eval scripts, script tags, and scripts that are added dynamically
 * Watches
 * Console
+* dummy change
 
 **Unsupported scenarios**
 * Debugging web workers
