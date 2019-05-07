@@ -18,6 +18,7 @@ const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
 console.log('2.2');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
 console.log('2.3');
+console.log(JSON.stringify(TEST_SPEC));
 const TEST_URL = new URL(TEST_SPEC.props.url);
 
 console.log('3');
