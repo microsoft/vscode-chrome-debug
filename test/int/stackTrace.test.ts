@@ -13,8 +13,11 @@ import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 console.log('2');
 
 const DATA_ROOT = testSetup.DATA_ROOT;
+console.log('2.1');
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
+console.log('2.2');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
+console.log('2.3');
 const TEST_URL = new URL(TEST_SPEC.props.url);
 
 console.log('3');
