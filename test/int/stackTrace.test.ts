@@ -1,4 +1,4 @@
-console.log("TESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTINGTESTING")
+console.log('1');
 
 import * as assert from 'assert';
 import * as path from 'path';
@@ -10,10 +10,14 @@ import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
 import { setBreakpoint } from './intTestSupport';
 import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 
+console.log('2');
+
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
 const TEST_URL = new URL(TEST_SPEC.props.url);
+
+console.log('3');
 
 interface ExpectedSource {
     fileRelativePath?: string;
@@ -27,6 +31,8 @@ interface ExpectedFrame {
     source?: ExpectedSource;
     presentationHint?: string;
 }
+
+console.log('4');
 
 function assertSourceMatches(actual: DebugProtocol.Source | undefined, expected: ExpectedSource | undefined, index: number) {
     if (actual == null && expected == null) {
@@ -131,6 +137,8 @@ async function validateStackTrace(config: StackTraceValidationConfig): Promise<v
     }
 }
 
+console.log('5');
+
 puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
     puppeteerTest('Stack trace is generated with no formatting', suiteContext, async (_context, page) => {
         await validateStackTrace({
@@ -221,3 +229,5 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
         });
     });
 });
+
+console.log('6');
