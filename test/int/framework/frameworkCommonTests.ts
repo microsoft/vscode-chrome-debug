@@ -36,7 +36,7 @@ export class FrameworkTestSuite {
      * @param bpLabel Label for the breakpoint to set
      */
     testPageReloadBreakpoint(bpLabel: string) {
-        return puppeteerTest.skip(`${this.frameworkName} - Should hit breakpoint on page reload`, this.suiteContext,
+        return puppeteerTest(`${this.frameworkName} - Should hit breakpoint on page reload`, this.suiteContext,
             async (context, page) => {
                 const debugClient = context.debugClient;
                 const bpLocation = context.breakpointLabels.get(bpLabel);
