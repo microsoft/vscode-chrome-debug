@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from './testSetup';
+import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
