@@ -22,7 +22,7 @@
         "noImplicitAny": true,
         "strictPropertyInitialization": true,
 
-        "lib": ["es6", "dom"]
+        "lib": ["es6"]
 
     },
     "exclude": [
