@@ -16,6 +16,7 @@ import * as puppeteer from 'puppeteer';
 import { IAttachRequestArgs } from '../../../vscode-chrome-debug-core/lib/src/debugAdapterInterfaces';
 import { execSync } from 'child_process';
 import { expect } from 'chai';
+import { killAllChrome } from '../testUtils';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -130,11 +131,8 @@ suite('Chrome Debug Adapter etc', () => {
 
             await browser.close();
 
-            console.log('killing all instances of chrome');
             // force kill chrome here, as it will be left open by the debug adapter (same behavior as v1)
-            const killCmd = (process.platform === 'win32') ? 'taskkill /F /IM chrome.exe /T' : 'killall chrome';
-            const output = execSync(killCmd);
-            console.log(output.toString());
+            killAllChrome();
         });
     });
 });

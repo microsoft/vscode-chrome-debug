@@ -4,6 +4,7 @@
 
 import * as path from 'path';
 import * as mockery from 'mockery';
+import { execSync } from 'child_process';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -49,6 +50,17 @@ export function registerLocMocks(): void {
     });
 }
 
+/**
+ * Kills all running instances of chrome on the test host
+ */
+export function killAllChrome() {
+    const killCmd = (process.platform === 'win32') ? 'taskkill /F /IM chrome.exe /T' : 'killall chrome';
+    const output = execSync(killCmd);
+    console.log(output.toString());
+}
+
 function dummyLocalize(_id: string, englishString: string): string {
     return englishString;
 }
+
+
