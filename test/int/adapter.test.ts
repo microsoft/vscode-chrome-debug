@@ -24,7 +24,7 @@ suite('Chrome Debug Adapter etc', () => {
     let server: HttpOrHttpsServer | null;
 
     setup(function () {
-        return testSetup.setup(this, )
+        return testSetup.setup(this)
             .then(_dc => dc = _dc);
     });
 
@@ -114,7 +114,7 @@ suite('Chrome Debug Adapter etc', () => {
 
         test('Should throw error when launching if chrome debug port is in use', async () => {
             // browser already launched to the default port, and navigated away from about:blank
-            const browser = await puppeteer.launch(<puppeteer.LaunchOptions>{ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=9222'] });
+            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=9222'] });
             try {
                 await Promise.all([
                     dc.configurationSequence(),

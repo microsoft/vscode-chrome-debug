@@ -24,8 +24,7 @@ interface IChromeLauncherLifetimeState {
 
 class NotYetLaunched implements IChromeLauncherLifetimeState {
     public stop(): Promise<void> {
-        // no-op here because in the case that we attach to an existing instance the launcher will still be in this state
-        return new Promise(a => a());
+        throw new Error(`Can't stop the chrome process because it hasn't been launched yet`);
     }
 }
 
