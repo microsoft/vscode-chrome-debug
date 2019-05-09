@@ -12,7 +12,6 @@ import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
 import { Dictionary } from 'lodash';
 import { logCallsTo, getDebugAdapterLogFilePath, setTestLogName } from './utils/logging';
 import { IBeforeAndAfterContext } from 'mocha';
-import { execSync } from 'child_process';
 import { killAllChrome } from '../testUtils';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';

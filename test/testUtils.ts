@@ -62,5 +62,3 @@ export function killAllChrome() {
 function dummyLocalize(_id: string, englishString: string): string {
     return englishString;
 }
-
-

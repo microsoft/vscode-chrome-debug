@@ -13,10 +13,9 @@ import * as testSetup from './testSetup';
 import { HttpOrHttpsServer } from './types/server';
 import { isWindows } from './testSetup';
 import * as puppeteer from 'puppeteer';
-import { IAttachRequestArgs } from '../../../vscode-chrome-debug-core/lib/src/debugAdapterInterfaces';
-import { execSync } from 'child_process';
 import { expect } from 'chai';
 import { killAllChrome } from '../testUtils';
+import { IAttachRequestArgs } from 'vscode-chrome-debug-core';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -25,16 +24,11 @@ suite('Chrome Debug Adapter etc', () => {
     let server: HttpOrHttpsServer | null;
 
     setup(function () {
-        return testSetup.setup(this)
+        return testSetup.setup(this, )
             .then(_dc => dc = _dc);
     });
 
     teardown(() => {
-        if (server) {
-            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
-            server = null;
-        }
-
         return testSetup.teardown();
     });
 
@@ -58,13 +52,27 @@ suite('Chrome Debug Adapter etc', () => {
     });
 
     suite('launch', () => {
+        const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
+        setup(() => {
+
+            server = createServer({ root: testProjectRoot });
+            server.listen(7890);
+        });
+
+        teardown(() => {
+            if (server) {
+                server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+                server = null;
+            }
+        });
+
         /**
          * On MacOS it fails because: stopped location: path mismatch‌:
          *   ‌+ expected‌: ‌/users/vsts/agent/2.150.0/work/1/s/testdata/intervaldebugger/out/app.js‌
          *   - actual‌:    users/vsts/agent/2.150.0/work/1/s/testdata/intervaldebugger/out/app.js‌
          */
         (isWindows ? test : test.skip)('should stop on debugger statement in file:///, sourcemaps disabled', () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
+
             const launchFile = path.join(testProjectRoot, 'index.html');
             const breakFile = path.join(testProjectRoot, 'out/app.js');
             const DEBUGGER_LINE = 2;
@@ -77,12 +85,8 @@ suite('Chrome Debug Adapter etc', () => {
         });
 
         test('should stop on debugger statement in http://localhost', () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
-
-            server = createServer({ root: testProjectRoot });
-            server.listen(7890);
 
             return Promise.all([
                 dc.configurationSequence(),
@@ -92,13 +96,10 @@ suite('Chrome Debug Adapter etc', () => {
         });
 
         test('Should attach to existing instance of chrome and break on debugger statement', async () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
 
-            server = createServer({ root: testProjectRoot });
-            server.listen(7890);
-            const browser = await puppeteer.launch(<puppeteer.LaunchOptions>{ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=7777'] });
+            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=7777'] });
 
             await Promise.all([
                 dc.configurationSequence(),
@@ -112,12 +113,6 @@ suite('Chrome Debug Adapter etc', () => {
         });
 
         test('Should throw error when launching if chrome debug port is in use', async () => {
-
-            const testProjectRoot = path.join(DATA_ROOT, 'intervalDebugger');
-
-            server = createServer({ root: testProjectRoot });
-            server.listen(7890);
-
             // browser already launched to the default port, and navigated away from about:blank
             const browser = await puppeteer.launch(<puppeteer.LaunchOptions>{ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=9222'] });
             try {
