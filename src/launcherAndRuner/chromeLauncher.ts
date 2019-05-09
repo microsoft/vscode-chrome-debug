@@ -19,16 +19,10 @@ import * as utils from '../utils';
 let localize = nls.loadMessageBundle();
 
 interface IChromeLauncherLifetimeState {
-    readonly userRequestedUrl: string;
-
     stop(): Promise<void>;
 }
 
 class NotYetLaunched implements IChromeLauncherLifetimeState {
-    public get userRequestedUrl(): string {
-        throw new Error(`Can't get the user requested url because chrome hasn't been launched yet`);
-    }
-
     public stop(): Promise<void> {
         // no-op here because in the case that we attach to an existing instance the launcher will still be in this state
         return new Promise(a => a());
@@ -36,20 +30,14 @@ class NotYetLaunched implements IChromeLauncherLifetimeState {
 }
 
 class Stopped implements IChromeLauncherLifetimeState {
-    public get userRequestedUrl(): string {
-        throw new Error(`Can't get the user requested url because chrome was stopped already`);
-    }
-
     public stop(): Promise<void> {
         throw new Error(`Can't stop the chrome process because it hasn been already stopped`);
     }
 }
 
 class LaunchedInWindowsWithPID implements IChromeLauncherLifetimeState {
-    public constructor(
-        public readonly userRequestedUrl: string,
-        private readonly _chromePID: number) {
-    }
+
+    public constructor(private readonly _chromePID: number) {}
 
     public async stop(): Promise<void> {
         // Disconnect before killing Chrome, because running "taskkill" when it's paused sometimes doesn't kill it
@@ -97,7 +85,6 @@ class LaunchedInWindowsWithPID implements IChromeLauncherLifetimeState {
 
 class LaunchedAsChildProcess implements IChromeLauncherLifetimeState {
     public constructor(
-        public readonly userRequestedUrl: string,
         public readonly chromePID: number,
         private readonly _chromeProc: ChildProcess) {
     }
@@ -114,10 +101,6 @@ class LaunchedAsChildProcess implements IChromeLauncherLifetimeState {
 }
 
 class LaunchedUnelevatedAndFailedToGetPID implements IChromeLauncherLifetimeState {
-    public constructor(
-        public readonly userRequestedUrl: string) {
-    }
-
     public stop(): Promise<void> {
         throw new Error(`Can't stop the chrome process because the debugger failed to obtain the Chrome process ID when it was launched`);
     }
@@ -137,10 +120,6 @@ export class ChromeLauncher implements IDebuggeeLauncher {
     constructor(
         @inject(TYPES.ISession) private readonly _session: ISession,
         @inject(TYPES.ConnectedCDAConfiguration) private readonly _configuration: ConnectedCDAConfiguration) { }
-
-    public get userRequestedUrl(): string {
-        return this._state.userRequestedUrl;
-    }
 
     public async launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<ILaunchResult> {
         let runtimeExecutable: string | null = null;
@@ -191,18 +170,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
             chromeArgs.push('--user-data-dir=' + args.userDataDir);
         }
 
-        let launchUrl: string | null = null;
-        if (args.file) {
-            launchUrl = coreUtils.pathToFileURL(args.file);
-        } else if (args.url) {
-            launchUrl = args.url;
-        } else {
-            throw new Error(`You must specify either file or url to launch Chrome against a local file or a url. None were specified. `
-                + `The specified parameterse are: ${JSON.stringify(args)}`);
-        }
-
-        const userRequestedUrl = launchUrl;
-
+        let launchUrl = this._configuration.userRequestedUrl;
         if (launchUrl && !args.noDebug) {
             // We store the launch file/url provided and temporarily launch and attach to about:blank page. Once we receive configurationDone() event, we redirect the page to this file/url
             // This is done to facilitate hitting breakpoints on load
@@ -214,7 +182,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
         }
 
         this._state = await this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable,
-            !!args.shouldLaunchChromeUnelevated, userRequestedUrl, telemetryPropertyCollector);
+            !!args.shouldLaunchChromeUnelevated, telemetryPropertyCollector);
 
         return {
             address: args.address,
@@ -230,8 +198,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
 
     private async spawnChrome(
         chromePath: string, chromeArgs: string[], env: coreUtils.IStringDictionary<string> | null,
-        cwd: string | null, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean,
-        userRequestedUrl: string, telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<IChromeLauncherLifetimeState> {
+        cwd: string | null, usingRuntimeExecutable: boolean, shouldLaunchUnelevated: boolean, telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<IChromeLauncherLifetimeState> {
         /* __GDPR__FRAGMENT__
            "StepNames" : {
               "LaunchTarget.LaunchExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -244,9 +211,9 @@ export class ChromeLauncher implements IDebuggeeLauncher {
             telemetryPropertyCollector.addTelemetryProperty('doesHostSupportLaunchUnelevated', `${doesHostSupportLaunchUnelevatedProcessRequest}`);
 
             if (doesHostSupportLaunchUnelevatedProcessRequest) {
-                return await this.spawnChromeUnelevatedWithClient(chromePath, chromeArgs, userRequestedUrl);
+                return await this.spawnChromeUnelevatedWithClient(chromePath, chromeArgs);
             } else {
-                return await this.spawnChromeUnelevatedWithWindowsScriptHost(chromePath, chromeArgs, userRequestedUrl);
+                return await this.spawnChromeUnelevatedWithWindowsScriptHost(chromePath, chromeArgs);
             }
         } else if (platform === coreUtils.Platform.Windows && !usingRuntimeExecutable) {
             const options: ForkOptions = {
@@ -269,7 +236,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
                     const pidStr = data.toString();
                     logger.log('got chrome PID: ' + pidStr);
                     const chromePID = parseInt(pidStr, 10);
-                    resolved(new LaunchedInWindowsWithPID(userRequestedUrl, chromePID));
+                    resolved(new LaunchedInWindowsWithPID(chromePID));
                 });
 
                 chromeProc.on('error', (err) => {
@@ -313,11 +280,11 @@ export class ChromeLauncher implements IDebuggeeLauncher {
 
             const _chromePID = chromeProc.pid;
 
-            return new LaunchedAsChildProcess(userRequestedUrl, _chromePID, chromeProc);
+            return new LaunchedAsChildProcess(_chromePID, chromeProc);
         }
     }
 
-    private async spawnChromeUnelevatedWithWindowsScriptHost(chromePath: string, chromeArgs: string[], userRequestedUrl: string): Promise<IChromeLauncherLifetimeState> {
+    private async spawnChromeUnelevatedWithWindowsScriptHost(chromePath: string, chromeArgs: string[]): Promise<IChromeLauncherLifetimeState> {
         const semaphoreFile = path.join(os.tmpdir(), 'launchedUnelevatedChromeProcess.id');
         if (fs.existsSync(semaphoreFile)) { // remove the previous semaphoreFile if it exists.
             fs.unlinkSync(semaphoreFile);
@@ -335,10 +302,10 @@ export class ChromeLauncher implements IDebuggeeLauncher {
 
         if (pidStr) {
             logger.log(`Parsed output file and got Chrome PID ${pidStr}`);
-            return new LaunchedInWindowsWithPID(userRequestedUrl, parseInt(pidStr, 10));
+            return new LaunchedInWindowsWithPID(parseInt(pidStr, 10));
         }
 
-        return new LaunchedUnelevatedAndFailedToGetPID(userRequestedUrl);
+        return new LaunchedUnelevatedAndFailedToGetPID();
     }
 
     private getFullEnv(customEnv: coreUtils.IStringDictionary<string>): coreUtils.IStringDictionary<string | undefined> {
@@ -351,7 +318,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
         return env;
     }
 
-    private async spawnChromeUnelevatedWithClient(chromePath: string, chromeArgs: string[], userRequestedUrl: string): Promise<IChromeLauncherLifetimeState> {
+    private async spawnChromeUnelevatedWithClient(chromePath: string, chromeArgs: string[]): Promise<IChromeLauncherLifetimeState> {
         const chromePID = await new Promise<number>((resolve, reject) => {
             this._session.sendRequest('launchUnelevated', {
                 'process': chromePath,
@@ -365,7 +332,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
             });
         });
 
-        return new LaunchedInWindowsWithPID(userRequestedUrl, chromePID);
+        return new LaunchedInWindowsWithPID(chromePID);
     }
 }
 
