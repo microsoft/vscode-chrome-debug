@@ -54,9 +54,12 @@ export function registerLocMocks(): void {
  * Kills all running instances of chrome on the test host
  */
 export function killAllChrome() {
-    const killCmd = (process.platform === 'win32') ? 'taskkill /F /IM chrome.exe /T' : 'killall chrome';
-    const output = execSync(killCmd);
-    console.log(output.toString());
+    try {
+        const killCmd = (process.platform === 'win32') ? 'taskkill /F /IM chrome.exe /T' : 'killall chrome';
+        const output = execSync(killCmd);
+        console.log(output.toString());
+    } catch (_) { }
+    // the kill command will exit with a non-zero code (and cause execSync to throw) if chrome is already stopped
 }
 
 function dummyLocalize(_id: string, englishString: string): string {
