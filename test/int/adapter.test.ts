@@ -98,23 +98,35 @@ suite('Chrome Debug Adapter etc', () => {
         test('Should attach to existing instance of chrome and break on debugger statement', async () => {
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
+            const remoteDebuggingPort = 7777;
 
-            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=7777'] });
-
-            await Promise.all([
-                dc.configurationSequence(),
-                dc.initializeRequest().then(_ => {
-                    return dc.attachRequest(<IAttachRequestArgs>{ url: 'http://localhost:7890', port: 7777, webRoot: testProjectRoot });
-                }),
-                dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
-            ]);
-
-            await browser.close();
+            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', `--remote-debugging-port=${remoteDebuggingPort}`] });
+            try {
+                await Promise.all([
+                    dc.configurationSequence(),
+                    dc.initializeRequest().then(_ => {
+                        return dc.attachRequest(<IAttachRequestArgs>{ url: 'http://localhost:7890', port: remoteDebuggingPort, webRoot: testProjectRoot });
+                    }),
+                    dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
+                ]);
+            }
+            finally {
+                await browser.close();
+            }
         });
 
+        /**
+         * This test is baselining behvaior from V1 around what happens when the adapter tries to launch when
+         * there is another running instance of chrome with --remote-debugging-port set to the same port the adapter is trying to use.
+         * We expect the debug adapter to throw an exception saying that the connection attempt timed out after N milliseconds.
+         * TODO: We don't think is is ideal behavior for the adapter, and want to change it fairly quickly after V2 is ready to launch.
+         *   right now this test exists only to verify that we match the behavior of V1
+         */
         test('Should throw error when launching if chrome debug port is in use', async () => {
             // browser already launched to the default port, and navigated away from about:blank
-            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', '--remote-debugging-port=9222'] });
+            const remoteDebuggingPort = 9222;
+            const browser = await puppeteer.launch({ headless: false, args: ['http://localhost:7890', `--remote-debugging-port=${remoteDebuggingPort}`] });
+
             try {
                 await Promise.all([
                     dc.configurationSequence(),
@@ -123,8 +135,9 @@ suite('Chrome Debug Adapter etc', () => {
             } catch (err) {
                 expect(err.message).to.satisfy( (x: string) => x.startsWith('Cannot connect to runtime process, timeout after 2000 ms'));
             }
-
-            await browser.close();
+            finally {
+                await browser.close();
+            }
 
             // force kill chrome here, as it will be left open by the debug adapter (same behavior as v1)
             killAllChrome();
