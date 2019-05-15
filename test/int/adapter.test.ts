@@ -132,6 +132,7 @@ suite('Chrome Debug Adapter etc', () => {
                     dc.configurationSequence(),
                     dc.launch({ url: 'http://localhost:7890', timeout: 2000, webRoot: testProjectRoot }),
                 ]);
+                assert.fail('Expected launch to throw a timeout exception, but it didn\'t.');
             } catch (err) {
                 expect(err.message).to.satisfy( (x: string) => x.startsWith('Cannot connect to runtime process, timeout after 2000 ms'));
             }
