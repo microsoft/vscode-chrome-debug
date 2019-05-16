@@ -86,7 +86,7 @@ export class BreakpointsAssertions {
     public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
         const actionResult = lastActionToMakeBreakpointHit();
 
-        this.assertIsHitThenResume(breakpoint, verifications);
+        await this.assertIsHitThenResume(breakpoint, verifications);
 
         await actionResult;
     }
@@ -94,15 +94,18 @@ export class BreakpointsAssertions {
     public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
         await this._breakpointsWizard.waitUntilPaused(breakpoint);
 
-        let stackFrameFormat: DebugProtocol.StackFrameFormat = this._defaultStackFrameFormat;
         let stackTraceVerifier: IStackTraceVerifier | undefined = undefined;
-
         if (verifications.stackTrace && verifications.stackTraceVerifier) {
             assert.fail('Cannot set both verifications.stackTrace and verifications.stackTraceVerifier. Choose at most one.');
         } else if (verifications.stackTrace) {
             stackTraceVerifier = this.getDefaultStackTraceVerifier(breakpoint, verifications.stackTrace);
         } else if (verifications.stackTraceVerifier) {
             stackTraceVerifier = verifications.stackTraceVerifier;
+        }
+
+        let stackFrameFormat: DebugProtocol.StackFrameFormat | undefined = undefined;
+        if (stackTraceVerifier) {
+            stackFrameFormat = stackTraceVerifier.format;
         }
 
         const stackTraceResponse = await await this._internal.client.send('stackTrace', {
