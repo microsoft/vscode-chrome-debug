@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-export interface IVariablesVerification {
+export interface IExpectedVariables {
     [name: string]: string;
 }
 
@@ -16,7 +16,7 @@ export class VariablesAssertions {
     /**
      * Verify that the stackFrame contains some variables with a specific value
      */
-    public async assertStackTraceContains(stackFrame: DebugProtocol.StackFrame, variables: IVariablesVerification): Promise<void> {
+    public async assertStackTraceContains(stackFrame: DebugProtocol.StackFrame, variables: IExpectedVariables): Promise<void> {
         const scopesResponse = await this._client.scopesRequest({ frameId: stackFrame.id });
         const localsScope = scopesResponse.body.scopes.find(scope => scope.name === 'Locals');
         expect(localsScope).to.not.equal(undefined);

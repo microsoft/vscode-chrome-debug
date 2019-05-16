@@ -15,6 +15,16 @@ export interface IHitCountBreakpointOptions extends IBreakpointOptions {
 export class FileBreakpointsWizard {
     public constructor(private readonly _internal: InternalFileBreakpointsWizard) { }
 
+    public async breakpoint(options: IBreakpointOptions): Promise<BreakpointWizard> {
+        const wrappedBreakpoint = wrapWithMethodLogger(await this._internal.breakpoint({
+            text: options.text,
+            boundText: options.boundText,
+            name: `BP @ ${options.text}`
+        }));
+
+        return wrappedBreakpoint.setThenWaitForVerifiedThenValidate();
+    }
+
     public async hitCountBreakpoint(options: IHitCountBreakpointOptions): Promise<BreakpointWizard> {
         return (await (await this.unsetHitCountBreakpoint(options)).setThenWaitForVerifiedThenValidate());
     }

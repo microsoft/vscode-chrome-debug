@@ -6,12 +6,12 @@ import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
-import { setBreakpoint } from './intTestSupport';
-import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
+import { BreakpointsWizard as BreakpointsWizard } from './wizards/breakpoints/breakpointsWizard';
+import { IStackTraceVerifier } from './wizards/breakpoints/implementation/breakpointsAssertions';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
-const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
+const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT, projectSrc: SIMPLE_PROJECT_ROOT } );
 const TEST_URL = new URL(TEST_SPEC.props.url);
 
 interface ExpectedSource {
@@ -98,48 +98,45 @@ interface StackTraceValidationConfig {
     page: puppeteer.Page;
     breakPointLabel: string;
     buttonIdToClick: string;
-    args: DebugProtocol.StackTraceArguments;
+    format?: DebugProtocol.StackFrameFormat;
     expectedFranes: ExpectedFrame[];
 }
 
 async function validateStackTrace(config: StackTraceValidationConfig): Promise<void> {
-    // Find the breakpoint location for this test
-    const location = config.suiteContext.breakpointLabels.get(config.breakPointLabel);
-
-    // Set the breakpoint, click the button, and wait for the breakpoint to hit
     const incBtn = await config.page.waitForSelector(config.buttonIdToClick);
-    await setBreakpoint(config.suiteContext.debugClient, location);
-    const clicked = incBtn.click();
-    await config.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
 
-    // Get the stack trace
-    const stackTraceResponse = await config.suiteContext.debugClient.send('stackTrace', config.args);
+    const breakpoints = BreakpointsWizard.create(config.suiteContext.debugClient, TEST_SPEC);
+    const breakpointWizard = breakpoints.at('app.js');
 
-    // Clean up the test before assertions, in case the assertions fail
-    await config.suiteContext.debugClient.continueRequest();
-    await clicked;
+    const setStateBreakpoint = await breakpointWizard.breakpoint({
+        text: "console.log('Inside anonymous function')"
+    });
 
-    // Assert the response is as expected
-    try {
-        assertResponseMatches(stackTraceResponse, config.expectedFranes);
-    } catch (e) {
-        const error: assert.AssertionError = e;
-        error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceResponse, null, 2);
+    const stackTraceVerifier: IStackTraceVerifier = {
+        format: config.format,
+        verify: (stackTraceResponse: DebugProtocol.StackTraceResponse) => {
+            try {
+                assertResponseMatches(stackTraceResponse, config.expectedFranes);
+            } catch (e) {
+                const error: assert.AssertionError = e;
+                error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceResponse, null, 2);
 
-        throw error;
-    }
+                throw error;
+            }
+        }
+    };
+
+    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTraceVerifier: stackTraceVerifier});
 }
 
-puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
+puppeteerSuite.only('Stack Traces', TEST_SPEC, (suiteContext) => {
     puppeteerTest('Stack trace is generated with no formatting', suiteContext, async (_context, page) => {
         await validateStackTrace({
             suiteContext: suiteContext,
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID
-            },
+            format: undefined,
             expectedFranes: [
                 { name: '(anonymous function)', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'inner', line: 8, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -156,11 +153,8 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    module: true
-                }
+            format: {
+                module: true
             },
             expectedFranes: [
                 { name: '(anonymous function) [app.js]', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -178,11 +172,8 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    line: true,
-                }
+            format: {
+                line: true,
             },
             expectedFranes: [
                 { name: '(anonymous function) Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -200,15 +191,12 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    parameters: true,
-                    parameterTypes: true,
-                    parameterNames: true,
-                    line: true,
-                    module: true
-                }
+            format: {
+                parameters: true,
+                parameterTypes: true,
+                parameterNames: true,
+                line: true,
+                module: true
             },
             expectedFranes: [
                 { name: '(anonymous function) [app.js] Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
