@@ -5,8 +5,8 @@ import {
     IDebuggeeRunner, ITelemetryPropertyCollector, inject,
     injectable, postConstruct, TYPES, utils as coreUtils, CDTP, IBrowserNavigator, parseResourceIdentifier, logger
 } from 'vscode-chrome-debug-core';
-import { ChromeLauncher } from './chromeLauncher';
 import Uri from 'vscode-uri';
+import { ConnectedCDAConfiguration } from 'vscode-chrome-debug-core';
 
 /**
  * Run the specified web-page url in Chrome
@@ -16,17 +16,17 @@ export class ChromeRunner implements IDebuggeeRunner {
     private readonly _userPageLaunched = coreUtils.promiseDefer<void>();
 
     public constructor(
-        @inject(TYPES.IBrowserNavigation) private readonly _browserNavigation: IBrowserNavigator,
-        @inject(TYPES.IDebuggeeLauncher) private readonly _chromeLauncher: ChromeLauncher) {
+        @inject(TYPES.ConnectedCDAConfiguration) private readonly _configuration: ConnectedCDAConfiguration,
+        @inject(TYPES.IBrowserNavigation) private readonly _browserNavigation: IBrowserNavigator) {
         this.install();
     }
 
     public async run(_telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<void> {
         // TODO: Is this needed?  await this._browserNavigation.enable();
 
-        if (this._chromeLauncher.userRequestedUrl) {
+        if (this._configuration.userRequestedUrl) {
             // This means all the setBreakpoints requests have been completed. So we can navigate to the original file/url.
-            this._browserNavigation.navigate({ url: this._chromeLauncher.userRequestedUrl }).then(() => {
+            this._browserNavigation.navigate({ url: this._configuration.userRequestedUrl }).then(() => {
                 /* __GDPR__FRAGMENT__
                    "StepNames" : {
                       "RequestedNavigateToUserPage" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
@@ -44,10 +44,10 @@ export class ChromeRunner implements IDebuggeeRunner {
     }
 
     protected onFrameNavigated(params: CDTP.Page.FrameNavigatedEvent): void {
-        if (this._chromeLauncher.userRequestedUrl) {
+        if (this._configuration.userRequestedUrl) {
             // TODO: Make sure we are doing the right thing in this method and we send proper telemetry
             const url = Uri.parse(params.frame.url).toString();
-            const requestedUrlNoAnchor = this._chromeLauncher.userRequestedUrl.split('#')[0]; // Frame navigated url doesn't include the anchor
+            const requestedUrlNoAnchor = this._configuration.userRequestedUrl.split('#')[0]; // Frame navigated url doesn't include the anchor
             const requestedIdentifier = parseResourceIdentifier(Uri.parse(requestedUrlNoAnchor).toString());
             const urlIdentifier = parseResourceIdentifier(url);
             if (url === requestedUrlNoAnchor || decodeURI(url) === requestedUrlNoAnchor
@@ -61,7 +61,7 @@ export class ChromeRunner implements IDebuggeeRunner {
                 // Uknown chrome error
                 this._userPageLaunched.reject('UnknownChromeError');
             } else {
-                logger.log(`ChromeRunner.onFrameNavigated: Unexpected case: url: ${params.frame.url} requested: ${this._chromeLauncher.userRequestedUrl}`);
+                logger.log(`ChromeRunner.onFrameNavigated: Unexpected case: url: ${params.frame.url} requested: ${this._configuration.userRequestedUrl}`);
             }
         }
     }

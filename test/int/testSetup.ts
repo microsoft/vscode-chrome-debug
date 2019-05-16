@@ -12,7 +12,7 @@ import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
 import { Dictionary } from 'lodash';
 import { logCallsTo, getDebugAdapterLogFilePath, setTestLogName } from './utils/logging';
 import { IBeforeAndAfterContext } from 'mocha';
-import { execSync } from 'child_process';
+import { killAllChrome } from '../testUtils';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
@@ -78,9 +78,7 @@ export async function teardown() {
 
     if (process.platform === 'win32' && process.env.TF_BUILD) {
         // We only need to kill the chrome.exe instances on the Windows agent
-        try {
-            // TODO: Figure out a way to remove this
-            execSync('taskkill /f /im chrome.exe', { stdio: 'ignore' });
-        } catch { }
+        // TODO: Figure out a way to remove this
+        killAllChrome();
     }
 }

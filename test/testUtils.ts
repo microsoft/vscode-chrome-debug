@@ -4,6 +4,8 @@
 
 import * as path from 'path';
 import * as mockery from 'mockery';
+import { execSync } from 'child_process';
+import * as puppeteer from 'puppeteer';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -47,6 +49,20 @@ export function registerLocMocks(): void {
         config: () => () => dummyLocalize,
         loadMessageBundle: () => dummyLocalize
     });
+}
+
+/**
+ * Kills all running instances of chrome (that were launched by the tests, on Windows at least) on the test host
+ */
+export function killAllChrome() {
+    try {
+        const killCmd = (process.platform === 'win32') ? `start powershell -WindowStyle hidden -Command "Get-Process | Where-Object {$_.Path -like '*${puppeteer.executablePath()}*'} | Stop-Process"` : 'killall chrome';
+        const output = execSync(killCmd);
+        console.log(output.toString());
+    } catch (e) {
+        console.error(`Error killing chrome: ${e.message}`);
+    }
+    // the kill command will exit with a non-zero code (and cause execSync to throw) if chrome is already stopped
 }
 
 function dummyLocalize(_id: string, englishString: string): string {

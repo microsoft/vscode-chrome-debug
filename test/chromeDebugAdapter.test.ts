@@ -33,7 +33,7 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict, false, {events: {}}, { extensibilityPoints: {}});
+        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict, false, {events: {}}, {}, { extensibilityPoints: {}});
         mockChrome = getMockChromeConnectionApi();
         mockChromeDebugSession = Mock.ofType(MockChromeDebugSession, MockBehavior.Strict);
         mockChromeDebugSession
