@@ -60,8 +60,8 @@ function assertSourceMatches(actual: DebugProtocol.Source | undefined, expected:
         expectedPath = url.toString();
     } else if (expected.evalCode === true) {
         // Eval code has source that looks like 'VM123'. Check it by regex instead.
-        expect(actual.name).to.match(/VM(\d+)/, `Frame ${index} source name`);
-        expect(actual.path).to.match(/<eval>\\VM(\d+)/, `Frame ${index} source path`);
+        expect(actual.name).to.match(/.*VM.*/, `Frame ${index} source name`);
+        expect(actual.path).to.match(/.*VM.*/, `Frame ${index} source path`);
         return;
     } else {
         assert.fail('Not enough information for expected source: set either "fileRelativePath" or "urlRelativePath" or "eval"');
@@ -145,7 +145,7 @@ async function validateStackTrace(config: StackTraceValidationConfig): Promise<v
     await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTraceVerifier: stackTraceVerifier});
 }
 
-puppeteerSuite.only('Stack Traces', TEST_SPEC, (suiteContext) => {
+puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
     puppeteerTest('Stack trace is generated with no formatting', suiteContext, async (_context, page) => {
         await validateStackTrace({
             suiteContext: suiteContext,
@@ -177,7 +177,7 @@ puppeteerSuite.only('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFranes: [
                 { name: '(anonymous function) [app.js]', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js]', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { nameRegExp: /\(eval code\) \[VM(\d+)\]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { nameRegExp: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -223,7 +223,7 @@ puppeteerSuite.only('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFranes: [
                 { name: '(anonymous function) [app.js] Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js] Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { nameRegExp: /\(eval code\) \[VM(\d+)\] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { nameRegExp: /\(eval code\) \[.*VM.*] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
