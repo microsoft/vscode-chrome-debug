@@ -7,7 +7,7 @@ import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
-import { BreakpointsWizard as BreakpointsWizard } from './wizards/breakpoints/breakpointsWizard';
+import { BreakpointsWizard } from './wizards/breakpoints/breakpointsWizard';
 import { IStackTraceVerifier } from './wizards/breakpoints/implementation/breakpointsAssertions';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
@@ -22,8 +22,7 @@ interface ExpectedSource {
 }
 
 interface ExpectedFrame {
-    name?: string;
-    nameRegExp?: RegExp;
+    name: string | RegExp;
     line?: number;
     column?: number;
     source?: ExpectedSource;
@@ -73,12 +72,10 @@ function assertSourceMatches(actual: DebugProtocol.Source | undefined, expected:
 }
 
 function assertFrameMatches(actual: DebugProtocol.StackFrame, expected: ExpectedFrame, index: number) {
-    if (expected.name) {
+    if (typeof expected.name === 'string') {
         expect(actual.name).to.equal(expected.name, `Frame ${index} name`);
-    } else if (expected.nameRegExp) {
-        expect(actual.name).to.match(expected.nameRegExp, `Frame ${index} name`);
-    } else {
-        assert.fail('Not enough information for frame name: set either "name" or "nameRegExp"');
+    } else if (expected.name instanceof RegExp) {
+        expect(actual.name).to.match(expected.name, `Frame ${index} name`);
     }
 
     expect(actual.line).to.equal(expected.line, `Frame ${index} line`);
@@ -115,7 +112,7 @@ interface StackTraceValidationConfig {
     breakPointLabel: string;
     buttonIdToClick: string;
     format?: DebugProtocol.StackFrameFormat;
-    expectedFranes: ExpectedFrame[];
+    expectedFrames: ExpectedFrame[];
 }
 
 async function validateStackTrace(config: StackTraceValidationConfig): Promise<void> {
@@ -132,7 +129,7 @@ async function validateStackTrace(config: StackTraceValidationConfig): Promise<v
         format: config.format,
         verify: (stackTraceResponse: DebugProtocol.StackTraceResponse) => {
             try {
-                assertResponseMatches(stackTraceResponse, config.expectedFranes);
+                assertResponseMatches(stackTraceResponse, config.expectedFrames);
             } catch (e) {
                 const error: assert.AssertionError = e;
                 error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceResponse, null, 2);
@@ -142,7 +139,7 @@ async function validateStackTrace(config: StackTraceValidationConfig): Promise<v
         }
     };
 
-    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTraceVerifier: stackTraceVerifier});
+    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTrace: stackTraceVerifier});
 }
 
 puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
@@ -153,7 +150,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
             format: undefined,
-            expectedFranes: [
+            expectedFrames: [
                 { name: '(anonymous function)', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '(eval code)', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
@@ -174,10 +171,10 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             format: {
                 module: true
             },
-            expectedFranes: [
+            expectedFrames: [
                 { name: '(anonymous function) [app.js]', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js]', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { nameRegExp: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -195,7 +192,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             format: {
                 line: true,
             },
-            expectedFranes: [
+            expectedFrames: [
                 { name: '(anonymous function) Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '(eval code) Line 1', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
@@ -220,10 +217,10 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 line: true,
                 module: true
             },
-            expectedFranes: [
+            expectedFrames: [
                 { name: '(anonymous function) [app.js] Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js] Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { nameRegExp: /\(eval code\) \[.*VM.*] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: /\(eval code\) \[.*VM.*] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},

@@ -21,8 +21,7 @@ export interface IStackTraceVerifier {
 
 export interface IVerifications {
     variables?: IExpectedVariables;
-    stackTrace?: IExpectedStackTrace;
-    stackTraceVerifier?: IStackTraceVerifier;
+    stackTrace?: IExpectedStackTrace | IStackTraceVerifier;
 }
 
 interface IObjectWithLocation {
@@ -52,20 +51,21 @@ export class BreakpointsAssertions {
             format: this._defaultStackFrameFormat,
             verify: (stackTraceResponse) => {
                 expect(stackTraceResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(stackTraceResponse)}`).to.equal(true);
+
+                const stackTraceFrames = stackTraceResponse.body.stackFrames;
                 expect(stackTraceResponse.body.totalFrames, `The number of stackFrames was different than the value supplied on the totalFrames field`)
-                    .to.equal(stackTraceResponse.body.stackFrames.length);
-                stackTraceResponse.body.stackFrames.forEach(frame => {
+                    .to.equal(stackTraceFrames.length);
+                stackTraceFrames.forEach(frame => {
                     // Warning: We don't currently validate frame.source.path
                     expect(frame.source).not.to.equal(undefined);
                     const expectedSourceNameAndLine = ` [${frame.source!.name}] Line ${frame.line}`;
                     expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
                 });
 
-                const stackTrace = stackTraceResponse.body.stackFrames;
 
                 const formattedExpectedStackTrace = expectedStackTrace.replace(/^\s+/gm, ''); // Remove the white space we put at the start of the lines to make the stack trace align with the code
-                this.applyIgnores(formattedExpectedStackTrace, stackTrace);
-                const actualStackTrace = this.extractStackTrace(stackTrace);
+                this.applyIgnores(formattedExpectedStackTrace, stackTraceFrames);
+                const actualStackTrace = this.extractStackTrace(stackTraceFrames);
                 assert.equal(actualStackTrace, formattedExpectedStackTrace, `Expected the stack trace when hitting ${breakpoint} to be:\n${formattedExpectedStackTrace}\nyet it is:\n${actualStackTrace}`);
             }
         };
@@ -95,12 +95,10 @@ export class BreakpointsAssertions {
         await this._breakpointsWizard.waitUntilPaused(breakpoint);
 
         let stackTraceVerifier: IStackTraceVerifier | undefined = undefined;
-        if (verifications.stackTrace && verifications.stackTraceVerifier) {
-            assert.fail('Cannot set both verifications.stackTrace and verifications.stackTraceVerifier. Choose at most one.');
-        } else if (verifications.stackTrace) {
+        if (typeof verifications.stackTrace === 'string') {
             stackTraceVerifier = this.getDefaultStackTraceVerifier(breakpoint, verifications.stackTrace);
-        } else if (verifications.stackTraceVerifier) {
-            stackTraceVerifier = verifications.stackTraceVerifier;
+        } else if (typeof verifications.stackTrace === 'object') {
+            stackTraceVerifier = verifications.stackTrace;
         }
 
         let stackFrameFormat: DebugProtocol.StackFrameFormat | undefined = undefined;

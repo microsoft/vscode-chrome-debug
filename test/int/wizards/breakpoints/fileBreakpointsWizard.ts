@@ -2,6 +2,7 @@ import { BreakpointWizard } from './breakpointWizard';
 import { InternalFileBreakpointsWizard } from './implementation/internalFileBreakpointsWizard';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { wrapWithMethodLogger } from '../../core-v2/chrome/logging/methodsCalledLogger';
+import { PauseOnHitCount } from '../../core-v2/chrome/internal/breakpoints/bpActionWhenHit';
 
 export interface IBreakpointOptions {
     text: string;
@@ -30,10 +31,10 @@ export class FileBreakpointsWizard {
     }
 
     public async unsetHitCountBreakpoint(options: IHitCountBreakpointOptions): Promise<BreakpointWizard> {
-        return wrapWithMethodLogger(await this._internal.hitCountBreakpoint({
+        return wrapWithMethodLogger(await this._internal.breakpoint({
             text: options.text,
             boundText: options.boundText,
-            hitCountCondition: options.hitCountCondition,
+            actionWhenHit: new PauseOnHitCount(options.hitCountCondition),
             name: `BP @ ${options.text}`
         }));
     }

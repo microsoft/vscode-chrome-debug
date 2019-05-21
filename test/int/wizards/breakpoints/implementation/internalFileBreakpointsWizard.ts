@@ -1,7 +1,7 @@
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { findPositionOfTextInFile } from '../../../utils/findPositionOfTextInFile';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { PauseOnHitCount, AlwaysPause } from '../../../core-v2/chrome/internal/breakpoints/bpActionWhenHit';
+import { AlwaysPause, IBPActionWhenHit } from '../../../core-v2/chrome/internal/breakpoints/bpActionWhenHit';
 import { BreakpointWizard } from '../breakpointWizard';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
 import { FileBreakpointsWizard } from '../fileBreakpointsWizard';
@@ -48,16 +48,12 @@ export class InternalFileBreakpointsWizard {
 
     public constructor(private readonly _breakpointsWizard: BreakpointsWizard, public readonly client: ExtendedDebugClient, public readonly filePath: string) { }
 
-    public async breakpoint(options: { text: string, name: string, boundText?: string }): Promise<BreakpointWizard> {
+    public async breakpoint(options: { name: string, text: string, boundText?: string, actionWhenHit?: IBPActionWhenHit}) {
         const position = await findPositionOfTextInFile(this.filePath, options.text);
         const boundPosition = options.boundText ? await findPositionOfTextInFile(this.filePath, options.boundText) : position;
-        return new BreakpointWizard(this, position, new AlwaysPause(), options.name, boundPosition);
-    }
+        const actionWhenHit = options.actionWhenHit || new AlwaysPause();
 
-    public async hitCountBreakpoint(options: { text: string; hitCountCondition: string; name: string, boundText?: string }): Promise<BreakpointWizard> {
-        const position = await findPositionOfTextInFile(this.filePath, options.text);
-        const boundPosition = options.boundText ? await findPositionOfTextInFile(this.filePath, options.boundText) : position;
-        return new BreakpointWizard(this, position, new PauseOnHitCount(options.hitCountCondition), options.name, boundPosition);
+        return new BreakpointWizard(this, position, actionWhenHit, options.name, boundPosition);
     }
 
     public async set(breakpointWizard: BreakpointWizard): Promise<void> {
