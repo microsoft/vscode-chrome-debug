@@ -3,9 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { puppeteerTest } from '../puppeteer/puppeteerSuite';
+import { puppeteerTest, PuppeteerTestContext } from '../puppeteer/puppeteerSuite';
 import { setBreakpoint } from '../intTestSupport';
-import { FrameworkTestContext } from './frameworkTestSupport';
+import { LaunchWebServer } from '../fixtures/launchWebServer';
+import { loadProjectLabels } from '../labels';
+import { TestProjectSpec } from './frameworkTestSupport';
+import { DefaultFixture } from '../fixtures/defaultFixture';
+import { MultipleFixtures } from '../fixtures/multipleFixtures';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -15,21 +19,8 @@ import { FrameworkTestContext } from './frameworkTestSupport';
 export class FrameworkTestSuite {
     constructor(
         private frameworkName: string,
-        private suiteContext: FrameworkTestContext
+        private suiteContext: PuppeteerTestContext
     ) {}
-
-    /**
-     * Test that we can stop on a breakpoint set before launch
-     * @param bpLabel Label for the breakpoint to set
-     */
-    testBreakOnLoad(bpLabel: string) {
-        return test(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
-            const testSpec = this.suiteContext.testSpec;
-            const location = this.suiteContext.breakpointLabels.get(bpLabel);
-            await this.suiteContext.debugClient
-                .hitBreakpointUnverified(testSpec.props.launchConfig, location);
-        });
-    }
 
     /**
      * Test that a breakpoint set after the page loads is hit on reload
@@ -134,4 +125,25 @@ export class FrameworkTestSuite {
             await debugClient.continueRequest();
         });
     }
+}
+
+/**
+ * Test that we can stop on a breakpoint set before launch
+ * @param bpLabel Label for the breakpoint to set
+ */
+export function testBreakOnLoad(frameworkName: string, testSpec: TestProjectSpec, bpLabel: string) {
+    const testTitle = `${frameworkName} - Should stop on breakpoint on initial page load`;
+    return test(testTitle, async () => {
+        const defaultFixture = await DefaultFixture.createWithTitle(testTitle);
+        const fixture = new MultipleFixtures(new LaunchWebServer(testSpec), defaultFixture);
+        const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
+
+        try {
+            const location = breakpointLabels.get(bpLabel);
+            await defaultFixture.debugClient
+                .hitBreakpointUnverified(testSpec.props.launchConfig, location);
+        } finally {
+            await fixture.cleanUp();
+        }
+    });
 }

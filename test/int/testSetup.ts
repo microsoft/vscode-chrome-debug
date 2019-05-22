@@ -51,8 +51,17 @@ export const lowercaseDriveLetterDirname = __dirname.charAt(0).toLowerCase() + _
 export const PROJECT_ROOT = path.join(lowercaseDriveLetterDirname, '../../../');
 export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 
-export async function setup(context: IBeforeAndAfterContext, port?: number, launchProps?: ILaunchRequestArgs) {
-    const testTitle = context.currentTest.fullTitle();
+/** Default setup for all our tests, using the context of the setup method
+ *    - Best practise: The new best practise is to use the DefaultFixture when possible instead of calling this method directly
+ */
+export async function setup(context: IBeforeAndAfterContext, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
+    return setupWithTitle(context.currentTest.fullTitle(), port, launchProps);
+}
+
+/** Default setup for all our tests, using the test title
+ *    - Best practise: The new best practise is to use the DefaultFixture when possible instead of calling this method directly
+ */
+export async function setupWithTitle(testTitle: string, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
     setTestLogName(testTitle);
 
     if (!port) {
@@ -76,7 +85,7 @@ export async function setup(context: IBeforeAndAfterContext, port?: number, laun
 export async function teardown() {
     await ts.teardown();
 
-    if (process.platform === 'win32' && process.env.TF_BUILD) {
+    if (process.platform === 'win32') {
         // We only need to kill the chrome.exe instances on the Windows agent
         // TODO: Figure out a way to remove this
         killAllChrome();

@@ -10,6 +10,7 @@ import { BreakpointLocation } from '../intTestSupport';
 import { ILaunchRequestArgs } from '../../../src/chromeDebugInterfaces';
 import { MakePropertyRequired } from '../core-v2/typeUtils';
 import { IValidatedMap } from '../core-v2/chrome/collections/validatedMap';
+import { DATA_ROOT } from '../testSetup';
 
 /*
  * A collection of supporting classes/functions for running framework tests
@@ -37,7 +38,6 @@ export interface ProjectSpecProps {
  * attached to in order to test the debug adapter)
  */
 export class TestProjectSpec {
-
     _props: MakePropertyRequired<ProjectSpecProps, keyof ProjectSpecProps>;
     get props() { return this._props; }
 
@@ -64,6 +64,19 @@ export class TestProjectSpec {
                 webRoot: webRoot
             }
         };
+    }
+
+    /**
+     * Specify project by it's location relative to the testdata folder e.g.:
+     *    - TestProjectSpec.fromTestPath('react_with_loop/dist')
+     *    - TestProjectSpec.fromTestPath('simple')
+     *
+     * The path *can only* use forward-slahes "/" as separators
+     */
+    public static fromTestPath(reversedSlashesRelativePath: string): TestProjectSpec {
+        const pathComponents = reversedSlashesRelativePath.split('/');
+        const projectAbsolutePath = path.join(...[DATA_ROOT].concat(pathComponents));
+        return new TestProjectSpec({ projectRoot: projectAbsolutePath });
     }
 
     /**
