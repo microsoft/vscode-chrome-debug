@@ -1,110 +1,17 @@
-import * as assert from 'assert';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from './testSetup';
-import { expect } from 'chai';
 import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
 import { BreakpointsWizard } from './wizards/breakpoints/breakpointsWizard';
-import { IStackTraceVerifier } from './wizards/breakpoints/implementation/breakpointsAssertions';
+import { ExpectedFrame } from './wizards/breakpoints/implementation/stackTraceObjectAssertions';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT, projectSrc: SIMPLE_PROJECT_ROOT } );
 const TEST_URL = new URL(TEST_SPEC.props.url);
-
-interface ExpectedSource {
-    fileRelativePath?: string;
-    urlRelativePath?: string;
-    evalCode?: boolean;
-}
-
-interface ExpectedFrame {
-    name: string | RegExp;
-    line?: number;
-    column?: number;
-    source?: ExpectedSource;
-    presentationHint?: string;
-}
-
-function assertSourceMatches(actual: DebugProtocol.Source | undefined, expected: ExpectedSource | undefined, index: number) {
-    if (actual == null && expected == null) {
-        return;
-    }
-
-    if (expected == null) {
-        assert.fail(`Source was returned for frame ${index} but none was expected`);
-        return;
-    }
-
-    if (actual == null) {
-        assert.fail(`Source was expected for frame ${index} but none was returned`);
-        return;
-    }
-
-    let expectedName: string;
-    let expectedPath: string;
-
-    if (expected.fileRelativePath) {
-        // Generate the expected path from the relative path and the project root
-        expectedPath = path.join(TEST_SPEC.props.projectRoot, expected.fileRelativePath);
-        expectedName = path.parse(expectedPath).base;
-    } else if (expected.urlRelativePath) {
-        // Generate the expected path from the relative path and the project url
-        const url = new URL(TEST_URL.toString()); // Clone URL so we can update it
-        url.pathname = expected.urlRelativePath;
-        expectedName = url.host;
-        expectedPath = url.toString();
-    } else if (expected.evalCode === true) {
-        // Eval code has source that looks like 'VM123'. Check it by regex instead.
-        expect(actual.name).to.match(/.*VM.*/, `Frame ${index} source name`);
-        expect(actual.path).to.match(/.*VM.*/, `Frame ${index} source path`);
-        return;
-    } else {
-        assert.fail('Not enough information for expected source: set either "fileRelativePath" or "urlRelativePath" or "eval"');
-        return;
-    }
-
-    expect(actual.name).to.equal(expectedName, `Frame ${index} source name`);
-    expect(actual.path).to.equal(expectedPath, `Frame ${index} source path`);
-}
-
-function assertFrameMatches(actual: DebugProtocol.StackFrame, expected: ExpectedFrame, index: number) {
-    if (typeof expected.name === 'string') {
-        expect(actual.name).to.equal(expected.name, `Frame ${index} name`);
-    } else if (expected.name instanceof RegExp) {
-        expect(actual.name).to.match(expected.name, `Frame ${index} name`);
-    }
-
-    expect(actual.line).to.equal(expected.line, `Frame ${index} line`);
-    expect(actual.column).to.equal(expected.column, `Frame ${index} column`);
-
-    // Normal V1 stack frames will have no presentationHint, normal V2 stack frames will have presentationHint 'normal'
-    if (testSetup.isThisV1 && expected.presentationHint === 'normal') {
-        // tslint:disable-next-line:no-unused-expression
-        expect(actual.presentationHint, `Frame ${index} presentationHint`).to.be.undefined;
-    } else {
-        expect(actual.presentationHint).to.equal(expected.presentationHint, `Frame ${index} presentationHint`);
-    }
-
-    assertSourceMatches(actual.source, expected.source, index);
-}
-
-function assertResponseMatches(actual: DebugProtocol.StackTraceResponse, expectedFrames: ExpectedFrame[]) {
-    // Check totalFrames property
-    expect(actual.body.totalFrames).to.equal(expectedFrames.length, 'body.totalFrames');
-
-    // Check array length
-    const actualFrames = actual.body.stackFrames;
-    expect(actualFrames.length).to.equal(expectedFrames.length, 'Number of stack frames');
-
-    // Check each frame
-    actualFrames.forEach((actualFrame, i) => {
-        assertFrameMatches(actualFrame, expectedFrames[i], i);
-    });
-}
 
 interface StackTraceValidationConfig {
     suiteContext: FrameworkTestContext;
@@ -125,21 +32,7 @@ async function validateStackTrace(config: StackTraceValidationConfig): Promise<v
         text: "console.log('Test stack trace here')"
     });
 
-    const stackTraceVerifier: IStackTraceVerifier = {
-        format: config.format,
-        verify: (stackTraceResponse: DebugProtocol.StackTraceResponse) => {
-            try {
-                assertResponseMatches(stackTraceResponse, config.expectedFrames);
-            } catch (e) {
-                const error: assert.AssertionError = e;
-                error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceResponse, null, 2);
-
-                throw error;
-            }
-        }
-    };
-
-    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTrace: stackTraceVerifier});
+    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTrace: config.expectedFrames, stackFrameFormat: config.format});
 }
 
 puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
@@ -149,7 +42,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            format: undefined,
+            format: {},
             expectedFrames: [
                 { name: '(anonymous function)', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
