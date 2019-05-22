@@ -10,6 +10,7 @@ import { loadProjectLabels } from '../labels';
 import { TestProjectSpec } from './frameworkTestSupport';
 import { DefaultFixture } from '../fixtures/defaultFixture';
 import { MultipleFixtures } from '../fixtures/multipleFixtures';
+import * as puppeteer from 'puppeteer';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -123,6 +124,30 @@ export class FrameworkTestSuite {
             await debugClient.pauseRequest({ threadId: 0 });
             await waitForPaused;
             await debugClient.continueRequest();
+        });
+    }
+
+    /**
+     * A generic breakpoint test. This can be used for many different types of breakpoint tests with the following structure:
+     *
+     * 1. Wait for the page to load by waiting for the selector: `waitSelectorId`
+     * 2. Set a breakpoint at `bpLabel`
+     * 3. Execute a trigger event that should cause the breakpoint to be hit using the function `trigger`
+     * 4. Assert that the breakpoint is hit on the expected location, and continue
+     *
+     * @param waitSelectorId
+     * @param bpLabel
+     * @param trigger
+     */
+    genericBreakpointTest(description: string, waitSelectorId: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
+        return puppeteerTest(`${this.frameworkName} - ${description}`, this.suiteContext, async (context, page) => {
+            const location = context.breakpointLabels.get(bpLabel);
+            await page.waitForSelector(`#${waitSelectorId}`);
+            await setBreakpoint(this.suiteContext.debugClient, location);
+            const triggerPromise = trigger(page);
+            await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.suiteContext.debugClient.continueRequest();
+            await triggerPromise;
         });
     }
 }

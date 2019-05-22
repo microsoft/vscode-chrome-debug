@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome",
+            "trace": "verbose",
+            //"url": "http://localhost:5000/other.html",
+            "file": "C:/development/debug_adapters_v2/vscode-chrome-debug/testdata/inline_scripts/other.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "type": "my-chrome",
+            "request": "launch",
+            "name": "My Launch Chrome",
+            "url": "http://localhost:5000/other.html",
+            "webRoot": "${workspaceFolder}"
+        }
+    ]
+}

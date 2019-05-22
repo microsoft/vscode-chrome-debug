@@ -120,7 +120,7 @@ function puppeteerSuiteFunction(
 puppeteerSuiteFunction.skip = (
   description: string,
   testSpec: TestProjectSpec,
-  callback: (suiteContext: FrameworkTestContext) => any
+  callback: (suiteContext: PuppeteerTestContext) => any
 ) => puppeteerSuiteFunction(description, testSpec, callback, suite.skip);
 
 puppeteerSuiteFunction.only = (
