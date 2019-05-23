@@ -3,31 +3,44 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createServer } from 'http-server';
 import * as puppeteer from 'puppeteer';
-import * as testSetup from '../testSetup';
-import { launchTestAdapter } from '../intTestSupport';
-import { getPageByUrl, connectPuppeteer } from './puppeteerSupport';
 import { FrameworkTestContext, TestProjectSpec, ReassignableFrameworkTestContext } from '../framework/frameworkTestSupport';
-import { isThisV1 } from '../testSetup';
-import { HttpOrHttpsServer } from '../types/server';
 import { loadProjectLabels } from '../labels';
-import { logCallsTo } from '../utils/logging';
 import { ISuiteCallbackContext, ISuite } from 'mocha';
+import { NullFixture } from '../fixtures/fixture';
+import { LaunchProject } from '../fixtures/launchProject';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
  */
 export interface IPuppeteerTestContext extends FrameworkTestContext {
   /** The connected puppeteer browser object */
-  browser: puppeteer.Browser;
+  browser: puppeteer.Browser | null;
   /** The currently running html page in Chrome */
-  page: puppeteer.Page;
+  page: puppeteer.Page | null;
 }
 
 export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
-  public constructor(public readonly browser: puppeteer.Browser, public readonly page: puppeteer.Page) {
+  private _browser: puppeteer.Browser | null = null;
+  private _page: puppeteer.Page | null = null;
+
+  public constructor() {
     super();
+  }
+
+  public get browser(): puppeteer.Browser | null {
+    return this._browser;
+  }
+
+  public get page(): puppeteer.Page | null {
+    return this._page;
+  }
+
+  public reassignTo(newWrapped: IPuppeteerTestContext): this {
+    super.reassignTo(newWrapped);
+    this._page = newWrapped.page;
+    this._browser = newWrapped.browser;
+    return this;
   }
 }
 
@@ -41,40 +54,24 @@ export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
  */
 async function puppeteerTestFunction(
   description: string,
-  context: FrameworkTestContext,
+  context: PuppeteerTestContext,
   testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>,
   functionToDeclareTest: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = test
 ) {
   return functionToDeclareTest(description, async function () {
-    const debugClient = await context.debugClient;
-    await launchTestAdapter(debugClient, context.testSpec.props.launchConfig);
-    const browser = await connectPuppeteer(9222);
-
-    const page = logCallsTo(await getPageByUrl(browser, context.testSpec.props.url), 'PuppeteerPage');
-
-    // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
-    // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
-    // If we don't wait here, there's always a possibility that we can send the set breakpoint request
-    // for a subsequent test after the scripts have started being parsed/run by Chrome, yet before
-    // the target script is parsed, in which case the adapter will try to use breakOnLoad, but
-    // the instrumentation BP will never be hit, leaving our breakpoint in limbo
-    if (isThisV1) {
-      await new Promise(a => setTimeout(a, 500));
-    }
-
-    await testFunction( new PuppeteerTestContext(browser, page).reassignTo(context), page);
+    await testFunction(context, context.page!);
   });
 }
 
 puppeteerTestFunction.skip = (
   description: string,
-  _context: FrameworkTestContext,
+  _context: PuppeteerTestContext,
   _testFunction: (context: IPuppeteerTestContext, page: puppeteer.Page) => Promise<any>
-) => test.skip(description, () => {throw new Error(`We don't expect this to be called`); });
+) => test.skip(description, () => { throw new Error(`We don't expect this to be called`); });
 
 puppeteerTestFunction.only = (
   description: string,
-  context: FrameworkTestContext,
+  context: PuppeteerTestContext,
   testFunction: (context: IPuppeteerTestContext, page: puppeteer.Page) => Promise<any>
 ) => puppeteerTestFunction(description, context, testFunction, test.only);
 
@@ -95,44 +92,34 @@ export const puppeteerTest = puppeteerTestFunction;
 function puppeteerSuiteFunction(
   description: string,
   testSpec: TestProjectSpec,
-  callback: (suiteContext: FrameworkTestContext) => any,
+  callback: (suiteContext: PuppeteerTestContext) => void,
   suiteFunctionToUse: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = suite
 ): Mocha.ISuite {
   return suiteFunctionToUse(description, () => {
-    const suiteContext = new ReassignableFrameworkTestContext();
-
-    let server: HttpOrHttpsServer | null;
+    let testContext = new PuppeteerTestContext();
+    let fixture: LaunchProject | NullFixture = new NullFixture(); // This variable is shared across all test of this suite
 
     setup(async function () {
-      let debugClient = await testSetup.setup(this);
-      suiteContext.reassignTo({
-        testSpec,
-        debugClient: debugClient,
-        breakpointLabels: await loadProjectLabels(testSpec.props.webRoot)
+      const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
+      const lauchProject = fixture = await LaunchProject.create(this, testSpec);
+
+      testContext.reassignTo({
+        testSpec, debugClient: lauchProject.debugClient, breakpointLabels, browser: lauchProject.browser, page: lauchProject.page
       });
-
-      // Running tests on CI can time out at the default 5s, so we up this to 10s
-      suiteContext.debugClient.defaultTimeout = 15000;
-
-      server = createServer({ root: testSpec.props.webRoot });
-      server.listen(7890);
     });
 
-    teardown(() => {
-      if (server) {
-        server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
-        server = null;
-      }
-      return testSetup.teardown();
+    teardown(async () => {
+      fixture.cleanUp();
+      fixture = new NullFixture();
     });
 
-    callback(suiteContext);
+    callback(testContext);
   });
 }
 
 puppeteerSuiteFunction.only = (
   description: string,
   testSpec: TestProjectSpec,
-  callback: (suiteContext: FrameworkTestContext) => any,
+  callback: (suiteContext: PuppeteerTestContext) => any,
 ) => puppeteerSuiteFunction(description, testSpec, callback, suite.only);
 export const puppeteerSuite = puppeteerSuiteFunction;
