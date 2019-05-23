@@ -15,6 +15,7 @@ export class LaunchWebServer implements IFixture {
 
     public constructor(testSpec: TestProjectSpec) {
         this.server = createServer({ root: testSpec.props.webRoot });
+        // TODO: This should probably be extracted somehow and randomized at some point (Also replace 7890 in the url)
         this.server.listen(7890);
     }
 

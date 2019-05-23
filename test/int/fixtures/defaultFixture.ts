@@ -5,7 +5,7 @@
 import { IFixture } from './fixture';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import * as testSetup from '../testSetup';
-import { IBeforeAndAfterContext } from 'mocha';
+import { IBeforeAndAfterContext, ITestCallbackContext } from 'mocha';
 
 /**
  * Default set up for all our tests. We expect all our tests to need to do this setup
@@ -13,12 +13,12 @@ import { IBeforeAndAfterContext } from 'mocha';
  */
 export class DefaultFixture implements IFixture {
     private constructor(public readonly debugClient: ExtendedDebugClient) {
-        // Running tests on CI can time out at the default 5s, so we up this to 10s
+        // Running tests on CI can time out at the default 5s, so we up this to 15s
         debugClient.defaultTimeout = 15000;
     }
 
     /** Create a new fixture using the provided setup context */
-    public static async create(context: IBeforeAndAfterContext): Promise<DefaultFixture> {
+    public static async create(context: IBeforeAndAfterContext | ITestCallbackContext): Promise<DefaultFixture> {
         return new DefaultFixture(await testSetup.setup(context));
     }
 

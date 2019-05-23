@@ -6,12 +6,13 @@
 import * as path from 'path';
 import * as tmp from 'tmp';
 import * as puppeteer from 'puppeteer';
-
+import * as _ from 'lodash';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
+
 import { ILaunchRequestArgs } from '../../src/chromeDebugInterfaces';
 import { Dictionary } from 'lodash';
 import { logCallsTo, getDebugAdapterLogFilePath, setTestLogName } from './utils/logging';
-import { IBeforeAndAfterContext } from 'mocha';
+import { IBeforeAndAfterContext, ITestCallbackContext } from 'mocha';
 import { killAllChrome } from '../testUtils';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
@@ -54,8 +55,9 @@ export const DATA_ROOT = path.join(PROJECT_ROOT, 'testdata/');
 /** Default setup for all our tests, using the context of the setup method
  *    - Best practise: The new best practise is to use the DefaultFixture when possible instead of calling this method directly
  */
-export async function setup(context: IBeforeAndAfterContext, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
-    return setupWithTitle(context.currentTest.fullTitle(), port, launchProps);
+export async function setup(context: IBeforeAndAfterContext | ITestCallbackContext, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
+    const currentTest = _.defaultTo(context.currentTest, context.test);
+    return setupWithTitle(currentTest.fullTitle(), port, launchProps);
 }
 
 /** Default setup for all our tests, using the test title

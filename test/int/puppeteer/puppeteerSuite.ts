@@ -101,7 +101,7 @@ function puppeteerSuiteFunction(
 
     setup(async function () {
       const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
-      const lauchProject = fixture = await LaunchProject.create(this.currentTest.title, testSpec);
+      const lauchProject = fixture = await LaunchProject.create(this, testSpec);
 
       testContext.reassignTo({
         testSpec, debugClient: lauchProject.debugClient, breakpointLabels, browser: lauchProject.browser, page: lauchProject.page
