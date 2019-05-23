@@ -28,6 +28,10 @@ export class BreakpointsWizard {
         this._client.on('breakpoint', breakpointStatusChange => this.onBreakpointStatusChange(breakpointStatusChange.body));
     }
 
+    public get project() {
+        return this._project;
+    }
+
     private logState() {
         logger.log(`BreakpointsWizard #events = ${this._eventsToBeConsumed.length}, state = ${this.state}`);
     }

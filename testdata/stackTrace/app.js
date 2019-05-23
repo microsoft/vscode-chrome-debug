@@ -1,9 +1,13 @@
 function buttonClick() {
-    setTimeout(inner, 100);
+    setTimeout(timeoutCallback, 100);
 }
 
-function inner() {
+function timeoutCallback() {
+    eval("evalCallback();");
+}
+
+function evalCallback() {
     (function() {
-        console.log('Inside anonymous function'); // bpLabel: stackTraceBreakpoint
+        console.log('Test stack trace here');
     })();
 }

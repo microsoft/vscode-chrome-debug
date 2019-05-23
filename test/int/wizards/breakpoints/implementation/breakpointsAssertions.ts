@@ -1,4 +1,3 @@
-import * as assert from 'assert';
 import * as path from 'path';
 import { expect, use } from 'chai';
 import * as chaiString from 'chai-string';
@@ -8,16 +7,16 @@ import { BreakpointWizard } from '../breakpointWizard';
 import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './internalFileBreakpointsWizard';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTimeout';
-import { findLineNumber } from '../../../utils/findPositionOfTextInFile';
-import { IVariablesVerification, VariablesAssertions } from './variablesAssertions';
+import { IExpectedVariables, VariablesAssertions } from './variablesAssertions';
+import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAssertions';
+import { StackTraceStringAssertions } from './stackTraceStringAssertions';
 
 use(chaiString);
 
-export type IStackTraceVerification = string;
-
 export interface IVerifications {
-    variables?: IVariablesVerification;
-    stackTrace?: IStackTraceVerification;
+    variables?: IExpectedVariables;
+    stackTrace?: string | ExpectedFrame[];
+    stackFrameFormat?: DebugProtocol.StackFrameFormat;
 }
 
 interface IObjectWithLocation {
@@ -28,6 +27,14 @@ interface IObjectWithLocation {
 
 export class BreakpointsAssertions {
     private readonly _variableAssertions = new VariablesAssertions(this._internal.client);
+
+    private readonly _defaultStackFrameFormat: DebugProtocol.StackFrameFormat = {
+        parameters: true,
+        parameterTypes: true,
+        parameterNames: true,
+        line: true,
+        module: true
+    };
 
     public constructor(
         private readonly _breakpointsWizard: BreakpointsWizard,
@@ -49,7 +56,7 @@ export class BreakpointsAssertions {
     public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
         const actionResult = lastActionToMakeBreakpointHit();
 
-        this.assertIsHitThenResume(breakpoint, verifications);
+        await this.assertIsHitThenResume(breakpoint, verifications);
 
         await actionResult;
     }
@@ -57,17 +64,23 @@ export class BreakpointsAssertions {
     public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
         await this._breakpointsWizard.waitUntilPaused(breakpoint);
 
-        const stackTrace = await this.stackTrace();
-        const topFrame = stackTrace[0];
+        const stackFrameFormat = verifications.stackFrameFormat || this._defaultStackFrameFormat;
+
+        const stackTraceResponse = await this._internal.client.send('stackTrace', {
+            threadId: THREAD_ID,
+            format: stackFrameFormat
+        });
+        const topFrame = stackTraceResponse.body.stackFrames[0];
 
         // Validate that the topFrame is locate in the same place as the breakpoint
         this.assertLocationMatchesExpected(topFrame, breakpoint);
 
-        if (verifications.stackTrace !== undefined) {
-            const formattedExpectedStackTrace = verifications.stackTrace.replace(/^\s+/gm, ''); // Remove the white space we put at the start of the lines to make the stack trace align with the code
-            this.applyIgnores(formattedExpectedStackTrace, stackTrace);
-            const actualStackTrace = this.extractStackTrace(stackTrace);
-            assert.equal(actualStackTrace, formattedExpectedStackTrace, `Expected the stack trace when hitting ${breakpoint} to be:\n${formattedExpectedStackTrace}\nyet it is:\n${actualStackTrace}`);
+        if (typeof verifications.stackTrace === 'string') {
+            const assertions = new StackTraceStringAssertions(breakpoint);
+            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
+        } else if (typeof verifications.stackTrace === 'object') {
+            const assertions = new StackTraceObjectAssertions(this._breakpointsWizard);
+            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
         }
 
         if (verifications.variables !== undefined) {
@@ -75,50 +88,6 @@ export class BreakpointsAssertions {
         }
 
         await this._breakpointsWizard.resume();
-    }
-
-    public applyIgnores(formattedExpectedStackTrace: string, stackTrace: DebugProtocol.StackFrame[]): void {
-        const ignoreFunctionNameText = '<__IGNORE_FUNCTION_NAME__>';
-        const ignoreFunctionName = findLineNumber(formattedExpectedStackTrace, formattedExpectedStackTrace.indexOf(ignoreFunctionNameText));
-        if (ignoreFunctionName >= 0) {
-            expect(stackTrace.length).to.be.greaterThan(ignoreFunctionName);
-            const ignoredFrame = stackTrace[ignoreFunctionName];
-            ignoredFrame.name = `${ignoreFunctionNameText} [${ignoredFrame.source!.name}] Line ${ignoredFrame.line}`;
-        }
-    }
-
-    private extractStackTrace(stackTrace: DebugProtocol.StackFrame[]): string {
-        return stackTrace.map(f => this.printStackTraceFrame(f)).join('\n');
-    }
-
-    private printStackTraceFrame(frame: DebugProtocol.StackFrame): string {
-        let frameName = frame.name;
-        return `${frameName}:${frame.column}${frame.presentationHint && frame.presentationHint !== 'normal' ? ` (${frame.presentationHint})` : ''}`;
-    }
-
-    private async stackTrace(): Promise<DebugProtocol.StackFrame[]> {
-        const stackTraceResponse = await this._internal.client.send('stackTrace', {
-            threadId: THREAD_ID,
-            format: {
-                parameters: true,
-                parameterTypes: true,
-                parameterNames: true,
-                line: true,
-                module: true
-            }
-        });
-
-        expect(stackTraceResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(stackTraceResponse)}`).to.equal(true);
-        expect(stackTraceResponse.body.totalFrames, `The number of stackFrames was different than the value supplied on the totalFrames field`)
-            .to.equal(stackTraceResponse.body.stackFrames.length);
-        stackTraceResponse.body.stackFrames.forEach(frame => {
-            // Warning: We don't currently validate frame.source.path
-            expect(frame.source).not.to.equal(undefined);
-            const expectedSourceNameAndLine = ` [${frame.source!.name}] Line ${frame.line}`;
-            expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
-        });
-
-        return stackTraceResponse.body.stackFrames;
     }
 
     private assertLocationMatchesExpected(objectWithLocation: IObjectWithLocation, breakpoint: BreakpointWizard): void {

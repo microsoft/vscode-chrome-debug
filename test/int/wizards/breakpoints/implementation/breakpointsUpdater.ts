@@ -5,7 +5,7 @@ import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointWizard, VSCodeActionWhenHit } from '../breakpointWizard';
 import { PerformChangesImmediatelyState } from './performChangesImmediatelyState';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
-import { PauseOnHitCount } from '../../../core-v2/chrome/internal/breakpoints/bpActionWhenHit';
+import { PauseOnHitCount, AlwaysPause } from '../../../core-v2/chrome/internal/breakpoints/bpActionWhenHit';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { Replace } from '../../../core-v2/typeUtils';
 
@@ -41,7 +41,9 @@ export class BreakpointsUpdater {
     }
 
     private actionWhenHitToVSCodeProtocol(breakpoint: BreakpointWizard): VSCodeActionWhenHit {
-        if (breakpoint.actionWhenHit instanceof PauseOnHitCount) {
+        if (breakpoint.actionWhenHit instanceof AlwaysPause) {
+            return {};
+        } else if (breakpoint.actionWhenHit instanceof PauseOnHitCount) {
             return { hitCondition: breakpoint.actionWhenHit.pauseOnHitCondition };
         } else {
             throw new Error('Not yet implemented');
