@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { logger, } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
-import { MethodsCalledLogger, IMethodsCalledLoggerConfiguration, MethodsCalledLoggerConfiguration, ReplacementInstruction } from '../core-v2/chrome/logging/methodsCalledLogger';
+import { MethodsCalledLogger, IMethodsCalledLoggerConfiguration, MethodsCalledLoggerConfiguration, ReplacementInstruction, wrapWithMethodLogger } from '../core-v2/chrome/logging/methodsCalledLogger';
 
 const useDateTimeInLog = false;
 function dateTimeForFilePath(): string {
@@ -50,14 +50,16 @@ class PuppeteerMethodsCalledLoggerConfiguration implements IMethodsCalledLoggerC
     private readonly _wrapped = new MethodsCalledLoggerConfiguration('', []);
     public readonly replacements: ReplacementInstruction[] = [];
 
-    public decideWhetherToWrapMethodResult(methodName: string | symbol | number, args: any, _result: unknown, wrapWithName: (name: string) => void): void {
-        if (methodName === 'waitForSelector') {
-            wrapWithName(args[0]);
+    public customizeResult<T>(methodName: string | symbol | number, args: any, result: T): T {
+        if (methodName === 'waitForSelector' && typeof result === 'object' && args.length >= 1) {
+            return wrapWithMethodLogger(<T & object>result, args[0]);
+        } else {
+            return result;
         }
     }
 
-    public decideWhetherToWrapEventEmitterListener(receiverName: string, methodName: string | symbol | number, args: unknown[], wrapWithName: (name: string) => void): void {
-        return this._wrapped.decideWhetherToWrapEventEmitterListener(receiverName, methodName, args, wrapWithName);
+    public customizeArgumentsBeforeCall(receiverName: string, methodName: string | symbol | number, args: object[]): void {
+        this._wrapped.customizeArgumentsBeforeCall(receiverName, methodName, args);
     }
 }
 

@@ -1,4 +1,9 @@
 import URI from 'vscode-uri';
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as testSetup from '../../../testSetup';

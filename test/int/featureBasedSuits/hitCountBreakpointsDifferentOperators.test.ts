@@ -13,6 +13,7 @@ import { puppeteerSuite, puppeteerTest } from '../puppeteer/puppeteerSuite';
 import { reactWithLoopTestSpecification } from '../resources/resourceProjects';
 import { BreakpointsWizard as BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 import { expect } from 'chai';
+import { logger } from 'vscode-debugadapter';
 
 puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecification, (suiteContext) => {
     interface IConditionConfiguration {
@@ -70,9 +71,10 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
                  * the value of this variable to validate that a bp with = 12 paused on the 12th iteration rather than on the 1st one
                  * (The breakpoint is located in the same place in both iterations, so we need to use state to differenciate between those two cases)
                  */
-                await setStateBreakpoint.assertIsHitThenResume({ variables: { 'iterationNumber': `${nextIterationToPause}` } });
+                await setStateBreakpoint.assertIsHitThenResume({ variables: { local_contains: { iterationNumber: nextIterationToPause } } });
             }
 
+            logger.log(`No more pauses afterwards = ${conditionConfiguration.noMorePausesAfterwards}`);
             if (conditionConfiguration.noMorePausesAfterwards) {
                 await breakpoints.waitAndAssertNotPaused();
                 await setStateBreakpoint.unset();

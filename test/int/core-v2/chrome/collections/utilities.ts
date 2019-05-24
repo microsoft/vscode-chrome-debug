@@ -5,9 +5,9 @@
 import { ValidatedMultiMap } from './validatedMultiMap';
 
 export function groupByKey<T, K>(elements: T[], obtainKey: (element: T) => K): ValidatedMultiMap<K, T> {
-    const groupped = ValidatedMultiMap.empty<K, T>();
-    elements.forEach(element => groupped.add(obtainKey(element), element));
-    return groupped;
+    const grouped = ValidatedMultiMap.empty<K, T>();
+    elements.forEach(element => grouped.add(obtainKey(element), element));
+    return grouped;
 }
 
 export function determineOrderingOfStrings(left: string, right: string): number {
