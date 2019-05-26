@@ -2,6 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as nls from 'vscode-nls';
+let localize = nls.loadMessageBundle();
+
 import * as os from 'os';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,9 +18,7 @@ import { ILaunchRequestArgs, IAttachRequestArgs, ICommonRequestArgs, ISetExpress
 import * as utils from './utils';
 import * as errors from './errors';
 
-import * as nls from 'vscode-nls';
 import { FinishedStartingUpEventArguments } from 'vscode-chrome-debug-core/lib/src/executionTimingsReporter';
-let localize = nls.loadMessageBundle();
 
 // Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
@@ -49,7 +50,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
         capabilities.supportsLogPoints = true;
 
         if (args.locale) {
-            localize = nls.config({ locale: args.locale })();
+            localize = nls.config({ locale: args.locale, bundleFormat: nls.BundleFormat.standalone })();
         }
 
         this._doesHostSupportLaunchUnelevatedProcessRequest = args.supportsLaunchUnelevatedProcessRequest || false;

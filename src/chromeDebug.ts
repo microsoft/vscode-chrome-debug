@@ -2,6 +2,9 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as nls from 'vscode-nls'; // MUST BE FIRST IMPORT
+nls.config({ bundleFormat: nls.BundleFormat.standalone });
+
 import { ChromeDebugSession, logger, UrlPathTransformer, BaseSourceMapTransformer, telemetry } from 'vscode-chrome-debug-core';
 import * as path from 'path';
 import * as os from 'os';
