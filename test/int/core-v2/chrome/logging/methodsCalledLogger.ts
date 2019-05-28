@@ -62,6 +62,7 @@ export class MethodsCalledLogger<T extends object> {
                 const originalPropertyValue = target[propertyKey];
                 if (typeof originalPropertyValue === 'function') {
                     return (...args: any) => {
+                        const callId = this.generateCallId();
                         try {
                             if (propertyKey === 'on' && args.length >= 2) {
                                 let listenerPossiblyWrapped = args[1];
@@ -69,9 +70,10 @@ export class MethodsCalledLogger<T extends object> {
                                 args[1] = listenerPossiblyWrapped;
                             }
 
+                            this.logCallStart(propertyKey, args, callId);
                             const result = originalPropertyValue.apply(target, args);
                             if (!result || !result.then) {
-                                this.logCall(propertyKey, Synchronicity.Sync, args, Outcome.Succesful, result);
+                                this.logCall(propertyKey, Synchronicity.Sync, args, Outcome.Succesful, result, callId);
                                 if (result === target) {
                                     return receiver;
                                 } else {
@@ -80,8 +82,7 @@ export class MethodsCalledLogger<T extends object> {
                                     return resultPossiblyWrapped;
                                 }
                             } else {
-                                const callId = this.generateCallId();
-                                this.logCallStart(propertyKey, args, callId);
+                                this.logSyncPartFinished(propertyKey, args, callId);
                                 return result.then((promiseResult: unknown) => {
                                     this.logCall(propertyKey, Synchronicity.Async, args, Outcome.Succesful, promiseResult, callId);
                                     if (promiseResult === target) {
@@ -97,7 +98,7 @@ export class MethodsCalledLogger<T extends object> {
                                 });
                             }
                         } catch (exception) {
-                            this.logCall(propertyKey, Synchronicity.Sync, args, Outcome.Failure, exception);
+                            this.logCall(propertyKey, Synchronicity.Sync, args, Outcome.Failure, exception, callId);
                             throw exception;
                         }
                     };
@@ -127,12 +128,17 @@ export class MethodsCalledLogger<T extends object> {
     }
 
     private logCallStart(propertyKey: PropertyKey, methodCallArguments: any[], callId: number): void {
-        const message = `START ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
+        const message = `START            ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
         logger.verbose(message);
     }
 
-    private logCall(propertyKey: PropertyKey, synchronicity: Synchronicity, methodCallArguments: any[], outcome: Outcome, resultOrException: unknown, callId?: number): void {
-        const endPrefix = callId ? `END   ${callId}: ` : '';
+    private logSyncPartFinished(propertyKey: PropertyKey, methodCallArguments: any[], callId: number): void {
+        const message = `PROMISE-RETURNED ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
+        logger.verbose(message);
+    }
+
+    private logCall(propertyKey: PropertyKey, synchronicity: Synchronicity, methodCallArguments: any[], outcome: Outcome, resultOrException: unknown, callId: number): void {
+        const endPrefix = callId ? `END              ${callId}: ` : '';
         const message = `${endPrefix}${this.printMethodCall(propertyKey, methodCallArguments)} ${this.printMethodSynchronicity(synchronicity)}  ${this.printMethodResponse(outcome, resultOrException)}`;
         logger.verbose(message);
     }

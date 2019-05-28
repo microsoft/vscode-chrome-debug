@@ -10,6 +10,7 @@ import { LaunchPuppeteer } from '../puppeteer/launchPuppeteer';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { Page, Browser } from 'puppeteer';
 import { ITestCallbackContext, IBeforeAndAfterContext } from 'mocha';
+import { PausedWizard } from '../wizards/pausedWizard';
 
 /** Perform all the steps neccesary to launch a particular project such as:
  *    - Default fixture/setup
@@ -20,13 +21,18 @@ export class LaunchProject implements IFixture {
     private constructor(
         private readonly _defaultFixture: DefaultFixture,
         private readonly _launchWebServer: LaunchWebServer,
+        public readonly pausedWizard: PausedWizard,
         private readonly _launchPuppeteer: LaunchPuppeteer) { }
 
     public static async create(testContext: IBeforeAndAfterContext | ITestCallbackContext, testSpec: TestProjectSpec): Promise<LaunchProject> {
         const defaultFixture = await DefaultFixture.create(testContext);
         const launchWebServer = new LaunchWebServer(testSpec);
+
+        // We need to create the PausedWizard before launching the debuggee to listen to all events and avoid race conditions
+        const pausedWizard = PausedWizard.forClient(defaultFixture.debugClient);
+
         const launchPuppeteer = await LaunchPuppeteer.create(defaultFixture.debugClient, testSpec);
-        return new LaunchProject(defaultFixture, launchWebServer, launchPuppeteer);
+        return new LaunchProject(defaultFixture, launchWebServer, pausedWizard, launchPuppeteer);
     }
 
     /** Client for the debug adapter being used for this test */
