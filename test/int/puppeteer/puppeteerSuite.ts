@@ -93,8 +93,8 @@ function puppeteerSuiteFunction(
   description: string,
   testSpec: TestProjectSpec,
   callback: (suiteContext: PuppeteerTestContext) => void,
-  suiteFunctionToUse: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = suite
-): Mocha.ISuite {
+  suiteFunctionToUse: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite | void = suite
+): Mocha.ISuite | void {
   return suiteFunctionToUse(description, () => {
     let testContext = new PuppeteerTestContext();
     let fixture: LaunchProject | NullFixture = new NullFixture(); // This variable is shared across all test of this suite
@@ -116,6 +116,12 @@ function puppeteerSuiteFunction(
     callback(testContext);
   });
 }
+
+puppeteerSuiteFunction.skip = (
+  description: string,
+  testSpec: TestProjectSpec,
+  callback: (suiteContext: FrameworkTestContext) => any
+) => puppeteerSuiteFunction(description, testSpec, callback, suite.skip);
 
 puppeteerSuiteFunction.only = (
   description: string,
