@@ -46,9 +46,9 @@ export class PausedWizard {
      *
      * @param millisecondsToWaitForPauses How much time to wait for pauses
      */
-    public async waitAndAssertNotPaused(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
+    public async waitAndConsumeResumedEvent(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
         await utils.promiseTimeout(undefined, millisecondsToWaitForPauses); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
-        await this.state.assertNotPaused();
+        await this.state.consumeResumedEvent();
     }
 
     /** Return whether the debuggee is currently paused */
@@ -58,27 +58,27 @@ export class PausedWizard {
 
     /** Wait and block until the debuggee is paused on a debugger statement */
     public async waitUntilPausedOnDebuggerStatement(): Promise<void> {
-        return this.waitUntilPaused(pauseInfo => {
+        return this.waitAndConsumePausedEvent(pauseInfo => {
             expect(pauseInfo.description).to.equal('Paused on debugger statement');
             expect(pauseInfo.reason).to.equal('debugger_statement');
         });
     }
 
     /** Wait and block until the debuggee is paused, and then perform the specified action with the pause event's body */
-    public async waitUntilPaused(actionWithPausedInfo: (pausedInfo: DebugProtocol.StoppedEvent['body']) => void): Promise<void> {
+    public async waitAndConsumePausedEvent(actionWithPausedInfo: (pausedInfo: DebugProtocol.StoppedEvent['body']) => void): Promise<void> {
         await waitUntilReadyWithTimeout(() => this.state instanceof PausedEventAvailableToBeConsumed);
 
-        actionWithPausedInfo(this.state.assertIsPaused().body);
+        actionWithPausedInfo(this.state.consumePausedEvent().body);
     }
 
     /** Wait and block until the debuggee has been resumed */
-    public async waitUntilJustResumed(): Promise<void> {
+    public async waitUntilResumed(): Promise<void> {
         // We assume that nobody is consuming events in parallel, so if we start paused, the wait call won't ever succeed
         expect(this.state).to.not.be.instanceOf(PausedEventAvailableToBeConsumed);
 
         await waitUntilReadyWithTimeout(() => this.state instanceof ResumedEventAvailableToBeConsumed);
 
-        await this.state.assertNotPaused();
+        await this.state.consumeResumedEvent();
     }
 
     /**
@@ -88,7 +88,7 @@ export class PausedWizard {
         await this._client.continueRequest();
         if (isThisV2) {
             // TODO: Is getting this event on V2 a bug? See: Continued Event at https://microsoft.github.io/debug-adapter-protocol/specification
-            await this.waitUntilJustResumed();
+            await this.waitUntilResumed();
         }
     }
 
@@ -139,8 +139,8 @@ export class PausedWizard {
 interface IEventForConsumptionAvailabilityState {
     readonly latestEvent: DebugProtocol.StoppedEvent | DebugProtocol.ContinuedEvent;
 
-    assertIsPaused(): DebugProtocol.StoppedEvent;
-    assertNotPaused(): void;
+    consumePausedEvent(): DebugProtocol.StoppedEvent;
+    consumeResumedEvent(): void;
 
     isPaused(): boolean;
 }
@@ -154,14 +154,13 @@ class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabili
         return true;
     }
 
-    public assertIsPaused(): DebugProtocol.StoppedEvent {
+    public consumePausedEvent(): DebugProtocol.StoppedEvent {
         this._markNextEventWasConsumed();
         return this.latestEvent;
     }
 
-    public assertNotPaused(): void {
-        expect(this.latestEvent.event, `Expected that there was not new paused event to be consumed, and that the debugger wasn't paused yet the state was: ${this}`)
-            .to.not.equal('stopped');
+    public consumeResumedEvent(): void {
+        throw new Error(`The debugger is paused`);
     }
 
     public toString(): string {
@@ -172,11 +171,11 @@ class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabili
 class ResumedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
     public constructor(protected readonly _markNextEventWasConsumed: MarkNextEventWasConsumed, public readonly latestEvent: DebugProtocol.ContinuedEvent) { }
 
-    public assertIsPaused(): DebugProtocol.StoppedEvent {
+    public consumePausedEvent(): DebugProtocol.StoppedEvent {
         throw new Error(`The debugger is not paused`);
     }
 
-    public assertNotPaused(): void {
+    public consumeResumedEvent(): void {
         this._markNextEventWasConsumed();
     }
 
@@ -194,16 +193,16 @@ class NoEventAvailableToBeConsumed implements IEventForConsumptionAvailabilitySt
         throw new Error(`There is no event available to be consumed`);
     }
 
-    public assertIsPaused(): never {
+    public consumePausedEvent(): never {
         throw new Error(`There is no event available to be consumed`);
     }
 
-    public assertNotPaused(): void {
-        // Always true for this state
+    public consumeResumedEvent(): void {
+        throw new Error(`There is no event available to be consumed`);
     }
 
     public isPaused(): boolean {
-        return false;
+        throw new Error(`Can't determine whether the debuggee is paused or not when there is no event available to be consumed`);
     }
 
     public toString(): string {

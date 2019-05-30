@@ -59,7 +59,7 @@ export class BreakpointsAssertions {
     }
 
     public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
-        await this._breakpointsWizard.waitUntilPaused(breakpoint);
+        await this._breakpointsWizard.waitAndConsumePausedEvent(breakpoint);
 
         const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
 

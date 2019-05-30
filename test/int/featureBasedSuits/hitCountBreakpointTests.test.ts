@@ -33,7 +33,7 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
 
         await incBtn.click();
 
-        await breakpoints.waitAndAssertNotPaused();
+        await breakpoints.waitAndConsumeResumedEvent();
 
         await setStateBreakpoint.unset();
     });
@@ -70,7 +70,7 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
 
         await incBtn.click();
 
-        await breakpoints.waitAndAssertNotPaused();
+        await breakpoints.waitAndConsumeResumedEvent();
 
         await setStateBreakpoint.unset();
         await setNewValBreakpoint.unset();
@@ -111,7 +111,7 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
 
         await incBtn.click();
 
-        await breakpoints.waitAndAssertNotPaused();
+        await breakpoints.waitAndConsumeResumedEvent();
 
         await counterBreakpoints.batch(async () => {
             await setStateBreakpoint.unset();

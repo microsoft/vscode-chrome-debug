@@ -30,9 +30,9 @@ export class BreakpointsWizard {
             () => new InternalFileBreakpointsWizard(wrapWithMethodLogger(this), this._client, this._project.src(filePath)))));
     }
 
-    public async waitUntilPaused(_breakpoint: BreakpointWizard): Promise<void> {
+    public async waitAndConsumePausedEvent(_breakpoint: BreakpointWizard): Promise<void> {
         // TODO: Should we validate the stack trace is on breakpoint here?
-        await this._pausedWizard.waitUntilPaused(pausedInfo => {
+        await this._pausedWizard.waitAndConsumePausedEvent(pausedInfo => {
             expect(pausedInfo.reason).to.equal('breakpoint');
         });
     }
@@ -44,8 +44,8 @@ export class BreakpointsWizard {
         return this._pausedWizard.resume();
     }
 
-    public async waitAndAssertNotPaused(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
-        return this._pausedWizard.waitAndAssertNotPaused(millisecondsToWaitForPauses);
+    public async waitAndConsumeResumedEvent(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
+        return this._pausedWizard.waitAndConsumeResumedEvent(millisecondsToWaitForPauses);
     }
 
     public toString(): string {
