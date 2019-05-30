@@ -21,13 +21,13 @@ export enum KindOfVerification {
 /**
  * Provide methods to validate that the variables appearing on the stack trace are what we expect
  */
-export class VariablesVerificator {
+export class VariablesVerifier {
     /** Verify that the actual variables are exactly the variables that we expect */
-    public assertVariablesAre(variables: DebugProtocol.Variable[], expectedVariablesPrinted: string | ManyVariablesValues): void {
-        if (typeof expectedVariablesPrinted === 'string') {
-            this.assertVariablesPrintedAre(variables, expectedVariablesPrinted);
+    public assertVariablesAre(variables: DebugProtocol.Variable[], expectedVariables: string | ManyVariablesValues): void {
+        if (typeof expectedVariables === 'string') {
+            this.assertVariablesPrintedAre(variables, expectedVariables);
         } else {
-            this.assertVariablesValuesAre(variables, expectedVariablesPrinted);
+            this.assertVariablesValuesAre(variables, expectedVariables);
         }
     }
 

@@ -19,15 +19,18 @@ import { wrapWithMethodLogger } from '../core-v2/chrome/logging/methodsCalledLog
  * Warning: Needs to be created before the debuggee is launched to capture all events and avoid race conditions
  */
 export class PausedWizard {
+    private _noMoreEventsExpected = false;
     private _eventsToBeConsumed: (DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent)[] = [];
     private static _clientToPausedWizard = new ValidatedMap<ExtendedDebugClient, PausedWizard>();
 
     private constructor(private readonly _client: ExtendedDebugClient) {
         this._client.on('stopped', stopped => {
+            this.validateNoMoreEventsIfSet(stopped);
             this._eventsToBeConsumed.push(stopped);
             this.logState();
         });
         this._client.on('continued', continued => {
+            this.validateNoMoreEventsIfSet(continued);
             this._eventsToBeConsumed.push(continued);
             this.logState();
         });
@@ -86,6 +89,17 @@ export class PausedWizard {
         if (isThisV2) {
             // TODO: Is getting this event on V2 a bug? See: Continued Event at https://microsoft.github.io/debug-adapter-protocol/specification
             await this.waitUntilJustResumed();
+        }
+    }
+
+    public assertNoMoreEvents(): void {
+        expect(this.state).to.be.instanceOf(NoEventAvailableToBeConsumed);
+        this._noMoreEventsExpected = true;
+    }
+
+    private validateNoMoreEventsIfSet(event: DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent): void {
+        if (this._noMoreEventsExpected) {
+            throw new Error(`Received an event after it was signaled that no more events were expected: ${JSON.stringify(event)}`);
         }
     }
 

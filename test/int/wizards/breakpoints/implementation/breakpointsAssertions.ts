@@ -7,7 +7,6 @@ import * as path from 'path';
 import { expect, use } from 'chai';
 import * as chaiString from 'chai-string';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointWizard } from '../breakpointWizard';
 import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './internalFileBreakpointsWizard';
 import { BreakpointsWizard } from '../breakpointsWizard';
@@ -15,7 +14,7 @@ import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTime
 import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAssertions';
 import { StackTraceStringAssertions } from './stackTraceStringAssertions';
 import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
-import { StackFrameWizard } from '../../variables/stackFrameWizard';
+import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
 
 use(chaiString);
 
@@ -33,14 +32,6 @@ interface IObjectWithLocation {
 
 export class BreakpointsAssertions {
     private readonly _variablesWizard = new VariablesWizard(this._internal.client);
-
-    private readonly _defaultStackFrameFormat: DebugProtocol.StackFrameFormat = {
-        parameters: true,
-        parameterTypes: true,
-        parameterNames: true,
-        line: true,
-        module: true
-    };
 
     public constructor(
         private readonly _breakpointsWizard: BreakpointsWizard,
@@ -70,27 +61,21 @@ export class BreakpointsAssertions {
     public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
         await this._breakpointsWizard.waitUntilPaused(breakpoint);
 
-        const stackFrameFormat = verifications.stackFrameFormat || this._defaultStackFrameFormat;
-
-        const stackTraceResponse = await this._internal.client.send('stackTrace', {
-            threadId: THREAD_ID,
-            format: stackFrameFormat
-        });
-        const topFrame = stackTraceResponse.body.stackFrames[0];
+        const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
 
         // Validate that the topFrame is locate in the same place as the breakpoint
-        this.assertLocationMatchesExpected(topFrame, breakpoint);
+        this.assertLocationMatchesExpected(stackTraceFrames[0], breakpoint);
 
         if (typeof verifications.stackTrace === 'string') {
             const assertions = new StackTraceStringAssertions(breakpoint);
-            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
         } else if (typeof verifications.stackTrace === 'object') {
             const assertions = new StackTraceObjectAssertions(this._breakpointsWizard);
-            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
         }
 
         if (verifications.variables !== undefined) {
-            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, topFrame), verifications.variables);
+            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, stackTraceFrames[0]), verifications.variables);
         }
 
         await this._breakpointsWizard.resume();

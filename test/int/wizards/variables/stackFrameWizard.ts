@@ -4,6 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { expect } from 'chai';
+import * as _ from 'lodash';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { THREAD_ID, ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { VariablesScopeName } from './variablesWizard';
@@ -15,6 +16,30 @@ interface IVariablesOfScope {
     variables: DebugProtocol.Variable[];
 }
 
+const defaultStackFrameFormat: DebugProtocol.StackFrameFormat = {
+    parameters: true,
+    parameterTypes: true,
+    parameterNames: true,
+    line: true,
+    module: true
+};
+
+export async function stackTrace(client: ExtendedDebugClient, optionalStackFrameFormat?: DebugProtocol.StackFrameFormat): Promise<DebugProtocol.StackTraceResponse['body']> {
+    const stackFrameFormat = _.defaultTo(optionalStackFrameFormat, defaultStackFrameFormat);
+    const stackTraceResponse = await client.send('stackTrace', { threadId: THREAD_ID, stackFrameFormat });
+    expect(stackTraceResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(stackTraceResponse)}`).to.equal(true);
+
+    // Check totalFrames property
+    expect(stackTraceResponse.body.totalFrames).to.equal(stackTraceResponse.body.stackFrames.length, 'body.totalFrames');
+    return stackTraceResponse.body;
+}
+
+export async function topStackFrame(client: ExtendedDebugClient, optionalStackFrameFormat?: DebugProtocol.StackFrameFormat): Promise<DebugProtocol.StackFrame> {
+    const stackFrames = (await stackTrace(client, optionalStackFrameFormat)).stackFrames;
+    expect(stackFrames.length).to.be.greaterThan(0);
+    return stackFrames[0];
+}
+
 /** Utility functions to operate on the stack straces and stack frames of the debuggee.
  * It also provides utilities to access the scopes available in a particular stack frame.
  */
@@ -23,11 +48,7 @@ export class StackFrameWizard {
 
     /** Return a Wizard to interact with the top stack frame of the debuggee of the client */
     public static async topStackFrame(client: ExtendedDebugClient): Promise<StackFrameWizard> {
-        const stackTraceResponse = await client.send('stackTrace', { threadId: THREAD_ID });
-        expect(stackTraceResponse.success).to.equal(true);
-        const stackFrames = stackTraceResponse.body.stackFrames;
-        expect(stackFrames.length).to.be.greaterThan(0);
-        return new StackFrameWizard(client, stackFrames[0]);
+        return new StackFrameWizard(client, await topStackFrame(client));
     }
 
     /** Return the variables information for the scopes selected by name */

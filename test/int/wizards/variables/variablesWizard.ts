@@ -7,9 +7,11 @@ import * as _ from 'lodash';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { StackFrameWizard } from './stackFrameWizard';
-import { VariablesVerificator } from './variablesVerificator';
-import { GlobalVariablesVerificator } from './globalVariablesVerificator';
+import { VariablesVerifier } from './variablesVerifier';
 import { ValidatedMap } from '../../core-v2/chrome/collections/validatedMap';
+import { trimWhitespaceAndComments } from '../breakpoints/implementation/printedTestInputl';
+import { expect } from 'chai';
+import { printVariables } from './variablesPrinting';
 
 export interface VariablePrintedProperties {
     value: string;
@@ -48,10 +50,18 @@ export type VerificationModifier = 'contains' | '';
 export class VariablesWizard {
     public constructor(private readonly _client: ExtendedDebugClient) { }
 
-    public async assertNewGlobalVariariablesAre(actionThatAddsNewVariables: () => PromiseOrNot<void>, variables: ManyVariablesPropertiesPrinted): Promise<void> {
-        const variablesToIgnore = await (await this.topStackFrameHelper()).globalVariableNames();
+    /** Verify that the global variables have the expected values, ignoring the variables in <namesOfGlobalsToIgnore> */
+    public async assertNewGlobalVariariablesAre(actionThatAddsNewVariables: () => PromiseOrNot<void>, expectedGlobals: ManyVariablesPropertiesPrinted): Promise<void> {
+        // Store pre-existing global variables' names
+        const namesOfGlobalsToIgnore = await (await this.topStackFrameHelper()).globalVariableNames();
+
+        // Perform an action that adds new global variables
         await actionThatAddsNewVariables();
-        await this.globalsVerificator.assertGlobalsOfTopFrameAre(variables, variablesToIgnore);
+
+        const globalsOnFrame = await (await this.topStackFrameHelper()).variablesOfScope('global');
+        const nonIgnoredGlobals = globalsOnFrame.filter(global => !namesOfGlobalsToIgnore.has(global.name));
+        const expectedGlobalsTrimmed = trimWhitespaceAndComments(expectedGlobals);
+        expect(printVariables(nonIgnoredGlobals)).to.equal(expectedGlobalsTrimmed);
     }
 
     /**
@@ -91,12 +101,8 @@ export class VariablesWizard {
         return [<VariablesScopeName>components[0], <VerificationModifier>_.defaultTo(components[1], '')];
     }
 
-    private get verificator(): VariablesVerificator {
-        return new VariablesVerificator();
-    }
-
-    private get globalsVerificator(): GlobalVariablesVerificator {
-        return new GlobalVariablesVerificator(this._client);
+    private get verificator(): VariablesVerifier {
+        return new VariablesVerifier();
     }
 
     private async topStackFrameHelper(): Promise<StackFrameWizard> {

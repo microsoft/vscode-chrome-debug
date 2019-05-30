@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
- import * as assert from 'assert';
+import * as assert from 'assert';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { expect } from 'chai';
 import { findLineNumber } from '../../../utils/findPositionOfTextInFile';
@@ -14,12 +14,8 @@ export class StackTraceStringAssertions {
     public constructor(
         private readonly _breakpoint: BreakpointWizard) { }
 
-    public  assertResponseMatches(actualResponse: DebugProtocol.StackTraceResponse, expectedString: string) {
-        expect(actualResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(actualResponse)}`).to.equal(true);
+    public  assertResponseMatches(stackTraceFrames: DebugProtocol.StackFrame[], expectedString: string) {
 
-        const stackTraceFrames = actualResponse.body.stackFrames;
-        expect(actualResponse.body.totalFrames, `The number of stackFrames was different than the value supplied on the totalFrames field`)
-            .to.equal(stackTraceFrames.length);
         stackTraceFrames.forEach(frame => {
             // Warning: We don't currently validate frame.source.path
             expect(frame.source).not.to.equal(undefined);
