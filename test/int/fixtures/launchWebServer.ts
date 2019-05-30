@@ -58,6 +58,10 @@ export class LaunchWebServer implements IFixture {
         return Object.assign({}, this._testSpec.props.launchConfig, { url: this.url.toString() });
     }
 
+    public get port(): number {
+        return this._server.address().port;
+    }
+
     public async cleanUp(): Promise<void> {
         await closeServer(this._server);
     }
