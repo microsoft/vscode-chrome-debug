@@ -105,6 +105,11 @@ jobs:
         publishRunAttachments: true
 
   - ${{ if eq(parameters.name, 'Windows') }}:
+    - task: CmdLine@2
+      condition: always()
+      inputs:
+        script: 'dir /b > filelist.txt'
+        workingDirectory: 'logs/'
     - task: PublishPipelineArtifact@0
       condition: always()
       inputs:
@@ -112,6 +117,11 @@ jobs:
         targetPath: 'logs/'
 
   - ${{ if eq(parameters.name, 'MacOS') }}:
+    - task: CmdLine@2
+      condition: always()
+      inputs:
+        script: 'ls -1 > filelist.txt'
+        workingDirectory: 'logs/'
     - task: PublishPipelineArtifact@0
       condition: always()
       inputs:
