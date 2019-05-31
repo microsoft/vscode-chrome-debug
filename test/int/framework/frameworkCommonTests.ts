@@ -135,13 +135,14 @@ export function testBreakOnLoad(frameworkName: string, testSpec: TestProjectSpec
     const testTitle = `${frameworkName} - Should stop on breakpoint on initial page load`;
     return test(testTitle, async () => {
         const defaultFixture = await DefaultFixture.createWithTitle(testTitle);
-        const fixture = new MultipleFixtures(new LaunchWebServer(testSpec), defaultFixture);
-        const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
+        const launchWebServer = await LaunchWebServer.launch(testSpec);
+        const fixture = new MultipleFixtures(launchWebServer, defaultFixture);
 
         try {
+            const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
             const location = breakpointLabels.get(bpLabel);
             await defaultFixture.debugClient
-                .hitBreakpointUnverified(testSpec.props.launchConfig, location);
+                .hitBreakpointUnverified(launchWebServer.launchConfig, location);
         } finally {
             await fixture.cleanUp();
         }
