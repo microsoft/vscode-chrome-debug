@@ -97,7 +97,7 @@ suite('Chrome Debug Adapter etc', () => {
         });
 
         const testTitle = 'Should attach to existing instance of chrome and break on debugger statement';
-        test(testTitle, async function () {
+        test(testTitle, async () => {
             const fullTestTitle = `Chrome Debug Adapter etc launch ${testTitle}`;
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
