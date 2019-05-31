@@ -52,13 +52,13 @@ export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
  * @param context The test context for this test sutie
  * @param testFunction The inner test function that will run a test using puppeteer
  */
-async function puppeteerTestFunction(
+function puppeteerTestFunction(
   description: string,
   context: PuppeteerTestContext,
   testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>,
   functionToDeclareTest: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = test
 ) {
-  return functionToDeclareTest(description, async function () {
+    functionToDeclareTest(description, async function () {
     await testFunction(context, context.page!);
   });
 }
