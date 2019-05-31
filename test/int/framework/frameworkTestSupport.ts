@@ -73,10 +73,14 @@ export class TestProjectSpec {
      *
      * The path *can only* use forward-slahes "/" as separators
      */
-    public static fromTestPath(reversedSlashesRelativePath: string): TestProjectSpec {
+    public static fromTestPath(reversedSlashesRelativePath: string, url?: string): TestProjectSpec {
         const pathComponents = reversedSlashesRelativePath.split('/');
         const projectAbsolutePath = path.join(...[DATA_ROOT].concat(pathComponents));
-        return new TestProjectSpec({ projectRoot: projectAbsolutePath });
+        let props: ProjectSpecProps = { projectRoot: projectAbsolutePath };
+        if (url) {
+            props.url = url;
+        }
+        return new TestProjectSpec(props);
     }
 
     /**

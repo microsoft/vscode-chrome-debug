@@ -135,14 +135,14 @@ export class FrameworkTestSuite {
      * 3. Execute a trigger event that should cause the breakpoint to be hit using the function `trigger`
      * 4. Assert that the breakpoint is hit on the expected location, and continue
      *
-     * @param waitSelectorId
+     * @param waitSelector an html selector to identify a resource to wait for for page load
      * @param bpLabel
      * @param trigger
      */
-    genericBreakpointTest(description: string, waitSelectorId: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
+    genericBreakpointTest(description: string, waitSelector: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
         return puppeteerTest(`${this.frameworkName} - ${description}`, this.suiteContext, async (context, page) => {
             const location = context.breakpointLabels.get(bpLabel);
-            await page.waitForSelector(`#${waitSelectorId}`);
+            await page.waitForSelector(`${waitSelector}`);
             await setBreakpoint(this.suiteContext.debugClient, location);
             const triggerPromise = trigger(page);
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
