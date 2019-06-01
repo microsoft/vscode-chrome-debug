@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { utils } from 'vscode-chrome-debug-core';
 
 // The VSTS agents run slower than our machines. Use this value to reduce proportinoally the timeouts in your dev machine
-export const DefaultTimeoutMultiplier = parseFloat(_.defaultTo(process.env['MSFT_TEST_TIMEOUT_MULTIPLIER'], '1'));
+export const DefaultTimeoutMultiplier = parseFloat(_.defaultTo(process.env['TEST_TIMEOUT_MULTIPLIER'], '1'));
 
 /**
  * Wait until the isReady condition evaluates to true. This method will evaluate it every 50 milliseconds until it returns true. It will time-out after maxWaitTimeInMilliseconds milliseconds

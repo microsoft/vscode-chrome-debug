@@ -9,6 +9,8 @@ import { loadProjectLabels } from '../labels';
 import { ISuiteCallbackContext, ISuite } from 'mocha';
 import { NullFixture } from '../fixtures/fixture';
 import { LaunchProject } from '../fixtures/launchProject';
+import { PromiseOrNot } from 'vscode-chrome-debug-core';
+import { logger } from 'vscode-debugadapter';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -59,14 +61,14 @@ export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
  * @param context The test context for this test sutie
  * @param testFunction The inner test function that will run a test using puppeteer
  */
-async function puppeteerTestFunction(
+function puppeteerTestFunction(
   description: string,
   context: PuppeteerTestContext,
-  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>,
+  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => PromiseOrNot<void>,
   functionToDeclareTest: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = test
-) {
-  return functionToDeclareTest(description, async function () {
-    await testFunction(context, context.page!);
+): void {
+  functionToDeclareTest(description, function () {
+    return testFunction(context, context.page!);
   });
 }
 
@@ -118,6 +120,7 @@ function puppeteerSuiteFunction(
     teardown(async () => {
       await fixture.cleanUp();
       fixture = new NullFixture();
+      logger.log(`teardown finished`);
     });
 
     callback(testContext);

@@ -19,7 +19,7 @@ import { logger } from 'vscode-debugadapter';
  * The fixture offers access to both the browser, and page objects of puppeteer
  */
 export class LaunchPuppeteer implements IFixture {
-    public constructor(private readonly _debugClient: ExtendedDebugClient, public readonly browser: Browser, public readonly page: Page) { }
+    public constructor(public readonly browser: Browser, public readonly page: Page) { }
 
     public static async create(debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs): Promise<LaunchPuppeteer> {
         const daPort = await getPort();
@@ -39,12 +39,17 @@ export class LaunchPuppeteer implements IFixture {
             await new Promise(a => setTimeout(a, 500));
         }
 
-        return new LaunchPuppeteer(debugClient, browser, page);
+        return new LaunchPuppeteer(browser, page);
     }
 
     public async cleanUp(): Promise<void> {
-        await this._debugClient.disconnectRequest();
-        await this.browser.close();
+        logger.log(`Closing puppeteer and chrome`);
+        try {
+            await this.browser.close();
+            logger.log(`Scucesfully closed puppeteer and chrome`);
+        } catch (exception) {
+            logger.log(`Failed to close puppeteer: ${exception}`);
+        }
      }
 
 

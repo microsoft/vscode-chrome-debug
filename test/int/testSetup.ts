@@ -65,11 +65,11 @@ export async function setup(context: IBeforeAndAfterContext | ITestCallbackConte
  *    - Best practise: The new best practise is to use the DefaultFixture when possible instead of calling this method directly
  */
 export async function setupWithTitle(testTitle: string, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
-    killAllChromesOnWin32(); // Kill chrome.exe instances before the tests. Killing them after the tests is not as reliable. If setup fails, teardown is not executed.
+    // killAllChromesOnWin32(); // Kill chrome.exe instances before the tests. Killing them after the tests is not as reliable. If setup fails, teardown is not executed.
     setTestLogName(testTitle);
 
     if (!port) {
-        const daPort = process.env['MSFT_TEST_DA_PORT'];
+        const daPort = process.env['TEST_DA_PORT'];
         port = daPort
             ? parseInt(daPort, 10)
             : undefined;
@@ -90,7 +90,7 @@ export async function teardown() {
     await ts.teardown();
 }
 
-function killAllChromesOnWin32() {
+export function killAllChromesOnWin32() {
     if (process.platform === 'win32') {
         // We only need to kill the chrome.exe instances on the Windows agent
         // TODO: Figure out a way to remove this

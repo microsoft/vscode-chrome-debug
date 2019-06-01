@@ -58,7 +58,7 @@
     "http-server": "^0.10.0",
     "lodash": "^4.17.11",
     "minimist": "^1.2.0",
-    "mocha": "^5.2.0",
+    "mocha": "^6.1.4",
     "mocha-junit-reporter": "^1.21.0",
     "mocha-multi-reporters": "^1.1.7",
     "mockery": "^1.7.0",

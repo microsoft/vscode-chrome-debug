@@ -25,7 +25,8 @@ async function createServerAsync(root: string): Promise<HttpOrHttpsServer> {
 }
 
 async function closeServer(server: HttpOrHttpsServer): Promise<void> {
-    return await new Promise((resolve, reject) => {
+    logger.log(`Closing web-server`);
+    await new Promise((resolve, reject) => {
         server.close((error?: any) => {
             if (error) {
                 logger.log('Error closing server in teardown: ' + (error && error.message));
@@ -35,6 +36,7 @@ async function closeServer(server: HttpOrHttpsServer): Promise<void> {
             }
         });
     });
+    logger.log(`Web-server closed`);
 }
 
 /**
