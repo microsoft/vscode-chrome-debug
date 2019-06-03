@@ -1,14 +1,14 @@
+import URI from 'vscode-uri';
 import * as assert from 'assert';
 import * as path from 'path';
 import * as testSetup from '../../../testSetup';
 import { expect } from 'chai';
-import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointsWizard } from '../breakpointsWizard';
 
 export interface ExpectedSource {
     fileRelativePath?: string;
-    urlRelativePath?: string;
+    url?: URI;
     evalCode?: boolean;
 }
 
@@ -22,11 +22,9 @@ export interface ExpectedFrame {
 
 export class StackTraceObjectAssertions {
     private readonly _projectRoot: string;
-    private readonly _projectURL: URL;
 
     public constructor(breakpointsWizard: BreakpointsWizard) {
         this._projectRoot = breakpointsWizard.project.props.projectRoot;
-        this._projectURL = new URL(breakpointsWizard.project.props.url);
     }
 
     private assertSourceMatches(actual: DebugProtocol.Source | undefined, expected: ExpectedSource | undefined, index: number) {
@@ -51,12 +49,9 @@ export class StackTraceObjectAssertions {
             // Generate the expected path from the relative path and the project root
             expectedPath = path.join(this._projectRoot, expected.fileRelativePath);
             expectedName = path.parse(expectedPath).base;
-        } else if (expected.urlRelativePath) {
-            // Generate the expected path from the relative path and the project url
-            const url = new URL(this._projectURL.toString()); // Clone URL so we can update it
-            url.pathname = expected.urlRelativePath;
-            expectedName = url.host;
-            expectedPath = url.toString();
+        } else if (expected.url) {
+            expectedName = expected.url.authority;
+            expectedPath = expected.url.toString();
         } else if (expected.evalCode === true) {
             // Eval code has source that looks like 'VM123'. Check it by regex instead.
             expect(actual.name).to.match(/.*VM.*/, `Frame ${index} source name`);

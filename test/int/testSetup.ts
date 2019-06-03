@@ -14,6 +14,7 @@ import { Dictionary } from 'lodash';
 import { logCallsTo, getDebugAdapterLogFilePath, setTestLogName } from './utils/logging';
 import { IBeforeAndAfterContext, ITestCallbackContext } from 'mocha';
 import { killAllChrome } from '../testUtils';
+import { DefaultTimeoutMultiplier } from './utils/waitUntilReadyWithTimeout';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
@@ -64,10 +65,11 @@ export async function setup(context: IBeforeAndAfterContext | ITestCallbackConte
  *    - Best practise: The new best practise is to use the DefaultFixture when possible instead of calling this method directly
  */
 export async function setupWithTitle(testTitle: string, port?: number, launchProps?: ILaunchRequestArgs): Promise<ts.ExtendedDebugClient> {
+    // killAllChromesOnWin32(); // Kill chrome.exe instances before the tests. Killing them after the tests is not as reliable. If setup fails, teardown is not executed.
     setTestLogName(testTitle);
 
     if (!port) {
-        const daPort = process.env['MSFT_TEST_DA_PORT'];
+        const daPort = process.env['TEST_DA_PORT'];
         port = daPort
             ? parseInt(daPort, 10)
             : undefined;
@@ -78,7 +80,7 @@ export async function setupWithTitle(testTitle: string, port?: number, launchPro
     }
 
     const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
-    debugClient.defaultTimeout = 10000/*ms*/; // The VSTS agents run slower than our machines
+    debugClient.defaultTimeout = DefaultTimeoutMultiplier * 10000 /*10 seconds*/;
 
     const wrappedDebugClient = logCallsTo(debugClient, 'DebugAdapterClient');
     return wrappedDebugClient;
@@ -86,7 +88,9 @@ export async function setupWithTitle(testTitle: string, port?: number, launchPro
 
 export async function teardown() {
     await ts.teardown();
+}
 
+export function killAllChromesOnWin32() {
     if (process.platform === 'win32') {
         // We only need to kill the chrome.exe instances on the Windows agent
         // TODO: Figure out a way to remove this

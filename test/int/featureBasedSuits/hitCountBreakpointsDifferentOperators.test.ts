@@ -51,7 +51,7 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
         { condition: '% 37', iterationsExpectedToPause: [37, 74, 111, 148], noMorePausesAfterwards: false },
     ];
 
-    for (const conditionConfiguration of manyConditionsConfigurations) {
+    manyConditionsConfigurations.forEach(conditionConfiguration => {
         puppeteerTest(`condition ${conditionConfiguration.condition}`, suiteContext, async (_context, page) => {
             const incBtn = await page.waitForSelector('#incrementBtn');
             const breakpoints = BreakpointsWizard.create(suiteContext.debugClient, reactWithLoopTestSpecification);
@@ -84,7 +84,7 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
 
             await buttonClicked;
         });
-    }
+    });
 
     // * Hit count breakpoint syntax: (>|>=|=|<|<=|%)?\s*([0-9]+)
     const manyInvalidConditions: string[] = [
@@ -106,7 +106,7 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
         '> 3.5',
     ];
 
-    for (const invalidCondition of manyInvalidConditions) {
+    manyInvalidConditions.forEach(invalidCondition => {
         puppeteerTest(`invalid condition ${invalidCondition}`, suiteContext, async () => {
             const breakpoints = BreakpointsWizard.create(suiteContext.debugClient, reactWithLoopTestSpecification);
             const counterBreakpoints = breakpoints.at('Counter.jsx');
@@ -120,5 +120,5 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
                 expect(exception.toString()).to.be.equal(`Error: [debugger-for-chrome] Error processing "setBreakpoints": Didn't recognize <${invalidCondition}> as a valid hit count condition`);
             }
         });
-    }
+    });
 });
