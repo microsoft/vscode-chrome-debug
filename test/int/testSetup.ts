@@ -36,7 +36,7 @@ function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>, te
 
     const hideWindows = process.env['TEST_DA_HIDE_WINDOWS'] === 'true';
     if (hideWindows) {
-        // launchArgs.runtimeArgs = ['--headless', '--disable-gpu'];
+        launchArgs.runtimeArgs = ['--headless', '--disable-gpu'];
     }
 
     // Start with a clean userDataDir for each test run

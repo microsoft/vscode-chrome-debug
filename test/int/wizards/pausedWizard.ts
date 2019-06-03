@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
+import { ExtendedDebugClient, THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 import { logger } from 'vscode-debugadapter';
 import { utils } from 'vscode-chrome-debug-core';
 import { isThisV2 } from '../testSetup';
@@ -92,9 +92,26 @@ export class PausedWizard {
         }
     }
 
-    public assertNoMoreEvents(): void {
+    /**
+     * Instruct the debuggee to pause, and verify that the Debug-Adapter sends the proper notification after that happens
+     */
+    public async pause(): Promise<void> {
+        await this._client.pauseRequest({ threadId: THREAD_ID });
+
+        await this.waitAndConsumePausedEvent(event => {
+            expect(event.reason).to.equal('pause');
+            expect(event.description).to.equal('Paused on user request');
+        });
+    }
+
+    public async waitAndAssertNoMoreEvents(): Promise<void> {
         expect(this.state).to.be.instanceOf(NoEventAvailableToBeConsumed);
         this._noMoreEventsExpected = true;
+
+        // Wait some time, to see if any events appear eventually
+        await utils.promiseTimeout(undefined, 500);
+
+        expect(this.state).to.be.instanceOf(NoEventAvailableToBeConsumed);
     }
 
     private validateNoMoreEventsIfSet(event: DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent): void {

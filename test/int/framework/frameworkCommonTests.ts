@@ -10,6 +10,7 @@ import { loadProjectLabels } from '../labels';
 import { TestProjectSpec } from './frameworkTestSupport';
 import { DefaultFixture } from '../fixtures/defaultFixture';
 import { MultipleFixtures } from '../fixtures/multipleFixtures';
+import { PausedWizard } from '../wizards/pausedWizard';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -21,6 +22,10 @@ export class FrameworkTestSuite {
         private frameworkName: string,
         private suiteContext: PuppeteerTestContext
     ) {}
+
+    private get pausedWizard(): PausedWizard {
+        return this.suiteContext.launchProject!.pausedWizard;
+    }
 
     /**
      * Test that a breakpoint set after the page loads is hit on reload
@@ -37,8 +42,13 @@ export class FrameworkTestSuite {
 
                 await setBreakpoint(debugClient, bpLocation);
                 const reloaded = page.reload();
+
                 await debugClient.assertStoppedLocation('breakpoint', bpLocation);
+                await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
                 await debugClient.continueRequest();
+                await this.pausedWizard.waitAndConsumeResumedEvent();
+
                 await reloaded;
             });
     }
@@ -59,10 +69,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepInLocation);
             await this.suiteContext.debugClient.stepInAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -81,10 +97,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step',  { ...location, line: location.line + 1 });
             await this.suiteContext.debugClient.nextAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -104,10 +126,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepOutLocation);
             await this.suiteContext.debugClient.stepOutAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -117,12 +145,12 @@ export class FrameworkTestSuite {
      * @param bpLocation
      */
     testPauseExecution() {
-        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, _page) => {
-            const debugClient = context.debugClient;
-            const waitForPaused = debugClient.waitForEvent('stopped');
-            await debugClient.pauseRequest({ threadId: 0 });
-            await waitForPaused;
-            await debugClient.continueRequest();
+        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (_context, _page) => {
+            await this.pausedWizard.pause();
+
+            // TODO: Verify we are actually pausing in the expected line
+
+            await this.pausedWizard.resume();
         });
     }
 }

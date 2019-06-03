@@ -48,6 +48,10 @@ export class BreakpointsWizard {
         return this._pausedWizard.waitAndConsumeResumedEvent(millisecondsToWaitForPauses);
     }
 
+    public async waitAndAssertNoMoreEvents(): Promise<void> {
+        return this._pausedWizard.waitAndAssertNoMoreEvents();
+    }
+
     public toString(): string {
         return 'Breakpoints';
     }

@@ -56,7 +56,7 @@ export class LaunchProject implements IFixture {
     }
 
     public async cleanUp(): Promise<void> {
-        this.pausedWizard.assertNoMoreEvents();
+        await this.pausedWizard.waitAndAssertNoMoreEvents();
         await this._defaultFixture.cleanUp(); // Disconnect the debug-adapter first
         await this._launchPuppeteer.cleanUp(); // Then disconnect puppeteer and close chrome
         await this._launchWebServer.cleanUp(); // Finally disconnect the web-server

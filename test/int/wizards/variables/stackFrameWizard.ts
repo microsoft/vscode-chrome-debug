@@ -26,7 +26,7 @@ const defaultStackFrameFormat: DebugProtocol.StackFrameFormat = {
 
 export async function stackTrace(client: ExtendedDebugClient, optionalStackFrameFormat?: DebugProtocol.StackFrameFormat): Promise<DebugProtocol.StackTraceResponse['body']> {
     const stackFrameFormat = _.defaultTo(optionalStackFrameFormat, defaultStackFrameFormat);
-    const stackTraceResponse = await client.send('stackTrace', { threadId: THREAD_ID, stackFrameFormat });
+    const stackTraceResponse = await client.send('stackTrace', { threadId: THREAD_ID, format: stackFrameFormat });
     expect(stackTraceResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(stackTraceResponse)}`).to.equal(true);
 
     // Check totalFrames property

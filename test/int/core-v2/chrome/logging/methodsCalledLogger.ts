@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as _ from 'lodash';
+import * as path from 'path';
 import { printTopLevelObjectDescription } from './printObjectDescription';
 import { logger } from 'vscode-debugadapter';
 
@@ -121,13 +122,37 @@ export class MethodsCalledLogger<T extends object> {
         return `${synchronicity === Synchronicity.Sync ? '' : ' async'}`;
     }
 
+    /** Returns the test file and line that the code is currently executing e.g.:
+     *                                           <                                       >
+     * [22:23:28.468 UTC] START            10026: hitCountBreakpointTests.test.ts:34:2 | #incrementBtn.click()
+     */
+    // TODO: Figure out how to integrate this with V2. We don't want to do this for production logging because new Error().stack is slow
+    private getTestFileAndLine(): string {
+        const stack = new Error().stack;
+        if (stack) {
+            const stackLines = stack.split('\n');
+            const testCaseLine = stackLines.find(line => line.indexOf('test.ts') >= 0);
+            if (testCaseLine) {
+                const filenameAndLine = testCaseLine.lastIndexOf(path.sep);
+                if (filenameAndLine >= 0) {
+                    const fileNameAndLineNumber = testCaseLine.substring(filenameAndLine + 1, testCaseLine.length - 2);
+                    return `${fileNameAndLineNumber} | `;
+                }
+            }
+        }
+
+        return '';
+    }
+
     private logCallStart(propertyKey: PropertyKey, methodCallArguments: any[], callId: number): void {
-        const message = `START            ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
+        const getTestFileAndLine = this.getTestFileAndLine();
+        const message = `START            ${callId}: ${getTestFileAndLine}${this.printMethodCall(propertyKey, methodCallArguments)}`;
         logger.verbose(message);
     }
 
     private logSyncPartFinished(propertyKey: PropertyKey, methodCallArguments: any[], callId: number): void {
-        const message = `PROMISE-RETURNED ${callId}: ${this.printMethodCall(propertyKey, methodCallArguments)}`;
+        const getTestFileAndLine = this.getTestFileAndLine();
+        const message = `PROMISE-RETURNED ${callId}: ${getTestFileAndLine}${this.printMethodCall(propertyKey, methodCallArguments)}`;
         logger.verbose(message);
     }
 
