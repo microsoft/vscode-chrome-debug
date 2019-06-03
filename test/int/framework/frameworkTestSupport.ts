@@ -27,10 +27,6 @@ export interface ProjectSpecProps {
     outFiles?: string[];
     /** The default launch configuration for the test project */
     launchConfig?: ILaunchRequestArgs;
-    /** Port to use for the server */
-    port?: number;
-    /** Url to use for the project */
-    url?: string;
 }
 
 /**
@@ -47,17 +43,12 @@ export class TestProjectSpec {
     constructor(props: ProjectSpecProps) {
         const outFiles = props.outFiles || [path.join(props.projectRoot, 'out')];
         const webRoot = props.webRoot || props.projectRoot;
-        const port = props.port || 7890;
-        const url = props.url || `http://localhost:${port}/`;
         this._props = {
             projectRoot: props.projectRoot,
             projectSrc: props.projectSrc || path.join(props.projectRoot, 'src'),
             webRoot: webRoot,
             outFiles: outFiles,
-            port: port,
-            url: url,
             launchConfig: props.launchConfig || {
-                url: url,
                 outFiles: outFiles,
                 sourceMaps: true,
                 runtimeExecutable: puppeteer.executablePath(),

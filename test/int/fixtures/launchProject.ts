@@ -2,6 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import URI from 'vscode-uri';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { IFixture } from './fixture';
 import { DefaultFixture } from './defaultFixture';
@@ -23,9 +24,10 @@ export class LaunchProject implements IFixture {
         private readonly _launchPuppeteer: LaunchPuppeteer) { }
 
     public static async create(testContext: IBeforeAndAfterContext | ITestCallbackContext, testSpec: TestProjectSpec): Promise<LaunchProject> {
+        const launchWebServer = await LaunchWebServer.launch(testSpec);
         const defaultFixture = await DefaultFixture.create(testContext);
-        const launchWebServer = new LaunchWebServer(testSpec);
-        const launchPuppeteer = await LaunchPuppeteer.create(defaultFixture.debugClient, testSpec);
+
+        const launchPuppeteer = await LaunchPuppeteer.create(defaultFixture.debugClient, launchWebServer.launchConfig);
         return new LaunchProject(defaultFixture, launchWebServer, launchPuppeteer);
     }
 
@@ -44,9 +46,13 @@ export class LaunchProject implements IFixture {
         return this._launchPuppeteer.page;
     }
 
+    public get url(): URI {
+        return this._launchWebServer.url;
+    }
+
     public async cleanUp(): Promise<void> {
-        await this._launchPuppeteer.cleanUp();
-        await this._launchWebServer.cleanUp();
-        await this._defaultFixture.cleanUp();
+        await this._defaultFixture.cleanUp(); // Disconnect the debug-adapter first
+        await this._launchPuppeteer.cleanUp(); // Then disconnect puppeteer and close chrome
+        await this._launchWebServer.cleanUp(); // Finally disconnect the web-server
     }
 }

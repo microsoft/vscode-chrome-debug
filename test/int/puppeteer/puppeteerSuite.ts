@@ -9,6 +9,8 @@ import { loadProjectLabels } from '../labels';
 import { ISuiteCallbackContext, ISuite } from 'mocha';
 import { NullFixture } from '../fixtures/fixture';
 import { LaunchProject } from '../fixtures/launchProject';
+import { PromiseOrNot } from 'vscode-chrome-debug-core';
+import { logger } from 'vscode-debugadapter';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -18,11 +20,13 @@ export interface IPuppeteerTestContext extends FrameworkTestContext {
   browser: puppeteer.Browser | null;
   /** The currently running html page in Chrome */
   page: puppeteer.Page | null;
+  launchProject: LaunchProject | null;
 }
 
 export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
   private _browser: puppeteer.Browser | null = null;
   private _page: puppeteer.Page | null = null;
+  private _launchProject: LaunchProject | null = null;
 
   public constructor() {
     super();
@@ -36,10 +40,15 @@ export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
     return this._page;
   }
 
+  public get launchProject(): LaunchProject | null {
+    return this._launchProject;
+  }
+
   public reassignTo(newWrapped: IPuppeteerTestContext): this {
     super.reassignTo(newWrapped);
     this._page = newWrapped.page;
     this._browser = newWrapped.browser;
+    this._launchProject = newWrapped.launchProject;
     return this;
   }
 }
@@ -55,11 +64,11 @@ export class PuppeteerTestContext extends ReassignableFrameworkTestContext {
 function puppeteerTestFunction(
   description: string,
   context: PuppeteerTestContext,
-  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => Promise<any>,
+  testFunction: (context: PuppeteerTestContext, page: puppeteer.Page) => PromiseOrNot<void>,
   functionToDeclareTest: (description: string, callback: (this: ISuiteCallbackContext) => void) => ISuite = test
-) {
-    functionToDeclareTest(description, async function () {
-    await testFunction(context, context.page!);
+): void {
+  functionToDeclareTest(description, function () {
+    return testFunction(context, context.page!);
   });
 }
 
@@ -101,16 +110,17 @@ function puppeteerSuiteFunction(
 
     setup(async function () {
       const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
-      const lauchProject = fixture = await LaunchProject.create(this, testSpec);
+      const launchProject = fixture = await LaunchProject.create(this, testSpec);
 
       testContext.reassignTo({
-        testSpec, debugClient: lauchProject.debugClient, breakpointLabels, browser: lauchProject.browser, page: lauchProject.page
+        testSpec, debugClient: launchProject.debugClient, breakpointLabels, browser: launchProject.browser, page: launchProject.page, launchProject
       });
     });
 
     teardown(async () => {
-      fixture.cleanUp();
+      await fixture.cleanUp();
       fixture = new NullFixture();
+      logger.log(`teardown finished`);
     });
 
     callback(testContext);
@@ -128,4 +138,9 @@ puppeteerSuiteFunction.only = (
   testSpec: TestProjectSpec,
   callback: (suiteContext: PuppeteerTestContext) => any,
 ) => puppeteerSuiteFunction(description, testSpec, callback, suite.only);
+puppeteerSuiteFunction.skip = (
+  description: string,
+  _testSpec: TestProjectSpec,
+  _callback: (suiteContext: PuppeteerTestContext) => any,
+) => suite.skip(description, () => {});
 export const puppeteerSuite = puppeteerSuiteFunction;

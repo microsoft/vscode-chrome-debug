@@ -59,7 +59,7 @@ export class HumanSpeedProxy<T extends object> {
 
 const humanSlownessSimulator = new HumanSlownessSimulator();
 
-const humanSlownessEnabeld = process.env.MSFT_RUN_TESTS_SLOWLY === 'true';
+const humanSlownessEnabeld = process.env.RUN_TESTS_SLOWLY === 'true';
 
 export function slowToHumanLevel<T extends object>(object: T): T {
     return humanSlownessEnabeld

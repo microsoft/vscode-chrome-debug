@@ -16,6 +16,7 @@ import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { killAllChrome } from '../testUtils';
 import { IAttachRequestArgs } from 'vscode-chrome-debug-core';
+import { getDebugAdapterLogFilePath } from './utils/logging';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -95,7 +96,9 @@ suite('Chrome Debug Adapter etc', () => {
             ]);
         });
 
-        test('Should attach to existing instance of chrome and break on debugger statement', async () => {
+        const testTitle = 'Should attach to existing instance of chrome and break on debugger statement';
+        test(testTitle, async () => {
+            const fullTestTitle = `Chrome Debug Adapter etc launch ${testTitle}`;
             const breakFile = path.join(testProjectRoot, 'src/app.ts');
             const DEBUGGER_LINE = 2;
             const remoteDebuggingPort = 7777;
@@ -105,7 +108,10 @@ suite('Chrome Debug Adapter etc', () => {
                 await Promise.all([
                     dc.configurationSequence(),
                     dc.initializeRequest().then(_ => {
-                        return dc.attachRequest(<IAttachRequestArgs>{ url: 'http://localhost:7890', port: remoteDebuggingPort, webRoot: testProjectRoot });
+                        return dc.attachRequest(<IAttachRequestArgs>{
+                            url: 'http://localhost:7890', port: remoteDebuggingPort, webRoot: testProjectRoot,
+                            logFilePath: getDebugAdapterLogFilePath(fullTestTitle), logTimestamps: true
+                        });
                     }),
                     dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } )
                 ]);
@@ -130,7 +136,7 @@ suite('Chrome Debug Adapter etc', () => {
             try {
                 await Promise.all([
                     dc.configurationSequence(),
-                    dc.launch({ url: 'http://localhost:7890', timeout: 2000, webRoot: testProjectRoot }),
+                    dc.launch({ url: 'http://localhost:7890', timeout: 2000, webRoot: testProjectRoot, port: remoteDebuggingPort }),
                 ]);
                 assert.fail('Expected launch to throw a timeout exception, but it didn\'t.');
             } catch (err) {

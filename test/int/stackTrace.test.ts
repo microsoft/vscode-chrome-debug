@@ -1,7 +1,6 @@
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from './testSetup';
-import { URL } from 'url';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
@@ -11,7 +10,6 @@ import { ExpectedFrame } from './wizards/breakpoints/implementation/stackTraceOb
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT, projectSrc: SIMPLE_PROJECT_ROOT } );
-const TEST_URL = new URL(TEST_SPEC.props.url);
 
 interface StackTraceValidationConfig {
     suiteContext: FrameworkTestContext;
@@ -50,12 +48,13 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: 'onclick', line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
+                { name: 'onclick', line: 7, column: 49, source: { url: suiteContext.launchProject!.url }, presentationHint: 'normal'},
             ]
         });
     });
 
     puppeteerTest('Stack trace is generated with module formatting', suiteContext, async (_context, page) => {
+        const url = suiteContext.launchProject!.url;
         await validateStackTrace({
             suiteContext: suiteContext,
             page: page,
@@ -71,7 +70,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: `onclick [${TEST_URL.host}]`, line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
+                { name: `onclick [${url.authority}]`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });
@@ -92,12 +91,13 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: 'onclick Line 7', line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
+                { name: 'onclick Line 7', line: 7, column: 49, source: { url: suiteContext.launchProject!.url }, presentationHint: 'normal'},
             ]
         });
     });
 
     puppeteerTest('Stack trace is generated with all formatting', suiteContext, async (_context, page) => {
+        const url = suiteContext.launchProject!.url;
         await validateStackTrace({
             suiteContext: suiteContext,
             page: page,
@@ -117,7 +117,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: `onclick [${TEST_URL.host}] Line 7`, line: 7, column: 49, source: { urlRelativePath: '/' }, presentationHint: 'normal'},
+                { name: `onclick [${url.authority}] Line 7`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });

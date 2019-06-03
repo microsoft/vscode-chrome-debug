@@ -2,25 +2,64 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import URI from 'vscode-uri';
 import { createServer } from 'http-server';
 import { IFixture } from './fixture';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { HttpOrHttpsServer } from '../types/server';
+import { ILaunchRequestArgs } from 'vscode-chrome-debug-core';
+import { logger } from 'vscode-debugadapter';
+
+async function createServerAsync(root: string): Promise<HttpOrHttpsServer> {
+    const server = createServer({ root });
+    return await new Promise((resolve, reject) => {
+        logger.log(`About to launch web-server`);
+        server.listen(0, '127.0.0.1', function (this: HttpOrHttpsServer, error?: any) {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(this); // We return the this pointer which is the internal server object, which has access to the .address() method
+            }
+        });
+    });
+}
+
+async function closeServer(server: HttpOrHttpsServer): Promise<void> {
+    logger.log(`Closing web-server`);
+    await new Promise((resolve, reject) => {
+        server.close((error?: any) => {
+            if (error) {
+                logger.log('Error closing server in teardown: ' + (error && error.message));
+                reject(error);
+            } else {
+                resolve();
+            }
+        });
+    });
+    logger.log(`Web-server closed`);
+}
 
 /**
  * Launch a web-server for the test project listening on the default port
  */
 export class LaunchWebServer implements IFixture {
-    private readonly server: HttpOrHttpsServer;
+    private constructor(private readonly _server: HttpOrHttpsServer, private readonly _testSpec: TestProjectSpec) { }
 
-    public constructor(testSpec: TestProjectSpec) {
-        this.server = createServer({ root: testSpec.props.webRoot });
-        // TODO: This should probably be extracted somehow and randomized at some point (Also replace 7890 in the url)
-        this.server.listen(7890);
+    public static async launch(testSpec: TestProjectSpec): Promise<LaunchWebServer> {
+        return new LaunchWebServer(await createServerAsync(testSpec.props.webRoot), testSpec);
+    }
+
+    public get url(): URI {
+        const address = this._server.address();
+        return URI.parse(`http://localhost:${address.port}/`);
+    }
+
+    public get launchConfig(): ILaunchRequestArgs {
+        return Object.assign({}, this._testSpec.props.launchConfig, { url: this.url.toString() });
     }
 
     public async cleanUp(): Promise<void> {
-        this.server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+        await closeServer(this._server);
     }
 
     public toString(): string {

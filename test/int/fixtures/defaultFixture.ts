@@ -6,6 +6,7 @@ import { IFixture } from './fixture';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import * as testSetup from '../testSetup';
 import { IBeforeAndAfterContext, ITestCallbackContext } from 'mocha';
+import { logger } from 'vscode-debugadapter';
 
 /**
  * Default set up for all our tests. We expect all our tests to need to do this setup
@@ -28,7 +29,9 @@ export class DefaultFixture implements IFixture {
     }
 
     public async cleanUp(): Promise<void> {
+        logger.log(`Default test clean-up`);
         await testSetup.teardown();
+        logger.log(`Default test clean-up finished`);
     }
 
     public toString(): string {

@@ -58,7 +58,9 @@ export function killAllChrome() {
     try {
         const killCmd = (process.platform === 'win32') ? `start powershell -WindowStyle hidden -Command "Get-Process | Where-Object {$_.Path -like '*${puppeteer.executablePath()}*'} | Stop-Process"` : 'killall chrome';
         const output = execSync(killCmd);
-        console.log(output.toString());
+        if (output.length > 0) { // Don't print empty lines
+            console.log(output.toString());
+        }
     } catch (e) {
         console.error(`Error killing chrome: ${e.message}`);
     }

@@ -2,14 +2,16 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
+import * as getPort from 'get-port';
 import { IFixture } from '../fixtures/fixture';
 import { launchTestAdapter } from '../intTestSupport';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { connectPuppeteer, getPageByUrl } from './puppeteerSupport';
 import { logCallsTo } from '../utils/logging';
 import { isThisV1 } from '../testSetup';
-import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { Browser, Page } from 'puppeteer';
+import { ILaunchRequestArgs } from 'vscode-chrome-debug-core';
+import { logger } from 'vscode-debugadapter';
 
 /**
  * Launch the debug adapter using the Puppeteer version of chrome, and then connect to it
@@ -19,11 +21,13 @@ import { Browser, Page } from 'puppeteer';
 export class LaunchPuppeteer implements IFixture {
     public constructor(public readonly browser: Browser, public readonly page: Page) { }
 
-    public static async create(debugClient: ExtendedDebugClient, testSpec: TestProjectSpec): Promise<LaunchPuppeteer> {
-        await launchTestAdapter(debugClient, testSpec.props.launchConfig);
-        const browser = await connectPuppeteer(9222);
+    public static async create(debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs): Promise<LaunchPuppeteer> {
+        const daPort = await getPort();
+        logger.log(`About to launch debug-adapter at port: ${daPort}`);
+        await launchTestAdapter(debugClient, Object.assign({}, launchConfig, { port: daPort }));
+        const browser = await connectPuppeteer(daPort);
 
-        const page = logCallsTo(await getPageByUrl(browser, testSpec.props.url), 'PuppeteerPage');
+        const page = logCallsTo(await getPageByUrl(browser, launchConfig.url!), 'PuppeteerPage');
 
         // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
         // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
@@ -38,7 +42,15 @@ export class LaunchPuppeteer implements IFixture {
         return new LaunchPuppeteer(browser, page);
     }
 
-    public async cleanUp(): Promise<void> { }
+    public async cleanUp(): Promise<void> {
+        logger.log(`Closing puppeteer and chrome`);
+        try {
+            await this.browser.close();
+            logger.log(`Scucesfully closed puppeteer and chrome`);
+        } catch (exception) {
+            logger.log(`Failed to close puppeteer: ${exception}`);
+        }
+     }
 
 
     public toString(): string {
