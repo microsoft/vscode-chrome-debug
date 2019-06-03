@@ -5,9 +5,11 @@ import * as testSetup from '../testSetup';
 import { puppeteerSuite } from '../puppeteer/puppeteerSuite';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { FrameworkTestSuite } from '../framework/frameworkCommonTests';
+import * as path from 'path';
+import { utils } from 'vscode-chrome-debug-core';
 
-const SINGLE_INLINE_TEST_SPEC = TestProjectSpec.fromTestPath('inline_scripts', `file:///${testSetup.DATA_ROOT.replace(/\\/g, '/')}inline_scripts/single.html`);
-const MULTIPLE_INLINE_TEST_SPEC = TestProjectSpec.fromTestPath('inline_scripts', `file:///${testSetup.DATA_ROOT.replace(/\\/g, '/')}inline_scripts/multiple.html`);
+const SINGLE_INLINE_TEST_SPEC = TestProjectSpec.fromTestPath('inline_scripts', utils.pathToFileURL(path.join(testSetup.DATA_ROOT, 'inline_scripts/single.html')));
+const MULTIPLE_INLINE_TEST_SPEC = TestProjectSpec.fromTestPath('inline_scripts', utils.pathToFileURL(path.join(testSetup.DATA_ROOT, 'inline_scripts/multiple.html')));
 
 suite('Inline Script Tests', () => {
     puppeteerSuite('Single inline script', SINGLE_INLINE_TEST_SPEC, (suiteContext) => {
