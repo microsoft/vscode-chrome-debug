@@ -1,14 +1,14 @@
-import URI from 'vscode-uri';
 import * as assert from 'assert';
 import * as path from 'path';
 import * as testSetup from '../../../testSetup';
 import { expect } from 'chai';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointsWizard } from '../breakpointsWizard';
+import { URL } from 'url';
 
 export interface ExpectedSource {
     fileRelativePath?: string;
-    url?: URI;
+    url?: URL;
     evalCode?: boolean;
 }
 
@@ -50,7 +50,7 @@ export class StackTraceObjectAssertions {
             expectedPath = path.join(this._projectRoot, expected.fileRelativePath);
             expectedName = path.parse(expectedPath).base;
         } else if (expected.url) {
-            expectedName = expected.url.authority;
+            expectedName = expected.url.host;
             expectedPath = expected.url.toString();
         } else if (expected.evalCode === true) {
             // Eval code has source that looks like 'VM123'. Check it by regex instead.
