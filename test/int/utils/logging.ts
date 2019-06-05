@@ -42,8 +42,12 @@ logger.init(() => { });
 process.on('uncaughtException', () => logger.dispose());
 process.on('unhandledRejection', () => logger.dispose());
 
+let currentTestTitle = '';
 export function setTestLogName(testTitle: string): void {
-    logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+    if (testTitle !== currentTestTitle) {
+        logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+        testTitle = currentTestTitle;
+    }
 }
 
 class PuppeteerMethodsCalledLoggerConfiguration implements IMethodsCalledLoggerConfiguration {
