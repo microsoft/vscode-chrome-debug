@@ -9,10 +9,15 @@ import { logger } from 'vscode-debugadapter';
 import { utils } from 'vscode-chrome-debug-core';
 import { isThisV2 } from '../testSetup';
 import { waitUntilReadyWithTimeout } from '../utils/waitUntilReadyWithTimeout';
-import { StoppedEvent, ContinuedEvent } from 'vscode-debugadapter';
 import { expect } from 'chai';
 import { ValidatedMap } from '../core-v2/chrome/collections/validatedMap';
 import { wrapWithMethodLogger } from '../core-v2/chrome/logging/methodsCalledLogger';
+
+enum EventToConsume {
+    Paused,
+    Resumed,
+    None
+}
 
 /** Helper methods to wait and/or verify when the debuggee was paused for any kind of pause.
  *
@@ -42,18 +47,18 @@ export class PausedWizard {
     }
 
     /**
-     * Wait for a little while, and verify that the debuggee is not paused after that
+     * Verify that the debuggee is not paused
      *
      * @param millisecondsToWaitForPauses How much time to wait for pauses
      */
-    public async waitAndConsumeResumedEvent(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
-        await utils.promiseTimeout(undefined, millisecondsToWaitForPauses); // Wait for 1 second (to anything on flight has time to finish) and verify that we are not paused afterwards
-        await this.state.consumeResumedEvent();
+    public async waitAndConsumeResumedEvent(): Promise<void> {
+        await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Resumed);
+        this.markNextEventAsConsumed('continued');
     }
 
     /** Return whether the debuggee is currently paused */
     public isPaused(): boolean {
-        return this.state.isPaused();
+        return this.nextEventToConsume === EventToConsume.Paused;
     }
 
     /** Wait and block until the debuggee is paused on a debugger statement */
@@ -66,19 +71,20 @@ export class PausedWizard {
 
     /** Wait and block until the debuggee is paused, and then perform the specified action with the pause event's body */
     public async waitAndConsumePausedEvent(actionWithPausedInfo: (pausedInfo: DebugProtocol.StoppedEvent['body']) => void): Promise<void> {
-        await waitUntilReadyWithTimeout(() => this.state instanceof PausedEventAvailableToBeConsumed);
-
-        actionWithPausedInfo(this.state.consumePausedEvent().body);
+        await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Paused);
+        const pausedEvent = <DebugProtocol.StoppedEvent>this._eventsToBeConsumed[0];
+        this.markNextEventAsConsumed('stopped');
+        actionWithPausedInfo(pausedEvent.body);
     }
 
     /** Wait and block until the debuggee has been resumed */
     public async waitUntilResumed(): Promise<void> {
         // We assume that nobody is consuming events in parallel, so if we start paused, the wait call won't ever succeed
-        expect(this.state).to.not.be.instanceOf(PausedEventAvailableToBeConsumed);
+        expect(this.nextEventToConsume).to.not.equal(EventToConsume.Paused);
 
-        await waitUntilReadyWithTimeout(() => this.state instanceof ResumedEventAvailableToBeConsumed);
+        await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Resumed);
 
-        await this.state.consumeResumedEvent();
+        this.markNextEventAsConsumed('continued');
     }
 
     /**
@@ -105,13 +111,13 @@ export class PausedWizard {
     }
 
     public async waitAndAssertNoMoreEvents(): Promise<void> {
-        expect(this.state).to.be.instanceOf(NoEventAvailableToBeConsumed);
+        expect(this.nextEventToConsume).to.equal(EventToConsume.None);
         this._noMoreEventsExpected = true;
 
         // Wait some time, to see if any events appear eventually
         await utils.promiseTimeout(undefined, 500);
 
-        expect(this.state).to.be.instanceOf(NoEventAvailableToBeConsumed);
+        expect(this.nextEventToConsume).to.equal(EventToConsume.None);
     }
 
     private validateNoMoreEventsIfSet(event: DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent): void {
@@ -121,19 +127,19 @@ export class PausedWizard {
     }
 
     private logState() {
-        logger.log(`Resume/Pause #events = ${this._eventsToBeConsumed.length}, state = ${this.state}`);
+        logger.log(`Resume/Pause #events = ${this._eventsToBeConsumed.length}, state = ${EventToConsume[this.nextEventToConsume]}`);
     }
 
-    private get state(): IEventForConsumptionAvailabilityState {
+    private get nextEventToConsume(): EventToConsume {
         if (this._eventsToBeConsumed.length === 0) {
-            return new NoEventAvailableToBeConsumed();
+            return EventToConsume.None;
         } else {
             const nextEventToBeConsumed = this._eventsToBeConsumed[0];
             switch (nextEventToBeConsumed.event) {
                 case 'stopped':
-                    return new PausedEventAvailableToBeConsumed(() => this.markNextEventAsConsumed('stopped'), <StoppedEvent>nextEventToBeConsumed);
+                    return EventToConsume.Paused;
                 case 'continued':
-                    return new ResumedEventAvailableToBeConsumed(() => this.markNextEventAsConsumed('continued'), <ContinuedEvent>nextEventToBeConsumed);
+                    return EventToConsume.Resumed;
                 default:
                     throw new Error(`Expected the event to be consumed to be either a stopped or continued yet it was: ${JSON.stringify(nextEventToBeConsumed)}`);
             }
@@ -149,80 +155,5 @@ export class PausedWizard {
 
     public toString(): string {
         return 'PausedWizard';
-    }
-}
-
-
-interface IEventForConsumptionAvailabilityState {
-    readonly latestEvent: DebugProtocol.StoppedEvent | DebugProtocol.ContinuedEvent;
-
-    consumePausedEvent(): DebugProtocol.StoppedEvent;
-    consumeResumedEvent(): void;
-
-    isPaused(): boolean;
-}
-
-type MarkNextEventWasConsumed = () => void;
-
-class PausedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(protected readonly _markNextEventWasConsumed: MarkNextEventWasConsumed, public readonly latestEvent: DebugProtocol.StoppedEvent) { }
-
-    public isPaused(): boolean {
-        return true;
-    }
-
-    public consumePausedEvent(): DebugProtocol.StoppedEvent {
-        this._markNextEventWasConsumed();
-        return this.latestEvent;
-    }
-
-    public consumeResumedEvent(): void {
-        throw new Error(`The debugger is paused`);
-    }
-
-    public toString(): string {
-        return `Event available to be consumed: ${JSON.stringify(this.latestEvent)}`;
-    }
-}
-
-class ResumedEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public constructor(protected readonly _markNextEventWasConsumed: MarkNextEventWasConsumed, public readonly latestEvent: DebugProtocol.ContinuedEvent) { }
-
-    public consumePausedEvent(): DebugProtocol.StoppedEvent {
-        throw new Error(`The debugger is not paused`);
-    }
-
-    public consumeResumedEvent(): void {
-        this._markNextEventWasConsumed();
-    }
-
-    public isPaused(): boolean {
-        return false;
-    }
-
-    public toString(): string {
-        return `Resumed Event available to be consumed: ${JSON.stringify(this.latestEvent)}`;
-    }
-}
-
-class NoEventAvailableToBeConsumed implements IEventForConsumptionAvailabilityState {
-    public get latestEvent(): never {
-        throw new Error(`There is no event available to be consumed`);
-    }
-
-    public consumePausedEvent(): never {
-        throw new Error(`There is no event available to be consumed`);
-    }
-
-    public consumeResumedEvent(): void {
-        throw new Error(`There is no event available to be consumed`);
-    }
-
-    public isPaused(): boolean {
-        throw new Error(`Can't determine whether the debuggee is paused or not when there is no event available to be consumed`);
-    }
-
-    public toString(): string {
-        return `NoEventAvailableToBeConsumed`;
     }
 }

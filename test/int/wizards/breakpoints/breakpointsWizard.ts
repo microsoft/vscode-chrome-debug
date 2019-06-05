@@ -44,8 +44,8 @@ export class BreakpointsWizard {
         return this._pausedWizard.resume();
     }
 
-    public async waitAndConsumeResumedEvent(millisecondsToWaitForPauses = 1000 /*ms*/): Promise<void> {
-        return this._pausedWizard.waitAndConsumeResumedEvent(millisecondsToWaitForPauses);
+    public async waitAndConsumeResumedEvent(): Promise<void> {
+        return this._pausedWizard.waitAndConsumeResumedEvent();
     }
 
     public async waitAndAssertNoMoreEvents(): Promise<void> {
