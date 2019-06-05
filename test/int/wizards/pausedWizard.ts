@@ -29,16 +29,14 @@ export class PausedWizard {
     private static _clientToPausedWizard = new ValidatedMap<ExtendedDebugClient, PausedWizard>();
 
     private constructor(private readonly _client: ExtendedDebugClient) {
-        this._client.on('stopped', stopped => {
-            this.validateNoMoreEventsIfSet(stopped);
-            this._eventsToBeConsumed.push(stopped);
-            this.logState();
-        });
-        this._client.on('continued', continued => {
-            this.validateNoMoreEventsIfSet(continued);
-            this._eventsToBeConsumed.push(continued);
-            this.logState();
-        });
+        this._client.on('stopped', stopped => this.onEvent(stopped));
+        this._client.on('continued', continued => this.onEvent(continued));
+    }
+
+    private onEvent(continued: any) {
+        this.validateNoMoreEventsIfSet(continued);
+        this._eventsToBeConsumed.push(continued);
+        this.logState();
     }
 
     // The PausedWizard logic will break if we create 2 PausedWizards for the same client. So we warranty we only create one
