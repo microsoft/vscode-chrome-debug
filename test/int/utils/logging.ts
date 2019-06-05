@@ -42,8 +42,14 @@ logger.init(() => { });
 process.on('uncaughtException', () => logger.dispose());
 process.on('unhandledRejection', () => logger.dispose());
 
+let currentTestTitle = '';
 export function setTestLogName(testTitle: string): void {
-    logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+    // We call setTestLogName in the common setup code. We want to call it earlier in puppeteer tests to get the logs even when the setup fails
+    // So we write this code to be able to call it two times, and the second time will get ignored
+    if (testTitle !== currentTestTitle) {
+        logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+        testTitle = currentTestTitle;
+    }
 }
 
 class PuppeteerMethodsCalledLoggerConfiguration implements IMethodsCalledLoggerConfiguration {
