@@ -11,7 +11,7 @@ export async function waitUntilReadyWithTimeout(isReady: () => boolean, maxWaitT
     const maximumDateTimeToWaitUntil = Date.now() + maxWaitTimeInMilliseconds;
 
     while (!isReady() && Date.now() < maximumDateTimeToWaitUntil) {
-        await utils.promiseTimeout(undefined, 50);
+        await utils.promiseTimeout(undefined, 10 /*ms*/);
     }
 
     if (!isReady()) {

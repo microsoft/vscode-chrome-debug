@@ -35,17 +35,23 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
     suite('React specific tests', () => {
 
         puppeteerTest('Should hit breakpoint in .jsx file', suiteContext, async (_context, page) => {
+            const pausedWizard = suiteContext.launchProject!.pausedWizard;
+
             const location = suiteContext.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 
             await setBreakpoint(suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            await suiteContext.debugClient.continueRequest();
+            await pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await pausedWizard.resume();
             await clicked;
         });
 
         puppeteerTest('Should hit conditional breakpoint in .jsx file', suiteContext, async (_context, page) => {
+            const pausedWizard = suiteContext.launchProject!.pausedWizard;
+
             const location = suiteContext.breakpointLabels.get('react_Counter_increment');
             const incBtn = await page.waitForSelector('#incrementBtn');
 
@@ -56,9 +62,11 @@ puppeteerSuite('React Framework Tests', TEST_SPEC, (suiteContext) => {
             // don't await the last click, as the stopped debugger will deadlock it
             const clicked = incBtn.click();
             await suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await pausedWizard.waitAndConsumePausedEvent(() => {});
+
             // Be sure to await the continue request, otherwise sometimes the last click promise will
             // be rejected because the chrome instance is closed before it completes.
-            await suiteContext.debugClient.continueRequest();
+            await pausedWizard.resume();
             await clicked;
         });
 

@@ -57,7 +57,8 @@ export function registerLocMocks(): void {
 export function killAllChrome() {
     try {
         const killCmd = (process.platform === 'win32') ? `start powershell -WindowStyle hidden -Command "Get-Process | Where-Object {$_.Path -like '*${puppeteer.executablePath()}*'} | Stop-Process"` : 'killall chrome';
-        const output = execSync(killCmd);
+        const hideWindows = process.env['TEST_DA_HIDE_WINDOWS'] === 'true';
+        const output = execSync(killCmd, { windowsHide: hideWindows }); // TODO: windowsHide paramenter doesn't currently work. It might be related to this: https://github.com/nodejs/node/issues/21825
         if (output.length > 0) { // Don't print empty lines
             console.log(output.toString());
         }

@@ -1,3 +1,8 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as testSetup from '../../../testSetup';
@@ -87,12 +92,8 @@ export class StackTraceObjectAssertions {
         this.assertSourceMatches(actual.source, expected.source, index);
     }
 
-    private assertResponseMatchesFrames(actualResponse: DebugProtocol.StackTraceResponse, expectedFrames: ExpectedFrame[]) {
-        // Check totalFrames property
-        expect(actualResponse.body.totalFrames).to.equal(expectedFrames.length, 'body.totalFrames');
-
+    private assertResponseMatchesFrames(actualFrames: DebugProtocol.StackFrame[], expectedFrames: ExpectedFrame[]) {
         // Check array length
-        const actualFrames = actualResponse.body.stackFrames;
         expect(actualFrames.length).to.equal(expectedFrames.length, 'Number of stack frames');
 
         // Check each frame
@@ -101,12 +102,12 @@ export class StackTraceObjectAssertions {
         });
     }
 
-    public assertResponseMatches(actualResponse: DebugProtocol.StackTraceResponse, expectedFrames: ExpectedFrame[]) {
+    public assertResponseMatches(stackTraceFrames: DebugProtocol.StackFrame[], expectedFrames: ExpectedFrame[]) {
         try {
-            this.assertResponseMatchesFrames(actualResponse, expectedFrames);
+            this.assertResponseMatchesFrames(stackTraceFrames, expectedFrames);
         } catch (e) {
             const error: assert.AssertionError = e;
-            error.message += '\nActual stack trace response: \n' + JSON.stringify(actualResponse, null, 2);
+            error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceFrames, null, 2);
 
             throw error;
         }
