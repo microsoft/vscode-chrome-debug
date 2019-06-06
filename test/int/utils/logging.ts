@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { logger, } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
-import { MethodsCalledLogger, IMethodsCalledLoggerConfiguration, MethodsCalledLoggerConfiguration, ReplacementInstruction } from '../core-v2/chrome/logging/methodsCalledLogger';
+import { MethodsCalledLogger, IMethodsCalledLoggerConfiguration, MethodsCalledLoggerConfiguration, ReplacementInstruction, wrapWithMethodLogger } from '../core-v2/chrome/logging/methodsCalledLogger';
 
 const useDateTimeInLog = false;
 function dateTimeForFilePath(): string {
@@ -42,22 +42,30 @@ logger.init(() => { });
 process.on('uncaughtException', () => logger.dispose());
 process.on('unhandledRejection', () => logger.dispose());
 
+let currentTestTitle = '';
 export function setTestLogName(testTitle: string): void {
-    logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+    // We call setTestLogName in the common setup code. We want to call it earlier in puppeteer tests to get the logs even when the setup fails
+    // So we write this code to be able to call it two times, and the second time will get ignored
+    if (testTitle !== currentTestTitle) {
+        logger.setup(LogLevel.Verbose, logFilePath(testTitle, 'TEST'));
+        testTitle = currentTestTitle;
+    }
 }
 
 class PuppeteerMethodsCalledLoggerConfiguration implements IMethodsCalledLoggerConfiguration {
     private readonly _wrapped = new MethodsCalledLoggerConfiguration('', []);
     public readonly replacements: ReplacementInstruction[] = [];
 
-    public decideWhetherToWrapMethodResult(methodName: string | symbol | number, args: any, _result: unknown, wrapWithName: (name: string) => void): void {
-        if (methodName === 'waitForSelector') {
-            wrapWithName(args[0]);
+    public customizeResult<T>(methodName: string | symbol | number, args: any, result: T): T {
+        if (methodName === 'waitForSelector' && typeof result === 'object' && args.length >= 1) {
+            return wrapWithMethodLogger(<T & object>result, args[0]);
+        } else {
+            return result;
         }
     }
 
-    public decideWhetherToWrapEventEmitterListener(receiverName: string, methodName: string | symbol | number, args: unknown[], wrapWithName: (name: string) => void): void {
-        return this._wrapped.decideWhetherToWrapEventEmitterListener(receiverName, methodName, args, wrapWithName);
+    public customizeArgumentsBeforeCall(receiverName: string, methodName: string | symbol | number, args: object[]): void {
+        this._wrapped.customizeArgumentsBeforeCall(receiverName, methodName, args);
     }
 }
 

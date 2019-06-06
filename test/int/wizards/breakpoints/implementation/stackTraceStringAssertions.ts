@@ -1,19 +1,21 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import * as assert from 'assert';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { expect } from 'chai';
 import { findLineNumber } from '../../../utils/findPositionOfTextInFile';
 import { BreakpointWizard } from '../breakpointWizard';
+import { trimWhitespaceAndComments } from './printedTestInputl';
 
 export class StackTraceStringAssertions {
     public constructor(
         private readonly _breakpoint: BreakpointWizard) { }
 
-    public  assertResponseMatches(actualResponse: DebugProtocol.StackTraceResponse, expectedString: string) {
-        expect(actualResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(actualResponse)}`).to.equal(true);
+    public  assertResponseMatches(stackTraceFrames: DebugProtocol.StackFrame[], expectedString: string) {
 
-        const stackTraceFrames = actualResponse.body.stackFrames;
-        expect(actualResponse.body.totalFrames, `The number of stackFrames was different than the value supplied on the totalFrames field`)
-            .to.equal(stackTraceFrames.length);
         stackTraceFrames.forEach(frame => {
             // Warning: We don't currently validate frame.source.path
             expect(frame.source).not.to.equal(undefined);
@@ -22,7 +24,7 @@ export class StackTraceStringAssertions {
         });
 
 
-        const formattedExpectedStackTrace = expectedString.replace(/^\s+/gm, ''); // Remove the white space we put at the start of the lines to make the stack trace align with the code
+        const formattedExpectedStackTrace = trimWhitespaceAndComments(expectedString);
         this.applyIgnores(formattedExpectedStackTrace, stackTraceFrames);
         const actualStackTrace = this.extractStackTrace(stackTraceFrames);
         assert.equal(actualStackTrace, formattedExpectedStackTrace, `Expected the stack trace when hitting ${this._breakpoint} to be:\n${formattedExpectedStackTrace}\nyet it is:\n${actualStackTrace}`);

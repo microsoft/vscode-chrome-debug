@@ -11,6 +11,7 @@ import { NullFixture } from '../fixtures/fixture';
 import { LaunchProject } from '../fixtures/launchProject';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-debugadapter';
+import { setTestLogName } from '../utils/logging';
 
 /**
  * Extends the normal debug adapter context to include context relevant to puppeteer tests.
@@ -109,6 +110,7 @@ function puppeteerSuiteFunction(
     let fixture: LaunchProject | NullFixture = new NullFixture(); // This variable is shared across all test of this suite
 
     setup(async function () {
+      setTestLogName(this.currentTest.fullTitle());
       const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
       const launchProject = fixture = await LaunchProject.create(this, testSpec);
 

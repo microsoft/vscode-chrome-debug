@@ -1,15 +1,20 @@
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import * as path from 'path';
 import { expect, use } from 'chai';
 import * as chaiString from 'chai-string';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointWizard } from '../breakpointWizard';
 import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './internalFileBreakpointsWizard';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTimeout';
-import { IExpectedVariables, VariablesAssertions } from './variablesAssertions';
 import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAssertions';
 import { StackTraceStringAssertions } from './stackTraceStringAssertions';
+import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
+import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
 
 use(chaiString);
 
@@ -26,15 +31,7 @@ interface IObjectWithLocation {
 }
 
 export class BreakpointsAssertions {
-    private readonly _variableAssertions = new VariablesAssertions(this._internal.client);
-
-    private readonly _defaultStackFrameFormat: DebugProtocol.StackFrameFormat = {
-        parameters: true,
-        parameterTypes: true,
-        parameterNames: true,
-        line: true,
-        module: true
-    };
+    private readonly _variablesWizard = new VariablesWizard(this._internal.client);
 
     public constructor(
         private readonly _breakpointsWizard: BreakpointsWizard,
@@ -62,29 +59,23 @@ export class BreakpointsAssertions {
     }
 
     public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
-        await this._breakpointsWizard.waitUntilPaused(breakpoint);
+        await this._breakpointsWizard.waitAndConsumePausedEvent(breakpoint);
 
-        const stackFrameFormat = verifications.stackFrameFormat || this._defaultStackFrameFormat;
-
-        const stackTraceResponse = await this._internal.client.send('stackTrace', {
-            threadId: THREAD_ID,
-            format: stackFrameFormat
-        });
-        const topFrame = stackTraceResponse.body.stackFrames[0];
+        const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
 
         // Validate that the topFrame is locate in the same place as the breakpoint
-        this.assertLocationMatchesExpected(topFrame, breakpoint);
+        this.assertLocationMatchesExpected(stackTraceFrames[0], breakpoint);
 
         if (typeof verifications.stackTrace === 'string') {
             const assertions = new StackTraceStringAssertions(breakpoint);
-            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
         } else if (typeof verifications.stackTrace === 'object') {
             const assertions = new StackTraceObjectAssertions(this._breakpointsWizard);
-            assertions.assertResponseMatches(stackTraceResponse, verifications.stackTrace);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
         }
 
         if (verifications.variables !== undefined) {
-            this._variableAssertions.assertStackTraceContains(topFrame, verifications.variables);
+            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, stackTraceFrames[0]), verifications.variables);
         }
 
         await this._breakpointsWizard.resume();
@@ -99,9 +90,9 @@ export class BreakpointsAssertions {
 
         const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
         const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
-        const expectedBPLocationPrintted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
-        const actualBPLocationPrintted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
+        const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
+        const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
 
-        expect(actualBPLocationPrintted).to.be.equal(expectedBPLocationPrintted);
+        expect(actualBPLocationPrinted).to.be.equal(expectedBPLocationPrinted);
     }
 }

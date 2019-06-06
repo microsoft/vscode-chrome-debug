@@ -34,6 +34,11 @@ function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>, te
         launchArgs.runtimeExecutable = puppeteer.executablePath();
     }
 
+    const hideWindows = process.env['TEST_DA_HIDE_WINDOWS'] === 'true';
+    if (hideWindows) {
+        launchArgs.runtimeArgs = ['--headless', '--disable-gpu'];
+    }
+
     // Start with a clean userDataDir for each test run
     const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
     launchArgs.userDataDir = tmpDir.name;
