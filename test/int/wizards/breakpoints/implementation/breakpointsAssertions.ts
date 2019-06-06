@@ -85,14 +85,14 @@ export class BreakpointsAssertions {
         const expectedFilePath = this._internal.filePath;
 
         expect(objectWithLocation.source).to.not.equal(undefined);
-        expect(objectWithLocation.source!.path).to.be.equal(expectedFilePath);
-        expect(objectWithLocation.source!.name).to.be.equal(path.basename(expectedFilePath));
+        expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
+        expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
 
         const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
         const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
         const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
         const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
 
-        expect(actualBPLocationPrinted).to.be.equal(expectedBPLocationPrinted);
+        expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
     }
 }
