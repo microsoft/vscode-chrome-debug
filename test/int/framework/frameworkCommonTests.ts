@@ -12,6 +12,7 @@ import { DefaultFixture } from '../fixtures/defaultFixture';
 import { MultipleFixtures } from '../fixtures/multipleFixtures';
 import * as puppeteer from 'puppeteer';
 import { PausedWizard } from '../wizards/pausedWizard';
+import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -167,15 +168,13 @@ export class FrameworkTestSuite {
      * @param bpLabel
      * @param trigger
      */
-    genericBreakpointTest(description: string, waitSelector: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
+    testBreakpointHitsOnPageAction(description: string, waitSelector: string, file: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
         return puppeteerTest(`${this.frameworkName} - ${description}`, this.suiteContext, async (context, page) => {
-            const location = context.breakpointLabels.get(bpLabel);
             await page.waitForSelector(`${waitSelector}`);
-            await setBreakpoint(this.suiteContext.debugClient, location);
-            const triggerPromise = trigger(page);
-            await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
-            await this.suiteContext.debugClient.continueRequest();
-            await triggerPromise;
+            const breakpoints = BreakpointsWizard.create(context.debugClient, context.testSpec);
+            const breakpointWizard = breakpoints.at(file);
+            const bp = await breakpointWizard.breakpoint({ text: bpLabel });
+            await bp.assertIsHitThenResumeWhen(() => trigger(page));
         });
     }
 }
