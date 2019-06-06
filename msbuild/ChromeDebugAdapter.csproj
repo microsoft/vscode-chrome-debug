@@ -21,7 +21,7 @@
 
   <Target Name="GetFilesToSign" DependsOnTargets="DeleteUnwantedFiles" BeforeTargets="SignFiles">
     <ItemGroup>
-      <FilesToSign Include="$(OutDir)ziproot\**\*.js">
+      <FilesToSign Include="$(OutDir)ziproot\**\*.js" Exclude="$(OutDir)ziproot\**\inversify\es\interfaces\interfaces.js">
         <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
     </ItemGroup>
