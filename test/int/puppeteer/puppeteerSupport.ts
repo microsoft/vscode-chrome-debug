@@ -46,7 +46,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
     while ((current - before) < timeout) {
 
         const pages = await browser.pages();
-        const desiredPage = pages.find(p => p.url() === url);
+        const desiredPage = pages.find(p => p.url().toLowerCase() === url.toLowerCase());
         if (desiredPage) {
             return desiredPage;
         }

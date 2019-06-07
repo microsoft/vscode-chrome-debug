@@ -8,7 +8,6 @@ import * as puppeteer from 'puppeteer';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointLocation } from '../intTestSupport';
 import { ILaunchRequestArgs } from '../../../src/chromeDebugInterfaces';
-import { MakePropertyRequired } from '../core-v2/typeUtils';
 import { IValidatedMap } from '../core-v2/chrome/collections/validatedMap';
 import { DATA_ROOT } from '../testSetup';
 
@@ -34,13 +33,13 @@ export interface ProjectSpecProps {
  * attached to in order to test the debug adapter)
  */
 export class TestProjectSpec {
-    _props: MakePropertyRequired<ProjectSpecProps, keyof ProjectSpecProps>;
+    _props: Required<ProjectSpecProps>;
     get props() { return this._props; }
 
     /**
      * @param props Parameters for the project spec. The only required param is "projectRoot", others will be set to sensible defaults
      */
-    constructor(props: ProjectSpecProps) {
+    constructor(props: ProjectSpecProps, public readonly staticUrl?: string) {
         const outFiles = props.outFiles || [path.join(props.projectRoot, 'out')];
         const webRoot = props.webRoot || props.projectRoot;
         this._props = {
@@ -64,10 +63,12 @@ export class TestProjectSpec {
      *
      * The path *can only* use forward-slahes "/" as separators
      */
-    public static fromTestPath(reversedSlashesRelativePath: string): TestProjectSpec {
+    public static fromTestPath(reversedSlashesRelativePath: string, sourceDir = 'src', staticUrl?: string): TestProjectSpec {
         const pathComponents = reversedSlashesRelativePath.split('/');
         const projectAbsolutePath = path.join(...[DATA_ROOT].concat(pathComponents));
-        return new TestProjectSpec({ projectRoot: projectAbsolutePath });
+        const projectSrc = path.join(projectAbsolutePath, sourceDir);
+        let props: ProjectSpecProps = { projectRoot: projectAbsolutePath, projectSrc };
+        return new TestProjectSpec(props, staticUrl);
     }
 
     /**

@@ -70,7 +70,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: `onclick [${url.authority}]`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
+                { name: `onclick [${url.host}]`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });
@@ -117,7 +117,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
                 { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                { name: `onclick [${url.authority}] Line 7`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
+                { name: `onclick [${url.host}] Line 7`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });

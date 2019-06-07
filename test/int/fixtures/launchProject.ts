@@ -2,15 +2,15 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import URI from 'vscode-uri';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { IFixture } from './fixture';
 import { DefaultFixture } from './defaultFixture';
-import { LaunchWebServer } from './launchWebServer';
+import { LaunchWebServer, ProvideStaticUrl } from './launchWebServer';
 import { LaunchPuppeteer } from '../puppeteer/launchPuppeteer';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { Page, Browser } from 'puppeteer';
 import { ITestCallbackContext, IBeforeAndAfterContext } from 'mocha';
+import { URL } from 'url';
 import { PausedWizard } from '../wizards/pausedWizard';
 
 /** Perform all the steps neccesary to launch a particular project such as:
@@ -21,12 +21,16 @@ import { PausedWizard } from '../wizards/pausedWizard';
 export class LaunchProject implements IFixture {
     private constructor(
         private readonly _defaultFixture: DefaultFixture,
-        private readonly _launchWebServer: LaunchWebServer,
+        private readonly _launchWebServer: LaunchWebServer | ProvideStaticUrl,
         public readonly pausedWizard: PausedWizard,
         private readonly _launchPuppeteer: LaunchPuppeteer) { }
 
     public static async create(testContext: IBeforeAndAfterContext | ITestCallbackContext, testSpec: TestProjectSpec): Promise<LaunchProject> {
-        const launchWebServer = await LaunchWebServer.launch(testSpec);
+
+        const launchWebServer = (testSpec.staticUrl) ?
+            new ProvideStaticUrl(new URL(testSpec.staticUrl), testSpec) :
+            await LaunchWebServer.launch(testSpec);
+
         const defaultFixture = await DefaultFixture.create(testContext);
 
         // We need to create the PausedWizard before launching the debuggee to listen to all events and avoid race conditions
@@ -51,7 +55,7 @@ export class LaunchProject implements IFixture {
         return this._launchPuppeteer.page;
     }
 
-    public get url(): URI {
+    public get url(): URL {
         return this._launchWebServer.url;
     }
 

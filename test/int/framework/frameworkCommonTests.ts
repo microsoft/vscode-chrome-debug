@@ -10,7 +10,9 @@ import { loadProjectLabels } from '../labels';
 import { TestProjectSpec } from './frameworkTestSupport';
 import { DefaultFixture } from '../fixtures/defaultFixture';
 import { MultipleFixtures } from '../fixtures/multipleFixtures';
+import * as puppeteer from 'puppeteer';
 import { PausedWizard } from '../wizards/pausedWizard';
+import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -151,6 +153,28 @@ export class FrameworkTestSuite {
             // TODO: Verify we are actually pausing in the expected line
 
             await this.pausedWizard.resume();
+        });
+    }
+
+    /**
+     * A generic breakpoint test. This can be used for many different types of breakpoint tests with the following structure:
+     *
+     * 1. Wait for the page to load by waiting for the selector: `waitSelectorId`
+     * 2. Set a breakpoint at `bpLabel`
+     * 3. Execute a trigger event that should cause the breakpoint to be hit using the function `trigger`
+     * 4. Assert that the breakpoint is hit on the expected location, and continue
+     *
+     * @param waitSelector an html selector to identify a resource to wait for for page load
+     * @param bpLabel
+     * @param trigger
+     */
+    testBreakpointHitsOnPageAction(description: string, waitSelector: string, file: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
+        return puppeteerTest(`${this.frameworkName} - ${description}`, this.suiteContext, async (context, page) => {
+            await page.waitForSelector(`${waitSelector}`);
+            const breakpoints = BreakpointsWizard.create(context.debugClient, context.testSpec);
+            const breakpointWizard = breakpoints.at(file);
+            const bp = await breakpointWizard.breakpoint({ text: bpLabel });
+            await bp.assertIsHitThenResumeWhen(() => trigger(page));
         });
     }
 }

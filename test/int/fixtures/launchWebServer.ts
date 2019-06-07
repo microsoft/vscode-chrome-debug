@@ -2,13 +2,13 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import URI from 'vscode-uri';
 import { createServer } from 'http-server';
 import { IFixture } from './fixture';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { HttpOrHttpsServer } from '../types/server';
 import { ILaunchRequestArgs } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-debugadapter';
+import { URL } from 'url';
 
 async function createServerAsync(root: string): Promise<HttpOrHttpsServer> {
     const server = createServer({ root });
@@ -49,9 +49,9 @@ export class LaunchWebServer implements IFixture {
         return new LaunchWebServer(await createServerAsync(testSpec.props.webRoot), testSpec);
     }
 
-    public get url(): URI {
+    public get url(): URL {
         const address = this._server.address();
-        return URI.parse(`http://localhost:${address.port}/`);
+        return new URL(`http://localhost:${address.port}/`);
     }
 
     public get launchConfig(): ILaunchRequestArgs {
@@ -69,4 +69,14 @@ export class LaunchWebServer implements IFixture {
     public toString(): string {
         return `LaunchWebServer`;
     }
+}
+
+export class ProvideStaticUrl implements IFixture {
+
+    public constructor(public readonly url: URL, private readonly testSpec: TestProjectSpec) {}
+
+    public get launchConfig(): ILaunchRequestArgs {
+        return {...this.testSpec.props.launchConfig, url: this.url.href };
+    }
+    cleanUp() {}
 }
