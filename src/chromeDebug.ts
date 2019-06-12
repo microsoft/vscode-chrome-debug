@@ -4,7 +4,7 @@
 
 import * as os from 'os';
 import * as path from 'path';
-import { ChromeDebugSession, logger, OnlyProvideCustomLauncherExtensibilityPoints, ISourcesRetriever, telemetry, UrlPathTransformer, TYPES, interfaces, GetComponentByID, DependencyInjection, UninitializedCDA } from 'vscode-chrome-debug-core';
+import { ChromeDebugSession, logger, OnlyProvideCustomLauncherExtensibilityPoints, ISourcesRetriever, telemetry, UrlPathTransformer, TYPES, interfaces, GetComponentByID, DependencyInjection, UninitializedCDA, ISession } from 'vscode-chrome-debug-core';
 import { ChromeDebugAdapter } from './chromeDebugAdapter';
 import { ChromeLauncher } from './launcherAndRuner/chromeLauncher';
 import { defaultTargetFilter } from './utils';
@@ -28,7 +28,8 @@ function customizeComponents<T>(identifier: interfaces.ServiceIdentifier<T>, com
             return <T><unknown>new HTMLSourceRetriever(<ISourcesRetriever><unknown>component, getComponentById(CDTPResourceContentGetter));
             case TYPES.UninitializedCDA:
             // We use our own version of the UninitializedCDA component to declare some extra capabilities that this client supports
-            return <T><unknown>new CustomizedUninitializedCDA(<UninitializedCDA><unknown>component);
+            const session = <ISession>getComponentById(TYPES.ISession);
+            return <T><unknown>new CustomizedUninitializedCDA(session, <UninitializedCDA><unknown>component);
         default:
             return component;
     }
