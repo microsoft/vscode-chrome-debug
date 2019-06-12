@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import { BaseCDAState, injectable, IInitializeRequestArgs, UninitializedCDA, ITelemetryPropertyCollector, IDebugAdapterState } from 'vscode-chrome-debug-core';
+import { BaseCDAState, injectable, IInitializeRequestArgs, UninitializedCDA, ITelemetryPropertyCollector, IDebugAdapterState, inject, TYPES, ISession } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 /**
@@ -11,6 +11,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 @injectable()
 export class CustomizedUninitializedCDA extends BaseCDAState {
     constructor(
+        @inject(TYPES.ISession) protected readonly _session: ISession,
         private readonly _wrappedUninitializedCDA: UninitializedCDA) {
         super([], { 'initialize': (args, telemetryPropertyCollector) => this.initialize(args, telemetryPropertyCollector) });
     }
