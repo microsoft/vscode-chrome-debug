@@ -75,16 +75,27 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
 // Must match the strings in -core's remoteMapper.ts
 const remoteUriScheme = 'vscode-remote';
-const remotePathBase = '/__vscode-remote-uri__';
+const remotePathComponent = '__vscode-remote-uri__';
+
+const isWindows = process.platform === 'win32';
+function getFsPath(uri: vscode.Uri): string {
+    const fsPath = uri.fsPath;
+    return isWindows && !fsPath.match(/^[a-zA-Z]:/) ?
+        fsPath.replace(/\\/g, '/') : // Hack - undo the slash normalization that URI does when windows is the current platform
+        fsPath;
+}
 
 function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
-    const uriPath = remoteUri.fsPath;
+    const uriPath = getFsPath(remoteUri);
     const driveLetterMatch = uriPath.match(/^[A-Za-z]:/);
+    let internalPath: string;
     if (!!driveLetterMatch) {
-        return path.join(driveLetterMatch[0], remotePathBase, uriPath.substr(2));
+        internalPath = path.win32.join(driveLetterMatch[0], remotePathComponent, uriPath.substr(2));
     } else {
-        return path.join(remotePathBase, uriPath);
+        internalPath = path.posix.join('/', remotePathComponent, uriPath);
     }
+
+    return internalPath;
 }
 
 function rewriteWorkspaceRoot(configObject: any, internalWorkspaceRootPath: string): void {
