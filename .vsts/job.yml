@@ -63,6 +63,7 @@ jobs:
 
   - ${{ if eq(parameters.name, 'Windows') }}:
     - task: Npm@1
+      condition: false
       displayName: npm frameworkTest
       inputs:
         command: custom
