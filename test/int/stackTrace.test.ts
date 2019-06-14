@@ -1,3 +1,7 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
+
 import * as assert from 'assert';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
@@ -7,6 +11,7 @@ import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTest
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
 import { setBreakpoint } from './intTestSupport';
 import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
+import { URL } from 'url';
 import { activate } from '../../src/extension';
 
 const DATA_ROOT = testSetup.DATA_ROOT;

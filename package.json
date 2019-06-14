@@ -57,6 +57,7 @@
     "mocha": "^5.2.0",
     "mocha-multi-reporters": "^1.1.7",
     "mockery": "^1.7.0",
+    "puppeteer": "^1.17.0",
     "source-map-support": "^0.5.11",
     "tmp": "0.0.31",
     "ts-loader": "^1.0.0",
