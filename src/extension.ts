@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import * as Core from 'vscode-chrome-debug-core';
 import * as nls from 'vscode-nls';
+import * as path from 'path';
 
 import { defaultTargetFilter, getTargetFilter } from './utils';
 
@@ -66,18 +67,52 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             }
         }
 
+        resolveRemoteUris(folder, config);
+
         return config;
     }
 }
 
-function toggleSkippingFile(path: string): void {
-    if (!path) {
+// Must match the strings in -core's remoteMapper.ts
+const remoteUriScheme = 'vscode-remote';
+const remotePathBase = '/__vscode-remote-uri__';
+
+function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
+    const uriPath = remoteUri.fsPath;
+    const driveLetterMatch = uriPath.match(/^[A-Za-z]:/);
+    if (!!driveLetterMatch) {
+        return path.join(driveLetterMatch[0], remotePathBase, uriPath.substr(2));
+    } else {
+        return path.join(remotePathBase, uriPath);
+    }
+}
+
+function rewriteWorkspaceRoot(configObject: any, internalWorkspaceRootPath: string): void {
+    for (const key in configObject) {
+        if (typeof configObject[key] === 'string') {
+            configObject[key] = configObject[key].replace(/\$\{workspaceRoot\}/g, internalWorkspaceRootPath);
+        } else {
+            rewriteWorkspaceRoot(configObject[key], internalWorkspaceRootPath);
+        }
+    }
+}
+
+function resolveRemoteUris(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration): void {
+    if (folder && folder.uri.scheme === remoteUriScheme) {
+        const internalPath = mapRemoteClientUriToInternalPath(folder.uri);
+        rewriteWorkspaceRoot(config, internalPath);
+        (<any>config).remoteAuthority = folder.uri.authority;
+    }
+}
+
+function toggleSkippingFile(aPath: string): void {
+    if (!aPath) {
         const activeEditor = vscode.window.activeTextEditor;
-        path = activeEditor && activeEditor.document.fileName;
+        aPath = activeEditor && activeEditor.document.fileName;
     }
 
-    if (path && vscode.debug.activeDebugSession) {
-        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path } : { sourceReference: path };
+    if (aPath && vscode.debug.activeDebugSession) {
+        const args: Core.IToggleSkipFileStatusArgs = typeof aPath === 'string' ? { path: aPath } : { sourceReference: aPath };
         vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
     }
 }
