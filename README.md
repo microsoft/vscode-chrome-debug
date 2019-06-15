@@ -194,6 +194,23 @@ Ionic and gulp-sourcemaps output a sourceRoot of `"/source/"` by default. If you
 }
 ```
 
+## Usage with remote VS Code extensions
+
+This extension can be used with the [VS Code Remote Extensions](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.vscode-remote-extensionpack) to debug an app in a local Chrome window. Here's an example workflow using the [Remote - SSH](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh) extension:
+
+- Connect to the SSH remote where your project is located
+- Launch the development server on the remote
+- Run the "Forward Port From Active Host" command to forward the port the server is listening on. For example, if your development server is listening on port 3000, forward port 3000 to the local machine.
+- Start your "chrome" launch config
+- Chrome should start on the local machine, accessing your app via the forwarded port
+- Debugging works as normally
+
+There are a couple caveats to this workflow:
+- Since the extension can't currently access the remote disk, sourcemaps can't be read from disk. If sourcemaps are inlined, they will still be used. If possible, they will be downloaded through your webserver.
+- In a local window, when resolving your script locations with webRoot/pathMapping, the extension does some searching for the correct script. Again, since the extension can't check the remote disk, the extension can't do this searching, so your webRoot/pathMapping must be exactly accurate to resolve the script location.
+
+If you have any other issues, please open an issue.
+
 ## Troubleshooting
 
 ### My breakpoints aren't hit. What's wrong?
