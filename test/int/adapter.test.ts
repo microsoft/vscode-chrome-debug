@@ -96,6 +96,25 @@ suite('Chrome Debug Adapter etc', () => {
             ]);
         });
 
+        test('Should hit breakpoint even if webRoot has unexpected case all uppercase for VisualStudio', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const breakFile = path.join(testProjectRoot, 'src/script.js');
+            const DEBUGGER_LINE = 3;
+
+            await dc.initializeRequest({
+                adapterID: 'chrome',
+                clientID: 'visualstudio',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                pathFormat: 'path'
+            });
+            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase() } as any);
+            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+            await dc.configurationDoneRequest();
+            await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
+
+        });
+
         const testTitle = 'Should attach to existing instance of chrome and break on debugger statement';
         test(testTitle, async () => {
             const fullTestTitle = `Chrome Debug Adapter etc launch ${testTitle}`;
@@ -120,6 +139,24 @@ suite('Chrome Debug Adapter etc', () => {
                 await browser.close();
             }
         });
+
+        test('Should hit breakpoint even if webRoot has unexpected case all lowercase for VisualStudio', async () => {
+            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
+            const breakFile = path.join(testProjectRoot, 'src/script.js');
+            const DEBUGGER_LINE = 3;
+
+            await dc.initializeRequest({
+                adapterID: 'chrome',
+                clientID: 'visualstudio',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                pathFormat: 'path'
+            });
+            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase() } as any);
+            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+            await dc.configurationDoneRequest();
+            await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
+	});
 
         /**
          * This test is baselining behvaior from V1 around what happens when the adapter tries to launch when
