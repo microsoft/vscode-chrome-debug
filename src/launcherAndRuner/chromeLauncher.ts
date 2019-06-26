@@ -8,8 +8,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import {
-    ITelemetryPropertyCollector, logger, telemetry, utils as coreUtils,
-    ILaunchResult, IDebuggeeLauncher, inject, injectable, TYPES, ISession, ConnectedCDAConfiguration
+    ITelemetryPropertyCollector, logger, telemetry, utils as coreUtils, TerminatingReason,
+    ILaunchResult, IDebuggeeLauncher, inject, injectable, TYPES, ISession, ConnectedCDAConfiguration, printClassDescription
 } from 'vscode-chrome-debug-core';
 import * as nls from 'vscode-nls';
 import { ILaunchRequestArgs } from '../chromeDebugInterfaces';
@@ -22,12 +22,14 @@ interface IChromeLauncherLifetimeState {
     stop(): Promise<void>;
 }
 
+@printClassDescription
 class NotYetLaunched implements IChromeLauncherLifetimeState {
     public stop(): Promise<void> {
         throw new Error(`Can't stop the chrome process because it hasn't been launched yet`);
     }
 }
 
+@printClassDescription
 class Stopped implements IChromeLauncherLifetimeState {
     public stop(): Promise<void> {
         throw new Error(`Can't stop the chrome process because it hasn been already stopped`);
@@ -80,6 +82,10 @@ class LaunchedInWindowsWithPID implements IChromeLauncherLifetimeState {
             execSync(taskkillForceCmd);
         } catch (e) { }
     }
+
+    public toString(): string {
+        return `Lauched in windows with PID: ${this._chromePID}`;
+    }
 }
 
 class LaunchedAsChildProcess implements IChromeLauncherLifetimeState {
@@ -97,8 +103,13 @@ class LaunchedAsChildProcess implements IChromeLauncherLifetimeState {
         logger.log('Killing Chrome process');
         this._chromeProc.kill('SIGINT');
     }
+
+    public toString(): string {
+        return `Lauched as child process with PID: ${this.chromePID}`;
+    }
 }
 
+@printClassDescription
 class LaunchedUnelevatedAndFailedToGetPID implements IChromeLauncherLifetimeState {
     public stop(): Promise<void> {
         throw new Error(`Can't stop the chrome process because the debugger failed to obtain the Chrome process ID when it was launched`);
@@ -182,6 +193,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
 
         this._state = await this.spawnChrome(runtimeExecutable, chromeArgs, chromeEnv, chromeWorkingDir, !!args.runtimeExecutable,
             !!args.shouldLaunchChromeUnelevated, telemetryPropertyCollector);
+        logger.log(`ChromeLauncher changed to state: ${this._state}`);
 
         return {
             address: args.address,
@@ -190,9 +202,13 @@ export class ChromeLauncher implements IDebuggeeLauncher {
         };
     }
 
-    public async stop(): Promise<void> {
-        await this._state.stop();
-        this._state = new Stopped();
+    public async stop(reason: TerminatingReason): Promise<void> {
+        // If the client sent a disconnect request, then we stop Chrome. If we disconnected from the websocket,
+        // we don't need to do anything because we assume that Chrome is already closing or closed (at least the web-page)
+        if (reason === TerminatingReason.ClientRequestedToDisconnect) {
+            await this._state.stop();
+            this._state = new Stopped();
+        }
     }
 
     private async spawnChrome(
