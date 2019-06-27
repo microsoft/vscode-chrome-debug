@@ -101,7 +101,7 @@ function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
 function rewriteWorkspaceRoot(configObject: any, internalWorkspaceRootPath: string): void {
     for (const key in configObject) {
         if (typeof configObject[key] === 'string') {
-            configObject[key] = configObject[key].replace(/\$\{workspaceRoot\}/g, internalWorkspaceRootPath);
+            configObject[key] = configObject[key].replace(/\$\{workspace(Root|Folder)\}/g, internalWorkspaceRootPath);
         } else {
             rewriteWorkspaceRoot(configObject[key], internalWorkspaceRootPath);
         }
