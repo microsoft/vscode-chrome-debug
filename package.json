@@ -26,7 +26,7 @@
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
     "mocha-junit-reporter": "^1.18.0",
-    "vscode-chrome-debug-core": "^6.7.50",
+    "vscode-chrome-debug-core": "^6.7.51",
     "vscode-debugadapter": "^1.32.1",
     "vscode-nls": "^4.1.1"
   },
