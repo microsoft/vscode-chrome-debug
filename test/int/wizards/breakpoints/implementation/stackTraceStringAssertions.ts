@@ -32,8 +32,9 @@ export class StackTraceStringAssertions {
 
     private applyIgnores(formattedExpectedStackTrace: string, stackTrace: DebugProtocol.StackFrame[]): void {
         const ignoreFunctionNameText = '<__IGNORE_FUNCTION_NAME__>';
-        const ignoreFunctionName = findLineNumber(formattedExpectedStackTrace, formattedExpectedStackTrace.indexOf(ignoreFunctionNameText));
-        if (ignoreFunctionName >= 0) {
+        const lineWithIgnoreIndex = formattedExpectedStackTrace.indexOf(ignoreFunctionNameText);
+        if (lineWithIgnoreIndex >= 0) {
+            const ignoreFunctionName = findLineNumber(formattedExpectedStackTrace, lineWithIgnoreIndex);
             expect(stackTrace.length).to.be.greaterThan(ignoreFunctionName);
             const ignoredFrame = stackTrace[ignoreFunctionName];
             ignoredFrame.name = `${ignoreFunctionNameText} [${ignoredFrame.source!.name}] Line ${ignoredFrame.line}`;
