@@ -133,7 +133,7 @@ suite('Chrome Debug Adapter etc', () => {
                 pathFormat: 'path'
             });
 
-            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase() } as any);
+            await dc.launchRequest( { url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase(), runtimeExecutable: puppeteer.executablePath() } as any);
             await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
             await dc.configurationDoneRequest();
             await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
@@ -150,7 +150,7 @@ suite('Chrome Debug Adapter etc', () => {
                 columnsStartAt1: true,
                 pathFormat: 'path'
             });
-            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase() } as any);
+            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase(), runtimeExecutable: puppeteer.executablePath() } as any);
             await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
             await dc.configurationDoneRequest();
             await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
