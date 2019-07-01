@@ -8,6 +8,7 @@
  */
 
 import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { PromiseOrNot } from 'vscode-chrome-debug-core';
 
 const ImplementsBreakpointLocation = Symbol();
 /**
@@ -36,11 +37,14 @@ export class BreakpointLocation {
  * @param client Debug Client
  * @param launchConfig The launch config to use
  */
-export async function launchTestAdapter(client: DebugClient, launchConfig: any) {
+export async function launchTestAdapter(
+    client: DebugClient, launchConfig: any,
+    configureDebuggee: (client: DebugClient) => PromiseOrNot<unknown> = () => Promise.resolve()) {
 
     let init = client.waitForEvent('initialized');
     await client.launch(launchConfig);
     await init;
+    await configureDebuggee(client);
     await client.configurationDoneRequest();
 }
 
