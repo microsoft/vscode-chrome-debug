@@ -8,6 +8,7 @@ import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { LaunchProject } from '../fixtures/launchProject';
 import { expect } from 'chai';
 import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 testUsing('Pause on promise rejections when unhandled exceptions are enabled', context => LaunchProject.create(context,
     TestProjectSpec.fromTestPath('featuresTests/pauseOnPromisesRejections'),
@@ -27,7 +28,7 @@ async function waitUntilPausedOnPromiseRejection(launchProject: LaunchProject, e
     });
 }
 
-function validateExceptionHasCorrectInformation(exceptionInfo, exceptionMessage: string) {
+function validateExceptionHasCorrectInformation(exceptionInfo: DebugProtocol.ExceptionInfoResponse, exceptionMessage: string): void {
     expect(exceptionInfo.success).to.equal(true);
     expect(exceptionInfo.body.breakMode).to.equal('unhandled');
     expect(exceptionInfo.body.description).to.equal(undefined);
