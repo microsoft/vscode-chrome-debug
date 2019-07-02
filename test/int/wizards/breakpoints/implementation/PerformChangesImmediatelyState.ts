@@ -1,8 +1,12 @@
-import { DebugProtocol } from 'vscode-debugprotocol';
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { BreakpointWizard } from '../breakpointWizard';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
-import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate } from './internalFileBreakpointsWizard';
-import { BreakpointsAssertions } from './breakpointsAssertions';
+import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId } from './internalFileBreakpointsWizard';
+import { BreakpointsAssertions, IVerifications } from './breakpointsAssertions';
 import { BreakpointsWizard } from '../breakpointsWizard';
 
 export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrategy {
@@ -35,9 +39,9 @@ export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrat
         await this._internal.sendBreakpointsToClient(new BreakpointsUpdate([], [breakpointWizard], remainingBreakpoints));
     }
 
-    public onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent): void {
-        const breakpoint = this._idToBreakpoint.get(breakpointStatusChanged.body.breakpoint.id);
-        this.currentBreakpointsMapping.setAndReplaceIfExist(breakpoint, breakpointStatusChanged.body.breakpoint);
+    public onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void {
+        const breakpoint = this._idToBreakpoint.get(breakpointStatusChanged.breakpoint.id);
+        this.currentBreakpointsMapping.setAndReplaceIfExist(breakpoint, breakpointStatusChanged.breakpoint);
     }
 
     public assertIsVerified(breakpoint: BreakpointWizard): void {
@@ -48,8 +52,12 @@ export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrat
         await this._breakpointsAssertions.waitUntilVerified(breakpoint);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void> {
-        await this._breakpointsAssertions.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, expectedStackTrace);
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+        await this._breakpointsAssertions.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, verifications);
+    }
+
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+        await this._breakpointsAssertions.assertIsHitThenResume(breakpoint, verifications);
     }
 
     private currentBreakpoints(): BreakpointWizard[] {

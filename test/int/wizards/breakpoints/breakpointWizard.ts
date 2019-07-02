@@ -3,13 +3,14 @@ import { IBPActionWhenHit } from '../../core-v2/chrome/internal/breakpoints/bpAc
 import { InternalFileBreakpointsWizard } from './implementation/internalFileBreakpointsWizard';
 import { RemoveProperty } from '../../core-v2/typeUtils';
 import { DebugProtocol } from 'vscode-debugprotocol';
+import { IVerifications } from './implementation/breakpointsAssertions';
 
 export class BreakpointWizard {
     private _state: IBreakpointSetOrUnsetState = new BreakpointUnsetState(this, this._internal, this.changeStateFunction());
 
     public constructor(
         private readonly _internal: InternalFileBreakpointsWizard, public readonly position: Position,
-        public readonly actionWhenHit: IBPActionWhenHit, public readonly name: string) { }
+        public readonly actionWhenHit: IBPActionWhenHit, public readonly name: string, public readonly boundPosition: Position) { }
 
     public async setThenWaitForVerifiedThenValidate(): Promise<BreakpointWizard> {
         await this.setWithoutVerifying();
@@ -33,8 +34,13 @@ export class BreakpointWizard {
         return this;
     }
 
-    public async assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<BreakpointWizard> {
-        await this._state.assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit, expectedStackTrace);
+    public async assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications = {}): Promise<BreakpointWizard> {
+        await this._state.assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit, verifications);
+        return this;
+    }
+
+    public async assertIsHitThenResume(verifications: IVerifications) {
+        await this._state.assertIsHitThenResume(verifications);
         return this;
     }
 
@@ -59,7 +65,8 @@ export type ChangeBreakpointWizardState = (newState: IBreakpointSetOrUnsetState)
 export interface IBreakpointSetOrUnsetState {
     set(): Promise<void>;
     unset(): Promise<void>;
-    assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void>;
+    assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void>;
+    assertIsHitThenResume(verifications: IVerifications): Promise<void>;
     assertIsVerified(): void;
     waitUntilVerified(): Promise<void>;
 }
@@ -80,8 +87,23 @@ class BreakpointSetState implements IBreakpointSetOrUnsetState {
         this._changeState(new BreakpointUnsetState(this._breakpoint, this._internal, this._changeState));
     }
 
-    public assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void> {
-        return this._internal.assertIsHitThenResumeWhen(this._breakpoint, lastActionToMakeBreakpointHit, expectedStackTrace);
+    /**
+     * This method is intended to avoid hangs when performing a puppeteer action that will get blocked while the debuggee hits a breakpoint.
+     *
+     * The method will execute the puppeteer action, verify that the breakpoint is hit, and afterwards verify that the puppeteer action was properly finished.
+     *
+     * More details:
+     * The method will also verify that the pause was in the exact locatio that the breakpoint is located, and any other verifications specified in the verifications parameter
+     */
+    public assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+        return this._internal.assertIsHitThenResumeWhen(this._breakpoint, lastActionToMakeBreakpointHit, verifications);
+    }
+
+    /**
+     * Verify that the debuggee is paused due to this breakpoint, and perform a customizable list of extra verifications
+     */
+    public assertIsHitThenResume(verifications: IVerifications): Promise<void> {
+        return this._internal.assertIsHitThenResume(this._breakpoint, verifications);
     }
 
     public assertIsVerified(): void {
@@ -109,7 +131,11 @@ export class BreakpointUnsetState implements IBreakpointSetOrUnsetState {
         throw new Error(`Can't unset a breakpoint that is already unset`);
     }
 
-    public assertIsHitThenResumeWhen(_lastActionToMakeBreakpointHit: () => Promise<void>, _expectedStackTrace: string): Promise<void> {
+    public assertIsHitThenResumeWhen(_lastActionToMakeBreakpointHit: () => Promise<void>, _verifications: IVerifications): Promise<void> {
+        throw new Error(`Can't expect to hit a breakpoint that is unset`);
+    }
+
+    public assertIsHitThenResume(_verifications: IVerifications): Promise<void> {
         throw new Error(`Can't expect to hit a breakpoint that is unset`);
     }
 

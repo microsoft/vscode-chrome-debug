@@ -80,21 +80,21 @@ suite('Utils', () => {
         });
     });
 
-    suite('getTargetFilter()', () => {
-        test('defaultTargetFilter', () => {
-            const {defaultTargetFilter} = getUtils();
-            const targets = [{type: 'page'}, {type: 'webview'}];
-            assert.deepEqual(targets.filter(defaultTargetFilter), [{type: 'page'}]);
-        });
+    // suite('getTargetFilter()', () => {
+    //     test('defaultTargetFilter', () => {
+    //         const {defaultTargetFilter} = getUtils();
+    //         const targets = [{type: 'page'}, {type: 'webview'}];
+    //         assert.deepEqual(targets.filter(defaultTargetFilter), [{type: 'page'}]);
+    //     });
 
-        test('getTargetFilter', () => {
-            const {getTargetFilter} = getUtils();
-            const targets = [{type: 'page'}, {type: 'webview'}];
-            assert.deepEqual(targets.filter(getTargetFilter(['page'])), [{type: 'page'}]);
-            assert.deepEqual(targets.filter(getTargetFilter(['webview'])), [{type: 'webview'}]);
-            assert.deepEqual(targets.filter(getTargetFilter(['page', 'webview'])), targets);
-            // Falsy targetTypes should effectively disable filtering.
-            assert.deepEqual(targets.filter(getTargetFilter()), targets);
-        });
-    });
+    //     test('getTargetFilter', () => {
+    //         const {getTargetFilter} = getUtils();
+    //         const targets = [{type: 'page'}, {type: 'webview'}];
+    //         assert.deepEqual(targets.filter(getTargetFilter(['page'])), [{type: 'page'}]);
+    //         assert.deepEqual(targets.filter(getTargetFilter(['webview'])), [{type: 'webview'}]);
+    //         assert.deepEqual(targets.filter(getTargetFilter(['page', 'webview'])), targets);
+    //         // Falsy targetTypes should effectively disable filtering.
+    //         assert.deepEqual(targets.filter(getTargetFilter()), targets);
+    //     });
+    // });
 });

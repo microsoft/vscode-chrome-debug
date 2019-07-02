@@ -4,9 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as path from 'path';
+import * as puppeteer from 'puppeteer';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointLocation } from '../intTestSupport';
 import { ILaunchRequestArgs } from '../../../src/chromeDebugInterfaces';
+import { IValidatedMap } from '../core-v2/chrome/collections/validatedMap';
+import { DATA_ROOT } from '../testSetup';
 
 /*
  * A collection of supporting classes/functions for running framework tests
@@ -20,13 +23,9 @@ export interface ProjectSpecProps {
     /** The directory from which to host the project for a test */
     webRoot?: string;
     /** The outfiles directory for the test project */
-    outFiles?: string;
+    outFiles?: string[];
     /** The default launch configuration for the test project */
     launchConfig?: ILaunchRequestArgs;
-    /** Port to use for the server */
-    port?: number;
-    /** Url to use for the project */
-    url?: string;
 }
 
 /**
@@ -34,28 +33,42 @@ export interface ProjectSpecProps {
  * attached to in order to test the debug adapter)
  */
 export class TestProjectSpec {
-
-    _props: ProjectSpecProps;
+    _props: Required<ProjectSpecProps>;
     get props() { return this._props; }
 
     /**
      * @param props Parameters for the project spec. The only required param is "projectRoot", others will be set to sensible defaults
      */
-    constructor(props: ProjectSpecProps) {
-        this._props = props;
-        this._props.projectSrc = props.projectSrc || path.join(props.projectRoot, 'src');
-        this._props.webRoot = props.webRoot || props.projectRoot;
-        this._props.outFiles = props.outFiles || path.join(props.projectRoot, 'out');
-        this._props.port = props.port || 7890;
-        this._props.url = props.url || `http://localhost:${props.port}/`;
-        this._props.launchConfig = props.launchConfig || {
-            url: props.url,
-            outFiles: [props.outFiles],
-            sourceMaps: true,
-            /* TODO: get this dynamically */
-            runtimeExecutable: 'node_modules/puppeteer/.local-chromium/win64-637110/chrome-win/chrome.exe',
-            webRoot: props.webRoot
+    constructor(props: ProjectSpecProps, public readonly staticUrl?: string) {
+        const outFiles = props.outFiles || [path.join(props.projectRoot, 'out')];
+        const webRoot = props.webRoot || props.projectRoot;
+        this._props = {
+            projectRoot: props.projectRoot,
+            projectSrc: props.projectSrc || path.join(props.projectRoot, 'src'),
+            webRoot: webRoot,
+            outFiles: outFiles,
+            launchConfig: props.launchConfig || {
+                outFiles: outFiles,
+                sourceMaps: true,
+                runtimeExecutable: puppeteer.executablePath(),
+                webRoot: webRoot
+            }
         };
+    }
+
+    /**
+     * Specify project by it's location relative to the testdata folder e.g.:
+     *    - TestProjectSpec.fromTestPath('react_with_loop/dist')
+     *    - TestProjectSpec.fromTestPath('simple')
+     *
+     * The path *can only* use forward-slahes "/" as separators
+     */
+    public static fromTestPath(reversedSlashesRelativePath: string, sourceDir = 'src', staticUrl?: string): TestProjectSpec {
+        const pathComponents = reversedSlashesRelativePath.split('/');
+        const projectAbsolutePath = path.join(...[DATA_ROOT].concat(pathComponents));
+        const projectSrc = path.join(projectAbsolutePath, sourceDir);
+        let props: ProjectSpecProps = { projectRoot: projectAbsolutePath, projectSrc };
+        return new TestProjectSpec(props, staticUrl);
     }
 
     /**
@@ -72,9 +85,48 @@ export class TestProjectSpec {
  */
 export interface FrameworkTestContext {
     /** The test project specs for the currently executing test suite */
-    testSpec: TestProjectSpec;
+    readonly testSpec: TestProjectSpec;
     /** A mapping of labels set in source files to a breakpoint location for a test */
-    breakpointLabels?: Map<string, BreakpointLocation>;
+    readonly breakpointLabels: IValidatedMap<string, BreakpointLocation>;
     /** The debug adapter test support client */
-    debugClient?: ExtendedDebugClient;
+    readonly debugClient: ExtendedDebugClient;
+}
+
+export class ReassignableFrameworkTestContext implements FrameworkTestContext {
+    private _wrapped: FrameworkTestContext = new NotInitializedFrameworkTestContext();
+
+    public get testSpec(): TestProjectSpec {
+        return this._wrapped.testSpec;
+    }
+
+    public get breakpointLabels(): IValidatedMap<string, BreakpointLocation> {
+        return this._wrapped.breakpointLabels;
+    }
+
+    public get debugClient(): ExtendedDebugClient {
+        return this._wrapped.debugClient;
+    }
+
+    public reassignTo(newWrapped: FrameworkTestContext): this {
+        this._wrapped = newWrapped;
+        return this;
+    }
+}
+
+export class NotInitializedFrameworkTestContext implements FrameworkTestContext {
+    public get testSpec(): TestProjectSpec {
+        return this.throwNotInitializedException();
+    }
+
+    public get breakpointLabels(): IValidatedMap<string, BreakpointLocation> {
+        return this.throwNotInitializedException();
+    }
+
+    public get debugClient(): ExtendedDebugClient {
+        return this.throwNotInitializedException();
+    }
+
+    private throwNotInitializedException(): never {
+        throw new Error(`This test context hasn't been initialized yet. This is probably a bug in the tests`);
+    }
 }

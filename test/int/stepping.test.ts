@@ -9,26 +9,28 @@ import { createServer } from 'http-server';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
+import { HttpOrHttpsServer } from './types/server';
 
 suite('Stepping', () => {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;
-    setup(() => {
-        return testSetup.setup()
+    setup(function () {
+        return testSetup.setup(this)
             .then(_dc => dc = _dc);
     });
 
-    let server: any;
-    teardown(() => {
+    let server: HttpOrHttpsServer | null;
+    teardown(async () => {
         if (server) {
-            server.close();
+            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+            server = null;
         }
 
-        return testSetup.teardown();
+        await testSetup.teardown();
     });
 
-    suite('skipFiles', () => {
+    suite.skip('skipFiles', () => {
         test('when generated script is skipped via regex, the source can be un-skipped', async () => {
             const testProjectRoot = path.join(DATA_ROOT, 'calls-between-merged-files');
             const sourceA = path.join(testProjectRoot, 'sourceA.ts');

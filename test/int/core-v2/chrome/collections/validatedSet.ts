@@ -15,7 +15,9 @@ export class ValidatedSet<K> implements IValidatedSet<K> {
     public constructor(iterable: Iterable<K>);
     public constructor(values?: ReadonlyArray<K>);
     public constructor(valuesOrIterable?: ReadonlyArray<K> | undefined | Iterable<K>) {
-        this._wrappedSet = new Set(valuesOrIterable);
+        this._wrappedSet = valuesOrIterable
+            ? new Set(valuesOrIterable)
+            : new Set();
     }
 
     public get size(): number {

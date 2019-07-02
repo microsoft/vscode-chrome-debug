@@ -37,7 +37,8 @@
                 "--timeout", "999999",
                 "--colors",
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
-                "${workspaceFolder}/out/test/int/*.test.js"
+                "${workspaceFolder}/out/test/int/**/*.test.js",
+                "--grep", "Variables scopes global"
             ],
             "skipFiles": ["<node_internals>/**"],
             "outFiles": [

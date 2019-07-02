@@ -16,3 +16,7 @@ export function isNotUndefined<T>(object: T | undefined): object is T {
 export interface Array<T> {
     filter<U extends T>(predicate: (element: T) => element is U): U[];
 }
+
+export type Replace<T, R extends keyof T, N> = {
+    [K in keyof T]: K extends R ? N : T[K];
+};
