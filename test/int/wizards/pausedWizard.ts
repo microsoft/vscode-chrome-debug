@@ -67,25 +67,6 @@ export class PausedWizard {
         });
     }
 
-    /** Wait and block until the debuggee is paused on an unhandled promise */
-    public async waitUntilPausedOnPromiseRejection(exceptionMessage: string): Promise<void> {
-        return this.waitAndConsumePausedEvent(async pauseInfo => {
-            expect(pauseInfo.description).to.equal('Paused on promise rejection');
-            expect(pauseInfo.reason).to.equal('exception');
-
-            const exceptionInfo = await this._client.exceptionInfoRequest({ threadId: THREAD_ID });
-            expect(exceptionInfo.success).to.equal(true);
-            expect(exceptionInfo.body.breakMode).to.equal('unhandled');
-            expect(exceptionInfo.body.description).to.equal(undefined);
-            expect(exceptionInfo.body.details).to.not.equal(undefined);
-            expect(exceptionInfo.body.details!.message).to.equal(exceptionMessage);
-            expect(exceptionInfo.body.exceptionId).to.equal('string');
-
-            // formattedDescription is a VS-specific property
-            expect((<any>exceptionInfo.body.details).formattedDescription).to.equal(exceptionMessage);
-        });
-    }
-
     /** Wait and block until the debuggee is paused, and then perform the specified action with the pause event's body */
     public async waitAndConsumePausedEvent(actionWithPausedInfo: (pausedInfo: DebugProtocol.StoppedEvent['body']) => void): Promise<void> {
         await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Paused);
