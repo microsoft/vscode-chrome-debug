@@ -13,6 +13,7 @@
   },
   "publisher": "msjsdiag",
   "bugs": "https://github.com/microsoft/vscode-chrome-debug/issues",
+  "extensionKind": "ui",
   "engines": {
     "vscode": "^1.17.0"
   },
@@ -27,7 +28,7 @@
     "reflect-metadata": "^0.1.13",
     "vscode-chrome-debug-core": "git+https://github.com/Microsoft/vscode-chrome-debug-core.git#v2",
     "vscode-debugadapter": "^1.32.1",
-    "vscode-nls": "^4.0.0",
+    "vscode-nls": "^4.1.1",
     "vscode-uri": "^1.0.6"
   },
   "devDependencies": {
@@ -62,7 +63,7 @@
     "mocha-junit-reporter": "^1.21.0",
     "mocha-multi-reporters": "^1.1.7",
     "mockery": "^1.7.0",
-    "puppeteer": "^1.13.0",
+    "puppeteer": "^1.17.0",
     "request-promise-native": "^1.0.7",
     "source-map-support": "^0.5.11",
     "tmp": "0.0.31",

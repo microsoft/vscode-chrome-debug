@@ -1,3 +1,7 @@
+/*---------------------------------------------------------
+ * Copyright (C) Microsoft Corporation. All rights reserved.
+ *--------------------------------------------------------*/
+
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from './testSetup';
