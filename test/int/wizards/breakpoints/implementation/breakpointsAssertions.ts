@@ -15,10 +15,12 @@ import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAss
 import { StackTraceStringAssertions } from './stackTraceStringAssertions';
 import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
 import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
+import { PromiseOrNot } from 'vscode-chrome-debug-core';
 
 use(chaiString);
 
-export interface IVerifications {
+export interface IVerificationsAndAction {
+    action?: () => PromiseOrNot<void>;
     variables?: IExpectedVariables;
     stackTrace?: string | ExpectedFrame[];
     stackFrameFormat?: DebugProtocol.StackFrameFormat;
@@ -50,7 +52,7 @@ export class BreakpointsAssertions {
         await waitUntilReadyWithTimeout(() => this.currentBreakpointsMapping.get(breakpoint).verified);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
         const actionResult = lastActionToMakeBreakpointHit();
 
         await this.assertIsHitThenResume(breakpoint, verifications);
@@ -58,7 +60,7 @@ export class BreakpointsAssertions {
         await actionResult;
     }
 
-    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void> {
         await this._breakpointsWizard.waitAndConsumePausedEvent(breakpoint);
 
         const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
@@ -76,6 +78,10 @@ export class BreakpointsAssertions {
 
         if (verifications.variables !== undefined) {
             await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, stackTraceFrames[0]), verifications.variables);
+        }
+
+        if (verifications.action !== undefined) {
+            await verifications.action();
         }
 
         await this._breakpointsWizard.resume();

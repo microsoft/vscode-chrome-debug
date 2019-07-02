@@ -6,7 +6,7 @@
 import { BreakpointWizard } from '../breakpointWizard';
 import { ValidatedMap } from '../../../core-v2/chrome/collections/validatedMap';
 import { IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId } from './internalFileBreakpointsWizard';
-import { BreakpointsAssertions, IVerifications } from './breakpointsAssertions';
+import { BreakpointsAssertions, IVerificationsAndAction } from './breakpointsAssertions';
 import { BreakpointsWizard } from '../breakpointsWizard';
 
 export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrategy {
@@ -52,11 +52,11 @@ export class PerformChangesImmediatelyState implements IBreakpointsBatchingStrat
         await this._breakpointsAssertions.waitUntilVerified(breakpoint);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
         await this._breakpointsAssertions.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, verifications);
     }
 
-    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void> {
         await this._breakpointsAssertions.assertIsHitThenResume(breakpoint, verifications);
     }
 
