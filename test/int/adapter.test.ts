@@ -17,6 +17,7 @@ import { expect } from 'chai';
 import { killAllChrome } from '../testUtils';
 import { IAttachRequestArgs } from 'vscode-chrome-debug-core';
 import { getDebugAdapterLogFilePath } from './utils/logging';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -57,9 +58,7 @@ suite('Chrome Debug Adapter etc', () => {
         setup(() => {
 
             server = createServer({ root: testProjectRoot });
-            server.listen(7890, '127.0.0.1', 0, (e) => {
-                console.log('heres a blub: ' + e);
-            });
+            server.listen(7890);
         });
 
         teardown(() => {
@@ -98,25 +97,6 @@ suite('Chrome Debug Adapter etc', () => {
             ]);
         });
 
-        test('Should hit breakpoint even if webRoot has unexpected case all uppercase for VisualStudio', async () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-            const breakFile = path.join(testProjectRoot, 'src/script.js');
-            const DEBUGGER_LINE = 3;
-
-            await dc.initializeRequest({
-                adapterID: 'chrome',
-                clientID: 'visualstudio',
-                linesStartAt1: true,
-                columnsStartAt1: true,
-                pathFormat: 'path'
-            });
-            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase() } as any);
-            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
-            await dc.configurationDoneRequest();
-            await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
-
-        });
-
         const testTitle = 'Should attach to existing instance of chrome and break on debugger statement';
         test(testTitle, async () => {
             const fullTestTitle = `Chrome Debug Adapter etc launch ${testTitle}`;
@@ -143,9 +123,8 @@ suite('Chrome Debug Adapter etc', () => {
         });
 
         test('Should hit breakpoint even if webRoot has unexpected case all lowercase for VisualStudio', async () => {
-            const testProjectRoot = path.join(DATA_ROOT, 'breakOnLoad_javaScript');
-            const breakFile = path.join(testProjectRoot, 'src/script.js');
-            const DEBUGGER_LINE = 3;
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
+            const DEBUGGER_LINE = 2;
 
             await dc.initializeRequest({
                 adapterID: 'chrome',
@@ -154,11 +133,31 @@ suite('Chrome Debug Adapter etc', () => {
                 columnsStartAt1: true,
                 pathFormat: 'path'
             });
-            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase() } as any);
+
+            await dc.launchRequest( <DebugProtocol.LaunchRequestArguments>{ url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase(), runtimeExecutable: puppeteer.executablePath() });
             await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
             await dc.configurationDoneRequest();
-            await dc.assertStoppedLocation('breakpoint', { path: breakFile, line: DEBUGGER_LINE } );
-	});
+            await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
+        });
+
+        test('Should hit breakpoint even if webRoot has unexpected case all uppercase for VisualStudio', async () => {
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
+            const DEBUGGER_LINE = 2;
+
+            await dc.initializeRequest({
+                adapterID: 'chrome',
+                clientID: 'visualstudio',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                pathFormat: 'path'
+            });
+
+            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase(), runtimeExecutable: puppeteer.executablePath() } as any);
+            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+            await dc.configurationDoneRequest();
+            await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
+
+        });
 
         /**
          * This test is baselining behvaior from V1 around what happens when the adapter tries to launch when

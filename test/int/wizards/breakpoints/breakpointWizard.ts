@@ -4,6 +4,7 @@ import { InternalFileBreakpointsWizard } from './implementation/internalFileBrea
 import { RemoveProperty } from '../../core-v2/typeUtils';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { IVerifications } from './implementation/breakpointsAssertions';
+import { isThisV2 } from '../../testSetup';
 
 export class BreakpointWizard {
     private _state: IBreakpointSetOrUnsetState = new BreakpointUnsetState(this, this._internal, this.changeStateFunction());
@@ -14,8 +15,10 @@ export class BreakpointWizard {
 
     public async setThenWaitForVerifiedThenValidate(): Promise<BreakpointWizard> {
         await this.setWithoutVerifying();
-        await this.waitUntilVerified();
-        this.assertIsVerified();
+        if(isThisV2) { // this will hang indefinetly on V1 in certain cases, particularly hit count bps with invalid condiditions
+            await this.waitUntilVerified();
+            this.assertIsVerified();
+        }
         return this;
     }
 

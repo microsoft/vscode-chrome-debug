@@ -30,7 +30,9 @@ export class PausedWizard {
 
     private constructor(private readonly _client: ExtendedDebugClient) {
         this._client.on('stopped', stopped => this.onEvent(stopped));
-        this._client.on('continued', continued => this.onEvent(continued));
+        if(isThisV2) { // Don't bother subscribing on v1, as v1 sends more continues than strictly necessary
+            this._client.on('continued', continued => this.onEvent(continued));
+        }
     }
 
     private onEvent(continued: any) {
@@ -50,8 +52,10 @@ export class PausedWizard {
      * @param millisecondsToWaitForPauses How much time to wait for pauses
      */
     public async waitAndConsumeResumedEvent(): Promise<void> {
-        await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Resumed);
-        this.markNextEventAsConsumed('continued');
+        if(isThisV2) {
+            await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Resumed);
+            this.markNextEventAsConsumed('continued');
+        }
     }
 
     /** Return whether the debuggee is currently paused */
@@ -120,7 +124,9 @@ export class PausedWizard {
 
     private validateNoMoreEventsIfSet(event: DebugProtocol.ContinuedEvent | DebugProtocol.StoppedEvent): void {
         if (this._noMoreEventsExpected) {
-            throw new Error(`Received an event after it was signaled that no more events were expected: ${JSON.stringify(event)}`);
+            if(isThisV2) {
+                throw new Error(`Received an event after it was signaled that no more events were expected: ${JSON.stringify(event)}`);
+            } //no-op this for V1
         }
     }
 
