@@ -1,3 +1,6 @@
+## 4.11.5
+* Fix remote debugging issue - [#867](https://github.com/microsoft/vscode-chrome-debug/issues/867)
+
 ## 4.11.4
 * Fix debugging in a remote window with chrome-debug as a UI extension - [#832](https://github.com/microsoft/vscode-chrome-debug/issues/832)
 

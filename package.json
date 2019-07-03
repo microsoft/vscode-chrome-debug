@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "4.11.4",
+  "version": "4.11.6",
   "icon": "images/icon.png",
   "description": "%extension.description%",
   "author": {
@@ -25,7 +25,7 @@
   ],
   "license": "SEE LICENSE IN LICENSE.txt",
   "dependencies": {
-    "vscode-chrome-debug-core": "^6.7.50",
+    "vscode-chrome-debug-core": "^6.7.51",
     "vscode-debugadapter": "^1.32.1",
     "vscode-nls": "^4.1.1"
   },
