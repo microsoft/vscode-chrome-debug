@@ -6,7 +6,7 @@ import { ValidatedMap } from '../../core-v2/chrome/collections/validatedMap';
 import { wrapWithMethodLogger } from '../../core-v2/chrome/logging/methodsCalledLogger';
 import { FileBreakpointsWizard } from './fileBreakpointsWizard';
 import { BreakpointWizard } from './breakpointWizard';
-import { expect } from 'chai';
+import { expect } from '../../utils/customChai';
 import { PausedWizard } from '../pausedWizard';
 
 export class BreakpointsWizard {

@@ -10,7 +10,7 @@ import { StackFrameWizard } from './stackFrameWizard';
 import { VariablesVerifier } from './variablesVerifier';
 import { ValidatedMap } from '../../core-v2/chrome/collections/validatedMap';
 import { trimWhitespaceAndComments } from '../breakpoints/implementation/printedTestInputl';
-import { expect } from 'chai';
+import { expect } from '../../utils/customChai';
 import { printVariables } from './variablesPrinting';
 
 export interface VariablePrintedProperties {

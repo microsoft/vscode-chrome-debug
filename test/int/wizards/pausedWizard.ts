@@ -9,7 +9,7 @@ import { logger } from 'vscode-debugadapter';
 import { utils } from 'vscode-chrome-debug-core';
 import { isThisV2 } from '../testSetup';
 import { waitUntilReadyWithTimeout } from '../utils/waitUntilReadyWithTimeout';
-import { expect } from 'chai';
+import { expect } from '../utils/customChai';
 import { ValidatedMap } from '../core-v2/chrome/collections/validatedMap';
 import { wrapWithMethodLogger } from '../core-v2/chrome/logging/methodsCalledLogger';
 

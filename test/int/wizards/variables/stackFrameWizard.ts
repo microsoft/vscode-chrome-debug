@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { expect } from 'chai';
+import { expect } from '../../utils/customChai';
 import * as _ from 'lodash';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { THREAD_ID, ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
