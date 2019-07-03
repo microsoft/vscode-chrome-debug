@@ -11,7 +11,7 @@ import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 
 suite('modify variable', function () {
     const testSpec = TestProjectSpec.fromTestPath('featuresTests/setVariable');
-    testUsing('local', context => LaunchProject.create(context, testSpec), async (launchProject) => {
+    testUsing('local', context => LaunchProject.launch(context, testSpec), async (launchProject) => {
         const variables = new VariablesWizard(launchProject.debugClient);
         const breakpoints = BreakpointsWizard.create(launchProject.debugClient, testSpec).at('../app.ts');
         const changeShouldExitBreakpoint = await breakpoints.breakpoint({ text: `console.log('Change shouldExit value here')` });

@@ -4,15 +4,13 @@
 
 import * as getPort from 'get-port';
 import { IFixture } from '../fixtures/fixture';
-import { launchTestAdapter } from '../intTestSupport';
+import { launchTestAdapter, IScenarioConfiguration, IDebugAdapterCallbacks } from '../intTestSupport';
 import { ExtendedDebugClient } from 'vscode-chrome-debug-core-testsupport';
-import { connectPuppeteer, getPageByUrl } from './puppeteerSupport';
+import { connectPuppeteer, getPageByUrl, launchPuppeteer } from './puppeteerSupport';
 import { logCallsTo } from '../utils/logging';
 import { isThisV1 } from '../testSetup';
 import { Browser, Page } from 'puppeteer';
-import { ILaunchRequestArgs, PromiseOrNot } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-debugadapter';
-import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 /**
  * Launch the debug adapter using the Puppeteer version of chrome, and then connect to it
@@ -22,15 +20,27 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 export class LaunchPuppeteer implements IFixture {
     public constructor(public readonly browser: Browser, public readonly page: Page) { }
 
-    public static async create(
-        debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs,
-        configureDebuggee: (client: DebugClient) => PromiseOrNot<unknown> = () => Promise.resolve()): Promise<LaunchPuppeteer> {
+    public static async start(
+        debugClient: ExtendedDebugClient, daConfig: IScenarioConfiguration, chromeArgs: string[] = [],
+        callbacks: IDebugAdapterCallbacks): Promise<LaunchPuppeteer> {
         const daPort = await getPort();
         logger.log(`About to launch debug-adapter at port: ${daPort}`);
-        await launchTestAdapter(debugClient, Object.assign({}, launchConfig, { port: daPort }), configureDebuggee);
-        const browser = await connectPuppeteer(daPort);
 
-        const page = logCallsTo(await getPageByUrl(browser, launchConfig.url!), 'PuppeteerPage');
+        let browser: Browser;
+        if (daConfig.scenario === 'launch') {
+            await launchTestAdapter(debugClient, Object.assign({}, daConfig, { port: daPort }), callbacks);
+            browser = await connectPuppeteer(daPort);
+        } else {
+            browser = await launchPuppeteer(daPort, chromeArgs);
+
+            // We want to attach after the page is fully loaded, and things happened, to simulate a real attach scenario
+            const firstPage = (await browser.pages())[0];
+            await firstPage.waitForNavigation();
+
+            await launchTestAdapter(debugClient, Object.assign({}, daConfig, { port: daPort }), callbacks);
+        }
+
+        const page = logCallsTo(await getPageByUrl(browser, daConfig.url!), 'PuppeteerPage');
 
         // This short wait appears to be necessary to completely avoid a race condition in V1 (tried several other
         // strategies to wait deterministically for all scripts to be loaded and parsed, but have been unsuccessful so far)
@@ -53,7 +63,7 @@ export class LaunchPuppeteer implements IFixture {
         } catch (exception) {
             logger.log(`Failed to close puppeteer: ${exception}`);
         }
-     }
+    }
 
 
     public toString(): string {

@@ -13,8 +13,8 @@ import { ITestCallbackContext, IBeforeAndAfterContext } from 'mocha';
 import { URL } from 'url';
 import { PausedWizard } from '../wizards/pausedWizard';
 import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
-import { PromiseOrNot } from 'vscode-chrome-debug-core';
-import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { IScenarioConfiguration, IDebugAdapterCallbacks } from '../intTestSupport';
+import { ILaunchRequestArgs, IAttachRequestArgs } from 'vscode-chrome-debug-core';
 
 /** Perform all the steps neccesary to launch a particular project such as:
  *    - Default fixture/setup
@@ -29,9 +29,24 @@ export class LaunchProject implements IFixture {
         public readonly breakpoints: BreakpointsWizard,
         private readonly _launchPuppeteer: LaunchPuppeteer) { }
 
-    public static async create(
-        testContext: IBeforeAndAfterContext | ITestCallbackContext, testSpec: TestProjectSpec,
-        configureDebuggee: (client: DebugClient) => PromiseOrNot<unknown> = () => Promise.resolve()): Promise<LaunchProject> {
+    public static async launch(
+        testContext: IBeforeAndAfterContext | ITestCallbackContext,
+        testSpec: TestProjectSpec,
+        launchConfig: ILaunchRequestArgs = {},
+        callbacks: IDebugAdapterCallbacks = {}): Promise<LaunchProject> {
+        return this.start(testContext, testSpec, {...launchConfig, scenario: 'launch'}, callbacks);
+    }
+
+    public static async attach(
+        testContext: IBeforeAndAfterContext | ITestCallbackContext,
+        testSpec: TestProjectSpec,
+        attachConfig: IAttachRequestArgs = { port: 0 },
+        callbacks: IDebugAdapterCallbacks = {}): Promise<LaunchProject> {
+        return this.start(testContext, testSpec, {...attachConfig, scenario: 'attach'}, callbacks);
+    }
+
+    public static async start(testContext: IBeforeAndAfterContext | ITestCallbackContext, testSpec: TestProjectSpec, daConfig: IScenarioConfiguration,
+                              callbacks: IDebugAdapterCallbacks): Promise<LaunchProject> {
 
         const launchWebServer = (testSpec.staticUrl) ?
             new ProvideStaticUrl(new URL(testSpec.staticUrl), testSpec) :
@@ -43,7 +58,8 @@ export class LaunchProject implements IFixture {
         const pausedWizard = PausedWizard.forClient(defaultFixture.debugClient);
         const breakpointsWizard = BreakpointsWizard.createWithPausedWizard(defaultFixture.debugClient, pausedWizard, testSpec);
 
-        const launchPuppeteer = await LaunchPuppeteer.create(defaultFixture.debugClient, launchWebServer.launchConfig, configureDebuggee);
+        const chromeArgs = daConfig.scenario === 'attach' ? [launchWebServer.url.toString()] : []; // For attach we need to launch puppeteer/chrome pointing to the web-server
+        const launchPuppeteer = await LaunchPuppeteer.start(defaultFixture.debugClient, { ...launchWebServer.launchConfig, ...daConfig }, chromeArgs, callbacks);
         return new LaunchProject(defaultFixture, launchWebServer, pausedWizard, breakpointsWizard, launchPuppeteer);
     }
 

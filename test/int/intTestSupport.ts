@@ -8,7 +8,7 @@
  */
 
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { PromiseOrNot } from 'vscode-chrome-debug-core';
+import { PromiseOrNot, ILaunchRequestArgs, IAttachRequestArgs } from 'vscode-chrome-debug-core';
 
 const ImplementsBreakpointLocation = Symbol();
 /**
@@ -32,19 +32,39 @@ export class BreakpointLocation {
     }
 }
 
+export type IScenarioConfiguration = ILaunchRequestArgs & { scenario: 'launch' } | IAttachRequestArgs & { scenario: 'attach' };
+
+export interface IDebugAdapterCallbacks {
+    registerListeners?: (client: DebugClient) => PromiseOrNot<unknown>;
+    configureDebuggee?: (client: DebugClient) => PromiseOrNot<unknown>;
+}
+
 /**
  * Launch an instance of chrome and wait for the debug adapter to initialize and attach
  * @param client Debug Client
  * @param launchConfig The launch config to use
  */
 export async function launchTestAdapter(
-    client: DebugClient, launchConfig: any,
-    configureDebuggee: (client: DebugClient) => PromiseOrNot<unknown> = () => Promise.resolve()) {
+    client: DebugClient, launchConfig: IScenarioConfiguration,
+    callbacks: IDebugAdapterCallbacks) {
 
     let init = client.waitForEvent('initialized');
-    await client.launch(launchConfig);
+
+    if (callbacks.registerListeners !== undefined) {
+        await callbacks.registerListeners(client);
+    }
+
+    if (launchConfig.scenario === 'attach') {
+        await client.initializeRequest();
+        await client.attachRequest(launchConfig);
+    } else {
+        await client.launch(launchConfig);
+    }
+
     await init;
-    await configureDebuggee(client);
+    if (callbacks.configureDebuggee !== undefined) {
+        await callbacks.configureDebuggee(client);
+    }
     await client.configurationDoneRequest();
 }
 

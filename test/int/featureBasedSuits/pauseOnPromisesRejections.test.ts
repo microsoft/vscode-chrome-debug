@@ -10,9 +10,9 @@ import { expect } from 'chai';
 import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-testUsing('Pause on promise rejections when unhandled exceptions are enabled', context => LaunchProject.create(context,
-    TestProjectSpec.fromTestPath('featuresTests/pauseOnPromisesRejections'),
-    debugClient => debugClient.setExceptionBreakpointsRequest({ 'filters': ['uncaught'] })),
+testUsing('Pause on promise rejections when unhandled exceptions are enabled', context => LaunchProject.launch(context,
+    TestProjectSpec.fromTestPath('featuresTests/pauseOnPromisesRejections'), {},
+    { configureDebuggee: debugClient => debugClient.setExceptionBreakpointsRequest({ 'filters': ['uncaught'] }) }),
     async launchProject => {
         await waitUntilPausedOnPromiseRejection(launchProject, `Things didn't go as expected`);
     });
