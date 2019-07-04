@@ -61,4 +61,4 @@ jobs:
 trigger:
   branches:
    include:
-   - roblou/v2nightly
+   - v2
