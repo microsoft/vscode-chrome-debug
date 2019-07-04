@@ -59,7 +59,7 @@ jobs:
     displayName: Publish
 
 schedules:
-- cron: '2 * * * *'
+- cron: '0 15 * * *'
   displayName: Daily midnight build
   branches:
     include:
