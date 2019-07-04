@@ -59,8 +59,9 @@ jobs:
     displayName: Publish
 
 schedules:
-- cron: '0 * * * *'
+- cron: '2 * * * *'
   displayName: Daily midnight build
   branches:
     include:
     - v2
+    - roblou/v2nightly
