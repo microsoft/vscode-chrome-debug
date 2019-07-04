@@ -13,9 +13,9 @@ jobs:
       set -ex
 
       pwd
-      ls -l
+      ls -la
 
-      node ./vsts/nightlyVersionBump.js
+      node ./.vsts/nightlyVersionBump.js
 
       if [ -f src/constants.nightly.ts ]
       then
@@ -46,13 +46,6 @@ jobs:
       command: custom
       verbose: false
       customCommand: test
-
-  - task: Npm@1
-    displayName: Integration tests
-    inputs:
-      command: custom
-      verbose: false
-      customCommand: 'run allIntTest'
 
   - task: Npm@1
     displayName: npm lint
