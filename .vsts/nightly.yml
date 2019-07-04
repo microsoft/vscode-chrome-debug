@@ -58,7 +58,9 @@ jobs:
       npx vsce publish --pat "$(marketplacekey)"
     displayName: Publish
 
-trigger:
+schedules:
+- cron: '0 * * * *'
+  displayName: Daily midnight build
   branches:
-   include:
-   - v2
+    include:
+    - v2
