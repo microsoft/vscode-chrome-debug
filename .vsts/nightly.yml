@@ -1,0 +1,67 @@
+jobs:
+- job: Nightly
+  pool:
+    vmImage: 'macOS-10.13'
+  steps:
+  - task: NodeTool@0
+    displayName: Use Node 10.x
+    inputs:
+      versionSpec: 10.x
+      checkLatest: true
+
+  - script: |
+      set -ex
+
+      pwd
+      ls -la
+
+      node ./.vsts/nightlyVersionBump.js
+
+      if [ -f src/constants.nightly.ts ]
+      then
+        mv src/constants.nightly.ts src/constants.ts
+      fi
+
+      cat README.md >> README.nightly.md
+      mv README.nightly.md README.md
+    displayName: Nightly version bump
+
+  - task: Npm@1
+    displayName: npm install
+    inputs:
+      command: custom
+      customCommand: install --unsafe-perms
+      verbose: false
+
+  - task: Npm@1
+    displayName: npm build
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run build'
+
+  - task: Npm@1
+    displayName: npm test
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: test
+
+  - task: Npm@1
+    displayName: npm lint
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run lint'
+
+  - script: |
+      npx vsce publish --pat "$(marketplacekey)"
+    displayName: Publish
+
+schedules:
+- cron: '0 15 * * *'
+  displayName: Daily midnight build
+  branches:
+    include:
+    - v2
+    - roblou/v2nightly

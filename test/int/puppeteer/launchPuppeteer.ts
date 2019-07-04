@@ -10,8 +10,9 @@ import { connectPuppeteer, getPageByUrl } from './puppeteerSupport';
 import { logCallsTo } from '../utils/logging';
 import { isThisV1 } from '../testSetup';
 import { Browser, Page } from 'puppeteer';
-import { ILaunchRequestArgs } from 'vscode-chrome-debug-core';
+import { ILaunchRequestArgs, PromiseOrNot } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-debugadapter';
+import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 /**
  * Launch the debug adapter using the Puppeteer version of chrome, and then connect to it
@@ -21,10 +22,12 @@ import { logger } from 'vscode-debugadapter';
 export class LaunchPuppeteer implements IFixture {
     public constructor(public readonly browser: Browser, public readonly page: Page) { }
 
-    public static async create(debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs): Promise<LaunchPuppeteer> {
+    public static async create(
+        debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs,
+        configureDebuggee: (client: DebugClient) => PromiseOrNot<unknown> = () => Promise.resolve()): Promise<LaunchPuppeteer> {
         const daPort = await getPort();
         logger.log(`About to launch debug-adapter at port: ${daPort}`);
-        await launchTestAdapter(debugClient, Object.assign({}, launchConfig, { port: daPort }));
+        await launchTestAdapter(debugClient, Object.assign({}, launchConfig, { port: daPort }), configureDebuggee);
         const browser = await connectPuppeteer(daPort);
 
         const page = logCallsTo(await getPageByUrl(browser, launchConfig.url!), 'PuppeteerPage');

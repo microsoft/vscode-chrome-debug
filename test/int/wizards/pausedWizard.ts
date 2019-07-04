@@ -72,7 +72,7 @@ export class PausedWizard {
         await waitUntilReadyWithTimeout(() => this.nextEventToConsume === EventToConsume.Paused);
         const pausedEvent = <DebugProtocol.StoppedEvent>this._eventsToBeConsumed[0];
         this.markNextEventAsConsumed('stopped');
-        actionWithPausedInfo(pausedEvent.body);
+        await actionWithPausedInfo(pausedEvent.body);
     }
 
     /** Wait and block until the debuggee has been resumed */

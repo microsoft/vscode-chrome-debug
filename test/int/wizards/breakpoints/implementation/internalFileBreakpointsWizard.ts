@@ -16,7 +16,7 @@ import { PerformChangesImmediatelyState } from './performChangesImmediatelyState
 import { BreakpointsUpdater } from './breakpointsUpdater';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { MakePropertyRequired, Replace } from '../../../core-v2/typeUtils';
-import { IVerifications } from './breakpointsAssertions';
+import { IVerificationsAndAction } from './breakpointsAssertions';
 
 export type BreakpointWithId = MakePropertyRequired<DebugProtocol.Breakpoint, 'id'>;
 export type BreakpointStatusChangedWithId = Replace<DebugProtocol.BreakpointEvent['body'], 'breakpoint', BreakpointWithId>;
@@ -36,8 +36,8 @@ export interface IBreakpointsBatchingStrategy {
 
     waitUntilVerified(breakpoint: BreakpointWizard): Promise<void>;
     assertIsVerified(breakpoint: BreakpointWizard): void;
-    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void>;
-    assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void>;
+    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void>;
+    assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void>;
 
     onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void;
 }
@@ -77,11 +77,11 @@ export class InternalFileBreakpointsWizard {
         this._state.assertIsVerified(breakpoint);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
         return this._state.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, verifications);
     }
 
-    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void> {
         return this._state.assertIsHitThenResume(breakpoint, verifications);
     }
 

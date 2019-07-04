@@ -121,6 +121,42 @@ suite('Chrome Debug Adapter etc', () => {
             }
         });
 
+        test('Should hit breakpoint even if webRoot has unexpected case all lowercase for VisualStudio', async () => {
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
+            const DEBUGGER_LINE = 2;
+
+            await dc.initializeRequest({
+                adapterID: 'chrome',
+                clientID: 'visualstudio',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                pathFormat: 'path'
+            });
+
+            await dc.launchRequest( { url: 'http://localhost:7890', webRoot: testProjectRoot.toLowerCase(), runtimeExecutable: puppeteer.executablePath() } as any);
+            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+            await dc.configurationDoneRequest();
+            await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
+        });
+
+        test('Should hit breakpoint even if webRoot has unexpected case all uppercase for VisualStudio', async () => {
+            const breakFile = path.join(testProjectRoot, 'src/app.ts');
+            const DEBUGGER_LINE = 2;
+
+            await dc.initializeRequest({
+                adapterID: 'chrome',
+                clientID: 'visualstudio',
+                linesStartAt1: true,
+                columnsStartAt1: true,
+                pathFormat: 'path'
+            });
+            await dc.launchRequest({ url: 'http://localhost:7890', webRoot: testProjectRoot.toUpperCase(), runtimeExecutable: puppeteer.executablePath() } as any);
+            await dc.setBreakpointsRequest({ source: { path: breakFile }, breakpoints: [{ line: DEBUGGER_LINE }] });
+            await dc.configurationDoneRequest();
+            await dc.assertStoppedLocation('debugger_statement', { path: breakFile, line: DEBUGGER_LINE } );
+
+        });
+
         /**
          * This test is baselining behvaior from V1 around what happens when the adapter tries to launch when
          * there is another running instance of chrome with --remote-debugging-port set to the same port the adapter is trying to use.

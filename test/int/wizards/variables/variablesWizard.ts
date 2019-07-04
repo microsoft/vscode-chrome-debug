@@ -92,6 +92,13 @@ export class VariablesWizard {
         }
     }
 
+    public async set(variableName: string, newValue: string): Promise<void> {
+        const stackFrame = await this.topStackFrameHelper();
+        const { scope, variable } = await stackFrame.variable(variableName);
+        const response = await this._client.setVariableRequest({ variablesReference: scope.variablesReference, name: variable.name, value: newValue });
+        expect(response.success).to.equal(true);
+    }
+
     private splitIntoScopeNameAndModifier(modifiedScopeName: keyof IExpectedVariables): [VariablesScopeName, VerificationModifier] {
         const components = modifiedScopeName.split('_');
         if (components.length > 2) {
