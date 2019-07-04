@@ -88,4 +88,21 @@ export class StackFrameWizard {
     public async variablesOfScope(scopeName: VariablesScopeName): Promise<DebugProtocol.Variable[]> {
         return singleElementOfArray(await this.variablesOfScopes([scopeName])).variables;
     }
+
+    public async variable(variableName: string): Promise<{ scope: DebugProtocol.Scope, variable: DebugProtocol.Variable }> {
+        const scopes = await this.scopes();
+        for (const scope of scopes) {
+            const variablesResponse = await this._client.variablesRequest({ variablesReference: scope!.variablesReference });
+            expect(variablesResponse.success).to.equal(true);
+            expect(variablesResponse.body).not.to.equal(undefined);
+            const variables = variablesResponse.body.variables;
+            expect(variables).not.to.equal(undefined);
+            const variable = variables.find(eachVariable => eachVariable.name === variableName);
+            if (variable !== undefined) {
+                return { scope, variable };
+            }
+        }
+
+        throw new Error(`A variable named ${variableName} wasn't found in any of the scopes of ${this}`);
+    }
 }

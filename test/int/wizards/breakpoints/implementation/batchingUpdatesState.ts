@@ -10,7 +10,7 @@ import { ValidatedSet } from '../../../core-v2/chrome/collections/validatedSet';
 import {
     IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId
 } from './internalFileBreakpointsWizard';
-import { IVerifications } from './breakpointsAssertions';
+import { IVerificationsAndAction } from './breakpointsAssertions';
 
 export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
     private readonly _breakpointsToSet = new ValidatedSet<BreakpointWizard>();
@@ -41,11 +41,11 @@ export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
         throw new Error(`Breakpoint status shouldn't be updated while doing a batch update. Is this happening due to a product or test bug?`);
     }
 
-    public async assertIsHitThenResumeWhen(_breakpoint: BreakpointWizard, _lastActionToMakeBreakpointHit: () => Promise<void>, _verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResumeWhen(_breakpoint: BreakpointWizard, _lastActionToMakeBreakpointHit: () => Promise<void>, _verifications: IVerificationsAndAction): Promise<void> {
         throw new Error(`Breakpoint shouldn't be verified while doing a batch update. Is this happening due to a product or test bug?`);
     }
 
-    public async assertIsHitThenResume(_breakpoint: BreakpointWizard, _verifications: IVerifications): Promise<void> {
+    public async assertIsHitThenResume(_breakpoint: BreakpointWizard, _verifications: IVerificationsAndAction): Promise<void> {
         throw new Error(`Breakpoint shouldn't be verified while doing a batch update. Is this happening due to a product or test bug?`);
     }
 
