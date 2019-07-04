@@ -55,7 +55,8 @@ jobs:
       customCommand: 'run lint'
 
   - script: |
-      npx vsce package
+      npx vsce publish --pat "$(marketplacekey)"
+    displayName: Publish
 
 trigger:
   branches:
