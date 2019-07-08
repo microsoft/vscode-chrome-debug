@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as util from 'util';
 import * as readline from 'readline';
 import * as path from 'path';
+import { ValidatedMap, IValidatedMap } from './core-v2/chrome/collections/validatedMap';
 
 /*
  * Contains classes and functions to find and use test breakpoint labels in test project files
@@ -16,7 +17,7 @@ import * as path from 'path';
 const readdirAsync = util.promisify(fs.readdir);
 
 const labelRegex = /(\/\/|\/\*)\s*bpLabel:\s*(.+?)\b/;
-const ignoreList = [ 'node_modules', '.git' ];
+const ignoreList = [ 'node_modules', '.git', path.join('dist', 'out'), path.join('testdata', 'react', 'src') ];
 
 /**
  * A label in a source file that tells us where to put a breakpoint for a specific test
@@ -30,15 +31,15 @@ export interface BreakpointLabel {
  * Load all breakpoint labels that exist in the 'projectRoot' directory
  * @param projectRoot Root directory for the test project
  */
-export async function loadProjectLabels(projectRoot: string): Promise<Map<string, BreakpointLocation>> {
+export async function loadProjectLabels(projectRoot: string): Promise<IValidatedMap<string, BreakpointLocation>> {
 
-    const labelMap = new Map<string, BreakpointLocation>();
+    const labelMap = new ValidatedMap<string, BreakpointLocation>();
     if (containsIgnores(projectRoot)) return labelMap;
 
     const files = await readdirAsync(projectRoot);
 
     for (let file of files) {
-        let subMap: Map<string, BreakpointLocation> = null;
+        let subMap: Map<string, BreakpointLocation> | null = null;
         const fullPath = path.join(projectRoot, file);
         if (fs.lstatSync(fullPath).isDirectory()) {
             subMap = await loadProjectLabels(fullPath);
@@ -71,7 +72,7 @@ export async function loadLabelsFromFile(filePath: string): Promise<Map<string, 
         let match = labelRegex.exec(fileLine);
 
         if (match) {
-            labelMap.set(match[2], { path: filePath, line: lineNumber });
+            labelMap.set(match[2], new BreakpointLocation(filePath, lineNumber));
         }
         lineNumber++;
     });

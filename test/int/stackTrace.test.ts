@@ -2,118 +2,39 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 
-import * as assert from 'assert';
 import * as path from 'path';
 import * as puppeteer from 'puppeteer';
 import * as testSetup from './testSetup';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { FrameworkTestContext, TestProjectSpec } from './framework/frameworkTestSupport';
 import { puppeteerSuite, puppeteerTest } from './puppeteer/puppeteerSuite';
-import { setBreakpoint } from './intTestSupport';
-import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
-import { URL } from 'url';
-import { activate } from '../../src/extension';
+import { BreakpointsWizard } from './wizards/breakpoints/breakpointsWizard';
+import { ExpectedFrame } from './wizards/breakpoints/implementation/stackTraceObjectAssertions';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
-const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT } );
-const TEST_URL = new URL(TEST_SPEC.props.url);
-
-interface ExpectedSource {
-    fileRelativePath?: string;
-    urlRelativePath?: string;
-}
-
-interface ExpectedFrame {
-    name: string;
-    line?: number;
-    column?: number;
-    source?: ExpectedSource;
-    presentationHint?: string;
-}
-
-function assertSourceMatches(actual: DebugProtocol.Source, expected: ExpectedSource, index: number) {
-    if (expected == null) {
-        assert.equal(actual, null, `Source was returned for frame ${index} but none was expected`);
-        return;
-    }
-
-    let expectedName: string;
-    let expectedPath: string;
-
-    if (expected.fileRelativePath) {
-        // Generate the expected path from the relative path and the project root
-        expectedPath = path.join(TEST_SPEC.props.projectRoot, expected.fileRelativePath);
-        expectedName = path.parse(expectedPath).base;
-    } else if (expected.urlRelativePath) {
-        // Generate the expected path from the relative path and the project url
-        const url = new URL(TEST_URL.toString()); // Clone URL so we can update it
-        url.pathname = expected.urlRelativePath;
-        expectedName = url.host;
-        expectedPath = url.toString();
-    }
-
-    assert.equal(actual.name, expectedName, `Source name for frame ${index} does not match`);
-    assert.equal(actual.path, expectedPath, `Source path for frame ${index} does not match`);
-}
-
-function assertFrameMatches(actual: DebugProtocol.StackFrame, expected: ExpectedFrame, index: number) {
-    assert.equal(actual.name, expected.name, `Name for frame ${index} does not match`);
-    assert.equal(actual.line, expected.line, `Line number for frame ${index} does not match`);
-    assert.equal(actual.column, expected.column, `Column number for frame ${index} does not match`);
-    assert.equal(actual.presentationHint, expected.presentationHint, `Presentation hint for frame ${index} does not match`);
-    assertSourceMatches(actual.source, expected.source, index);
-}
-
-function assertResponseMatches(actual: DebugProtocol.StackTraceResponse, expectedFrames: ExpectedFrame[]) {
-    // Check totalFrames property
-    assert.equal(actual.body.totalFrames, expectedFrames.length, 'Property "totalFrames" does not match number of expected frames');
-
-    // Check array length
-    const actualFrames = actual.body.stackFrames;
-    assert.equal(actualFrames.length, expectedFrames.length, 'Number of stack frames in array does not match');
-
-    // Check each frame
-    actualFrames.forEach((actualFrame, i) => {
-        assertFrameMatches(actualFrame, expectedFrames[i], i);
-    });
-}
+const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT, projectSrc: SIMPLE_PROJECT_ROOT } );
 
 interface StackTraceValidationConfig {
     suiteContext: FrameworkTestContext;
     page: puppeteer.Page;
     breakPointLabel: string;
     buttonIdToClick: string;
-    args: DebugProtocol.StackTraceArguments;
-    expectedFranes: ExpectedFrame[];
+    format?: DebugProtocol.StackFrameFormat;
+    expectedFrames: ExpectedFrame[];
 }
 
 async function validateStackTrace(config: StackTraceValidationConfig): Promise<void> {
-    // Find the breakpoint location for this test
-    const location = config.suiteContext.breakpointLabels.get(config.breakPointLabel);
-
-    // Set the breakpoint, click the button, and wait for the breakpoint to hit
     const incBtn = await config.page.waitForSelector(config.buttonIdToClick);
-    await setBreakpoint(config.suiteContext.debugClient, location);
-    const clicked = incBtn.click();
-    await config.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
 
-    // Get the stack trace
-    const stackTraceResponse = await config.suiteContext.debugClient.send('stackTrace', config.args);
+    const breakpoints = BreakpointsWizard.create(config.suiteContext.debugClient, TEST_SPEC);
+    const breakpointWizard = breakpoints.at('app.js');
 
-    // Clean up the test before assertions, in case the assertions fail
-    await config.suiteContext.debugClient.continueRequest();
-    await clicked;
+    const setStateBreakpoint = await breakpointWizard.breakpoint({
+        text: "console.log('Test stack trace here')"
+    });
 
-    // Assert the response is as expected
-    try {
-        assertResponseMatches(stackTraceResponse, config.expectedFranes);
-    } catch (e) {
-        const error: assert.AssertionError = e;
-        error.message += '\nActual stack trace response: \n' + JSON.stringify(stackTraceResponse, null, 2);
-
-        throw error;
-    }
+    await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), {stackTrace: config.expectedFrames, stackFrameFormat: config.format});
 }
 
 puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
@@ -123,37 +44,37 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID
-            },
-            expectedFranes: [
-                { name: '(anonymous function)', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+            format: {},
+            expectedFrames: [
+                { name: '(anonymous function)', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'evalCallback', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: '(eval code)', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: 'timeoutCallback', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: 'onclick', line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'onclick', line: 7, column: 49, source: { url: suiteContext.launchProject!.url }, presentationHint: 'normal'},
             ]
         });
     });
 
     puppeteerTest('Stack trace is generated with module formatting', suiteContext, async (_context, page) => {
+        const url = suiteContext.launchProject!.url;
         await validateStackTrace({
             suiteContext: suiteContext,
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    module: true
-                }
+            format: {
+                module: true
             },
-            expectedFranes: [
-                { name: '(anonymous function) [app.js]', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner [app.js]', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+            expectedFrames: [
+                { name: '(anonymous function) [app.js]', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'evalCallback [app.js]', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: `onclick [${TEST_URL.host}]`, line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: `onclick [${url.host}]`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });
@@ -164,44 +85,43 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    line: true,
-                }
+            format: {
+                line: true,
             },
-            expectedFranes: [
-                { name: '(anonymous function) Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+            expectedFrames: [
+                { name: '(anonymous function) Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'evalCallback Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: '(eval code) Line 1', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: 'timeoutCallback Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: 'onclick Line 7', line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'onclick Line 7', line: 7, column: 49, source: { url: suiteContext.launchProject!.url }, presentationHint: 'normal'},
             ]
         });
     });
 
     puppeteerTest('Stack trace is generated with all formatting', suiteContext, async (_context, page) => {
+        const url = suiteContext.launchProject!.url;
         await validateStackTrace({
             suiteContext: suiteContext,
             page: page,
             breakPointLabel: 'stackTraceBreakpoint',
             buttonIdToClick: '#button',
-            args: {
-                threadId: THREAD_ID,
-                format: {
-                    parameters: true,
-                    parameterTypes: true,
-                    parameterNames: true,
-                    line: true,
-                    module: true
-                }
+            format: {
+                parameters: true,
+                parameterTypes: true,
+                parameterNames: true,
+                line: true,
+                module: true
             },
-            expectedFranes: [
-                { name: '(anonymous function) [app.js] Line 7', line: 7, column: 9, source: { fileRelativePath: 'app.js' }},
-                { name: 'inner [app.js] Line 8', line: 8, column: 7, source: { fileRelativePath: 'app.js' }},
+            expectedFrames: [
+                { name: '(anonymous function) [app.js] Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: 'evalCallback [app.js] Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: /\(eval code\) \[.*VM.*] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
+                { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
-                { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }},
-                { name: `onclick [${TEST_URL.host}] Line 7`, line: 7, column: 49, source: { urlRelativePath: '/' }},
+                { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
+                { name: `onclick [${url.host}] Line 7`, line: 7, column: 49, source: { url }, presentationHint: 'normal'},
             ]
         });
     });

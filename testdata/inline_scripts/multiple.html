@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+
+<head>
+
+</head>
+
+<body>
+  <h1>Hello, world!</h1>
+
+
+  <script>
+
+    console.log('first script of the day!');
+
+    function blub2() {
+      console.log('EAC before');
+      let a = 0;
+      console.log('EAC after')
+      let b = 2;
+      let c = a + b; // bpLabel: inlineScript1
+    }
+
+  </script>
+
+
+
+  <input type="button" value="blub" id="actionButton" onclick="blub2()">
+
+
+  <script>
+
+    function blub3() {
+      console.log('EAC before');
+      let a = 0;
+      console.log('EAC after')
+      let b = 2;
+      let c = a + b; // bpLabel: inlineScript2
+    }
+
+  </script>
+
+<script>
+
+  function blub4() {
+    console.log('EAC before');
+    let a = 0;
+    console.log('EAC after')
+    let b = 2;
+    let c = a + b; // bpLabel: inlineScript3
+  }
+
+</script>
+
+
+
+
+<input type="button" value="blub" id="actionButton" onclick="blub4()">
+
+
+
+</body>
+
+</html>

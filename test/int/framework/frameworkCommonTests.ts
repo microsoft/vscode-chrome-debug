@@ -3,9 +3,16 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { puppeteerTest } from '../puppeteer/puppeteerSuite';
+import { puppeteerTest, PuppeteerTestContext } from '../puppeteer/puppeteerSuite';
 import { setBreakpoint } from '../intTestSupport';
-import { FrameworkTestContext } from './frameworkTestSupport';
+import { LaunchWebServer } from '../fixtures/launchWebServer';
+import { loadProjectLabels } from '../labels';
+import { TestProjectSpec } from './frameworkTestSupport';
+import { DefaultFixture } from '../fixtures/defaultFixture';
+import { MultipleFixtures } from '../fixtures/multipleFixtures';
+import * as puppeteer from 'puppeteer';
+import { PausedWizard } from '../wizards/pausedWizard';
+import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 
 /**
  * A common framework test suite that allows for easy (one-liner) testing of various
@@ -15,20 +22,11 @@ import { FrameworkTestContext } from './frameworkTestSupport';
 export class FrameworkTestSuite {
     constructor(
         private frameworkName: string,
-        private suiteContext: FrameworkTestContext
+        private suiteContext: PuppeteerTestContext
     ) {}
 
-    /**
-     * Test that we can stop on a breakpoint set before launch
-     * @param bpLabel Label for the breakpoint to set
-     */
-    testBreakOnLoad(bpLabel: string) {
-        return test(`${this.frameworkName} - Should stop on breakpoint on initial page load`, async () => {
-            const testSpec = this.suiteContext.testSpec;
-            const location = this.suiteContext.breakpointLabels.get(bpLabel);
-            await this.suiteContext.debugClient
-                .hitBreakpointUnverified(testSpec.props.launchConfig, location);
-        });
+    private get pausedWizard(): PausedWizard {
+        return this.suiteContext.launchProject!.pausedWizard;
     }
 
     /**
@@ -46,8 +44,13 @@ export class FrameworkTestSuite {
 
                 await setBreakpoint(debugClient, bpLocation);
                 const reloaded = page.reload();
+
                 await debugClient.assertStoppedLocation('breakpoint', bpLocation);
+                await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
                 await debugClient.continueRequest();
+                await this.pausedWizard.waitAndConsumeResumedEvent();
+
                 await reloaded;
             });
     }
@@ -68,10 +71,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepInLocation);
             await this.suiteContext.debugClient.stepInAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -90,10 +99,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step',  { ...location, line: location.line + 1 });
             await this.suiteContext.debugClient.nextAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -113,10 +128,16 @@ export class FrameworkTestSuite {
             await setBreakpoint(this.suiteContext.debugClient, location);
             const clicked = incBtn.click();
             await this.suiteContext.debugClient.assertStoppedLocation('breakpoint',  location);
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
             const stopOnStep = this.suiteContext.debugClient.assertStoppedLocation('step', stepOutLocation);
             await this.suiteContext.debugClient.stepOutAndStop();
+            await this.pausedWizard.waitAndConsumeResumedEvent();
+
             await stopOnStep;
-            await this.suiteContext.debugClient.continueRequest();
+            await this.pausedWizard.waitAndConsumePausedEvent(() => {});
+
+            await this.pausedWizard.resume();
             await clicked;
         });
     }
@@ -126,11 +147,56 @@ export class FrameworkTestSuite {
      * @param bpLocation
      */
     testPauseExecution() {
-        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (context, _page) => {
-            const debugClient = context.debugClient;
-            await debugClient.pauseRequest({ threadId: 0 });
-            await debugClient.waitForEvent('stopped');
-            await debugClient.continueRequest();
+        return puppeteerTest(`${this.frameworkName} - Should correctly pause execution on a pause request`, this.suiteContext, async (_context, _page) => {
+            await this.pausedWizard.pause();
+
+            // TODO: Verify we are actually pausing in the expected line
+
+            await this.pausedWizard.resume();
         });
     }
+
+    /**
+     * A generic breakpoint test. This can be used for many different types of breakpoint tests with the following structure:
+     *
+     * 1. Wait for the page to load by waiting for the selector: `waitSelectorId`
+     * 2. Set a breakpoint at `bpLabel`
+     * 3. Execute a trigger event that should cause the breakpoint to be hit using the function `trigger`
+     * 4. Assert that the breakpoint is hit on the expected location, and continue
+     *
+     * @param waitSelector an html selector to identify a resource to wait for for page load
+     * @param bpLabel
+     * @param trigger
+     */
+    testBreakpointHitsOnPageAction(description: string, waitSelector: string, file: string, bpLabel: string, trigger: (page: puppeteer.Page) => Promise<void>) {
+        return puppeteerTest(`${this.frameworkName} - ${description}`, this.suiteContext, async (context, page) => {
+            await page.waitForSelector(`${waitSelector}`);
+            const breakpoints = BreakpointsWizard.create(context.debugClient, context.testSpec);
+            const breakpointWizard = breakpoints.at(file);
+            const bp = await breakpointWizard.breakpoint({ text: bpLabel });
+            await bp.assertIsHitThenResumeWhen(() => trigger(page));
+        });
+    }
+}
+
+/**
+ * Test that we can stop on a breakpoint set before launch
+ * @param bpLabel Label for the breakpoint to set
+ */
+export function testBreakOnLoad(frameworkName: string, testSpec: TestProjectSpec, bpLabel: string) {
+    const testTitle = `${frameworkName} - Should stop on breakpoint on initial page load`;
+    return test(testTitle, async () => {
+        const defaultFixture = await DefaultFixture.createWithTitle(testTitle);
+        const launchWebServer = await LaunchWebServer.launch(testSpec);
+        const fixture = new MultipleFixtures(launchWebServer, defaultFixture);
+
+        try {
+            const breakpointLabels = await loadProjectLabels(testSpec.props.webRoot);
+            const location = breakpointLabels.get(bpLabel);
+            await defaultFixture.debugClient
+                .hitBreakpointUnverified(launchWebServer.launchConfig, location);
+        } finally {
+            await fixture.cleanUp();
+        }
+    });
 }

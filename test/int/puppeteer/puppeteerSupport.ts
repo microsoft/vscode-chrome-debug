@@ -7,8 +7,7 @@
 * Functions that make puppeteer testing easier
 */
 
-import * as util from 'util';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import * as puppeteer from 'puppeteer';
 
 /**
@@ -17,8 +16,8 @@ import * as puppeteer from 'puppeteer';
  */
 export async function connectPuppeteer(port: number): Promise<puppeteer.Browser> {
 
-    const resp = await util.promisify(request)(`http://localhost:${port}/json/version`);
-    const { webSocketDebuggerUrl } = JSON.parse(resp.body);
+    const resp = await request(`http://localhost:${port}/json/version`);
+    const { webSocketDebuggerUrl } = JSON.parse(resp);
 
     const browser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl, defaultViewport: null });
     return browser;
@@ -47,7 +46,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
     while ((current - before) < timeout) {
 
         const pages = await browser.pages();
-        const desiredPage = pages.find(p => p.url() === url);
+        const desiredPage = pages.find(p => p.url().toLowerCase() === url.toLowerCase());
         if (desiredPage) {
             return desiredPage;
         }

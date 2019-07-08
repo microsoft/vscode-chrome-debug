@@ -1,94 +1,98 @@
-import * as assert from 'assert';
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+import * as path from 'path';
 import { expect, use } from 'chai';
 import * as chaiString from 'chai-string';
 import { DebugProtocol } from 'vscode-debugprotocol';
-import { THREAD_ID } from 'vscode-chrome-debug-core-testsupport';
 import { BreakpointWizard } from '../breakpointWizard';
 import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './internalFileBreakpointsWizard';
 import { BreakpointsWizard } from '../breakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTimeout';
-import { isThisV2, isThisV1 } from '../../../testSetup';
+import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAssertions';
+import { StackTraceStringAssertions } from './stackTraceStringAssertions';
+import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
+import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
 
 use(chaiString);
 
+export interface IVerifications {
+    variables?: IExpectedVariables;
+    stackTrace?: string | ExpectedFrame[];
+    stackFrameFormat?: DebugProtocol.StackFrameFormat;
+}
+
+interface IObjectWithLocation {
+    source?: DebugProtocol.Source;
+    line?: number; // One based line number
+    column?: number; // One based colum number
+}
+
 export class BreakpointsAssertions {
+    private readonly _variablesWizard = new VariablesWizard(this._internal.client);
+
     public constructor(
         private readonly _breakpointsWizard: BreakpointsWizard,
         private readonly _internal: InternalFileBreakpointsWizard,
         public readonly currentBreakpointsMapping: CurrentBreakpointsMapping) { }
 
     public assertIsVerified(breakpoint: BreakpointWizard): void {
-        const breakpointStatus = this.currentBreakpointsMapping.get(breakpoint);
-        assert(breakpointStatus.verified, `Expected ${breakpoint} to be verified yet it wasn't: ${breakpointStatus.message}`);
         // Convert to one based to match the VS Code potocol and what VS Code does if you try to open that file at that line number
-        // const oneBasedExpectedLineNumber = breakpoint.position.lineNumber + 1;
-        // const oneBasedExpectedColumnNumber = breakpoint.position.columnNumber + 1;
-        // const filePath = this._internal.filePath;
 
-        // TODO: Re-enable this once we figure out how to deal with source-maps that do unexpected things
-        // assert.equal(breakpointStatus.line, oneBasedExpectedLineNumber,
-        //     `Expected ${breakpoint} actual line to be ${filePath}:${oneBasedExpectedLineNumber}:${oneBasedExpectedColumnNumber}`
-        //     + ` yet it was ${filePath}:${breakpointStatus.line}:${breakpointStatus.column}`);
+        const breakpointStatus = this.currentBreakpointsMapping.get(breakpoint);
+        this.assertLocationMatchesExpected(breakpointStatus, breakpoint);
+        expect(breakpointStatus.verified, `Expected ${breakpoint} to be verified yet it wasn't: ${breakpointStatus.message}`).to.equal(true);
     }
 
     public async waitUntilVerified(breakpoint: BreakpointWizard): Promise<void> {
         await waitUntilReadyWithTimeout(() => this.currentBreakpointsMapping.get(breakpoint).verified);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, expectedStackTrace: string): Promise<void> {
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerifications): Promise<void> {
         const actionResult = lastActionToMakeBreakpointHit();
-        const vsCodeStatus = this.currentBreakpointsMapping.get(breakpoint);
-        const location = { path: this._internal.filePath, line: vsCodeStatus.line, colum: vsCodeStatus.column };
 
-        // TODO: Merge the two following calls together
-        await this._internal.client.assertStoppedLocation('breakpoint', location);
-        await this._breakpointsWizard.assertIsPaused();
-
-        const stackTraceResponse = await this._internal.client.send('stackTrace', {
-            threadId: THREAD_ID,
-            format: {
-                parameters: true,
-                parameterTypes: true,
-                parameterNames: true,
-                line: true,
-                module: true
-            }
-        });
-
-        this.validateStackTraceResponse(stackTraceResponse);
-
-        const formattedExpectedStackTrace = expectedStackTrace.replace(/^\s+/gm, ''); // Remove the white space we put at the start of the lines to make the stack trace align with the code
-        const actualStackTrace = this.extractStackTrace(stackTraceResponse);
-        assert.equal(actualStackTrace, formattedExpectedStackTrace, `Expected the stack trace when hitting ${breakpoint} to be:\n${formattedExpectedStackTrace}\nyet it is:\n${actualStackTrace}`);
-
-        // const scopesResponse = await this._internal.client.scopesRequest({ frameId: stackTraceResponse.body.stackFrames[0].id });
-        /// const scopes = scopesResponse.body.scopes;
-        await this._internal.client.continueRequest();
-        if (isThisV2) {
-            // TODO: Is getting this event on V2 a bug? See: Continued Event at https://microsoft.github.io/debug-adapter-protocol/specification
-            await this._breakpointsWizard.waitUntilJustResumed();
-        }
+        await this.assertIsHitThenResume(breakpoint, verifications);
 
         await actionResult;
     }
 
-    private extractStackTrace(stackTraceResponse: DebugProtocol.StackTraceResponse): string {
-        return stackTraceResponse.body.stackFrames.map(f => this.printStackTraceFrame(f)).join('\n');
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerifications): Promise<void> {
+        await this._breakpointsWizard.waitAndConsumePausedEvent(breakpoint);
+
+        const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
+
+        // Validate that the topFrame is locate in the same place as the breakpoint
+        this.assertLocationMatchesExpected(stackTraceFrames[0], breakpoint);
+
+        if (typeof verifications.stackTrace === 'string') {
+            const assertions = new StackTraceStringAssertions(breakpoint);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
+        } else if (typeof verifications.stackTrace === 'object') {
+            const assertions = new StackTraceObjectAssertions(this._breakpointsWizard);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
+        }
+
+        if (verifications.variables !== undefined) {
+            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, stackTraceFrames[0]), verifications.variables);
+        }
+
+        await this._breakpointsWizard.resume();
     }
 
-    private printStackTraceFrame(frame: DebugProtocol.StackFrame): string {
-        let frameName = frame.name;
-        return `${frameName}:${frame.column}${frame.presentationHint && frame.presentationHint !== 'normal' ? ` (${frame.presentationHint})` : ''}`;
-    }
+    private assertLocationMatchesExpected(objectWithLocation: IObjectWithLocation, breakpoint: BreakpointWizard): void {
+        const expectedFilePath = this._internal.filePath;
 
-    private validateStackTraceResponse(stackTraceResponse: DebugProtocol.StackTraceResponse) {
-        expect(stackTraceResponse.success, `Expected the response to the stack trace request to be succesful yet it failed: ${JSON.stringify(stackTraceResponse)}`).to.equal(true);
-        expect(stackTraceResponse.body.totalFrames, `The number of stackFrames was different than the value supplied on the totalFrames field`)
-            .to.equal(stackTraceResponse.body.stackFrames.length);
-        stackTraceResponse.body.stackFrames.forEach(frame => {
-            // Warning: We don't currently validate frame.source.path
-            const expectedSourceNameAndLine = ` [${frame.source.name}] Line ${frame.line}`;
-            expect(frame.name, 'Expected the formatted name to match the source name and line supplied as individual attributes').to.endsWith(expectedSourceNameAndLine);
-        });
+        expect(objectWithLocation.source).to.not.equal(undefined);
+        expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
+        expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
+
+        const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
+        const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
+        const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
+        const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
+
+        expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
     }
 }
