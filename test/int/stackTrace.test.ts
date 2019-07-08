@@ -15,6 +15,8 @@ const DATA_ROOT = testSetup.DATA_ROOT;
 const SIMPLE_PROJECT_ROOT = path.join(DATA_ROOT, 'stackTrace');
 const TEST_SPEC = new TestProjectSpec( { projectRoot: SIMPLE_PROJECT_ROOT, projectSrc: SIMPLE_PROJECT_ROOT } );
 
+const EVAL = (testSetup.isThisV2) ? 'eval code' : 'anonymous function';
+
 interface StackTraceValidationConfig {
     suiteContext: FrameworkTestContext;
     page: puppeteer.Page;
@@ -48,9 +50,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFrames: [
                 { name: '(anonymous function)', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                ((testSetup.isThisV2) ? // V1 produces "(anonymous function)" here
-                    { name: '(eval code)', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'} :
-                    { name: '(anonymous function)', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'}),
+                { name: `(${EVAL})`, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -72,9 +72,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFrames: [
                 { name: '(anonymous function) [app.js]', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js]', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                ((testSetup.isThisV2) ? // V1 produces "(anonymous function)" here
-                    { name: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'} :
-                    { name: /\(anonymous function\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'}),
+                { name: new RegExp(`\\(${EVAL}\\) \\[VM\\d+]`), line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js]', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js]', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -95,9 +93,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFrames: [
                 { name: '(anonymous function) Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                ((testSetup.isThisV2) ? // V1 produces "(anonymous function)" here
-                    { name: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'} :
-                    { name: '(anonymous function) Line 1', line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'}),
+                { name: new RegExp(`\\(${EVAL}\\) Line 1`), line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
@@ -123,9 +119,7 @@ puppeteerSuite('Stack Traces', TEST_SPEC, (suiteContext) => {
             expectedFrames: [
                 { name: '(anonymous function) [app.js] Line 11', line: 11, column: 9, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: 'evalCallback [app.js] Line 12', line: 12, column: 7, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
-                ((testSetup.isThisV2) ? // V1 produces "(anonymous function)" here
-                    { name: /\(eval code\) \[.*VM.*]/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'} :
-                    { name: /\(anonymous function\) \[.*VM.*] Line 1/, line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'}),
+                { name: new RegExp(`\\(${EVAL}\\) \\[VM\\d+] Line 1`), line: 1, column: 1, source: { evalCode: true }, presentationHint: 'normal'},
                 { name: 'timeoutCallback [app.js] Line 6', line: 6, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
                 { name: '[ setTimeout ]', presentationHint: 'label'},
                 { name: 'buttonClick [app.js] Line 2', line: 2, column: 5, source: { fileRelativePath: 'app.js' }, presentationHint: 'normal'},
