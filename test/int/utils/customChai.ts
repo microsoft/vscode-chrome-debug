@@ -7,6 +7,7 @@
  */
 
 import * as chai from 'chai';
+import { isThisV1 } from '../testSetup';
 
 class NoopProxyHandler {
     get<T, K extends keyof T>(_target: T, _propertyKey: K, _receiver: any): any {
@@ -38,7 +39,7 @@ function customExpect(target: any, message?: string): any {
 }
 
 function defaultShouldBeNoop(_target: any, _message?: string): boolean {
-    return true;
+    return isThisV1;
 }
 
 export let shouldBeNoop = defaultShouldBeNoop;
