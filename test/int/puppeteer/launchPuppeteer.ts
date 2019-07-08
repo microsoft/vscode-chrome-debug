@@ -21,7 +21,7 @@ import { logger } from 'vscode-debugadapter';
 export class LaunchPuppeteer implements IFixture {
     public constructor(public readonly browser: Browser, public readonly page: Page) { }
 
-    public static async create(debugClient: ExtendedDebugClient, launchConfig: ILaunchRequestArgs): Promise<LaunchPuppeteer> {
+    public static async create(debugClient: ExtendedDebugClient, launchConfig: any /* TODO: investigate why launch config types differ between V1 and V2 */): Promise<LaunchPuppeteer> {
         const daPort = await getPort();
         logger.log(`About to launch debug-adapter at port: ${daPort}`);
         await launchTestAdapter(debugClient, Object.assign({}, launchConfig, { port: daPort }));

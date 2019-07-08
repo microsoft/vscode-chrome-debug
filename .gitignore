@@ -13,3 +13,4 @@ testapp/**/out/
 test-results.xml
 bin
 obj
+logs

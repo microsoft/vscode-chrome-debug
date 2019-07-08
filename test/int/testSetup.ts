@@ -18,13 +18,15 @@ import { DefaultTimeoutMultiplier } from './utils/waitUntilReadyWithTimeout';
 
 const DEBUG_ADAPTER = './out/src/chromeDebug.js';
 
-let testLaunchProps: ILaunchRequestArgs & Dictionary<unknown> | undefined;
+let testLaunchProps: any | undefined; /* TODO: investigate why launch config types differ between V1 and V2 */
 
-export const isThisV2 = true;
+export const isThisV2 = false;
 export const isThisV1 = !isThisV2;
 export const isWindows = process.platform === 'win32';
 
-function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>, testTitle: string): void {
+// Note: marking launch args as any to avoid conflicts between v1 vs v2 launch arg types
+/* TODO: investigate why launch config types differ between V1 and V2 */
+function formLaunchArgs(launchArgs: any, testTitle: string): void {
     launchArgs.trace = 'verbose';
     launchArgs.logTimestamps = true;
     launchArgs.disableNetworkCache = true;
@@ -87,8 +89,11 @@ export async function setupWithTitle(testTitle: string, port?: number, launchPro
     const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
     debugClient.defaultTimeout = DefaultTimeoutMultiplier * 10000 /*10 seconds*/;
 
-    const wrappedDebugClient = logCallsTo(debugClient, 'DebugAdapterClient');
-    return wrappedDebugClient;
+    if(isThisV2) { // The logging proxy breaks lots of tests in v1, possibly due to some race conditions exposed by the extra delay
+        const wrappedDebugClient = logCallsTo(debugClient, 'DebugAdapterClient');
+        return wrappedDebugClient;
+    }
+    return debugClient;
 }
 
 export async function teardown() {

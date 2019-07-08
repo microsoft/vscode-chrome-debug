@@ -15,6 +15,7 @@ import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAss
 import { StackTraceStringAssertions } from './stackTraceStringAssertions';
 import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
 import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
+import { isThisV2 } from '../../../testSetup';
 
 use(chaiString);
 
@@ -82,17 +83,20 @@ export class BreakpointsAssertions {
     }
 
     private assertLocationMatchesExpected(objectWithLocation: IObjectWithLocation, breakpoint: BreakpointWizard): void {
-        const expectedFilePath = this._internal.filePath;
 
-        expect(objectWithLocation.source).to.not.equal(undefined);
-        expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
-        expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
+        if(isThisV2) { // Disable this completely for v1
+            const expectedFilePath = this._internal.filePath;
 
-        const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
-        const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
-        const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
-        const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
+            expect(objectWithLocation.source).to.not.equal(undefined);
+            expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
+            expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
 
-        expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
+            const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
+            const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
+            const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
+            const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
+
+            expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
+        }
     }
 }

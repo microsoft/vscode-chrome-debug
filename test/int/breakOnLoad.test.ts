@@ -12,6 +12,8 @@ import * as testSetup from './testSetup';
 import { BreakOnLoadStrategy } from 'vscode-chrome-debug-core';
 import { HttpOrHttpsServer } from './types/server';
 
+const EXPECTED_REASON = testSetup.isThisV1 ? 'debugger_statement' : 'breakpoint';
+
 function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -100,7 +102,8 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation(EXPECTED_REASON, { path: scriptPath, line: bpLine, column: bpCol });
+
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
             }
@@ -171,7 +174,8 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation(EXPECTED_REASON, { path: scriptPath, line: bpLine, column: bpCol });
+
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
             }
@@ -208,14 +212,16 @@ function runCommonTests(breakOnLoadStrategy: BreakOnLoadStrategy) {
 
             if (breakOnLoadStrategy === 'instrument') {
                 await launchWithUrlAndSetBreakpoints(url, testProjectRoot, scriptPath, bpLine, bpCol);
-                await dc.assertStoppedLocation('breakpoint', { path: scriptPath, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation(EXPECTED_REASON, { path: scriptPath, line: bpLine, column: bpCol });
+
                 await dc.setBreakpointsRequest({
                     lines: [bpLine],
                     breakpoints: [{ line: bpLine, column: bpCol }],
                     source: { path: script2Path }
                 });
                 await dc.continueRequest();
-                await dc.assertStoppedLocation('breakpoint', { path: script2Path, line: bpLine, column: bpCol });
+                await dc.assertStoppedLocation(EXPECTED_REASON, { path: script2Path, line: bpLine, column: bpCol });
+
             } else {
                 await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
                 await dc.setBreakpointsRequest({
