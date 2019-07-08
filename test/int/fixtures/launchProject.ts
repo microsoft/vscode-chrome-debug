@@ -12,6 +12,7 @@ import { Page, Browser } from 'puppeteer';
 import { ITestCallbackContext, IBeforeAndAfterContext } from 'mocha';
 import { URL } from 'url';
 import { PausedWizard } from '../wizards/pausedWizard';
+import { BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
 import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 
@@ -25,6 +26,7 @@ export class LaunchProject implements IFixture {
         private readonly _defaultFixture: DefaultFixture,
         private readonly _launchWebServer: LaunchWebServer | ProvideStaticUrl,
         public readonly pausedWizard: PausedWizard,
+        public readonly breakpoints: BreakpointsWizard,
         private readonly _launchPuppeteer: LaunchPuppeteer) { }
 
     public static async create(
@@ -39,9 +41,10 @@ export class LaunchProject implements IFixture {
 
         // We need to create the PausedWizard before launching the debuggee to listen to all events and avoid race conditions
         const pausedWizard = PausedWizard.forClient(defaultFixture.debugClient);
+        const breakpointsWizard = BreakpointsWizard.createWithPausedWizard(defaultFixture.debugClient, pausedWizard, testSpec);
 
         const launchPuppeteer = await LaunchPuppeteer.create(defaultFixture.debugClient, launchWebServer.launchConfig, configureDebuggee);
-        return new LaunchProject(defaultFixture, launchWebServer, pausedWizard, launchPuppeteer);
+        return new LaunchProject(defaultFixture, launchWebServer, pausedWizard, breakpointsWizard, launchPuppeteer);
     }
 
     /** Client for the debug adapter being used for this test */

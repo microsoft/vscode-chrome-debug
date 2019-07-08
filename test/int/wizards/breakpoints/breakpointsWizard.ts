@@ -10,10 +10,12 @@ import { expect } from 'chai';
 import { PausedWizard } from '../pausedWizard';
 
 export class BreakpointsWizard {
-    private readonly _pausedWizard = PausedWizard.forClient(this._client);
     private readonly _pathToFileWizard = new ValidatedMap<string, InternalFileBreakpointsWizard>();
 
-    private constructor(private readonly _client: ExtendedDebugClient, private readonly _project: TestProjectSpec) {
+    private constructor(
+        private readonly _client: ExtendedDebugClient,
+        private readonly _pausedWizard: PausedWizard,
+        private readonly _project: TestProjectSpec) {
         this._client.on('breakpoint', breakpointStatusChange => this.onBreakpointStatusChange(breakpointStatusChange.body));
     }
 
@@ -22,7 +24,11 @@ export class BreakpointsWizard {
     }
 
     public static create(debugClient: ExtendedDebugClient, testProjectSpecification: TestProjectSpec): BreakpointsWizard {
-        return wrapWithMethodLogger(new this(debugClient, testProjectSpecification));
+        return this.createWithPausedWizard(debugClient, PausedWizard.forClient(debugClient), testProjectSpecification);
+    }
+
+    public static createWithPausedWizard(debugClient: ExtendedDebugClient, pausedWizard: PausedWizard, testProjectSpecification: TestProjectSpec): BreakpointsWizard {
+        return wrapWithMethodLogger(new this(debugClient, pausedWizard, testProjectSpecification));
     }
 
     public at(filePath: string): FileBreakpointsWizard {
