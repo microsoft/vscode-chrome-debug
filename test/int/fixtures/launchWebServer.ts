@@ -43,7 +43,7 @@ async function closeServer(server: HttpOrHttpsServer): Promise<void> {
  * Launch a web-server for the test project listening on the default port
  */
 export class LaunchWebServer implements IFixture {
-    private constructor(private readonly _server: HttpOrHttpsServer, private readonly _testSpec: TestProjectSpec) { }
+    private constructor(private readonly _server: HttpOrHttpsServer, public readonly testSpec: TestProjectSpec) { }
 
     public static async launch(testSpec: TestProjectSpec): Promise<LaunchWebServer> {
         return new LaunchWebServer(await createServerAsync(testSpec.props.webRoot), testSpec);
@@ -55,7 +55,7 @@ export class LaunchWebServer implements IFixture {
     }
 
     public get launchConfig(): ILaunchRequestArgs {
-        return Object.assign({}, this._testSpec.props.launchConfig, { url: this.url.toString() });
+        return Object.assign({}, this.testSpec.props.launchConfig, { url: this.url.toString() });
     }
 
     public get port(): number {
@@ -73,7 +73,7 @@ export class LaunchWebServer implements IFixture {
 
 export class ProvideStaticUrl implements IFixture {
 
-    public constructor(public readonly url: URL, private readonly testSpec: TestProjectSpec) {}
+    public constructor(public readonly url: URL, public readonly testSpec: TestProjectSpec) {}
 
     public get launchConfig(): ILaunchRequestArgs {
         return {...this.testSpec.props.launchConfig, url: this.url.href };
