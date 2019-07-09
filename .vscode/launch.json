@@ -68,7 +68,7 @@
             "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
             "env": {
                 // TEST_DA_PORT: Enable this to debug the debug-adapter while the tests are running (The test will look for a debug-adapter server on port 4712 instead of launching a new one)
-                "TEST_DA_PORT": "4712",
+                // "TEST_DA_PORT": "4712",
                 // TEST_TIMEOUT_MULTIPLIER: The tests have long timeouts for the CI server. While debugging locally it's sometimes useful to reduce the timeouts, to be able to run all the tests faster when they are failing. This value is a multiplier that will be applied to all timeouts using during the tests... (Work in progress)
                 "TEST_TIMEOUT_MULTIPLIER": "0.4",
                 // TEST_DA_HIDE_WINDOWS: Enable this to hinde the windows that the test create (e.g.: Chrome windows, and Power Shell windows)
@@ -79,7 +79,7 @@
                 "-u", "tdd",
                 "--timeout", "999999",
                 "--colors",
-                "--grep", ".html file source",
+                "--grep", "breakpoint when using an escape character",
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "${workspaceFolder}/out/test/int/**/*.test.js",
             ],

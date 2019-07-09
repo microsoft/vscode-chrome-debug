@@ -8,7 +8,7 @@ import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { LaunchProject } from '../fixtures/launchProject';
 import { utils } from 'vscode-chrome-debug-core';
 
-const testSpec = TestProjectSpec.fromTestPath('featuresTests/unusualLaunchJson/urlUsesEscapedCharacter');
+const testSpec = TestProjectSpec.fromTestPath('simple');
 const appPath = testSpec.src('../index.html');
 
 // appPathUrl will have on Windows a character escaped like file:///C%3A/myproject/index.html
@@ -18,9 +18,11 @@ suite('Unusual launch.json', () => {
     testUsing('Hit breakpoint when using an escape character in the url', context => LaunchProject.launch(context,
         testSpec.usingStaticUrl(appPathUrl)),
         async (launchProject) => {
-            const runCodeButton = await launchProject.page.waitForSelector('#runCode');
-            const breakpoint = await launchProject.breakpoints.at('../app.ts').breakpoint({ text: `console.log('line 4'); ++lineToBeExecutedNumber;` });
+            // Wait for the page to load
+            await launchProject.page.waitForSelector('#helloWorld');
 
-            await breakpoint.assertIsHitThenResumeWhen(() => runCodeButton.click());
+            // Set a breakpoint, and reload to hit the breakpoint
+            const breakpoint = await launchProject.breakpoints.at('../app.js').breakpoint({ text: `console.log('Very simple webpage');` });
+            await breakpoint.assertIsHitThenResumeWhen(() => launchProject.page.reload());
         });
 });

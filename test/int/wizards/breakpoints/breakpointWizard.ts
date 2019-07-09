@@ -34,7 +34,7 @@ export class BreakpointWizard {
         return this;
     }
 
-    public async assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction = {}): Promise<BreakpointWizard> {
+    public async assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<unknown>, verifications: IVerificationsAndAction = {}): Promise<BreakpointWizard> {
         await this._state.assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit, verifications);
         return this;
     }
@@ -65,7 +65,7 @@ export type ChangeBreakpointWizardState = (newState: IBreakpointSetOrUnsetState)
 export interface IBreakpointSetOrUnsetState {
     set(): Promise<void>;
     unset(): Promise<void>;
-    assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void>;
+    assertIsHitThenResumeWhen(lastActionToMakeBreakpointHit: () => Promise<unknown>, verifications: IVerificationsAndAction): Promise<void>;
     assertIsHitThenResume(verifications: IVerificationsAndAction): Promise<void>;
     assertIsVerified(): void;
     waitUntilVerified(): Promise<void>;
