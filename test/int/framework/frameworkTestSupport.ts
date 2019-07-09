@@ -78,6 +78,10 @@ export class TestProjectSpec {
     src(filename: string) {
         return path.join(this.props.projectSrc, filename);
     }
+
+    public usingStaticUrl(staticUrl: string): TestProjectSpec {
+        return new TestProjectSpec(this.props, staticUrl);
+    }
 }
 
 /**
