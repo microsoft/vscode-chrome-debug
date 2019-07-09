@@ -8,6 +8,7 @@ import { LaunchProject } from '../fixtures/launchProject';
 import { utils } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { isWindows } from '../testSetup';
+import { onUnhandledException } from '../utils/onUnhandledException';
 
 const waitForOutput = utils.promiseDefer();
 
@@ -17,13 +18,11 @@ const testSpec = TestProjectSpec.fromTestPath('featuresTests/attachNoUrl');
 (isWindows ? testUsing : testUsing.skip)('Attach without specifying an url parameter', context => LaunchProject.attach(context,
     testSpec, undefined, {
         registerListeners: client => {
-            client.on('output', (args: DebugProtocol.OutputEvent) => {
-                // This test tests 2 different things while attaching:
-                // 1. We don't get an unhandled error while attaching (due to Runtime.consoleAPICalled being called with a scriptId that hasn't been parsed yet)
-                if (args.body.category === 'telemetry' && args.body.output === 'error') {
-                    waitForOutput.reject(`Debug adapter had an unhandled error: ${args.body.data.exceptionMessage}`);
-                }
+            // This test tests 2 different things while attaching:
+            // 1. We don't get an unhandled error while attaching (due to Runtime.consoleAPICalled being called with a scriptId that hasn't been parsed yet)
+            onUnhandledException(client, exceptionMessage => waitForOutput.reject(exceptionMessage));
 
+            client.on('output', (args: DebugProtocol.OutputEvent) => {
                 // 2. We eventually see this console.log message, because we attached succesfully to the web-page
                 if (args.body.category === 'stdout' && args.body.output.startsWith('If you see this message, you are attached...')) {
                     // Wait 1 second to see if any unhandled errors happen while attaching to the page
