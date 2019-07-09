@@ -7,7 +7,7 @@ import { testUsing } from '../fixtures/testUsing';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { LaunchProject } from '../fixtures/launchProject';
 
-testUsing('Hit breakpoint on JavaScript when source map is invalid', context => LaunchProject.create(context,
+testUsing('Hit breakpoint on JavaScript when source map is invalid', context => LaunchProject.launch(context,
     TestProjectSpec.fromTestPath('featuresTests/invalidSourceMap')),
     async (launchProject) => {
         const runCodeButton = await launchProject.page.waitForSelector('#runCode');

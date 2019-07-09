@@ -33,8 +33,8 @@ suite('loaded sources', () => {
     });
 
     const testSpec = TestProjectSpec.fromTestPath('featuresTests/loadedSources/basicLoadedSources');
-    testUsing('we receive events for js, ts, and eval sources', context => LaunchProject.create(context, testSpec,
-        client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args))), async launchProject => {
+    testUsing('we receive events for js, ts, and eval sources', context => LaunchProject.launch(context, testSpec, {},
+        { registerListeners: client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args)) }), async launchProject => {
             await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
             expect(loadedSources.length).to.equal(4);
             expect(loadedSources[0].name).to.equal('app.js');
@@ -52,8 +52,8 @@ suite('loaded sources', () => {
         });
 
 
-    testUsing('can get dynamic JavaScript file source', context => LaunchProject.create(context, testSpec,
-        client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args))), async launchProject => {
+    testUsing('can get dynamic JavaScript file source', context => LaunchProject.launch(context, testSpec, {},
+        { registerListeners: client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args)) }), async launchProject => {
             await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
             expect(loadedSources[0].name).to.equal('app.js');
@@ -64,8 +64,8 @@ suite('loaded sources', () => {
             expect(contents.body.content).to.equal(appFileContents);
         });
 
-    testUsing('can get dynamic .html file source', context => LaunchProject.create(context, testSpec,
-        client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args))), async launchProject => {
+    testUsing('can get dynamic .html file source', context => LaunchProject.launch(context, testSpec, {},
+        { registerListeners: client => client.on('loadedSource', args => onLoadedSource(<DebugProtocol.LoadedSourceEvent>args)) }), async launchProject => {
             await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
             // We need to finish loading the .html file, so we can request it's source content

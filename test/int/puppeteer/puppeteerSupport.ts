@@ -24,6 +24,17 @@ export async function connectPuppeteer(port: number): Promise<puppeteer.Browser>
 }
 
 /**
+ * Launch puppeteer and a new instance of chrome
+ * @param port The port on which the chrome debugger is running
+ */
+export async function launchPuppeteer(port: number, chromeArgs: string[] = []): Promise<puppeteer.Browser> {
+
+    const browser = await puppeteer.launch({ headless: false, defaultViewport: null, args: chromeArgs.concat([`--remote-debugging-port=${port}`]) });
+
+    return browser;
+}
+
+/**
  * Get the first (or only) page loaded in chrome
  * @param browser Puppeteer browser object
  */
@@ -52,7 +63,7 @@ export async function getPageByUrl(browser: puppeteer.Browser, url: string, time
         }
 
         // TODO: yuck, clean up
-        await new Promise((a, _r) =>  setTimeout(() => a(), timeout / 10));
+        await new Promise((a, _r) => setTimeout(() => a(), timeout / 10));
         current = new Date().getTime();
     }
     throw `Page with url: ${url} could not be found within ${timeout}ms`;

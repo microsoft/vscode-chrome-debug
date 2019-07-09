@@ -6,7 +6,7 @@ import { testUsing } from '../fixtures/testUsing';
 // Scopes' kinds: 'global' | 'local' | 'with' | 'closure' | 'catch' | 'block' | 'script' | 'eval' | 'module'
 // TODO: Test several scopes at the same time. They can be repeated, and the order does matter
 suite('Variables scopes', function () {
-    testUsing('local', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/localScope')), async (launchProject) => {
+    testUsing('local', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/localScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -39,7 +39,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('globals', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/globalScope')), async (launchProject) => {
+    testUsing('globals', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/globalScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertNewGlobalVariariablesAre(async () => {
@@ -77,7 +77,7 @@ suite('Variables scopes', function () {
             xyz = 4 (number)`);
     });
 
-    testUsing('script', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/scriptScope')), async (launchProject) => {
+    testUsing('script', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/scriptScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -108,7 +108,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('block', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/blockScope')), async (launchProject) => {
+    testUsing('block', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/blockScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre(
@@ -142,7 +142,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('catch', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/catchScope')), async (launchProject) => {
+    testUsing('catch', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/catchScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -151,7 +151,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('closure', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/closureScope')), async (launchProject) => {
+    testUsing('closure', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/closureScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -184,7 +184,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('eval', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/evalScope')), async (launchProject) => {
+    testUsing('eval', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/evalScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -215,7 +215,7 @@ suite('Variables scopes', function () {
         );
     });
 
-    testUsing('with', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/withScope')), async (launchProject) => {
+    testUsing('with', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/withScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
@@ -253,7 +253,7 @@ suite('Variables scopes', function () {
         });
     });
 
-    testUsing('module', context => LaunchProject.create(context, TestProjectSpec.fromTestPath('variablesScopes/moduleScope')), async (launchProject) => {
+    testUsing('module', context => LaunchProject.launch(context, TestProjectSpec.fromTestPath('variablesScopes/moduleScope')), async (launchProject) => {
         await launchProject.pausedWizard.waitUntilPausedOnDebuggerStatement();
 
         await new VariablesWizard(launchProject.debugClient).assertTopFrameVariablesAre({
