@@ -9,23 +9,25 @@ import { createServer } from 'http-server';
 import * as ts from 'vscode-chrome-debug-core-testsupport';
 
 import * as testSetup from './testSetup';
+import { HttpOrHttpsServer } from './types/server';
 
 suite('Breakpoints', () => {
     const DATA_ROOT = testSetup.DATA_ROOT;
 
     let dc: ts.ExtendedDebugClient;
-    setup(() => {
-        return testSetup.setup()
+    setup(function () {
+        return testSetup.setup(this)
             .then(_dc => dc = _dc);
     });
 
-    let server: any;
-    teardown(() => {
+    let server: HttpOrHttpsServer | null;
+    teardown(async () => {
         if (server) {
-            server.close();
+            server.close(err => console.log('Error closing server in teardown: ' + (err && err.message)));
+            server = null;
         }
 
-        return testSetup.teardown();
+        await testSetup.teardown();
     });
 
     suite('Column BPs', () => {
@@ -39,6 +41,7 @@ suite('Breakpoints', () => {
             const url = 'http://localhost:7890/index.html';
 
             const bpLine = 4;
+
             const bpCol = 16;
             await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol });
         });
@@ -58,6 +61,7 @@ suite('Breakpoints', () => {
             await dc.hitBreakpointUnverified({ url, webRoot: testProjectRoot }, { path: scriptPath, line: bpLine, column: bpCol1 });
             await dc.setBreakpointsRequest({ source: { path: scriptPath }, breakpoints: [{ line: bpLine, column: bpCol2 }] });
             await dc.continueTo('breakpoint', { line: bpLine, column: bpCol2 });
+
         });
 
         test('BP col is adjusted to correct col', async () => {

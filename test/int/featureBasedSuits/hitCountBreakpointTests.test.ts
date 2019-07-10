@@ -15,23 +15,6 @@ import { BreakpointsWizard as BreakpointsWizard } from '../wizards/breakpoints/b
 import { asyncRepeatSerially } from '../utils/repeat';
 
 puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecification, (suiteContext) => {
-    const reactCounterAppBaseStack = `
-            ca [react-dom.production.min.js] Line 49:1
-            ja [react-dom.production.min.js] Line 69:1
-            ka [react-dom.production.min.js] Line 73:1
-            wa [react-dom.production.min.js] Line 140:1
-            Aa [react-dom.production.min.js] Line 169:6
-            ya [react-dom.production.min.js] Line 158:1
-            Da [react-dom.production.min.js] Line 232:1
-            Ad [react-dom.production.min.js] Line 1718:1
-            Gi [react-dom.production.min.js] Line 5990:1
-            Kb [react-dom.production.min.js] Line 660:1
-            Dd [react-dom.production.min.js] Line 1760:1
-            (anonymous function) [react-dom.production.min.js] Line 6017:1
-            push../node_modules/scheduler/cjs/scheduler.production.min.js.exports.unstable_runWithPriority [scheduler.production.min.js] Line 274:1
-            Ii [react-dom.production.min.js] Line 6016:1
-            Cd [react-dom.production.min.js] Line 1737:1`;
-
     puppeteerTest("Hit count breakpoint = 3 pauses on the button's 3rd click", suiteContext, async (_context, page) => {
         const incBtn = await page.waitForSelector('#incrementBtn');
 
@@ -39,20 +22,18 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
         const counterBreakpoints = breakpoints.at('Counter.jsx');
 
         const setStateBreakpoint = await counterBreakpoints.hitCountBreakpoint({
-            lineText: 'this.setState({ count: newval });',
+            text: 'this.setState({ count: newval });',
+            boundText: 'setState({ count: newval })',
             hitCountCondition: '% 3'
         });
 
         await asyncRepeatSerially(2, () => incBtn.click());
 
-        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 17:12
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
+        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
 
         await incBtn.click();
 
-        await breakpoints.assertNotPaused();
+        await breakpoints.waitAndAssertNoMoreEvents();
 
         await setStateBreakpoint.unset();
     });
@@ -64,40 +45,32 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
         const counterBreakpoints = breakpoints.at('Counter.jsx');
 
         const setStateBreakpoint = await counterBreakpoints.hitCountBreakpoint({
-            lineText: 'this.setState({ count: newval });',
+            text: 'this.setState({ count: newval })',
+            boundText: 'setState({ count: newval })',
             hitCountCondition: '= 3'
         });
 
         const setNewValBreakpoint = await counterBreakpoints.hitCountBreakpoint({
-            lineText: 'const newval = this.state.count + 1',
+            text: 'const newval = this.state.count + 1',
+            boundText: 'state.count + 1',
             hitCountCondition: '= 5'
         });
 
         const stepInBreakpoint = await counterBreakpoints.hitCountBreakpoint({
-            lineText: 'this.stepIn();',
+            text: 'this.stepIn()',
+            boundText: 'stepIn()',
             hitCountCondition: '= 4'
         });
 
         await asyncRepeatSerially(2, () => incBtn.click());
 
-        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 17:12
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
-
-        await stepInBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 18:12
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
-
-        await setNewValBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 16:27
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
+        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
+        await stepInBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
+        await setNewValBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
 
         await incBtn.click();
 
-        await breakpoints.assertNotPaused();
+        await breakpoints.waitAndAssertNoMoreEvents();
 
         await setStateBreakpoint.unset();
         await setNewValBreakpoint.unset();
@@ -112,41 +85,33 @@ puppeteerSuite('Hit count breakpoints on a React project', reactTestSpecificatio
 
         const { setStateBreakpoint, stepInBreakpoint, setNewValBreakpoint } = await counterBreakpoints.batch(async () => ({
             setStateBreakpoint: await counterBreakpoints.hitCountBreakpoint({
-                lineText: 'this.setState({ count: newval });',
+                text: 'this.setState({ count: newval });',
+                boundText: 'setState({ count: newval })',
                 hitCountCondition: '= 3'
             }),
 
             setNewValBreakpoint: await counterBreakpoints.hitCountBreakpoint({
-                lineText: 'const newval = this.state.count + 1',
+                text: 'const newval = this.state.count + 1',
+                boundText: 'state.count + 1',
                 hitCountCondition: '= 5'
             }),
 
             stepInBreakpoint: await counterBreakpoints.hitCountBreakpoint({
-                lineText: 'this.stepIn();',
+                text: 'this.stepIn();',
+                boundText: 'stepIn()',
                 hitCountCondition: '= 4'
             })
         }));
 
         await asyncRepeatSerially(2, () => incBtn.click());
 
-        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 17:12
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
-
-        await stepInBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 18:12
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
-
-        await setNewValBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click(), `
-                increment [Counter.jsx] Line 16:27
-                onClick [Counter.jsx] Line 30:60
-                ${reactCounterAppBaseStack}`);
+        await setStateBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
+        await stepInBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
+        await setNewValBreakpoint.assertIsHitThenResumeWhen(() => incBtn.click());
 
         await incBtn.click();
 
-        await breakpoints.assertNotPaused();
+        await breakpoints.waitAndAssertNoMoreEvents();
 
         await counterBreakpoints.batch(async () => {
             await setStateBreakpoint.unset();

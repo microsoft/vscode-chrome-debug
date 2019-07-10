@@ -9,18 +9,26 @@
 
 import { DebugClient } from 'vscode-debugadapter-testsupport';
 
+const ImplementsBreakpointLocation = Symbol();
 /**
  * Simple breakpoint location params (based on what the debug test client accepts)
  */
-export interface BreakpointLocation {
-    /** The path to the source file in which to set a breakpoint */
-    path: string;
-    /** The line number in the file to set a breakpoint on */
-    line: number;
-    /** Optional breakpoint column */
-    column?: number;
-    /** Whether or not we should assert if the bp is verified or not */
-    verified?: boolean;
+export class BreakpointLocation {
+    [ImplementsBreakpointLocation]: 'BreakpointLocation';
+
+    public constructor (
+        /** The path to the source file in which to set a breakpoint */
+        public readonly path: string,
+        /** The line number in the file to set a breakpoint on */
+        public readonly line: number,
+        /** Optional breakpoint column */
+        public readonly column?: number,
+        /** Whether or not we should assert if the bp is verified or not */
+        public readonly verified?: boolean) {}
+
+    public toString(): string {
+        return `${this.path}:${this.line}:${this.column} verified: ${this.verified}`;
+    }
 }
 
 /**
