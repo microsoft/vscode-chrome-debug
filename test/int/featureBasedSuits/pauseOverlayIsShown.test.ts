@@ -15,6 +15,9 @@ import { utils } from 'vscode-chrome-debug-core';
 // log and see if we sent the proper Overlay.setPausedInDebuggerMessage message
 async function latestPausedOverlay(): Promise<string | undefined> {
     // Wait a little to give the log file time to get written...
+    // Warning: If this test starts failing because 500 ms being too little time, we should change the logic to read the file, and retry a few times to see if the assertion passes eventually
+    // If that doesn't work either, we'll need to do something less hacky like implementing a sniffer or proxy of the protocol, and get the information directly from there instead of
+    // reading it from a file
     await utils.promiseTimeout(undefined, 500);
 
     const logFilePath = launchArgs().logFilePath!;
