@@ -50,8 +50,15 @@ function formLaunchArgs(launchArgs: ILaunchRequestArgs & Dictionary<unknown>, te
     }
 }
 
+let storedLaunchArgs: ILaunchRequestArgs  = {};
+
+export function launchArgs(): ILaunchRequestArgs {
+    return { ...storedLaunchArgs };
+}
+
 function patchLaunchArgs(launchArgs: ILaunchRequestArgs, testTitle: string): void {
     formLaunchArgs(launchArgs, testTitle);
+    storedLaunchArgs = launchArgs;
 }
 
 export const lowercaseDriveLetterDirname = __dirname.charAt(0).toLowerCase() + __dirname.substr(1);
