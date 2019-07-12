@@ -14,6 +14,7 @@ import { HTMLSourceRetriever } from './components/htmlSourceLogic';
 import { CDTPResourceContentGetter } from './cdtpComponents/cdtpResourceContentGetter';
 import { ShowOverlayWhenPaused, CDTPDeprecatedPage } from './features/showOverlayWhenPaused';
 import { CustomizedUninitializedCDA } from './components/customizedUninitializedCDA';
+import { ReportVersionInformation } from './features/reportVersionInformation';
 
 const EXTENSION_NAME = 'debugger-for-chrome';
 
@@ -42,6 +43,7 @@ extensibilityPoints.targetFilter = defaultTargetFilter;
 extensibilityPoints.pathTransformer = UrlPathTransformer;
 extensibilityPoints.bindAdditionalComponents = (diContainer: DependencyInjection) => {
     diContainer.configureClass(TYPES.IServiceComponent, ShowOverlayWhenPaused);
+    diContainer.configureClass(TYPES.IServiceComponent, ReportVersionInformation);
     diContainer.configureClass(CDTPDeprecatedPage, CDTPDeprecatedPage);
 };
 

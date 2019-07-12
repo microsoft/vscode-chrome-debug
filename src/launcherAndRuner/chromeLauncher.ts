@@ -9,12 +9,13 @@ import * as os from 'os';
 import * as path from 'path';
 import {
     ITelemetryPropertyCollector, logger, telemetry, utils as coreUtils, TerminatingReason,
-    ILaunchResult, IDebuggeeLauncher, inject, injectable, TYPES, ISession, ConnectedCDAConfiguration, printClassDescription
+    ILaunchResult, IDebuggeeLauncher, inject, injectable, TYPES, ISession, ConnectedCDAConfiguration, printClassDescription, StepProgressEventsEmitter
 } from 'vscode-chrome-debug-core';
 import * as nls from 'vscode-nls';
 import { ILaunchRequestArgs } from '../chromeDebugInterfaces';
 import * as errors from '../errors';
 import * as utils from '../utils';
+import { ExecutionTimingsReporter } from 'vscode-chrome-debug-core';
 
 let localize = nls.loadMessageBundle();
 
@@ -125,11 +126,15 @@ interface IExtendedInitializeRequestArguments extends DebugProtocol.InitializeRe
  */
 @injectable()
 export class ChromeLauncher implements IDebuggeeLauncher {
+    private readonly events = new StepProgressEventsEmitter();
     private _state: IChromeLauncherLifetimeState = new NotYetLaunched();
 
     constructor(
         @inject(TYPES.ISession) private readonly _session: ISession,
-        @inject(TYPES.ConnectedCDAConfiguration) private readonly _configuration: ConnectedCDAConfiguration) { }
+        @inject(TYPES.ExecutionTimingsReporter) reporter: ExecutionTimingsReporter,
+        @inject(TYPES.ConnectedCDAConfiguration) private readonly _configuration: ConnectedCDAConfiguration) {
+            reporter.subscribeTo(this.events);
+        }
 
     public async launch(args: ILaunchRequestArgs, telemetryPropertyCollector: ITelemetryPropertyCollector): Promise<ILaunchResult> {
         let runtimeExecutable: string | null = null;
@@ -219,7 +224,7 @@ export class ChromeLauncher implements IDebuggeeLauncher {
               "LaunchTarget.LaunchExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
            }
          */
-        // this.events.emitStepStarted('LaunchTarget.LaunchExe');
+        this.events.emitStepStarted('LaunchTarget.LaunchExe');
         const platform = coreUtils.getPlatform();
         if (platform === coreUtils.Platform.Windows && shouldLaunchUnelevated) {
             const doesHostSupportLaunchUnelevatedProcessRequest = (<IExtendedInitializeRequestArguments>this._configuration.clientCapabilities).supportsLaunchUnelevatedProcessRequest;
