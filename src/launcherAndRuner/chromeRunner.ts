@@ -56,10 +56,10 @@ export class ChromeRunner implements IDebuggeeRunner {
                 this._userPageLaunched.resolve();
             } else if (url === 'chrome-error://chromewebdata/') {
                 // Chrome couldn't retrieve the web-page in the requested url
-                this._userPageLaunched.reject('UnreachableURL');
+                this._userPageLaunched.reject(new Error(`Unreachable URL: Chrome navigated to ${url} instead of navigating to the requested url: ${this._configuration.userRequestedUrl}`));
             } else if (url.startsWith('chrome-error://')) {
                 // Uknown chrome error
-                this._userPageLaunched.reject('UnknownChromeError');
+                this._userPageLaunched.reject(new Error(`Unknown Chrome Error: Chrome navigated to ${url} instead of navigating to the requested url: ${this._configuration.userRequestedUrl}`));
             } else {
                 logger.log(`ChromeRunner.onFrameNavigated: Unexpected case: url: ${params.frame.url} requested: ${this._configuration.userRequestedUrl}`);
             }
