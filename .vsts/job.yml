@@ -8,9 +8,9 @@ jobs:
     vmImage: ${{ parameters.vmImage }}
   steps:
   - task: NodeTool@0
-    displayName: Use Node 8.x
+    displayName: Use Node 10.x
     inputs:
-      versionSpec: 8.x
+      versionSpec: 10.x
       checkLatest: true
 
   - ${{ if eq(parameters.name, 'Windows') }}:
@@ -54,21 +54,12 @@ jobs:
     inputs:
       ignoreDirectories: 'testdata'
 
-  # - task: Npm@1
-  #   displayName: npm intTest
-  #   inputs:
-  #     command: custom
-  #     verbose: false
-  #     customCommand: 'run intTest'
-
-  - ${{ if eq(parameters.name, 'Windows') }}:
-    - task: Npm@1
-      condition: false
-      displayName: npm frameworkTest
-      inputs:
-        command: custom
-        verbose: false
-        customCommand: 'run frameworkTest'
+  - task: Npm@1
+    displayName: Integration tests
+    inputs:
+      command: custom
+      verbose: false
+      customCommand: 'run allIntTest'
 
   - task: Npm@1
     displayName: npm lint
@@ -102,10 +93,22 @@ jobs:
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
       displayName: 'Publish Security Analysis Logs'
 
-   # Publish Test Results
-  - ${{ if eq(parameters.name, 'Windows') }}:
-    - task: PublishTestResults@2
-      inputs:
-        testResultsFormat: 'JUnit' # Options: JUnit, NUnit, VSTest, xUnit, cTest
-        testResultsFiles: '**/test-*.xml'
+  - task: PublishTestResults@2
+    condition: always()
+    inputs:
+      testResultsFormat: 'JUnit' # Options: JUnit, NUnit, VSTest, xUnit, cTest
+      testResultsFiles: '**/test-*.xml'
+      publishRunAttachments: true
 
+  - task: PublishPipelineArtifact@0
+    condition: eq('${{ parameters.name }}', 'Windows')
+    inputs:
+      artifactName: 'testsOnWindows'
+      targetPath: 'logs/'
+
+  - ${{ if eq(parameters.name, 'MacOS') }}:
+    - task: PublishPipelineArtifact@0
+      condition: always()
+      inputs:
+        artifactName: 'testsOnMacOS'
+        targetPath: 'logs/'
