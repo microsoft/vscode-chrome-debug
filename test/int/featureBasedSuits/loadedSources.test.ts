@@ -16,7 +16,10 @@ let loadedSources: DebugProtocol.Source[] = [];
 function onLoadedSource(args: DebugProtocol.LoadedSourceEvent): void {
     switch (args.body.reason) {
         case 'new':
-            loadedSources.push(args.body.source);
+            // We ignore scripts added by puppeteer
+            if (args.body.source.name !== '__puppeteer_evaluation_script__') {
+                    loadedSources.push(args.body.source);
+            }
             break;
         case 'changed':
         case 'removed':
