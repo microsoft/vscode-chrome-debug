@@ -2,7 +2,8 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import {
-    utils as coreUtils, logger, telemetry, inject, TYPES, IDebuggeeStateInspector, ConnectedCDAConfiguration, INetworkCacheConfigurer, IDebuggeeRuntimeVersionProvider, IServiceComponent, injectable,
+    utils as coreUtils, logger, telemetry, inject, TYPES, IDebuggeeStateInspector, ConnectedCDAConfiguration,
+    INetworkCacheConfigurer, IDebuggeeRuntimeVersionProvider, injectable, IServiceComponent
 } from 'vscode-chrome-debug-core';
 import { ICommonRequestArgs } from '../chromeDebugInterfaces';
 
@@ -109,5 +110,9 @@ export class ReportVersionInformation implements IServiceComponent {
         @inject(TYPES.ConnectedCDAConfiguration) private readonly _configuration: ConnectedCDAConfiguration,
         @inject(TYPES.INetworkCacheConfiguration) private readonly _networkCacheConfiguration: INetworkCacheConfigurer,
         @inject(TYPES.IDebuggeeRuntimeVersionProvider) private readonly _debugeeVersionProvider: IDebuggeeRuntimeVersionProvider) {
+    }
+
+    public toString(): string {
+        return 'ReportVersionInformation';
     }
 }

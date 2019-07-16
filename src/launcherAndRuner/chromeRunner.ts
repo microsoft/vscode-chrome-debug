@@ -34,7 +34,9 @@ export class ChromeRunner implements IDebuggeeRunner {
                  */
             });
         }
+    }
 
+    public async waitUntilRunning(): Promise<void> {
         return this._userPageLaunched.promise;
     }
 
