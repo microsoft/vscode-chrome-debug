@@ -2,7 +2,7 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import {
-    utils as coreUtils, logger, telemetry, inject, TYPES, IDebuggeeStateInspector, ConnectedCDAConfiguration, INetworkCacheConfigurer, IDebuggeeRuntimeVersionProvider,
+    utils as coreUtils, logger, telemetry, inject, TYPES, IDebuggeeStateInspector, ConnectedCDAConfiguration, INetworkCacheConfigurer, IDebuggeeRuntimeVersionProvider, IServiceComponent, injectable,
 } from 'vscode-chrome-debug-core';
 import { ICommonRequestArgs } from '../chromeDebugInterfaces';
 
@@ -10,15 +10,16 @@ export interface IVersionProperties {
     [key: string]: string;
 }
 
-// TODO: Enable this class so it's used to report the version information
-export class ReportVersionInformation {
-    public async report(): Promise<void> {
+@injectable()
+export class ReportVersionInformation implements IServiceComponent {
+    public async install(): Promise<this> {
         // Don't return this promise, a failure shouldn't fail attach
         this._inspectDebugeeState.evaluate({ expression: 'navigator.userAgent', silent: true })
             .then(
                 evalResponse => logger.log('Target userAgent: ' + evalResponse.result.value),
                 err => logger.log('Getting userAgent failed: ' + err.message))
             .then(() => {
+                // TODO: Move this code to another class. It doesn't make sense for this code to be here
                 const configDisableNetworkCache = (<ICommonRequestArgs>this._configuration.args).disableNetworkCache;
                 const cacheDisabled = typeof configDisableNetworkCache === 'boolean' ?
                     configDisableNetworkCache :
@@ -32,7 +33,7 @@ export class ReportVersionInformation {
         const versionInformationPromise = this._debugeeVersionProvider.componentVersions().then(
             response => {
                 const properties: IVersionProperties = {
-                    'Versions.Target.CRDPVersion': response.product,
+                    'Versions.Target.CRDPVersion': response.crdp,
                     'Versions.Target.Revision': response.revision,
                     'Versions.Target.UserAgent': response.userAgent,
                     'Versions.Target.V8': response.v8
@@ -100,6 +101,7 @@ export class ReportVersionInformation {
             }
         */
         telemetry.telemetry.addCustomGlobalProperty(versionInformationPromise);
+        return this;
     }
 
     constructor(

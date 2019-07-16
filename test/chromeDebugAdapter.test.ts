@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 import * as mockery from 'mockery';
 import { IMock, It, Mock, MockBehavior, Times } from 'typemoq';
-import { chromeConnection, ISourceMapPathOverrides, TargetVersions, Version } from 'vscode-chrome-debug-core';
+import { chromeConnection, ISourceMapPathOverrides, TargetVersions, Version, ExecutionTimingsReporter } from 'vscode-chrome-debug-core';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
@@ -33,7 +33,8 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict, false, {events: {}}, {}, { extensibilityPoints: {}});
+        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict, false, {events: {}}, {},
+             new ExecutionTimingsReporter(), { extensibilityPoints: {}});
         mockChrome = getMockChromeConnectionApi();
         mockChromeDebugSession = Mock.ofType(MockChromeDebugSession, MockBehavior.Strict);
         mockChromeDebugSession
