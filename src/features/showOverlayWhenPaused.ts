@@ -2,7 +2,10 @@
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
 import * as utils from '../utils';
-import { CDTP, ISupportedDomains, inject, TYPES, CDTPEventsEmitterDiagnosticsModule, IServiceComponent, ConnectedCDAConfiguration, CDTPDomainsEnabler, IPausedOverlayConfigurer, ICDTPDebuggeeExecutionEventsProvider, injectable } from 'vscode-chrome-debug-core';
+import {
+    CDTP, ISupportedDomains, inject, TYPES, CDTPEventsEmitterDiagnosticsModule, IServiceComponent, ConnectedCDAConfiguration,
+    CDTPDomainsEnabler, IPausedOverlayConfigurer, ICDTPDebuggeeExecutionEventsProvider, injectable
+} from 'vscode-chrome-debug-core';
 import { ILaunchRequestArgs } from '../chromeDebugInterfaces';
 
 // TODO: This is a deprecated page method. We should migrate this to Overlay.setPausedInDebuggerMessage
@@ -77,5 +80,9 @@ export class ShowOverlayWhenPaused implements IServiceComponent {
 
     public install(): this {
         return this;
+    }
+
+    public toString(): string {
+        return 'ShowOverlayWhenPaused';
     }
 }
