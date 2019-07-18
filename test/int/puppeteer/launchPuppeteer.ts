@@ -11,6 +11,7 @@ import { logCallsTo } from '../utils/logging';
 import { isThisV1 } from '../testSetup';
 import { Browser, Page } from 'puppeteer';
 import { logger } from 'vscode-debugadapter';
+import { utils } from 'vscode-chrome-debug-core';
 
 /**
  * Launch the debug adapter using the Puppeteer version of chrome, and then connect to it
@@ -24,7 +25,7 @@ export class LaunchPuppeteer implements IFixture {
         debugClient: ExtendedDebugClient, daConfig: IScenarioConfiguration, chromeArgs: string[] = [],
         callbacks: IDebugAdapterCallbacks): Promise<LaunchPuppeteer> {
         const daPort = await getPort();
-        logger.log(`About to launch debug-adapter at port: ${daPort}`);
+        logger.log(`About to ${daConfig.scenario} debug-adapter at port: ${daPort}`);
 
         let browser: Browser;
         if (daConfig.scenario === 'launch') {
@@ -33,9 +34,8 @@ export class LaunchPuppeteer implements IFixture {
         } else {
             browser = await launchPuppeteer(daPort, chromeArgs);
 
-            // We want to attach after the page is fully loaded, and things happened, to simulate a real attach scenario
-            const firstPage = (await browser.pages())[0];
-            await firstPage.waitForNavigation();
+            // We want to attach after the page is fully loaded, and things happened, to simulate a real attach scenario. So we wait for a little bit
+            await utils.promiseTimeout(undefined, 1000);
 
             await launchTestAdapter(debugClient, Object.assign({}, daConfig, { port: daPort }), callbacks);
         }

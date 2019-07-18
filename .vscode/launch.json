@@ -79,7 +79,7 @@
                 "-u", "tdd",
                 "--timeout", "9999999",
                 "--colors",
-                "--grep", "url in sources",
+                "--grep", "Attach",
                 "--reporter", "node_modules/vscode-chrome-debug-core-testsupport/out/loggingReporter.js",
                 "${workspaceFolder}/out/test/int/**/*.test.js",
             ],

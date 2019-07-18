@@ -55,6 +55,8 @@ export async function launchTestAdapter(
     }
 
     if (launchConfig.scenario === 'attach') {
+        delete launchConfig.url; // We don't want the url property when we attach
+
         await client.initializeRequest();
         await client.attachRequest(launchConfig);
     } else {
