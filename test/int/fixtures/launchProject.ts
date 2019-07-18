@@ -58,8 +58,10 @@ export class LaunchProject implements IFixture {
         const pausedWizard = PausedWizard.forClient(defaultFixture.debugClient);
         const breakpointsWizard = BreakpointsWizard.createWithPausedWizard(defaultFixture.debugClient, pausedWizard, testSpec);
 
-        const chromeArgs = daConfig.scenario === 'attach' ? [launchWebServer.url.toString()] : []; // For attach we need to launch puppeteer/chrome pointing to the web-server
-        const launchPuppeteer = await LaunchPuppeteer.start(defaultFixture.debugClient, { ...launchWebServer.launchConfig, ...daConfig }, chromeArgs, callbacks);
+        const chromeArgsForPuppeteer = daConfig.scenario === 'attach' ? [launchWebServer.url.toString()] : []; // For attach we need to launch puppeteer/chrome pointing to the web-server
+        const launchConfig = { ...launchWebServer.launchConfig };
+
+        const launchPuppeteer = await LaunchPuppeteer.start(defaultFixture.debugClient, { ...launchConfig, ...daConfig }, chromeArgsForPuppeteer, callbacks);
         return new LaunchProject(defaultFixture, launchWebServer, pausedWizard, breakpointsWizard, launchPuppeteer);
     }
 

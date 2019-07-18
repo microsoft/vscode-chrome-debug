@@ -10,7 +10,7 @@ function runCode() {
     console.log('line 9');
     console.log("line 10");
     console.log("If you see this message, you are attached...");
-    setTimeout(runCode, 0);
+    setTimeout(runCode, 100);
 }
 runCode();
 //# sourceMappingURL=app.js.map
