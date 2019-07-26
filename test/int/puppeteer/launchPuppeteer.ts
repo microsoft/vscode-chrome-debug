@@ -35,7 +35,7 @@ export class LaunchPuppeteer implements IFixture {
             browser = await launchPuppeteer(daPort, chromeArgs);
 
             // We want to attach after the page is fully loaded, and things happened, to simulate a real attach scenario. So we wait for a little bit
-            await utils.promiseTimeout(undefined, 1000);
+            await utils.promiseTimeout(undefined, 3000);
 
             await launchTestAdapter(debugClient, Object.assign({}, daConfig, { port: daPort }), callbacks);
         }
