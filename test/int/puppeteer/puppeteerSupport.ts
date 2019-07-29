@@ -9,6 +9,7 @@
 
 import * as request from 'request-promise-native';
 import * as puppeteer from 'puppeteer';
+import { logger } from 'vscode-debugadapter';
 
 /**
  * Connect puppeteer to a currently running instance of chrome
@@ -20,6 +21,7 @@ export async function connectPuppeteer(port: number): Promise<puppeteer.Browser>
     const { webSocketDebuggerUrl } = JSON.parse(resp);
 
     const browser = await puppeteer.connect({ browserWSEndpoint: webSocketDebuggerUrl, defaultViewport: null });
+    logger.log(`Connected puppeteer on port: ${port} and websocket: ${JSON.stringify(webSocketDebuggerUrl)}`);
     return browser;
 }
 
@@ -28,8 +30,8 @@ export async function connectPuppeteer(port: number): Promise<puppeteer.Browser>
  * @param port The port on which the chrome debugger is running
  */
 export async function launchPuppeteer(port: number, chromeArgs: string[] = []): Promise<puppeteer.Browser> {
-
     const browser = await puppeteer.launch({ headless: false, defaultViewport: null, args: chromeArgs.concat([`--remote-debugging-port=${port}`]) });
+    logger.log(`Launched puppeteer on port: ${port} and args: ${JSON.stringify(chromeArgs)}`);
 
     return browser;
 }

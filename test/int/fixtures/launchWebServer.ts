@@ -13,11 +13,12 @@ import { URL } from 'url';
 async function createServerAsync(root: string): Promise<HttpOrHttpsServer> {
     const server = createServer({ root });
     return await new Promise((resolve, reject) => {
-        logger.log(`About to launch web-server`);
+        logger.log(`About to launch web-server on: ${root}`);
         server.listen(0, '127.0.0.1', function (this: HttpOrHttpsServer, error?: any) {
             if (error) {
                 reject(error);
             } else {
+                logger.log(`Web-server on: ${root} listening on: ${JSON.stringify(this.address())}`);
                 resolve(this); // We return the this pointer which is the internal server object, which has access to the .address() method
             }
         });
