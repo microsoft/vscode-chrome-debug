@@ -1,3 +1,6 @@
+## 4.11.6
+* Support clearing the current color in console.log color format args - [microsoft/vscode#76550](https://github.com/microsoft/vscode#76550)
+
 ## 4.11.5
 * Fix remote debugging issue - [#867](https://github.com/microsoft/vscode-chrome-debug/issues/867)
 
