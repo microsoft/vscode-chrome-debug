@@ -19,6 +19,7 @@ import * as utils from './utils';
 import * as errors from './errors';
 
 import { FinishedStartingUpEventArguments } from 'vscode-chrome-debug-core/lib/src/executionTimingsReporter';
+import { ChromeProvidedPortConnection } from './chromeProvidedPortConnection';
 
 // Keep in sync with sourceMapPathOverrides package.json default
 const DefaultWebSourceMapPathOverrides: ISourceMapPathOverrides = {
@@ -41,6 +42,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
     private _chromePID: number;
     private _userRequestedUrl: string;
     private _doesHostSupportLaunchUnelevatedProcessRequest: boolean;
+    protected _chromeConnection: ChromeProvidedPortConnection;
 
     public initialize(args: IExtendedInitializeRequestArguments): VSDebugProtocolCapabilities {
         this._overlayHelper = new utils.DebounceHelper(/*timeoutMs=*/200);
@@ -86,7 +88,8 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             }
 
             // Start with remote debugging enabled
-            const port = args.port || 9222;
+            // allow port = 0
+            let port = (args.port !== undefined) ? args.port : 9222;
             const chromeArgs: string[] = [];
             const chromeEnv: coreUtils.IStringDictionary<string> = args.env || null;
             const chromeWorkingDir: string = args.cwd || null;
@@ -113,6 +116,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
 
             if (args.userDataDir) {
                 chromeArgs.push('--user-data-dir=' + args.userDataDir);
+                this._chromeConnection.setUserDataDir(args.userDataDir);
             }
 
             if (args._clientOverlayPausedMessage) {

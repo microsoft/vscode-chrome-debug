@@ -41,9 +41,11 @@ function formLaunchArgs(launchArgs: any, testTitle: string): void {
         launchArgs.runtimeArgs = ['--headless', '--disable-gpu'];
     }
 
-    // Start with a clean userDataDir for each test run
-    const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
-    launchArgs.userDataDir = tmpDir.name;
+    // Start with a clean userDataDir for each test run (but only if not specified by the test)
+    if (!launchArgs.userDataDir) {
+        const tmpDir = tmp.dirSync({ prefix: 'chrome2-' });
+        launchArgs.userDataDir = tmpDir.name;
+    }
     if (testLaunchProps) {
         for (let key in testLaunchProps) {
             launchArgs[key] = testLaunchProps[key];
@@ -89,7 +91,7 @@ export async function setupWithTitle(testTitle: string, port?: number, launchPro
     const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
     debugClient.defaultTimeout = DefaultTimeoutMultiplier * 10000 /*10 seconds*/;
 
-    if(isThisV2) { // The logging proxy breaks lots of tests in v1, possibly due to some race conditions exposed by the extra delay
+    if (isThisV2) { // The logging proxy breaks lots of tests in v1, possibly due to some race conditions exposed by the extra delay
         const wrappedDebugClient = logCallsTo(debugClient, 'DebugAdapterClient');
         return wrappedDebugClient;
     }

@@ -15,8 +15,10 @@ import { isWindows } from './testSetup';
 import * as puppeteer from 'puppeteer';
 import { expect } from 'chai';
 import { killAllChrome } from '../testUtils';
-import { IAttachRequestArgs } from 'vscode-chrome-debug-core';
+import { IAttachRequestArgs, utils } from 'vscode-chrome-debug-core';
 import { getDebugAdapterLogFilePath } from './utils/logging';
+import { DebugClient } from 'vscode-debugadapter-testsupport';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 const DATA_ROOT = testSetup.DATA_ROOT;
 
@@ -185,5 +187,53 @@ suite('Chrome Debug Adapter etc', () => {
             // force kill chrome here, as it will be left open by the debug adapter (same behavior as v1)
             killAllChrome();
         });
+
+
+        test('Should launch successfully on port 0', async () => {
+            // browser already launched to the default port, and navigated away from about:blank
+            const remoteDebuggingPort = 0;
+            await Promise.all([
+                dc.configurationSequence(),
+                dc.launch({ url: 'http://localhost:7890', timeout: 5000, webRoot: testProjectRoot, port: remoteDebuggingPort }),
+            ]);
+
+            // wait for url to === http://localhost:7890 (launch response can come back before the navigation completes)
+            return waitForUrl(dc, 'http://localhost:7890/');
+        });
+
+        test('Should launch successfully on port 0, even when a browser instance is already running', async () => {
+            // browser already launched to the default port, and navigated away from about:blank
+            const remoteDebuggingPort = 0;
+            const dataDir = path.join(__dirname, 'testDataDir');
+            const browser = await puppeteer.launch({ headless: false, args: ['https://bing.com', `--user-data-dir=${dataDir}`, `--remote-debugging-port=${remoteDebuggingPort}`] });
+
+            try {
+                await Promise.all([
+                    dc.configurationSequence(),
+                    dc.launch({ url: 'http://localhost:7890', timeout: 5000, webRoot: testProjectRoot, port: remoteDebuggingPort, userDataDir: dataDir }),
+                ]);
+
+                await waitForUrl(dc, 'http://localhost:7890/');
+            } finally {
+                await browser.close();
+            }
+        });
     });
 });
+
+
+async function waitForUrl(dc: DebugClient, url: string): Promise<DebugProtocol.EvaluateResponse> {
+    const timeoutMs = 5000;
+    const intervalDelayMs = 50;
+
+    return await utils.retryAsync(async () => {
+        const response = await dc.evaluateRequest({
+            context: 'repl',
+            expression: 'window.location.href'
+        });
+
+        expect(response.body.result).to.equal(`"${url}"`);
+        return url;
+    }, timeoutMs, intervalDelayMs).catch(err => { throw err; });
+
+}
