@@ -109,7 +109,7 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
     ];
 
     manyInvalidConditions.forEach(invalidCondition => {
-        puppeteerTest(`invalid condition ${invalidCondition}`, suiteContext, async () => {
+        puppeteerTest.skip(`invalid condition ${invalidCondition}`, suiteContext, async () => {
             const breakpoints = BreakpointsWizard.create(suiteContext.debugClient, reactWithLoopTestSpecification);
             const counterBreakpoints = breakpoints.at('Counter.jsx');
 
