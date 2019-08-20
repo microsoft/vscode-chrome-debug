@@ -10,7 +10,7 @@ import { ValidatedSet } from '../../../core-v2/chrome/collections/validatedSet';
 import {
     IBreakpointsBatchingStrategy, InternalFileBreakpointsWizard, CurrentBreakpointsMapping, BreakpointsUpdate, BreakpointStatusChangedWithId
 } from './internalFileBreakpointsWizard';
-import { IVerificationsAndAction } from './breakpointsAssertions';
+import { IVerificationsAndAction } from '../breakpointsWizard';
 
 export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
     private readonly _breakpointsToSet = new ValidatedSet<BreakpointWizard>();
@@ -31,6 +31,10 @@ export class BatchingUpdatesState implements IBreakpointsBatchingStrategy {
 
     public assertIsVerified(breakpoint: BreakpointWizard): void {
         this._actionsToCompleteAfterBatch.push(() => this._internal.assertIsVerified(breakpoint));
+    }
+
+    public assertIsNotVerified(breakpoint: BreakpointWizard, unverifiedReason: string): void {
+        this._actionsToCompleteAfterBatch.push(() => this._internal.assertIsNotVerified(breakpoint, unverifiedReason));
     }
 
     public async waitUntilVerified(breakpoint: BreakpointWizard): Promise<void> {

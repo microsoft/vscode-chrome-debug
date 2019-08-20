@@ -12,7 +12,6 @@ import * as _ from 'lodash';
 import { puppeteerSuite, puppeteerTest } from '../puppeteer/puppeteerSuite';
 import { reactWithLoopTestSpecification } from '../resources/resourceProjects';
 import { BreakpointsWizard as BreakpointsWizard } from '../wizards/breakpoints/breakpointsWizard';
-import { expect } from 'chai';
 import { logger } from 'vscode-debugadapter';
 
 puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecification, (suiteContext) => {
@@ -94,33 +93,25 @@ puppeteerSuite('Hit count breakpoints combinations', reactWithLoopTestSpecificat
         '= -1',
         '> -200',
         '< -24',
-        '< 64\t',
-        '< 5      ',
         '>= -95',
         '<= -5',
-        '\t= 1',
         '< = 4',
-        '         <= 4',
         '% -200',
         'stop always',
-        '       = 3     ',
         '= 1 + 1',
         '> 3.5',
     ];
 
     manyInvalidConditions.forEach(invalidCondition => {
-        puppeteerTest.skip(`invalid condition ${invalidCondition}`, suiteContext, async () => {
+        puppeteerTest(`invalid condition ${invalidCondition}`, suiteContext, async () => {
             const breakpoints = BreakpointsWizard.create(suiteContext.debugClient, reactWithLoopTestSpecification);
             const counterBreakpoints = breakpoints.at('Counter.jsx');
 
-            try {
-                await counterBreakpoints.hitCountBreakpoint({
-                    text: 'iterationNumber * iterationNumber',
-                    hitCountCondition: invalidCondition
-                });
-            } catch (exception) {
-                expect(exception.toString()).to.be.equal(`Error: [debugger-for-chrome] Error processing "setBreakpoints": Didn't recognize <${invalidCondition}> as a valid hit count condition`);
-            }
+            await counterBreakpoints.unverifiedHitCountBreakpoint({
+                text: 'iterationNumber * iterationNumber',
+                hitCountCondition: invalidCondition,
+                unverifiedReason: `Didn't recognize <${invalidCondition}> as a valid hit count condition`
+            });
         });
     });
 });

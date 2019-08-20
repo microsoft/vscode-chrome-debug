@@ -13,6 +13,15 @@ export interface IHitCountBreakpointOptions extends IBreakpointOptions {
     hitCountCondition: string;
 }
 
+export interface IUnverifiedBreakpointOptions {
+    text: string;
+    unverifiedReason: string;
+}
+
+export interface IUnverifiedHitCountBreakpointOptions extends IUnverifiedBreakpointOptions {
+    hitCountCondition: string;
+}
+
 export class FileBreakpointsWizard {
     public constructor(private readonly _internal: InternalFileBreakpointsWizard) { }
 
@@ -28,6 +37,10 @@ export class FileBreakpointsWizard {
 
     public async hitCountBreakpoint(options: IHitCountBreakpointOptions): Promise<BreakpointWizard> {
         return (await (await this.unsetHitCountBreakpoint(options)).setThenWaitForVerifiedThenValidate());
+    }
+
+    public async unverifiedHitCountBreakpoint(options: IUnverifiedHitCountBreakpointOptions): Promise<BreakpointWizard> {
+        return (await (await this.unsetHitCountBreakpoint(options)).setWithoutVerifying()).assertIsNotVerified(options.unverifiedReason);
     }
 
     public async unsetHitCountBreakpoint(options: IHitCountBreakpointOptions): Promise<BreakpointWizard> {
