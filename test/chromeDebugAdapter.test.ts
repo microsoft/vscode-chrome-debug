@@ -11,6 +11,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { ChromeDebugAdapter as _ChromeDebugAdapter } from '../src/chromeDebugAdapter';
 import { getMockChromeConnectionApi, IMockChromeConnectionAPI } from './debugProtocolMocks';
 import * as testUtils from './testUtils';
+import { ChromeProvidedPortConnection } from '../src/chromeProvidedPortConnection';
 
 class MockChromeDebugSession {
     public sendEvent(event: DebugProtocol.Event): void {
@@ -22,7 +23,7 @@ class MockChromeDebugSession {
 
 const MODULE_UNDER_TEST = '../src/chromeDebugAdapter';
 suite('ChromeDebugAdapter', () => {
-    let mockChromeConnection: IMock<chromeConnection.ChromeConnection>;
+    let mockChromeConnection: IMock<ChromeProvidedPortConnection>;
     let mockEventEmitter: EventEmitter;
     let mockChrome: IMockChromeConnectionAPI;
 
@@ -35,7 +36,7 @@ suite('ChromeDebugAdapter', () => {
         mockery.enable({ useCleanCache: true, warnOnReplace: false, warnOnUnregistered: false });
 
         // Create a ChromeConnection mock with .on and .attach. Tests can fire events via mockEventEmitter
-        mockChromeConnection = Mock.ofType(chromeConnection.ChromeConnection, MockBehavior.Strict);
+        mockChromeConnection = Mock.ofType(ChromeProvidedPortConnection, MockBehavior.Strict);
         mockChrome = getMockChromeConnectionApi();
         mockEventEmitter = mockChrome.mockEventEmitter;
         mockChromeDebugSession = Mock.ofType(MockChromeDebugSession, MockBehavior.Strict);
@@ -75,6 +76,9 @@ suite('ChromeDebugAdapter', () => {
         mockChromeConnection
             .setup(x => x.version)
             .returns(() => Promise.resolve(new TargetVersions(Version.unknownVersion(), Version.unknownVersion())))
+            .verifiable(Times.atLeast(0));
+        mockChromeConnection
+            .setup(x => x.setUserDataDir(It.isAnyString()))
             .verifiable(Times.atLeast(0));
 
         // Instantiate the ChromeDebugAdapter, injecting the mock ChromeConnection

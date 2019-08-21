@@ -11,6 +11,7 @@ import * as os from 'os';
 import { defaultTargetFilter } from './utils';
 
 import { ChromeDebugAdapter } from './chromeDebugAdapter';
+import { ChromeProvidedPortConnection } from './chromeProvidedPortConnection';
 
 const EXTENSION_NAME = 'debugger-for-chrome';
 
@@ -22,7 +23,7 @@ ChromeDebugSession.run(ChromeDebugSession.getSession(
         extensionName: EXTENSION_NAME,
         logFilePath: path.resolve(os.tmpdir(), 'vscode-chrome-debug.txt'),
         targetFilter: defaultTargetFilter,
-
+        chromeConnection: ChromeProvidedPortConnection,
         pathTransformer: UrlPathTransformer,
         sourceMapTransformer: BaseSourceMapTransformer,
     }));
