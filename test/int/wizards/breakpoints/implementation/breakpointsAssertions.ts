@@ -9,22 +9,9 @@ import * as chaiString from 'chai-string';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { BreakpointWizard } from '../breakpointWizard';
 import { InternalFileBreakpointsWizard, CurrentBreakpointsMapping } from './internalFileBreakpointsWizard';
-import { BreakpointsWizard } from '../breakpointsWizard';
 import { waitUntilReadyWithTimeout } from '../../../utils/waitUntilReadyWithTimeout';
-import { ExpectedFrame, StackTraceObjectAssertions } from './stackTraceObjectAssertions';
-import { StackTraceStringAssertions } from './stackTraceStringAssertions';
-import { VariablesWizard, IExpectedVariables } from '../../variables/variablesWizard';
-import { StackFrameWizard, stackTrace } from '../../variables/stackFrameWizard';
-import { PromiseOrNot } from 'vscode-chrome-debug-core';
 
 use(chaiString);
-
-export interface IVerificationsAndAction {
-    action?: () => PromiseOrNot<void>;
-    variables?: IExpectedVariables;
-    stackTrace?: string | ExpectedFrame[];
-    stackFrameFormat?: DebugProtocol.StackFrameFormat;
-}
 
 interface IObjectWithLocation {
     source?: DebugProtocol.Source;
@@ -33,10 +20,7 @@ interface IObjectWithLocation {
 }
 
 export class BreakpointsAssertions {
-    private readonly _variablesWizard = new VariablesWizard(this._internal.client);
-
     public constructor(
-        private readonly _breakpointsWizard: BreakpointsWizard,
         private readonly _internal: InternalFileBreakpointsWizard,
         public readonly currentBreakpointsMapping: CurrentBreakpointsMapping) { }
 
@@ -44,61 +28,35 @@ export class BreakpointsAssertions {
         // Convert to one based to match the VS Code potocol and what VS Code does if you try to open that file at that line number
 
         const breakpointStatus = this.currentBreakpointsMapping.get(breakpoint);
-        this.assertLocationMatchesExpected(breakpointStatus, breakpoint);
+        assertMatchesBreakpointLocation(breakpointStatus, this._internal.filePath, breakpoint);
         expect(breakpointStatus.verified, `Expected ${breakpoint} to be verified yet it wasn't: ${breakpointStatus.message}`).to.equal(true);
+    }
+
+    public assertIsNotVerified(breakpoint: BreakpointWizard, unverifiedReason: string): void {
+        const breakpointLocation = `res:${breakpoint.filePath}:${breakpoint.position.lineNumber + 1}:${breakpoint.position.columnNumber + 1}`;
+
+        // For the moment we are assuming that the breakpoint maps to a single script file. If we need to support other cases we'll need to compose the message in the proper way
+        const fullMessage = `[ Breakpoint at ${breakpointLocation} do: ${breakpoint.actionWhenHit} is unbound because ${unverifiedReason} ]`;
+
+        const breakpointStatus = this.currentBreakpointsMapping.get(breakpoint);
+        expect(breakpointStatus.verified, `Expected ${breakpoint} to not be verified yet it was: ${breakpointStatus.message}`).to.equal(false);
+        expect(breakpointStatus.message, `Expected ${breakpoint} to have a particular unverified message`).to.equal(fullMessage);
     }
 
     public async waitUntilVerified(breakpoint: BreakpointWizard): Promise<void> {
         await waitUntilReadyWithTimeout(() => this.currentBreakpointsMapping.get(breakpoint).verified);
     }
+}
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
-        const actionResult = lastActionToMakeBreakpointHit();
+export function assertMatchesBreakpointLocation(objectWithLocation: IObjectWithLocation, expectedFilePath: string, breakpoint: BreakpointWizard): void {
+    expect(objectWithLocation.source).to.not.equal(undefined);
+    expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
+    expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
 
-        await this.assertIsHitThenResume(breakpoint, verifications);
+    const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
+    const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
+    const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
+    const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
 
-        await actionResult;
-    }
-
-    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void> {
-        await this._breakpointsWizard.waitAndConsumePausedEvent(breakpoint);
-
-        const stackTraceFrames = (await stackTrace(this._internal.client, verifications.stackFrameFormat)).stackFrames;
-
-        // Validate that the topFrame is locate in the same place as the breakpoint
-        this.assertLocationMatchesExpected(stackTraceFrames[0], breakpoint);
-
-        if (typeof verifications.stackTrace === 'string') {
-            const assertions = new StackTraceStringAssertions(breakpoint);
-            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
-        } else if (typeof verifications.stackTrace === 'object') {
-            const assertions = new StackTraceObjectAssertions(this._breakpointsWizard);
-            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
-        }
-
-        if (verifications.variables !== undefined) {
-            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._internal.client, stackTraceFrames[0]), verifications.variables);
-        }
-
-        if (verifications.action !== undefined) {
-            await verifications.action();
-        }
-
-        await this._breakpointsWizard.resume();
-    }
-
-    private assertLocationMatchesExpected(objectWithLocation: IObjectWithLocation, breakpoint: BreakpointWizard): void {
-        const expectedFilePath = this._internal.filePath;
-
-        expect(objectWithLocation.source).to.not.equal(undefined);
-        expect(objectWithLocation.source!.path!.toLowerCase()).to.be.equal(expectedFilePath.toLowerCase());
-        expect(objectWithLocation.source!.name!.toLowerCase()).to.be.equal(path.basename(expectedFilePath.toLowerCase()));
-
-        const expectedLineNumber = breakpoint.boundPosition.lineNumber + 1;
-        const expectedColumNumber = breakpoint.boundPosition.columnNumber + 1;
-        const expectedBPLocationPrinted = `${expectedFilePath}:${expectedLineNumber}:${expectedColumNumber}`;
-        const actualBPLocationPrinted = `${objectWithLocation.source!.path}:${objectWithLocation.line}:${objectWithLocation.column}`;
-
-        expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
-    }
+    expect(actualBPLocationPrinted.toLowerCase()).to.be.equal(expectedBPLocationPrinted.toLowerCase());
 }

@@ -8,8 +8,23 @@ import { FileBreakpointsWizard } from './fileBreakpointsWizard';
 import { BreakpointWizard } from './breakpointWizard';
 import { expect } from 'chai';
 import { PausedWizard } from '../pausedWizard';
+import { VariablesWizard, IExpectedVariables } from '../variables/variablesWizard';
+import { PromiseOrNot } from 'vscode-chrome-debug-core/lib/src/chrome/utils/promises';
+import { ExpectedFrame, StackTraceObjectAssertions } from './implementation/stackTraceObjectAssertions';
+import { stackTrace, StackFrameWizard } from '../variables/stackFrameWizard';
+import { assertMatchesBreakpointLocation } from './implementation/breakpointsAssertions';
+import { StackTraceStringAssertions } from './implementation/stackTraceStringAssertions';
+
+export interface IVerificationsAndAction {
+    action?: () => PromiseOrNot<void>;
+    variables?: IExpectedVariables;
+    stackTrace?: string | ExpectedFrame[];
+    stackFrameFormat?: DebugProtocol.StackFrameFormat;
+}
 
 export class BreakpointsWizard {
+    private readonly _variablesWizard = new VariablesWizard(this._client);
+
     private readonly _pathToFileWizard = new ValidatedMap<string, InternalFileBreakpointsWizard>();
 
     private constructor(
@@ -60,6 +75,43 @@ export class BreakpointsWizard {
 
     public toString(): string {
         return 'Breakpoints';
+    }
+
+    public async assertIsHitThenResumeWhen(breakpoints: BreakpointWizard[], lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
+        const actionResult = lastActionToMakeBreakpointHit();
+
+        for (const breakpoint of breakpoints) {
+            await this.assertIsHitThenResume(breakpoint, verifications);
+        }
+
+        await actionResult;
+    }
+
+    public async assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void> {
+        await this.waitAndConsumePausedEvent(breakpoint);
+
+        const stackTraceFrames = (await stackTrace(this._client, verifications.stackFrameFormat)).stackFrames;
+
+        // Validate that the topFrame is locate in the same place as the breakpoint
+        assertMatchesBreakpointLocation(stackTraceFrames[0], breakpoint.filePath, breakpoint);
+
+        if (typeof verifications.stackTrace === 'string') {
+            const assertions = new StackTraceStringAssertions(breakpoint);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
+        } else if (typeof verifications.stackTrace === 'object') {
+            const assertions = new StackTraceObjectAssertions(this);
+            assertions.assertResponseMatches(stackTraceFrames, verifications.stackTrace);
+        }
+
+        if (verifications.variables !== undefined) {
+            await this._variablesWizard.assertStackFrameVariablesAre(new StackFrameWizard(this._client, stackTraceFrames[0]), verifications.variables);
+        }
+
+        if (verifications.action !== undefined) {
+            await verifications.action();
+        }
+
+        await this.resume();
     }
 
     private onBreakpointStatusChange(breakpointStatusChanged: DebugProtocol.BreakpointEvent['body']): void {

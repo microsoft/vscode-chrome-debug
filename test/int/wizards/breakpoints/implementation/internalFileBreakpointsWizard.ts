@@ -14,9 +14,8 @@ import { PromiseOrNot } from 'vscode-chrome-debug-core';
 import { BatchingUpdatesState } from './batchingUpdatesState';
 import { PerformChangesImmediatelyState } from './performChangesImmediatelyState';
 import { BreakpointsUpdater } from './breakpointsUpdater';
-import { BreakpointsWizard } from '../breakpointsWizard';
+import { BreakpointsWizard, IVerificationsAndAction } from '../breakpointsWizard';
 import { MakePropertyRequired, Replace } from '../../../core-v2/typeUtils';
-import { IVerificationsAndAction } from './breakpointsAssertions';
 
 export type BreakpointWithId = MakePropertyRequired<DebugProtocol.Breakpoint, 'id'>;
 export type BreakpointStatusChangedWithId = Replace<DebugProtocol.BreakpointEvent['body'], 'breakpoint', BreakpointWithId>;
@@ -36,7 +35,8 @@ export interface IBreakpointsBatchingStrategy {
 
     waitUntilVerified(breakpoint: BreakpointWizard): Promise<void>;
     assertIsVerified(breakpoint: BreakpointWizard): void;
-    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void>;
+    assertIsNotVerified(breakpoint: BreakpointWizard, unverifiedReason: string): void;
+    assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<unknown>, verifications: IVerificationsAndAction): Promise<void>;
     assertIsHitThenResume(breakpoint: BreakpointWizard, verifications: IVerificationsAndAction): Promise<void>;
 
     onBreakpointStatusChange(breakpointStatusChanged: BreakpointStatusChangedWithId): void;
@@ -77,7 +77,11 @@ export class InternalFileBreakpointsWizard {
         this._state.assertIsVerified(breakpoint);
     }
 
-    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<void>, verifications: IVerificationsAndAction): Promise<void> {
+    public assertIsNotVerified(breakpoint: BreakpointWizard, unverifiedReason: string) {
+        this._state.assertIsNotVerified(breakpoint, unverifiedReason);
+    }
+
+    public async assertIsHitThenResumeWhen(breakpoint: BreakpointWizard, lastActionToMakeBreakpointHit: () => Promise<unknown>, verifications: IVerificationsAndAction): Promise<void> {
         return this._state.assertIsHitThenResumeWhen(breakpoint, lastActionToMakeBreakpointHit, verifications);
     }
 
