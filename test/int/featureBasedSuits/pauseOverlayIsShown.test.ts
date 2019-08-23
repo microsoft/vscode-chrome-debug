@@ -10,6 +10,7 @@ import { launchArgs } from '../testSetup';
 import { expect } from 'chai';
 import * as _ from 'lodash';
 import { utils } from 'vscode-chrome-debug-core';
+import { readFileP } from '../../testUtils';
 
 // There is no way to validate whether we are showing the paused overlay with puppeteer, so we look into the debug-adapter
 // log and see if we sent the proper Overlay.setPausedInDebuggerMessage message
@@ -21,7 +22,7 @@ async function latestPausedOverlay(): Promise<string | undefined> {
     await utils.promiseTimeout(undefined, 500);
 
     const logFilePath = launchArgs().logFilePath!;
-    const logFileContents = await utils.readFileP(logFilePath);
+    const logFileContents = await readFileP(logFilePath);
     const lines = logFileContents.split('\n');
     const lastEvent = _.findLast(lines, line => line.indexOf('Overlay.setPausedInDebuggerMessage') >= 0);
     expect(lastEvent).to.not.equal(undefined);

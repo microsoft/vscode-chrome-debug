@@ -6,6 +6,7 @@ import * as path from 'path';
 import * as mockery from 'mockery';
 import { execSync } from 'child_process';
 import * as puppeteer from 'puppeteer';
+import { utils } from 'vscode-chrome-debug-core';
 
 export function setupUnhandledRejectionListener(): void {
     process.addListener('unhandledRejection', unhandledRejectionListener);
@@ -70,4 +71,8 @@ export function killAllChrome() {
 
 function dummyLocalize(_id: string, englishString: string): string {
     return englishString;
+}
+
+export async function readFileP(path: string, encoding?: string): Promise<string> {
+    return (await utils.readFileP(path, encoding)).customerContentData;
 }
