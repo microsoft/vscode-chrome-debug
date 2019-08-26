@@ -9,7 +9,7 @@ import { testUsing } from '../fixtures/testUsing';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { fail } from 'assert';
 import { expect } from 'chai';
-import { utils } from 'vscode-chrome-debug-core';
+import { readFileP } from '../../testUtils';
 
 let loadedSources: DebugProtocol.Source[] = [];
 
@@ -63,7 +63,7 @@ suite('loaded sources', () => {
             const contents = await launchProject.debugClient.sourceRequest({ source: { sourceReference: loadedSources[0].sourceReference }, sourceReference: 0 /** Not used. Backwards compatibility */ });
             expect(contents.success).to.equal(true);
 
-            const appFileContents = await utils.readFileP(testSpec.src('../app.js'));
+            const appFileContents = await readFileP(testSpec.src('../app.js'));
             expect(contents.body.content).to.equal(appFileContents);
         });
 
@@ -78,7 +78,7 @@ suite('loaded sources', () => {
             const contents = await launchProject.debugClient.sourceRequest({ source: { sourceReference: loadedSources[3].sourceReference }, sourceReference: 0 /** Not used. Backwards compatibility */ });
             expect(contents.success).to.equal(true);
 
-            const appFileContents = await utils.readFileP(testSpec.src('../index.html'));
+            const appFileContents = await readFileP(testSpec.src('../index.html'));
             expect(contents.body.content).to.equal(appFileContents);
         });
 });

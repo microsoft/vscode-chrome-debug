@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import { createColumnNumber, createLineNumber, LineNumber } from '../core-v2/chrome/internal/locations/subtypes';
-import { utils } from 'vscode-chrome-debug-core';
 import { Position } from '../core-v2/chrome/internal/locations/location';
+import { readFileP } from '../../testUtils';
 
 export async function findPositionOfTextInFile(filePath: string, text: string): Promise<Position> {
-    const contentsIncludingCarriageReturns = await utils.readFileP(filePath, 'utf8');
+    const contentsIncludingCarriageReturns = await readFileP(filePath, 'utf8');
     const contents = contentsIncludingCarriageReturns.replace(/\r/g, '');
     const textStartIndex = contents.indexOf(text);
 

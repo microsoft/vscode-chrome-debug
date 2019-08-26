@@ -8,6 +8,7 @@ import { testUsing } from '../fixtures/testUsing';
 import { LaunchProject } from '../fixtures/launchProject';
 import { TestProjectSpec } from '../framework/frameworkTestSupport';
 import { utils } from 'vscode-chrome-debug-core';
+import { readFileP } from '../../testUtils';
 
 suite('Unusual source-maps', () => {
     testUsing(`file:/// url in sources' field`,
@@ -16,7 +17,7 @@ suite('Unusual source-maps', () => {
 
             // Update source-map to have a file:/// url in the sources field
             const sourceMapPath = testSpec.src('../app.js.map');
-            const sourceMapContents = await utils.readFileP(sourceMapPath);
+            const sourceMapContents = await readFileP(sourceMapPath);
             const sourceMapJSON = JSON.parse(sourceMapContents);
             sourceMapJSON['sources'] = [`file:///${testSpec.src('../app.ts').replace(/\\/g, '/')}`];
             await utils.writeFileP(sourceMapPath, JSON.stringify(sourceMapJSON));

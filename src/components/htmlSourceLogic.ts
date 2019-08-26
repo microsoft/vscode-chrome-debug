@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { ISource, ILoadedSourceTreeNode, IScript, SourceScriptRelationship, utilities, ISourcesRetriever } from 'vscode-chrome-debug-core';
+import { ISource, ILoadedSourceTreeNode, IScript, SourceScriptRelationship, utilities, ISourcesRetriever, SourceContents } from 'vscode-chrome-debug-core';
 import { CDTPResourceContentGetter } from '../cdtpComponents/cdtpResourceContentGetter';
 import * as _ from 'lodash';
 
@@ -21,7 +21,7 @@ export class HTMLSourceRetriever implements ISourcesRetriever {
         return this._wrappedSourcesLogic.loadedSourcesTreeForScript(script);
     }
 
-    public async text(source: ISource): Promise<string> {
+    public async text(source: ISource): Promise<SourceContents> {
         return source.tryResolving(
             async loadedSource => {
                 if (loadedSource.sourceScriptRelationship === SourceScriptRelationship.SourceIsMoreThanAScript) {
@@ -32,7 +32,8 @@ export class HTMLSourceRetriever implements ISourcesRetriever {
                         throw new Error(`iFrames are not currently supported. frame ids: ${JSON.stringify(frameIds)}`);
                     }
 
-                    return this._resourceContentGetter.resourceContent({ url: loadedSource.url, frameId: utilities.singleElementOfArray(frameIds) });
+                    const contents = await this._resourceContentGetter.resourceContent({ url: loadedSource.url, frameId: utilities.singleElementOfArray(frameIds) });
+                    return new SourceContents(contents);
                 }
                 return this._wrappedSourcesLogic.text(source);
             },
