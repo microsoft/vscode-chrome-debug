@@ -4,7 +4,7 @@
 import * as utils from '../utils';
 import {
     CDTP, ISupportedDomains, inject, TYPES, CDTPEventsEmitterDiagnosticsModule, IServiceComponent, ConnectedCDAConfiguration,
-    CDTPDomainsEnabler, IPausedOverlayConfigurer, ICDTPDebuggeeExecutionEventsProvider, injectable
+    CDTPDomainsEnabler, IPausedOverlayConfigurer, IEventsToClientReporter, injectable
 } from 'vscode-chrome-debug-core';
 import { ILaunchRequestArgs } from '../chromeDebugInterfaces';
 
@@ -66,12 +66,12 @@ export class ShowOverlayWhenPaused implements IServiceComponent {
     constructor(
         @inject(TYPES.IPausedOverlayConfigurer) private readonly _pausedOverlay: IPausedOverlayConfigurer,
         @inject(CDTPDeprecatedPage) private readonly _deprecatedPage: CDTPDeprecatedPage,
-        @inject(TYPES.ICDTPDebuggeeExecutionEventsProvider) debuggeeExecutionEventsProvider: ICDTPDebuggeeExecutionEventsProvider,
+        @inject(TYPES.IEventsToClientReporter) _eventsToClientReporter: IEventsToClientReporter,
         @inject(TYPES.ISupportedDomains) private readonly _supportedDomains: ISupportedDomains,
         @inject(TYPES.ConnectedCDAConfiguration) _configuration: ConnectedCDAConfiguration,
     ) {
-        debuggeeExecutionEventsProvider.onPaused(() => this.onPaused());
-        debuggeeExecutionEventsProvider.onResumed(() => this.onResumed());
+        _eventsToClientReporter.listenToDebuggeeWasStopped(() => this.onPaused());
+        _eventsToClientReporter.listenToDebuggeeWasResumed(() => this.onResumed());
         const clientOverlayPausedMessage = (<ILaunchRequestArgs>_configuration.args)._clientOverlayPausedMessage;
         if (clientOverlayPausedMessage) {
             this._pagePauseMessage = clientOverlayPausedMessage;
