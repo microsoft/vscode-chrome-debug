@@ -300,7 +300,11 @@ export class ChromeLauncher implements IDebuggeeLauncher {
 
             const _chromePID = chromeProc.pid;
 
-            return new LaunchedAsChildProcess(_chromePID, chromeProc);
+            if (platform === coreUtils.Platform.Windows && _chromePID) {
+                return new LaunchedInWindowsWithPID(_chromePID);
+            } else {
+                return new LaunchedAsChildProcess(_chromePID, chromeProc);
+            }
         }
     }
 
