@@ -17,7 +17,7 @@
 </p>
 
 
-A VS Code extension to debug your JavaScript code in the Google Chrome browser, or other targets that support the [Chrome DevTools Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
+A VS Code extension to debug your JavaScript code in the Google Chrome browser, or other targets that support the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/#home).
 
 ![Demo](https://github.com/Microsoft/vscode-chrome-debug/blob/master/images/demo.gif?raw=true)
 
