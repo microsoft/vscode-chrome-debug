@@ -30,7 +30,7 @@ export function chromeProvidedPortWithoutUserDataDir() {
 export function couldNotConnectToPort(address: string, port: number) {
     return Promise.reject(new ErrorWithMessage(<DebugProtocol.Message>{
         id: 2008,
-        format: localize('launch.port.not.open', 'Could not open a connection to Chrome at: {address}:{port}', '{address}', '{port}'),
+        format: localize('launch.port.not.open', 'Could not open a connection to Chrome at: {address}:{port}'),
         variables: { address, port: port.toString() },
         sendTelemetry: true
     }));
