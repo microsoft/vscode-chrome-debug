@@ -8,6 +8,9 @@ import { utils, chromeUtils } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-chrome-debug-core';
 import * as errors from './errors';
 
+import * as nls from 'vscode-nls';
+const localize = nls.loadMessageBundle();
+
 /**
  * Chrome connection class that supports launching with --remote-debugging-port=0 to get a random port for the debug session
  */

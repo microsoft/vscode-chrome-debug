@@ -31,7 +31,7 @@ const defaultLanguages = [
     { id: 'it', folderName: 'ita' },
     { id: 'cs', folderName: 'csy' },
     { id: 'tr', folderName: 'trk' },
-    { id: 'pt-br', folderName: 'ptb', transifexId: 'pt_BR' },
+    { id: 'pt-br', folderName: 'ptb', transifexId: 'pt-BR' },
     { id: 'pl', folderName: 'plk' }
 ];
 
@@ -177,10 +177,22 @@ gulp.task('translations-import', () => {
 	})).on('end', () => done());
 });
 
-gulp.task('i18n-import', () => {
-    return es.merge(defaultLanguages.map(language => {
-        return gulp.src(`../${translationExtensionName}-localization/${language.folderName}/**/*.xlf`)
+// Imports localization from raw localized MLCP strings to VS Code .i18n.json files
+gulp.task("translations-import", (done) => {
+    var options = minimist(process.argv.slice(2), {
+        string: "location",
+        default: {
+            location: "../vscode-translations-import"
+        }
+    });
+    es.merge(defaultLanguages.map((language) => {
+        let id = language.transifexId || language.id;
+        log(path.join(options.location, id, 'vscode-extensions', `${translationExtensionName}.xlf`));
+        return gulp.src(path.join(options.location, id, 'vscode-extensions', `${translationExtensionName}.xlf`))
             .pipe(nls.prepareJsonFiles())
-            .pipe(gulp.dest(path.join('./i18n', language.folderName)));
-    }));
+            .pipe(gulp.dest(path.join("./i18n", language.folderName)));
+    }))
+        .pipe(es.wait(() => {
+            done();
+        }));
 });
