@@ -1,3 +1,12 @@
+## 4.11.7
+* Support clearing the current color in console.log color format args - [microsoft/vscode#76550](https://github.com/microsoft/vscode#76550)
+
+## 4.11.5
+* Fix remote debugging issue - [#867](https://github.com/microsoft/vscode-chrome-debug/issues/867)
+
+## 4.11.4
+* Fix debugging in a remote window with chrome-debug as a UI extension - [#832](https://github.com/microsoft/vscode-chrome-debug/issues/832)
+
 ## 4.11.3
 * Fix frames labeled as `smartStep` when they shouldn't be - [Microsoft/vscode#68127](https://github.com/microsoft/vscode/issues/68127)
 * Fix slow attach when files don't exist on disk - [Microsoft/vscode#69118](https://github.com/microsoft/vscode/issues/69118)
