@@ -16,6 +16,7 @@ import { ShowOverlayWhenPaused, CDTPDeprecatedPage } from './features/showOverla
 import { CustomizedUninitializedCDA } from './components/customizedUninitializedCDA';
 import { ReportVersionInformation } from './features/reportVersionInformation';
 import { RestartDebugSession } from './features/restartDebugSession';
+import { ChromeProvidedPortConnection } from './chromeProvidedPortConnection';
 
 const EXTENSION_NAME = 'debugger-for-chrome';
 
@@ -48,6 +49,7 @@ extensibilityPoints.bindAdditionalComponents = (diContainer: DependencyInjection
     diContainer.configureClass(CDTPDeprecatedPage, CDTPDeprecatedPage);
     diContainer.configureClass(TYPES.ICommandHandlerDeclarer, RestartDebugSession);
 };
+extensibilityPoints.chromeConnection = ChromeProvidedPortConnection;
 
 ChromeDebugSession.run(ChromeDebugSession.getSession(
     {
