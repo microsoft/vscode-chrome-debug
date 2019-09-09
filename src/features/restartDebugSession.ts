@@ -1,10 +1,15 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { inject, TYPES, IBrowserNavigator } from 'vscode-chrome-debug-core';
+import { inject, injectable, TYPES, IBrowserNavigator, ICommandHandlerDeclarer, CommandHandlerDeclaration, ICommandHandlerDeclaration } from 'vscode-chrome-debug-core';
 
-export class RestartDebugSession {
-    // TODO DIEGO: Implement mechanism for the debug adapters to declare handlers for events
+@injectable()
+export class RestartDebugSession implements ICommandHandlerDeclarer {
+    getCommandHandlerDeclarations(): ICommandHandlerDeclaration[] {
+        return CommandHandlerDeclaration.fromLiteralObject({
+            restart: () => this.restart()
+        });
+    }
 
     /**
      * Opt-in event called when the 'reload' button in the debug widget is pressed
