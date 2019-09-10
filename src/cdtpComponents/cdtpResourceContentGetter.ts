@@ -1,7 +1,7 @@
 /*---------------------------------------------------------
  * Copyright (C) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------*/
-import { TYPES, inject, injectable, CDTPEnableableDiagnosticsModule, CDTP, CDTPDomainsEnabler, IExecutionContextEventsProvider } from 'vscode-chrome-debug-core';
+import { TYPES, inject, injectable, CDTPEnableableDiagnosticsModule, CDTP, CDTPDomainsEnabler, IExecutionContextEventsProvider, SourceContents } from 'vscode-chrome-debug-core';
 import * as _ from 'lodash';
 
 /**
@@ -34,7 +34,7 @@ export class CDTPResourceContentGetter extends CDTPEnableableDiagnosticsModule<C
     });
     }
 
-    public async resourceContent(params: CDTP.Page.GetResourceContentRequest): Promise<string> {
-        return (await this.api.getResourceContent(params)).content;
+    public async resourceContent(params: CDTP.Page.GetResourceContentRequest): Promise<SourceContents> {
+        return new SourceContents((await this.api.getResourceContent(params)).content);
     }
 }
