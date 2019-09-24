@@ -1,3 +1,6 @@
+## 4.12.0
+* Show all possible breakpoint locations - [#934](https://github.com/microsoft/vscode-chrome-debug/issues/934)
+
 ## 4.11.7
 * Support clearing the current color in console.log color format args - [microsoft/vscode#76550](https://github.com/microsoft/vscode#76550)
 
