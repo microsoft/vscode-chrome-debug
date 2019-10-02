@@ -5,6 +5,7 @@
 import * as vscode from 'vscode';
 import * as Core from 'vscode-chrome-debug-core';
 import * as nls from 'vscode-nls';
+import * as path from 'path';
 
 import { defaultTargetFilter, getTargetFilter } from './utils';
 
@@ -36,7 +37,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
     /**
      * Try to add all missing attributes to the debug configuration being launched.
      */
-    async resolveDebugConfiguration(_folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, _token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration | null> {
+    async resolveDebugConfiguration(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration, _token?: vscode.CancellationToken): Promise<vscode.DebugConfiguration | null> {
         // if launch.json is missing or empty
         if (!config.type && !config.request && !config.name) {
             // Return null so it will create a launch.json and fall back on provideDebugConfigurations - better to point the user towards the config
@@ -66,18 +67,63 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             }
         }
 
+        resolveRemoteUris(folder, config);
+
         return config;
     }
 }
 
-function toggleSkippingFile(path: string | undefined): void {
-    if (!path) {
-        const activeEditor = vscode.window.activeTextEditor;
-        path = activeEditor && activeEditor.document.fileName;
+// Must match the strings in -core's remoteMapper.ts
+const remoteUriScheme = 'vscode-remote';
+const remotePathComponent = '__vscode-remote-uri__';
+
+const isWindows = process.platform === 'win32';
+function getFsPath(uri: vscode.Uri): string {
+    const fsPath = uri.fsPath;
+    return isWindows && !fsPath.match(/^[a-zA-Z]:/) ?
+        fsPath.replace(/\\/g, '/') : // Hack - undo the slash normalization that URI does when windows is the current platform
+        fsPath;
+}
+
+function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
+    const uriPath = getFsPath(remoteUri);
+    const driveLetterMatch = uriPath.match(/^[A-Za-z]:/);
+    let internalPath: string;
+    if (!!driveLetterMatch) {
+        internalPath = path.win32.join(driveLetterMatch[0], remotePathComponent, uriPath.substr(2));
+    } else {
+        internalPath = path.posix.join('/', remotePathComponent, uriPath);
     }
 
-    if (path && vscode.debug.activeDebugSession) {
-        const args: Core.IToggleSkipFileStatusArgs = typeof path === 'string' ? { path: path } : { sourceReference: path };
+    return internalPath;
+}
+
+function rewriteWorkspaceRoot(configObject: any, internalWorkspaceRootPath: string): void {
+    for (const key in configObject) {
+        if (typeof configObject[key] === 'string') {
+            configObject[key] = configObject[key].replace(/\$\{workspace(Root|Folder)\}/g, internalWorkspaceRootPath);
+        } else {
+            rewriteWorkspaceRoot(configObject[key], internalWorkspaceRootPath);
+        }
+    }
+}
+
+function resolveRemoteUris(folder: vscode.WorkspaceFolder | undefined, config: vscode.DebugConfiguration): void {
+    if (folder && folder.uri.scheme === remoteUriScheme) {
+        const internalPath = mapRemoteClientUriToInternalPath(folder.uri);
+        rewriteWorkspaceRoot(config, internalPath);
+        (<any>config).remoteAuthority = folder.uri.authority;
+    }
+}
+
+function toggleSkippingFile(aPath: string | undefined): void {
+    if (!aPath) {
+        const activeEditor = vscode.window.activeTextEditor;
+        aPath = activeEditor && activeEditor.document.fileName;
+    }
+
+    if (aPath && vscode.debug.activeDebugSession) {
+        const args: Core.IToggleSkipFileStatusArgs = typeof aPath === 'string' ? { path: aPath } : { sourceReference: aPath };
         vscode.debug.activeDebugSession.customRequest('toggleSkipFileStatus', args);
     }
 }
