@@ -1,3 +1,7 @@
+## 4.12.1
+* Hide `[[StableObjectId]]` variable - [Microsoft/vscode-chrome-debug-core#396](https://github.com/microsoft/vscode-chrome-debug-core/issues/396)
+* Hide `breakpointLocations` errors from console
+
 ## 4.12.0
 * Show all possible breakpoint locations - [#934](https://github.com/microsoft/vscode-chrome-debug/issues/934)
 
