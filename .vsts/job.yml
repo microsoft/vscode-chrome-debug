@@ -88,6 +88,8 @@ jobs:
         uploadPREfast: false
         uploadRoslyn: false
         uploadTSLint: false
+      continueOnError: true
+
 
   - ${{ if eq(parameters.name, 'Windows') }}:
     - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@2
