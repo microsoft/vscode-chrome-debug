@@ -78,7 +78,7 @@ jobs:
         notificationAlias: 'webdiag-extensions@microsoft.com'
         instanceUrlForTsaV2: DEVDIV
         projectNameDEVDIV: DevDiv
-        areaPath: 'DevDiv\Client Platform\HTML Experiences\Diagnostics\Debugger'
+        areaPath: 'DevDiv\TypeScript\HTML Experiences\Diagnostics\Debugger'
         uploadAPIScan: false
         uploadBinSkim: false
         uploadFortifySCA: false
@@ -88,7 +88,6 @@ jobs:
         uploadPREfast: false
         uploadRoslyn: false
         uploadTSLint: false
-      continueOnError: true
 
 
   - ${{ if eq(parameters.name, 'Windows') }}:
