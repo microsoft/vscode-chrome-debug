@@ -11,6 +11,9 @@ import { defaultTargetFilter, getTargetFilter } from './utils';
 
 const localize = nls.loadMessageBundle();
 
+const DEBUG_SETTINGS = 'debug.chrome';
+const USE_V3_SETTING = 'useV3';
+
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSmartStep', toggleSmartStep));
@@ -68,6 +71,12 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
         }
 
         resolveRemoteUris(folder, config);
+
+        const useV3 = !!vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING);
+        if (useV3) {
+            config['__workspaceFolder'] = '${workspaceFolder}';
+            config.type = 'pwa-chrome';
+        }
 
         return config;
     }
