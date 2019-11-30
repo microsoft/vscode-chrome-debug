@@ -1,3 +1,6 @@
+## 4.12.2
+* Fix error when setting value on property - [Microsoft/vscode-node-debug2#250](https://github.com/microsoft/vscode-node-debug2/issues/250)
+
 ## 4.12.1
 * Hide `[[StableObjectId]]` variable - [Microsoft/vscode-chrome-debug-core#396](https://github.com/microsoft/vscode-chrome-debug-core/issues/396)
 * Hide `breakpointLocations` errors from console
