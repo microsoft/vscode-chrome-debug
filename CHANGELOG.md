@@ -1,3 +1,6 @@
+## 4.12.3
+* Fix error when using restartFrame on Electron - [Microsoft/vscode#86411](https://github.com/microsoft/vscode/issues/86411)
+
 ## 4.12.2
 * Fix error when setting value on property - [Microsoft/vscode-node-debug2#250](https://github.com/microsoft/vscode-node-debug2/issues/250)
 
