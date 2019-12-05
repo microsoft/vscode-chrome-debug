@@ -146,6 +146,8 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.
 * `disableNetworkCache`: If true, the network cache will be disabled.
 * `showAsyncStacks`: If true, callstacks across async calls (like `setTimeout`, `fetch`, resolved Promises, etc) will be shown.
+* `breakOnLoad`: Experimental. If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.
+* `breakOnLoadStrategy`: The strategy used for `breakOnLoad`. Options are "Instrument" or "Regex". Instrument "[tells] Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints" Regex "[s]ets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
 
 ## Skip files / Blackboxing / Ignore files
 You can use the `skipFiles` property to ignore/blackbox specific files while debugging. For example, if you set `"skipFiles": ["jquery.js"]`, then you will skip any file named 'jquery.js' when stepping through your code. You also won't break on exceptions thrown from 'jquery.js'. This works the same as "blackboxing scripts" in Chrome DevTools.
@@ -215,7 +217,9 @@ If you have any other issues, please open an issue.
 
 ### My breakpoints aren't hit. What's wrong?
 
-If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immediately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint. We are working in simplify this in with "break-on-load" breakpoints in https://github.com/Microsoft/vscode-chrome-debug/issues/445, which will make this timing issue transparent.
+If your breakpoints aren't hit, it's most likely a sourcemapping issue or because you are having breakpoints in immediately executed code. If you for example have a breakpoint in a `render function` that runs on page load, sometimes our debugger might not be attached to Chrome before the code has been executed. This means that you will have to refresh the page in Chrome after we have attached from VS Code to hit your breakpoint.
+
+Alternatively, we have an experimental "break-on-load" configuration option which will make this timing issue more transparent. It landed in https://github.com/microsoft/vscode-chrome-debug-core/pull/241.
 
 If you have a sourcemapping issue, please see https://github.com/Microsoft/vscode-chrome-debug#sourcemaps
 
