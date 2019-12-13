@@ -113,6 +113,15 @@
         "language": "fsharp"
       }
     ],
+    "configuration": {
+      "properties": {
+        "debug.chrome.useV3": {
+          "type": "boolean",
+					"description": "%debug.chrome.useV3.description%",
+					"default": false
+        }
+      }
+    },
     "debuggers": [
       {
         "type": "chrome",
