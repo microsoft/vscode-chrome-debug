@@ -28,5 +28,6 @@
 	"chrome.breakOnLoad.description": "Deneysel özellik - True olduğunda, hata ayıklama bağdaştırıcısı betikler yüklenmeden önce betiklerde kesme noktaları ayarlamaya çalışır. Böylece hata ayıklama bağdaştırıcısı bu betiklerin başlangıcındaki kesme noktalarına ulaşabilir. Bu işlem, performans üzerinde etkilidir.",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad için kullanılacak strateji.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Chrome'un her betik yüklenirken duraklamasını ve kaynak eşlemelerini çözümleyerek kesme noktalarını ayarlamasını sağlayın",
-	"chrome.breakOnLoadStrategy.regex.description": "Kesme noktasının ayarlandığı dosya ile aynı ada sahip dosyalarda kesme noktalarını iyimser bir şekilde ayarlar."
+	"chrome.breakOnLoadStrategy.regex.description": "Kesme noktasının ayarlandığı dosya ile aynı ada sahip dosyalarda kesme noktalarını iyimser bir şekilde ayarlar.",
+	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
 }

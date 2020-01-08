@@ -28,5 +28,6 @@
 	"chrome.breakOnLoad.description": "实验性功能 - 如果为 true，则调试适配器将尝试在加载脚本之前在其中设置断点，使其可命中这些脚本开头之处的断点。性能会受到影响。",
 	"chrome.breakOnLoadStrategy.description": "要用于 breakOnLoad 的策略。",
 	"chrome.breakOnLoadStrategy.instrument.description": "指示 Chrome 在加载每个脚本时暂停，以便解析源映射并设置断点",
-	"chrome.breakOnLoadStrategy.regex.description": "在与设置断点的文件名相同的文件中乐观地设置断点。"
+	"chrome.breakOnLoadStrategy.regex.description": "在与设置断点的文件名相同的文件中乐观地设置断点。",
+	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
 }

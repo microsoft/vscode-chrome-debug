@@ -28,5 +28,6 @@
 	"chrome.breakOnLoad.description": "Экспериментальная функция — если установлено значение \"true\", то адаптер отладки попытается установить точки останова в сценариях перед их загрузкой, чтобы обеспечить срабатывание точек останова в начале этих сценариев. Эта функция оказывает влияние на производительность.",
 	"chrome.breakOnLoadStrategy.description": "Стратегия, используемая для breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Сообщает Chrome о том, что необходимо приостановить работу после загрузки каждого сценария для разрешения сопоставителей с исходным кодом и установки точек останова",
-	"chrome.breakOnLoadStrategy.regex.description": "Оптимистично устанавливает точки останова в файлах с таким же именем, как у файла, в котором установлена точка останова."
+	"chrome.breakOnLoadStrategy.regex.description": "Оптимистично устанавливает точки останова в файлах с таким же именем, как у файла, в котором установлена точка останова.",
+	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
 }

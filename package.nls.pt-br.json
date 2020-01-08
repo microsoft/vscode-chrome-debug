@@ -28,5 +28,6 @@
 	"chrome.breakOnLoad.description": "Recurso experimental – Se for true, o adaptador de depuração tentará definir pontos de interrupção nos scripts antes que eles sejam carregados, para que possa atingir pontos de interrupção no início desses scripts. Tem um impacto no desempenho.",
 	"chrome.breakOnLoadStrategy.description": "A estratégia a ser usada para breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Informe ao Chrome para pausar conforme cada script é carregado, resolvendo sourcemaps e definindo pontos de interrupção",
-	"chrome.breakOnLoadStrategy.regex.description": "Define os pontos de interrupção de modo otimista em arquivos com o mesmo nome que o arquivo no qual o ponto de interrupção está definido."
+	"chrome.breakOnLoadStrategy.regex.description": "Define os pontos de interrupção de modo otimista em arquivos com o mesmo nome que o arquivo no qual o ponto de interrupção está definido.",
+	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
 }
