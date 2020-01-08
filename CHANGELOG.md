@@ -1,3 +1,6 @@
+## 4.12.4
+* Register "useV3" setting officially
+
 ## 4.12.3
 * Fix error when using restartFrame on Electron - [Microsoft/vscode#86411](https://github.com/microsoft/vscode/issues/86411)
 
