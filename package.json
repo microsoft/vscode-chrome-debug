@@ -68,7 +68,7 @@
     "tslint": "^5.7.0",
     "typemoq": "^2.1.0",
     "typescript": "^3.5.2",
-    "vsce": "^1.48.0",
+    "vsce": "^1.71.0",
     "vscode": "^1.1.30",
     "vscode-chrome-debug-core-testsupport": "^4.0.0",
     "vscode-debugadapter-testsupport": "^1.33.0",
