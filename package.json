@@ -17,7 +17,7 @@
     "ui"
   ],
   "engines": {
-    "vscode": "^1.17.0"
+    "vscode": "^1.41.0"
   },
   "categories": [
     "Debuggers"
