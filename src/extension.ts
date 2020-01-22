@@ -72,7 +72,9 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
         resolveRemoteUris(folder, config);
 
-        const useV3 = !!vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING);
+        const useV3 = !!vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING)
+            || vscode.workspace.getConfiguration().get('debug.javascript.usePreview', false);
+
         if (useV3 && !vscode.env.remoteName) {
             config['__workspaceFolder'] = '${workspaceFolder}';
             config.type = 'pwa-chrome';
