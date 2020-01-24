@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "Debugger for Chrome",
-  "version": "4.12.5",
+  "version": "4.12.6",
   "icon": "images/icon.png",
   "description": "%extension.description%",
   "author": {
