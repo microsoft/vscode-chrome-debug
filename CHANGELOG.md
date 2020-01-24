@@ -1,3 +1,6 @@
+## 4.12.6
+* Respect the `debug.javascript.usePreview` setting
+
 ## 4.12.5
 * Don't respect the `"debug.chrome.useV3"` setting in a remote window, because that debugger doesn't support the remote scenario yet
 
