@@ -75,7 +75,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
         const useV3 = !!vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING)
             || vscode.workspace.getConfiguration().get('debug.javascript.usePreview', false);
 
-        if (useV3 && !vscode.env.remoteName) {
+        if (useV3) {
             config['__workspaceFolder'] = '${workspaceFolder}';
             config.type = 'pwa-chrome';
         }
