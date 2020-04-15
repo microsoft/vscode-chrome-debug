@@ -461,14 +461,6 @@
         "command": "extension.chrome-debug.toggleSmartStep",
         "title": "%chrome.toggleSmartStep.title%"
       }
-    ],
-    "keybindings": [
-      {
-        "command": "extension.node-debug.pickLoadedScript",
-        "key": "ctrl+f4",
-        "mac": "cmd+f4",
-        "when": "debugType == 'chrome'"
-      }
     ]
   }
 }
