@@ -475,7 +475,7 @@ export class ChromeDebugAdapter extends CoreDebugAdapter {
             logger.log(`spawn('${chromePath}', ${JSON.stringify(chromeArgs) })`);
             const options = {
                 detached: true,
-                stdio: ['ignore'],
+                stdio: ['ignore' as const],
             };
             if (env) {
                 options['env'] = this.getFullEnv(env);
