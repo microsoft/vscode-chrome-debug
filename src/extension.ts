@@ -72,8 +72,9 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
         resolveRemoteUris(folder, config);
 
-        const useV3 = !!vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING)
-            || vscode.workspace.getConfiguration().get('debug.javascript.usePreview', false);
+        const useV3 = (vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING)
+            || vscode.workspace.getConfiguration().get('debug.javascript.usePreview'))
+            ?? isInsiders();
 
         if (useV3) {
             config['__workspaceFolder'] = '${workspaceFolder}';
@@ -94,6 +95,12 @@ function getFsPath(uri: vscode.Uri): string {
     return isWindows && !fsPath.match(/^[a-zA-Z]:/) ?
         fsPath.replace(/\\/g, '/') : // Hack - undo the slash normalization that URI does when windows is the current platform
         fsPath;
+}
+
+function isInsiders() {
+	return vscode.env.uriScheme === 'vscode-insiders'
+		|| vscode.env.uriScheme === 'code-oss'
+		|| vscode.env.uriScheme === 'vscode-exploration';
 }
 
 function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {

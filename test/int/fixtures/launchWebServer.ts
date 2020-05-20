@@ -9,6 +9,7 @@ import { HttpOrHttpsServer } from '../types/server';
 import { ILaunchRequestArgs } from 'vscode-chrome-debug-core';
 import { logger } from 'vscode-debugadapter';
 import { URL } from 'url';
+import { AddressInfo } from 'net';
 
 async function createServerAsync(root: string): Promise<HttpOrHttpsServer> {
     const server = createServer({ root });
@@ -50,7 +51,7 @@ export class LaunchWebServer implements IFixture {
     }
 
     public get url(): URL {
-        const address = this._server.address();
+        const address = this._server.address() as AddressInfo;
         return new URL(`http://localhost:${address.port}/`);
     }
 
@@ -59,7 +60,7 @@ export class LaunchWebServer implements IFixture {
     }
 
     public get port(): number {
-        return this._server.address().port;
+        return (this._server.address() as AddressInfo).port;
     }
 
     public async cleanUp(): Promise<void> {
