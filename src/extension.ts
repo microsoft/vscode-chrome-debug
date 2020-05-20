@@ -12,7 +12,6 @@ import { defaultTargetFilter, getTargetFilter } from './utils';
 const localize = nls.loadMessageBundle();
 
 const DEBUG_SETTINGS = 'debug.chrome';
-const USE_V3_SETTING = 'useV3';
 
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
@@ -72,11 +71,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
         resolveRemoteUris(folder, config);
 
-        const useV3 = (vscode.workspace.getConfiguration(DEBUG_SETTINGS).get(USE_V3_SETTING)
-            || vscode.workspace.getConfiguration().get('debug.javascript.usePreview'))
-            ?? isInsiders();
-
-        if (useV3) {
+        if (useV3()) {
             config['__workspaceFolder'] = '${workspaceFolder}';
             config.type = 'pwa-chrome';
         }
@@ -97,10 +92,19 @@ function getFsPath(uri: vscode.Uri): string {
         fsPath;
 }
 
+function useV3() {
+    return getWithoutDefault('debug.chrome.useV3') ?? getWithoutDefault('debug.javascript.usePreview') ?? isInsiders();
+}
+
+function getWithoutDefault<T>(setting: string): T | undefined {
+    const info = vscode.workspace.getConfiguration().inspect<T>(setting);
+    return info?.workspaceValue ?? info?.globalValue;
+}
+
 function isInsiders() {
-	return vscode.env.uriScheme === 'vscode-insiders'
-		|| vscode.env.uriScheme === 'code-oss'
-		|| vscode.env.uriScheme === 'vscode-exploration';
+    return vscode.env.uriScheme === 'vscode-insiders'
+        || vscode.env.uriScheme === 'code-oss'
+        || vscode.env.uriScheme === 'vscode-exploration';
 }
 
 function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
