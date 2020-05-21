@@ -2,7 +2,7 @@ jobs:
 - template: job.yml
   parameters:
     name: macOS
-    vmImage: 'macOS-10.13'
+    vmImage: 'macOS-latest'
 
 - template: job.yml
   parameters:
