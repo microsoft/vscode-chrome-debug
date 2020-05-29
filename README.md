@@ -144,7 +144,7 @@ See our wiki page for some configured example apps: [Examples](https://github.co
 * `sourceMaps`: By default, the adapter will use sourcemaps and your original sources whenever possible. You can disable this by setting `sourceMaps` to false.
 * `pathMapping`: This property takes a mapping of URL paths to local paths, to give you more flexibility in how URLs are resolved to local files. `"webRoot": "${workspaceFolder}"` is just shorthand for a pathMapping like `{ "/": "${workspaceFolder}" }`.
 * `smartStep`: Automatically steps over code that doesn't map to source files. Especially useful for debugging with async/await.
-* `disableNetworkCache`: If true, the network cache will be disabled.
+* `disableNetworkCache`: If false, the network cache will be NOT disabled. It is disabled be default.
 * `showAsyncStacks`: If true, callstacks across async calls (like `setTimeout`, `fetch`, resolved Promises, etc) will be shown.
 * `breakOnLoad`: Experimental. If true, the debug adapter will attempt to set breakpoints in scripts before they are loaded, so it can hit breakpoints at the beginnings of those scripts. Has a perf impact.
 * `breakOnLoadStrategy`: The strategy used for `breakOnLoad`. Options are "Instrument" or "Regex". Instrument "[tells] Chrome to pause as each script is loaded, resolving sourcemaps and setting breakpoints" Regex "[s]ets breakpoints optimistically in files with the same name as the file in which the breakpoint is set."
