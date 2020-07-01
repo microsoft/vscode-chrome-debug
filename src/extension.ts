@@ -47,7 +47,8 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             return null;
         }
 
-        if (config.request === 'attach') {
+        const v3 = useV3();
+        if (config.request === 'attach' && !v3) {
             const discovery = new Core.chromeTargetDiscoveryStrategy.ChromeTargetDiscovery(
                 new Core.NullLogger(), new Core.telemetry.NullTelemetryReporter());
 
@@ -71,7 +72,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
 
         resolveRemoteUris(folder, config);
 
-        if (useV3()) {
+        if (v3) {
             folder = folder || (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined);
             config['__workspaceFolder'] = folder?.uri.fsPath;
             config.type = 'pwa-chrome';
