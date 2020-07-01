@@ -95,18 +95,12 @@ function getFsPath(uri: vscode.Uri): string {
 }
 
 function useV3() {
-    return getWithoutDefault('debug.chrome.useV3') ?? getWithoutDefault('debug.javascript.usePreview') ?? isInsiders();
+    return getWithoutDefault('debug.chrome.useV3') ?? getWithoutDefault('debug.javascript.usePreview') ?? true;
 }
 
 function getWithoutDefault<T>(setting: string): T | undefined {
     const info = vscode.workspace.getConfiguration().inspect<T>(setting);
     return info?.workspaceValue ?? info?.globalValue;
-}
-
-function isInsiders() {
-    return vscode.env.uriScheme === 'vscode-insiders'
-        || vscode.env.uriScheme === 'code-oss'
-        || vscode.env.uriScheme === 'vscode-exploration';
 }
 
 function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {
