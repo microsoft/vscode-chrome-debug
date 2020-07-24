@@ -1,3 +1,8 @@
+
+**Important note:** By default, this extension now delegates to [the new js-debug extension](http://github.com/microsoft/vscode-js-debug) which is built-in to VS Code. Please file issues on that repo. To revert to the old behavior, you can set `"debug.javascript.usePreview": false` in your settings.
+
+---
+
 <h1 align="center">
   <br>
     <img src="https://github.com/Microsoft/vscode-chrome-debug/blob/master/images/icon.png?raw=true" alt="logo" width="200">
@@ -15,9 +20,6 @@
     <a href="https://gitter.im/Microsoft/vscode-chrome-debug?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/Microsoft/vscode-chrome-debug.svg" alt="Release"></a>
 
 </p>
-
-By default, this extension now delegates to [the new js-debug extension](http://github.com/microsoft/vscode-js-debug). Please file issues on that repo. To revert to the old behavior, you can set `"debug.javascript.usePreview": false` in your settings.
-
 
 A VS Code extension to debug your JavaScript code in the Google Chrome browser, or other targets that support the [Chrome DevTools Protocol](https://chromedevtools.github.io/debugger-protocol-viewer/).
 
