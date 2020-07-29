@@ -1,3 +1,8 @@
+**Note**: Active development for Chrome debugging in VS Code is happening in http://github.com/microsoft/vscode-js-debug. The vscode-chrome-debug repo will soon be considered deprecated.
+
+## 4.12.9 - 4.12.7
+* Making `debug.javascript.usePreview` the default
+
 ## 4.12.6
 * Respect the `debug.javascript.usePreview` setting
 
