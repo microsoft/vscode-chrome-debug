@@ -118,7 +118,8 @@
         "debug.chrome.useV3": {
           "type": "boolean",
           "description": "%debug.chrome.useV3.description%",
-          "default": false
+          "deprecationMessage": "%debug.chrome.useV3.deprecated%",
+          "default": true
         }
       }
     },
