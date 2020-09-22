@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "Stratégie à utiliser pour breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Indiquer à Chrome d'interrompre son exécution durant le chargement de chaque script pour résoudre les mappages de sources et définir les points d'arrêt",
 	"chrome.breakOnLoadStrategy.regex.description": "Définit les points d'arrêt de manière optimiste dans les fichiers qui portent le même nom que le fichier dans lequel le point d'arrêt est défini.",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }

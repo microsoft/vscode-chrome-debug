@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "要用于 breakOnLoad 的策略。",
 	"chrome.breakOnLoadStrategy.instrument.description": "指示 Chrome 在加载每个脚本时暂停，以便解析源映射并设置断点",
 	"chrome.breakOnLoadStrategy.regex.description": "在与设置断点的文件名相同的文件中乐观地设置断点。",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }

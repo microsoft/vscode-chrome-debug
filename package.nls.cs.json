@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "Strategie, která se má použít pro funkci breakOnLoad",
 	"chrome.breakOnLoadStrategy.instrument.description": "Nastaví pozastavení Chromu při načítání každého skriptu za účelem překladu sourcemapů a nastavení zarážek.",
 	"chrome.breakOnLoadStrategy.regex.description": "Nastaví zarážky optimisticky do souborů se stejným názvem, jaký má soubor, ve kterém je zarážka nastavena.",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }

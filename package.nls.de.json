@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "Die für breakOnLoad zu verwendende Strategie.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Geben Sie an, dass Chrome beim Laden jedes Skripts anhalten soll, um Sourcemaps aufzulösen und Haltepunkte festzulegen.",
 	"chrome.breakOnLoadStrategy.regex.description": "Legt Haltepunkte optimistisch in Dateien fest, die denselben Namen wie die Datei aufweisen, in der der Haltepunkt festgelegt ist.",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }

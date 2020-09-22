@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "Estrategia que debe usarse para breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Indica a Chrome que haga una pausa cuando se carga cada script para resolver los mapas de origen y establecer puntos de interrupción",
 	"chrome.breakOnLoadStrategy.regex.description": "Establece puntos de interrupción de forma optimista en archivos con el mismo nombre que el archivo donde se establece el punto de interrupción.",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }

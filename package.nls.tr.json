@@ -29,5 +29,6 @@
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad için kullanılacak strateji.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Chrome'un her betik yüklenirken duraklamasını ve kaynak eşlemelerini çözümleyerek kesme noktalarını ayarlamasını sağlayın",
 	"chrome.breakOnLoadStrategy.regex.description": "Kesme noktasının ayarlandığı dosya ile aynı ada sahip dosyalarda kesme noktalarını iyimser bir şekilde ayarlar.",
-	"debug.chrome.useV3.description": "[Experimental] Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension."
+	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
+	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
 }
