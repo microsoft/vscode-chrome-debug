@@ -70,12 +70,12 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             }
         }
 
-        resolveRemoteUris(folder, config);
-
         if (v3) {
             folder = folder || (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined);
             config['__workspaceFolder'] = folder?.uri.fsPath;
             config.type = 'pwa-chrome';
+        } else {
+            resolveRemoteUris(folder, config);
         }
 
         return config;
