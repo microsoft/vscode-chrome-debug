@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Do not file issues here!
+about: VS Code has a new debugger which can be found in the vscode-js-debug repo
 title: ''
 labels: ''
 assignees: ''
