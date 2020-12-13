@@ -1,4 +1,6 @@
-**Important note:** By default, this extension now delegates to [the new js-debug extension](http://github.com/microsoft/vscode-js-debug) which is built-in to VS Code. Please file issues on that repo. To revert to the old behavior, you can set `"debug.javascript.usePreview": false` in your settings.
+## :rotating_light: Important
+
+Please file issues on the repo for [the new js-debug extension](http://github.com/microsoft/vscode-js-debug). By default, this extension now delegates to that one which is built-in to VS Code.
 
 ---
 
