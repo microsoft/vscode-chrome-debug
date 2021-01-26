@@ -126,7 +126,7 @@
     "debuggers": [
       {
         "type": "chrome",
-        "label": "Chrome",
+        "label": "Chrome (legacy)",
         "program": "./out/src/chromeDebug.js",
         "runtime": "node",
         "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
@@ -138,7 +138,7 @@
         ],
         "configurationSnippets": [
           {
-            "label": "Chrome: Launch",
+            "label": "Chrome: Launch (legacy)",
             "description": "Launch Chrome to debug a URL",
             "body": {
               "type": "chrome",
@@ -149,7 +149,7 @@
             }
           },
           {
-            "label": "Chrome: Attach",
+            "label": "Chrome: Attach (legacy)",
             "description": "Attach to an instance of Chrome already in debug mode",
             "body": {
               "type": "chrome",
