@@ -1,6 +1,8 @@
 ## :rotating_light: Important
 
-Please file issues on the repo for [the new js-debug extension](http://github.com/microsoft/vscode-js-debug). By default, this extension now delegates to that one which is built-in to VS Code.
+This extension has been deprecated as Visual Studio Code now has a [bundled JavaScript Debugger](https://github.com/microsoft/vscode-js-debug) that covers the same functionality. It is a debugger that debugs Node.js, Chrome, Edge, WebView2, VS Code extensions, and more. You can safely un-install this extension and you will still be able to have the functionality you need.
+
+Please file any issues you encounter in [that repository](https://github.com/microsoft/vscode-js-debug).
 
 ---
 
