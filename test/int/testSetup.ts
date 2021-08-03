@@ -88,7 +88,7 @@ export async function setupWithTitle(testTitle: string, port?: number, launchPro
         testLaunchProps = launchProps;
     }
 
-    const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
+    const debugClient = await ts.setup({ entryPoint: DEBUG_ADAPTER, type: 'legacy-chrome', patchLaunchArgs: args => patchLaunchArgs(args, testTitle), port: port });
     debugClient.defaultTimeout = DefaultTimeoutMultiplier * 10000 /*10 seconds*/;
 
     if (isThisV2) { // The logging proxy breaks lots of tests in v1, possibly due to some race conditions exposed by the extra delay

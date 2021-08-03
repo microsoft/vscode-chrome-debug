@@ -128,7 +128,7 @@ suite('Chrome Debug Adapter etc', () => {
             const DEBUGGER_LINE = 2;
 
             await dc.initializeRequest({
-                adapterID: 'chrome',
+                adapterID: 'legacy-chrome',
                 clientID: 'visualstudio',
                 linesStartAt1: true,
                 columnsStartAt1: true,
@@ -146,7 +146,7 @@ suite('Chrome Debug Adapter etc', () => {
             const DEBUGGER_LINE = 2;
 
             await dc.initializeRequest({
-                adapterID: 'chrome',
+                adapterID: 'legacy-chrome',
                 clientID: 'visualstudio',
                 linesStartAt1: true,
                 columnsStartAt1: true,

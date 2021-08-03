@@ -11,31 +11,17 @@ import { defaultTargetFilter, getTargetFilter } from './utils';
 
 const localize = nls.loadMessageBundle();
 
-const DEBUG_SETTINGS = 'debug.chrome';
-
 export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSkippingFile', toggleSkippingFile));
     context.subscriptions.push(vscode.commands.registerCommand('extension.chrome-debug.toggleSmartStep', toggleSmartStep));
 
-    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('chrome', new ChromeConfigurationProvider()));
+    context.subscriptions.push(vscode.debug.registerDebugConfigurationProvider('legacy-chrome', new ChromeConfigurationProvider()));
 }
 
 export function deactivate() {
 }
 
-const DEFAULT_CONFIG = {
-    type: 'chrome',
-    request: 'launch',
-    name: localize('chrome.launch.name', 'Launch Chrome against localhost'),
-    url: 'http://localhost:8080',
-    webRoot: '${workspaceFolder}'
-};
-
 export class ChromeConfigurationProvider implements vscode.DebugConfigurationProvider {
-    provideDebugConfigurations(folder: vscode.WorkspaceFolder | undefined, token?: vscode.CancellationToken): vscode.ProviderResult<vscode.DebugConfiguration[]> {
-        return Promise.resolve([DEFAULT_CONFIG]);
-    }
-
     /**
      * Try to add all missing attributes to the debug configuration being launched.
      */
@@ -47,8 +33,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             return null;
         }
 
-        const v3 = useV3();
-        if (config.request === 'attach' && !v3) {
+        if (config.request === 'attach') {
             const discovery = new Core.chromeTargetDiscoveryStrategy.ChromeTargetDiscovery(
                 new Core.NullLogger(), new Core.telemetry.NullTelemetryReporter());
 
@@ -70,14 +55,7 @@ export class ChromeConfigurationProvider implements vscode.DebugConfigurationPro
             }
         }
 
-        if (v3) {
-            folder = folder || (vscode.workspace.workspaceFolders ? vscode.workspace.workspaceFolders[0] : undefined);
-            config['__workspaceFolder'] = folder?.uri.fsPath;
-            config.type = 'pwa-chrome';
-        } else {
-            resolveRemoteUris(folder, config);
-        }
-
+        resolveRemoteUris(folder, config);
         return config;
     }
 }
@@ -92,15 +70,6 @@ function getFsPath(uri: vscode.Uri): string {
     return isWindows && !fsPath.match(/^[a-zA-Z]:/) ?
         fsPath.replace(/\\/g, '/') : // Hack - undo the slash normalization that URI does when windows is the current platform
         fsPath;
-}
-
-function useV3() {
-    return getWithoutDefault('debug.chrome.useV3') ?? getWithoutDefault('debug.javascript.usePreview') ?? true;
-}
-
-function getWithoutDefault<T>(setting: string): T | undefined {
-    const info = vscode.workspace.getConfiguration().inspect<T>(setting);
-    return info?.workspaceValue ?? info?.globalValue;
 }
 
 function mapRemoteClientUriToInternalPath(remoteUri: vscode.Uri): string {

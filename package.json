@@ -1,6 +1,6 @@
 {
   "name": "debugger-for-chrome",
-  "displayName": "Debugger for Chrome",
+  "displayName": "[Deprecated] Debugger for Chrome",
   "version": "4.12.12",
   "icon": "images/icon.png",
   "description": "%extension.description%",
@@ -17,7 +17,8 @@
     "ui"
   ],
   "engines": {
-    "vscode": "^1.47.0"
+    "vscode": "^1.60.0-insider",
+    "node": ">=10"
   },
   "categories": [
     "Debuggers"
@@ -77,8 +78,7 @@
   },
   "main": "./out/src/extension",
   "activationEvents": [
-    "onDebugInitialConfigurations",
-    "onDebugResolve:chrome",
+    "onDebugResolve:legacy-chrome",
     "onCommand:extension.chrome-debug.toggleSkippingFile",
     "onCommand:extension.chrome-debug.toggleSmartStep"
   ],
@@ -113,19 +113,9 @@
         "language": "fsharp"
       }
     ],
-    "configuration": {
-      "properties": {
-        "debug.chrome.useV3": {
-          "type": "boolean",
-          "description": "%debug.chrome.useV3.description%",
-          "deprecationMessage": "%debug.chrome.useV3.deprecated%",
-          "default": true
-        }
-      }
-    },
     "debuggers": [
       {
-        "type": "chrome",
+        "type": "legacy-chrome",
         "label": "Chrome (legacy)",
         "program": "./out/src/chromeDebug.js",
         "runtime": "node",
@@ -444,12 +434,12 @@
         {
           "command": "extension.chrome-debug.toggleSkippingFile",
           "group": "navigation",
-          "when": "inDebugMode && debugType == 'chrome' && callStackItemType == 'stackFrame'"
+          "when": "inDebugMode && debugType == 'legacy-chrome' && callStackItemType == 'stackFrame'"
         },
         {
           "command": "extension.chrome-debug.toggleSmartStep",
           "group": "navigation",
-          "when": "inDebugMode && debugType == 'chrome' && callStackItemType == 'stackFrame'"
+          "when": "inDebugMode && debugType == 'legacy-chrome' && callStackItemType == 'stackFrame'"
         }
       ]
     },
