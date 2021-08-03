@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "Fonctionnalité expérimentale - Si la valeur est true, l'adaptateur de débogage tente de définir des points d'arrêt dans les scripts avant leur chargement. Ainsi, il peut atteindre les points d'arrêt au début de ces scripts. Cela a un impact sur le niveau de performance.",
 	"chrome.breakOnLoadStrategy.description": "Stratégie à utiliser pour breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Indiquer à Chrome d'interrompre son exécution durant le chargement de chaque script pour résoudre les mappages de sources et définir les points d'arrêt",
-	"chrome.breakOnLoadStrategy.regex.description": "Définit les points d'arrêt de manière optimiste dans les fichiers qui portent le même nom que le fichier dans lequel le point d'arrêt est défini.",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "Définit les points d'arrêt de manière optimiste dans les fichiers qui portent le même nom que le fichier dans lequel le point d'arrêt est défini."
 }

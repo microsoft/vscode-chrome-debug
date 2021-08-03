@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "Funzionalità sperimentale. Se è impostata su true, l'adattatore di debug proverà a impostare i punti di interruzione negli script prima che vengano caricati, in modo che i punti di interruzione vengano raggiunti all'inizio di tali script. Influisce sulle prestazioni.",
 	"chrome.breakOnLoadStrategy.description": "Strategia da usare per breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Indica a Chrome di effettuare una sospensione durante il caricamento dei singoli script, risolvendo i mapping di origine e impostando i punti di interruzione",
-	"chrome.breakOnLoadStrategy.regex.description": "Imposta i punti di interruzione in modalità ottimistica nei file con lo stesso nome del file in cui è impostato il punto di interruzione.",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "Imposta i punti di interruzione in modalità ottimistica nei file con lo stesso nome del file in cui è impostato il punto di interruzione."
 }

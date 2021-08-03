@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "試験的な機能 - true の場合、デバッグ アダプターによって読み込み前のスクリプトにブレークポイントの設定が試みられ、スクリプトの開始時からブレークポイントがヒットするようになります。これはパフォーマンスに影響します。",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad に対して使用する方法。",
 	"chrome.breakOnLoadStrategy.instrument.description": "各スクリプトが読み込まれる際に Chrome を一時停止し、ソースマップを解決してブレークポイントを設定します",
-	"chrome.breakOnLoadStrategy.regex.description": "ブレークポイントが設定されているファイルと同じ名前を持つファイル内に、ブレークポイントをオプティミスティックに設定します。",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "ブレークポイントが設定されているファイルと同じ名前を持つファイル内に、ブレークポイントをオプティミスティックに設定します。"
 }

@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "실험적 기능 - true인 경우 디버그 어댑터가 스크립트 시작 부분에 있는 중단점에 적중할 수 있도록 로드되기 전에 해당 스크립트에 중단점을 설정하려고 합니다. 이 기능을 사용하면 성능에 영향을 줍니다.",
 	"chrome.breakOnLoadStrategy.description": "breakOnLoad에 사용할 전략입니다.",
 	"chrome.breakOnLoadStrategy.instrument.description": "각 스크립트가 로드되면 Chrome에서 일시 중지한 후 sourcemap을 확인하고 중단점을 설정하도록 알려줍니다.",
-	"chrome.breakOnLoadStrategy.regex.description": "중단점이 설정된 파일과 이름이 같은 파일에서 중단점을 최적으로 설정합니다.",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "중단점이 설정된 파일과 이름이 같은 파일에서 중단점을 최적으로 설정합니다."
 }

@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "實驗性功能 -  如果為 true，偵錯配接器將會嘗試在載入指令碼前，先在其中設定中斷點，以便可在這些指令碼開頭叫用中斷點。這會影響效能。",
 	"chrome.breakOnLoadStrategy.description": "要用於 breakOnLoad 的策略。",
 	"chrome.breakOnLoadStrategy.instrument.description": "告知 Chrome 在載入每個指令碼時暫停，以解析 sourcemap 及設定中斷點",
-	"chrome.breakOnLoadStrategy.regex.description": "在與中斷點設定所在檔案同名的檔案中，以開放模式設定中斷點。",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "在與中斷點設定所在檔案同名的檔案中，以開放模式設定中斷點。"
 }

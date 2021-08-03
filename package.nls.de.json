@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "Experimentelle Funktion: Bei Festlegung auf TRUE versucht der Debugadapter, Haltepunkte in Skripts einzufügen, bevor diese geladen werden, damit der Adapter die Haltepunkte am Anfang der Skripts erreichen kann. Wirkt sich auf die Leistung aus.",
 	"chrome.breakOnLoadStrategy.description": "Die für breakOnLoad zu verwendende Strategie.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Geben Sie an, dass Chrome beim Laden jedes Skripts anhalten soll, um Sourcemaps aufzulösen und Haltepunkte festzulegen.",
-	"chrome.breakOnLoadStrategy.regex.description": "Legt Haltepunkte optimistisch in Dateien fest, die denselben Namen wie die Datei aufweisen, in der der Haltepunkt festgelegt ist.",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "Legt Haltepunkte optimistisch in Dateien fest, die denselben Namen wie die Datei aufweisen, in der der Haltepunkt festgelegt ist."
 }

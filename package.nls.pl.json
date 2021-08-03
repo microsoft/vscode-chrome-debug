@@ -28,7 +28,5 @@
 	"chrome.breakOnLoad.description": "Funkcja eksperymentalna — w przypadku wartości true adapter debugowania podejmie próbę ustawienia punktów przerwania w skryptach przed ich załadowaniem, tak aby punkty przerwania były trafiane na początku tych skryptów. Ma to wpływ na wydajność.",
 	"chrome.breakOnLoadStrategy.description": "Strategia na potrzeby ustawienia breakOnLoad.",
 	"chrome.breakOnLoadStrategy.instrument.description": "Poinformuj przeglądarkę Chrome, że ma wstrzymywać działanie podczas ładowania poszczególnych skryptów w celu rozpoznania map źródeł i ustawienia punktów przerwania",
-	"chrome.breakOnLoadStrategy.regex.description": "Optymistycznie ustawia punkty przerwania w plikach o takiej samej nazwie co plik, w którym punkt przerwania jest ustawiony.",
-	"debug.chrome.useV3.description": "Controls whether to delegate \"chrome\"-type launch configs to the js-debug extension.",
-	"debug.chrome.useV3.deprecated": "This setting is deprecated - please use `debug.javascript.usePreview` instead"
+	"chrome.breakOnLoadStrategy.regex.description": "Optymistycznie ustawia punkty przerwania w plikach o takiej samej nazwie co plik, w którym punkt przerwania jest ustawiony."
 }
