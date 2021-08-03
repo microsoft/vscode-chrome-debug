@@ -1,7 +1,7 @@
 {
   "name": "debugger-for-chrome",
   "displayName": "[Deprecated] Debugger for Chrome",
-  "version": "4.12.12",
+  "version": "4.13.0",
   "icon": "images/icon.png",
   "description": "%extension.description%",
   "author": {
